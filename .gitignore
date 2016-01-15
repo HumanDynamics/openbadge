@@ -1,0 +1,4 @@
+*.o
+*.scn
+*.py[co]
+__pycache__/*
