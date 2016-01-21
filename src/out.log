@@ -1,0 +1,115 @@
+2016-01-21 16:51:34,875 - INFO - [None] Resetting BLE
+2016-01-21 16:51:36,878 - INFO - [None] Done resetting BLE
+2016-01-21 16:51:36,879 - INFO - [None] Started
+2016-01-21 16:51:36,879 - ERROR - [None] Cannot find devices file: device_macs.txt
+2016-01-21 16:51:55,959 - INFO - [None] Resetting BLE
+2016-01-21 16:51:57,963 - INFO - [None] Done resetting BLE
+2016-01-21 16:51:57,963 - INFO - [None] Started
+2016-01-21 16:51:57,964 - INFO - [None] Reading whitelist:
+2016-01-21 16:51:57,966 - INFO - [None]     CC:4A:FD:5C:E3:5B
+2016-01-21 16:51:57,966 - INFO - [None]     C9:E6:5F:AC:28:69
+2016-01-21 16:51:57,967 - INFO - [None]     C9:82:C1:A9:B7:CD
+2016-01-21 16:51:57,967 - INFO - [None]     FF:6B:D4:CB:22:FA
+2016-01-21 16:51:57,968 - INFO - [None]     EF:AC:A0:8F:B2:35
+2016-01-21 16:51:57,968 - INFO - [None]     DC:40:1C:98:28:D9
+2016-01-21 16:51:57,969 - INFO - [None]     CA:9A:C4:37:A7:DA
+2016-01-21 16:51:57,969 - INFO - [None]     FC:D3:9B:76:98:5D
+2016-01-21 16:51:57,970 - INFO - [None]     F5:14:01:35:4D:A3
+2016-01-21 16:51:57,970 - INFO - [None]     C5:25:E5:6D:8C:89
+2016-01-21 16:51:57,971 - INFO - [None]     E2:C1:A5:B9:DC:8A
+2016-01-21 16:51:57,971 - INFO - [None]     CD:E0:41:1C:AB:06
+2016-01-21 16:51:57,972 - INFO - [None]     E0:36:2A:E3:73:E3
+2016-01-21 16:51:57,972 - INFO - [None]     D5:7E:FE:7C:0B:B2
+2016-01-21 16:51:57,972 - INFO - [None]     F9:E5:8E:97:D5:D8
+2016-01-21 16:51:57,973 - INFO - [None]     E1:85:25:89:A5:0E
+2016-01-21 16:51:57,973 - INFO - [None]     C6:6A:08:98:F2:88
+2016-01-21 16:51:57,974 - INFO - [None]     D1:EF:4C:DA:B2:15
+2016-01-21 16:51:57,974 - INFO - [None]     C6:10:CE:C5:D3:AD
+2016-01-21 16:51:57,974 - INFO - [None]     E3:7E:44:77:F2:38
+2016-01-21 16:51:57,975 - INFO - [None]     DF:03:05:2E:83:CA
+2016-01-21 16:51:57,975 - INFO - [None]     E2:33:F4:FA:41:44
+2016-01-21 16:51:57,976 - INFO - [None] Scanning for devices...
+2016-01-21 16:52:02,980 - DEBUG - [None] Found C6:10:CE:C5:D3:AD, added
+2016-01-21 16:52:02,981 - INFO - [None] Found: 1 devices
+2016-01-21 16:52:04,983 - INFO - [None] Communicating with synced devices...
+2016-01-21 16:52:04,983 - INFO - [C6:10:CE:C5:D3:AD] Talking with C6:10:CE:C5:D3:AD
+2016-01-21 16:52:06,089 - INFO - [C6:10:CE:C5:D3:AD] Connected
+2016-01-21 16:52:06,229 - INFO - [C6:10:CE:C5:D3:AD] Got status
+2016-01-21 16:52:06,229 - INFO - [C6:10:CE:C5:D3:AD] Already synced
+2016-01-21 16:52:06,229 - INFO - [C6:10:CE:C5:D3:AD] Requesting data...
+2016-01-21 16:52:12,492 - INFO - [C6:10:CE:C5:D3:AD] Waiting for more data...
+2016-01-21 16:52:13,494 - INFO - [C6:10:CE:C5:D3:AD] Waiting for more data...
+2016-01-21 16:52:14,494 - INFO - [C6:10:CE:C5:D3:AD] Waiting for more data...
+2016-01-21 16:52:14,495 - INFO - [C6:10:CE:C5:D3:AD] finished reading data
+2016-01-21 16:52:14,496 - INFO - [C6:10:CE:C5:D3:AD] disconnected
+2016-01-21 16:52:14,497 - INFO - [C6:10:CE:C5:D3:AD] Chunks received: 42
+2016-01-21 16:52:14,497 - INFO - [C6:10:CE:C5:D3:AD] saving chunks to file
+2016-01-21 16:52:14,497 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:31:44, Voltage: 2.836363554, Samples in chunk: 116
+2016-01-21 16:52:14,498 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:32:13, Voltage: 2.836363554, Samples in chunk: 116
+2016-01-21 16:52:14,498 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:32:42, Voltage: 2.83284449577, Samples in chunk: 116
+2016-01-21 16:52:14,499 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:33:11, Voltage: 2.82932543755, Samples in chunk: 116
+2016-01-21 16:52:14,500 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:33:40, Voltage: 2.836363554, Samples in chunk: 116
+2016-01-21 16:52:14,500 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:34:09, Voltage: 2.82580637932, Samples in chunk: 116
+2016-01-21 16:52:14,501 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:34:38, Voltage: 2.82228732109, Samples in chunk: 116
+2016-01-21 16:52:14,501 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:35:07, Voltage: 2.82228732109, Samples in chunk: 116
+2016-01-21 16:52:14,502 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:35:36, Voltage: 2.81876826286, Samples in chunk: 116
+2016-01-21 16:52:14,502 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:36:05, Voltage: 2.81876826286, Samples in chunk: 116
+2016-01-21 16:52:14,503 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:36:34, Voltage: 2.81524920464, Samples in chunk: 116
+2016-01-21 16:52:14,503 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:37:03, Voltage: 2.81524920464, Samples in chunk: 116
+2016-01-21 16:52:14,503 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:37:32, Voltage: 2.81876826286, Samples in chunk: 116
+2016-01-21 16:52:14,504 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:38:01, Voltage: 2.80821108818, Samples in chunk: 116
+2016-01-21 16:52:14,504 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:38:30, Voltage: 2.80821108818, Samples in chunk: 116
+2016-01-21 16:52:14,505 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:38:59, Voltage: 2.80821108818, Samples in chunk: 116
+2016-01-21 16:52:14,505 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:39:28, Voltage: 2.80469202995, Samples in chunk: 116
+2016-01-21 16:52:14,506 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:39:57, Voltage: 2.80469202995, Samples in chunk: 116
+2016-01-21 16:52:14,506 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:40:26, Voltage: 2.80117297173, Samples in chunk: 116
+2016-01-21 16:52:14,507 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:40:55, Voltage: 2.80117297173, Samples in chunk: 116
+2016-01-21 16:52:14,507 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:41:24, Voltage: 2.80469202995, Samples in chunk: 116
+2016-01-21 16:52:14,508 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:41:53, Voltage: 2.7976539135, Samples in chunk: 116
+2016-01-21 16:52:14,508 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:42:22, Voltage: 2.7976539135, Samples in chunk: 116
+2016-01-21 16:52:14,508 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:42:51, Voltage: 2.7976539135, Samples in chunk: 116
+2016-01-21 16:52:14,509 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:43:20, Voltage: 2.79413485527, Samples in chunk: 116
+2016-01-21 16:52:14,509 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:43:49, Voltage: 2.79413485527, Samples in chunk: 116
+2016-01-21 16:52:14,510 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:44:18, Voltage: 2.79061579704, Samples in chunk: 116
+2016-01-21 16:52:14,511 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:44:47, Voltage: 2.79061579704, Samples in chunk: 116
+2016-01-21 16:52:14,511 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:45:16, Voltage: 2.79413485527, Samples in chunk: 116
+2016-01-21 16:52:14,511 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:45:45, Voltage: 2.78709673882, Samples in chunk: 116
+2016-01-21 16:52:14,512 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:46:14, Voltage: 2.78709673882, Samples in chunk: 116
+2016-01-21 16:52:14,512 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:46:43, Voltage: 2.78709673882, Samples in chunk: 116
+2016-01-21 16:52:14,513 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:47:12, Voltage: 2.78709673882, Samples in chunk: 116
+2016-01-21 16:52:14,513 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:47:41, Voltage: 2.78709673882, Samples in chunk: 116
+2016-01-21 16:52:14,513 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:48:10, Voltage: 2.78357768059, Samples in chunk: 116
+2016-01-21 16:52:14,514 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:48:39, Voltage: 2.78357768059, Samples in chunk: 116
+2016-01-21 16:52:14,514 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:49:08, Voltage: 2.78709673882, Samples in chunk: 116
+2016-01-21 16:52:14,515 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:49:37, Voltage: 2.78005862236, Samples in chunk: 116
+2016-01-21 16:52:14,515 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:50:06, Voltage: 2.78005862236, Samples in chunk: 116
+2016-01-21 16:52:14,515 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:50:35, Voltage: 2.78005862236, Samples in chunk: 116
+2016-01-21 16:52:14,515 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:51:04, Voltage: 2.77653956413, Samples in chunk: 116
+2016-01-21 16:52:14,515 - INFO - [C6:10:CE:C5:D3:AD] Chunk timestamp: 2016-01-21 16:51:33, Voltage: 2.77653956413, Samples in chunk: 116
+2016-01-21 16:52:14,516 - INFO - [C6:10:CE:C5:D3:AD] done writing
+2016-01-21 16:52:16,518 - INFO - [None] Reading whitelist:
+2016-01-21 16:52:16,520 - INFO - [None]     CC:4A:FD:5C:E3:5B
+2016-01-21 16:52:16,521 - INFO - [None]     C9:E6:5F:AC:28:69
+2016-01-21 16:52:16,521 - INFO - [None]     C9:82:C1:A9:B7:CD
+2016-01-21 16:52:16,522 - INFO - [None]     FF:6B:D4:CB:22:FA
+2016-01-21 16:52:16,522 - INFO - [None]     EF:AC:A0:8F:B2:35
+2016-01-21 16:52:16,522 - INFO - [None]     DC:40:1C:98:28:D9
+2016-01-21 16:52:16,523 - INFO - [None]     CA:9A:C4:37:A7:DA
+2016-01-21 16:52:16,523 - INFO - [None]     FC:D3:9B:76:98:5D
+2016-01-21 16:52:16,524 - INFO - [None]     F5:14:01:35:4D:A3
+2016-01-21 16:52:16,524 - INFO - [None]     C5:25:E5:6D:8C:89
+2016-01-21 16:52:16,525 - INFO - [None]     E2:C1:A5:B9:DC:8A
+2016-01-21 16:52:16,525 - INFO - [None]     CD:E0:41:1C:AB:06
+2016-01-21 16:52:16,525 - INFO - [None]     E0:36:2A:E3:73:E3
+2016-01-21 16:52:16,526 - INFO - [None]     D5:7E:FE:7C:0B:B2
+2016-01-21 16:52:16,526 - INFO - [None]     F9:E5:8E:97:D5:D8
+2016-01-21 16:52:16,526 - INFO - [None]     E1:85:25:89:A5:0E
+2016-01-21 16:52:16,527 - INFO - [None]     C6:6A:08:98:F2:88
+2016-01-21 16:52:16,527 - INFO - [None]     D1:EF:4C:DA:B2:15
+2016-01-21 16:52:16,527 - INFO - [None]     C6:10:CE:C5:D3:AD
+2016-01-21 16:52:16,527 - INFO - [None]     E3:7E:44:77:F2:38
+2016-01-21 16:52:16,528 - INFO - [None]     DF:03:05:2E:83:CA
+2016-01-21 16:52:16,528 - INFO - [None]     E2:33:F4:FA:41:44
+2016-01-21 16:52:16,528 - INFO - [None] Scanning for devices...
+2016-01-21 16:52:21,643 - DEBUG - [None] Found C6:10:CE:C5:D3:AD, added
+2016-01-21 16:52:21,644 - INFO - [None] Found: 1 devices

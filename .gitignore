@@ -1,0 +1,6 @@
+*.o
+*.scn
+*.py[co]
+__pycache__/*
+*.out
+device_macs*
