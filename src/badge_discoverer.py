@@ -1,7 +1,9 @@
-import ble_scanner
-import threading
+from __future__ import print_function
+
 import datetime
 import time
+
+from bluepy import btle
 
 # Looks for badges and return their state (synced or not), the 
 # date of the latest scan, and a list of RSSIs
@@ -10,41 +12,38 @@ class BadgeDiscoverer:
 		self.DEVICE_NAME = "MiniBadge"
 		self.CLOCK_STATE_SYNC = "CLKSYN"
 		self.CLOCK_STATE_UNSYNC = "CLKUN"
-		None
+		self.DEVICE_NAME_FIELD_ID = 9
 	
 	def discover(self, scanDuration = 1): #seconds
-		bleScanner = ble_scanner.BleScanner()
-		
-		# stop if there is any running scan, then start a new one
-		bleScanner.hci_disable_le_scan()
-		bleScanner.hci_le_set_scan_parameters()
-		bleScanner.hci_enable_le_scan()
+		btle.Debugging = False
+		scanner = btle.Scanner().withDelegate(ScanDummy())
+		raw_devices = scanner.scan(scanDuration)
 		
 		devices={}
-		
-		t_end = time.time() + scanDuration
-		
-		# collect devices
-		while time.time() < t_end:
-			event = bleScanner.parse_events()
-			if event is not None:
-				device_name = event['name']
-				if device_name == self.DEVICE_NAME:
-					mac = event['mac']
-					rssi = event['rssi']
-					is_sync = not(self.CLOCK_STATE_UNSYNC in event['data'])
-					scan_date = datetime.datetime.now()
-					if not (mac in devices):
-						devices[mac] = {'scan_date':scan_date,'is_sync':is_sync,'rssis':[rssi]}
-					else:
-						devices[mac]['rssis'].append(rssi)
-						devices[mac]['scan_date'] = scan_date
-				
-		# stop scan
-		bleScanner.hci_disable_le_scan()
+		for device in raw_devices:
+			device_name = None
+			for (sdid, desc, val) in device.getScanData():
+				if sdid  == 9: device_name = val
+
+			if device_name == self.DEVICE_NAME:
+				rssi = device.rssi
+				mac = device.addr.upper()
+
+				is_sync = not(self.CLOCK_STATE_UNSYNC in device.rawData)
+				scan_date = datetime.datetime.now()
+				if not (mac in devices):
+					devices[mac] = {'scan_date':scan_date,'is_sync':is_sync,'rssi':rssi}
+				else:
+					devices[mac]['rssi']=rssi
+					devices[mac]['scan_date'] = scan_date
+
 		return devices
-	
+
+class ScanDummy(btle.DefaultDelegate):
+    def handleDiscovery(self, dev, isNewDev, isNewData):
+    	pass
+
 if __name__ == "__main__":
 	bd = BadgeDiscoverer()
 	devices = bd.discover()
-	print devices
+	print(devices)
