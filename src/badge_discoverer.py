@@ -13,7 +13,6 @@ class BadgeDiscoverer:
 		self.CLOCK_STATE_SYNC = "CLKSYN"
 		self.CLOCK_STATE_UNSYNC = "CLKUN"
 		self.DEVICE_NAME_FIELD_ID = 9
-		None
 	
 	def discover(self, scanDuration = 1): #seconds
 		btle.Debugging = False
@@ -42,7 +41,7 @@ class BadgeDiscoverer:
 
 class ScanDummy(btle.DefaultDelegate):
     def handleDiscovery(self, dev, isNewDev, isNewData):
-    	None
+    	pass
 
 if __name__ == "__main__":
 	bd = BadgeDiscoverer()
