@@ -4,3 +4,5 @@
 __pycache__/*
 *.out
 device_macs*
+*.log
+rssi_scan.txt
