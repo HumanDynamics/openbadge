@@ -6,7 +6,7 @@ Installation
 
 This is a guide to install the library on Ubuntu Trusty 14.04 LTS. 
 
-The first thing you need is to download and install [http://www.bluez.org/download/ BlueZ] libraray with a version number that starts with 5.
+The first thing you need is to download and install [BlueZ](http://www.bluez.org/download/) libraray with a version number that starts with 5.
 
     wget http://www.kernel.org/pub/linux/bluetooth/bluez-5.37.tar.xz
     tar xf bluez-5.37.tar.xz
