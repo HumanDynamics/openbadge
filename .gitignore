@@ -2,7 +2,12 @@
 *.scn
 *.py[co]
 __pycache__/*
+_build/*
 *.out
+*.bin
 device_macs*
 *.log
 rssi_scan.txt
+*.s#*
+*.b#*
+*.l#*
