@@ -11,3 +11,5 @@ rssi_scan.txt
 *.s#*
 *.b#*
 *.l#*
+*.brd.lck
+*.sch.lck
