@@ -212,6 +212,13 @@ int main(void)
         // init
         spi_init();
         // read/write
+        if (testExternalFlash()) {
+            debug_log("Success\r\n");
+        }
+        else{
+            debug_log("Failed\r\n");
+            while(1) {};
+        }
 
         nrf_delay_ms(LED_BLINK_MS);
         nrf_gpio_pin_write(GREEN_LED,LED_OFF);
