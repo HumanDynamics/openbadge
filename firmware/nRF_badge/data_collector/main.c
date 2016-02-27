@@ -55,7 +55,7 @@
 #include "internal_flash.h"  //for managing storage and sending from internal flash
 #include "external_flash.h"  //for interfacing to external SPI flash
 #include "scanning.h"       //for performing scans and storing scan data
-
+#include "self_test.h"   // for built-in tests
 
 
 
@@ -152,10 +152,82 @@ int main(void)
         nrf_gpio_cfg_default(BUTTON_4);
     #endif
     
-    
     debug_log_init();
     debug_log("\r\n\r\n\r\n\r\nUART trace initialized.\r\n\r\n");
-    
+
+
+    // Define and set LEDs
+    nrf_gpio_pin_dir_set(LED_1,NRF_GPIO_PIN_DIR_OUTPUT);  //set LED pin to output
+    nrf_gpio_pin_write(LED_1,LED_ON);  //turn off LED
+    nrf_gpio_pin_dir_set(LED_2,NRF_GPIO_PIN_DIR_OUTPUT);  //set LED pin to output
+    nrf_gpio_pin_write(LED_2,LED_OFF);  //turn off LED
+
+
+    #if defined(TESTER_ENABLE) // tester mode is enabled
+        //////////////////////////////////
+        // BLE start
+        debug_log("Starting BLE\r\n");
+        nrf_gpio_pin_write(GREEN_LED,LED_ON);
+        
+        BLEbegin();
+        
+        nrf_delay_ms(LED_BLINK_MS);
+        nrf_gpio_pin_write(GREEN_LED,LED_OFF);
+        nrf_delay_ms(LED_BLINK_MS);
+        //////////////////////////////////
+        // other init
+        debug_log("Init misc.\r\n");
+        nrf_gpio_pin_write(GREEN_LED,LED_ON);
+
+        sd_power_mode_set(NRF_POWER_MODE_LOWPWR);  //set low power sleep mode        
+        adc_config();
+        rtc_config();
+        
+        nrf_delay_ms(LED_BLINK_MS);
+        nrf_gpio_pin_write(GREEN_LED,LED_OFF);
+        nrf_delay_ms(LED_BLINK_MS);
+
+        //////////////////////////////////
+        // test internal flash
+        debug_log("Testing internal flash\r\n");
+        nrf_gpio_pin_write(GREEN_LED,LED_ON);
+        
+        if (testInternalFlash()) {
+            debug_log("Success\r\n");
+        }
+        else{
+            debug_log("Failed\r\n");
+            while(1) {};
+        }
+
+        nrf_delay_ms(LED_BLINK_MS);
+        nrf_gpio_pin_write(GREEN_LED,LED_OFF);
+        nrf_delay_ms(LED_BLINK_MS);
+
+        //////////////////////////////////
+        // test external flash
+        debug_log("Testing external flash\r\n");
+        nrf_gpio_pin_write(GREEN_LED,LED_ON);
+        
+        // init
+        spi_init();
+        // read/write
+
+        nrf_delay_ms(LED_BLINK_MS);
+        nrf_gpio_pin_write(GREEN_LED,LED_OFF);
+        nrf_delay_ms(LED_BLINK_MS);
+
+        //////////////////////////////////
+        // test mic
+        debug_log("Testing mic\r\n");
+
+        while(1) // stay in infinite loop, spit out mic values
+        {
+            int reading = analogRead(MIC_PIN);
+            debug_log("rd: %d\r\n",reading);
+            nrf_delay_ms(10);
+        }
+    #endif    
     
     // Initialize
     sd_power_mode_set(NRF_POWER_MODE_LOWPWR);  //set low power sleep mode
@@ -163,13 +235,7 @@ int main(void)
     adc_config();
     rtc_config();
     spi_init();
-    
-    // LEDs
-    nrf_gpio_pin_dir_set(LED_1,NRF_GPIO_PIN_DIR_OUTPUT);  //set LED pin to output
-    nrf_gpio_pin_write(LED_1,LED_ON);  //turn off LED
-    nrf_gpio_pin_dir_set(LED_2,NRF_GPIO_PIN_DIR_OUTPUT);  //set LED pin to output
-    nrf_gpio_pin_write(LED_2,LED_OFF);  //turn off LED
-    
+        
     // Button
     nrf_gpio_cfg_input(BUTTON_1,NRF_GPIO_PIN_PULLUP);  //button 4
     
@@ -231,12 +297,7 @@ int main(void)
     
     
     
-    /*while(1)
-    {
-        int reading = analogRead(MIC_PIN);
-        debug_log("rd: %d\r\n",reading);
-        nrf_delay_ms(10);
-    }*/
+
     
     
     
