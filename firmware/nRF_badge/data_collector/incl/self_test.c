@@ -60,7 +60,6 @@ void testMicAddSample(int s) {
     uint8_t clip_s = abs_s <= 255 ? abs_s : 255;  //clip reading
     threshold_buffer.pos = (threshold_buffer.pos + 1) % THRESH_BUFSIZE;;
     threshold_buffer.bytes[threshold_buffer.pos] = clip_s;
-    
     debug_log("added : %d\r\n", clip_s);
 }
 
@@ -74,17 +73,17 @@ uint8_t testMicAvg() {
     int sum = 0;
  
     for ( int i = 0; i < THRESH_BUFSIZE; i++ ) {
-        debug_log("%d,", threshold_buffer.bytes[i]);
+        //debug_log("%d,", threshold_buffer.bytes[i]);
         sum += threshold_buffer.bytes[i];
     }
-    debug_log("\r\n");
+    //debug_log("\r\n");
     return sum/THRESH_BUFSIZE;
 }
 
 bool testMicAboveThreshold() {
     uint8_t avg = testMicAvg();
-    double avg_with_sd = avg * THRESH_SD;
+    double avg_with_sd = (avg + THRESH_MAGIC_NUMBER) * THRESH_SD;
     uint8_t lastSample = threshold_buffer.bytes[threshold_buffer.pos];
-    debug_log("avg %d, avg with SD %f, sample %d\r\n", avg, avg_with_sd, lastSample);   
+    //debug_log("avg %d, avg with SD %f, sample %d\r\n", avg, avg_with_sd, lastSample);   
     return lastSample > avg_with_sd;
 }

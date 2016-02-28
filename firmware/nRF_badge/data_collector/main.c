@@ -251,7 +251,6 @@ int main(void)
             }
             else {
                 nrf_gpio_pin_write(RED_LED,LED_OFF);   
-                nrf_delay_ms(100);  
             }
             
             // turn on green light if button is pressed

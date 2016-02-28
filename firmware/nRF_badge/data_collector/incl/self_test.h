@@ -6,7 +6,8 @@
 #include "external_flash.h"
 
 #define THRESH_BUFSIZE 32  //size of the thresholding buffer, in bytes
-#define THRESH_SD 1.5 // 
+#define THRESH_SD 1.2 // 
+#define THRESH_MAGIC_NUMBER 15 // value to add to average to reduce sensitivity
 struct
 {
     uint8_t bytes[THRESH_BUFSIZE];
