@@ -54,3 +54,37 @@ bool testExternalFlash(void)
     */
     return true;
 }
+
+void testMicAddSample(int s) {
+    int abs_s = abs(s - threshold_buffer.zeroValue);
+    uint8_t clip_s = abs_s <= 255 ? abs_s : 255;  //clip reading
+    threshold_buffer.pos = (threshold_buffer.pos + 1) % THRESH_BUFSIZE;;
+    threshold_buffer.bytes[threshold_buffer.pos] = clip_s;
+    
+    debug_log("added : %d\r\n", clip_s);
+}
+
+void testMicInit(int zeroValue) {
+    threshold_buffer.pos = 0;
+    threshold_buffer.zeroValue = zeroValue;
+    memset(threshold_buffer.bytes, 0, sizeof(threshold_buffer.bytes));
+}
+
+uint8_t testMicAvg() {
+    int sum = 0;
+ 
+    for ( int i = 0; i < THRESH_BUFSIZE; i++ ) {
+        debug_log("%d,", threshold_buffer.bytes[i]);
+        sum += threshold_buffer.bytes[i];
+    }
+    debug_log("\r\n");
+    return sum/THRESH_BUFSIZE;
+}
+
+bool testMicAboveThreshold() {
+    uint8_t avg = testMicAvg();
+    double avg_with_sd = avg * THRESH_SD;
+    uint8_t lastSample = threshold_buffer.bytes[threshold_buffer.pos];
+    debug_log("avg %d, avg with SD %f, sample %d\r\n", avg, avg_with_sd, lastSample);   
+    return lastSample > avg_with_sd;
+}

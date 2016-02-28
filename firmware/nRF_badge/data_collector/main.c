@@ -162,9 +162,19 @@ int main(void)
     nrf_gpio_pin_dir_set(LED_2,NRF_GPIO_PIN_DIR_OUTPUT);  //set LED pin to output
     nrf_gpio_pin_write(LED_2,LED_OFF);  //turn off LED
 
+    // Button
+    nrf_gpio_cfg_input(BUTTON_1,NRF_GPIO_PIN_PULLUP);  //button
+
 
     #if defined(TESTER_ENABLE) // tester mode is enabled
         //////////////////////////////////
+        nrf_gpio_pin_write(GREEN_LED,LED_ON);
+        nrf_gpio_pin_write(RED_LED,LED_ON);
+        nrf_delay_ms(LED_BLINK_MS);
+        nrf_gpio_pin_write(GREEN_LED,LED_OFF);
+        nrf_gpio_pin_write(RED_LED,LED_OFF);
+        nrf_delay_ms(LED_BLINK_MS);
+
         // BLE start
         debug_log("Starting BLE\r\n");
         nrf_gpio_pin_write(GREEN_LED,LED_ON);
@@ -225,16 +235,39 @@ int main(void)
         nrf_delay_ms(LED_BLINK_MS);
 
         //////////////////////////////////
-        // test mic
-        debug_log("Testing mic\r\n");
+        // test button and mic
+        debug_log("Testing button and mic\r\n");
 
+        testMicInit(zeroValue);
         while(1) // stay in infinite loop, spit out mic values
         {
+            // update reading
             int reading = analogRead(MIC_PIN);
-            debug_log("rd: %d\r\n",reading);
+            testMicAddSample(reading);
+            
+            if (testMicAboveThreshold()) {
+                nrf_gpio_pin_write(RED_LED,LED_ON);
+                nrf_delay_ms(100);                  
+            }
+            else {
+                nrf_gpio_pin_write(RED_LED,LED_OFF);   
+                nrf_delay_ms(100);  
+            }
+            
+            // turn on green light if button is pressed
+            if(nrf_gpio_pin_read(BUTTON_1) == 0)
+            {
+                nrf_gpio_pin_write(GREEN_LED,LED_ON);
+            }
+            else {
+                nrf_gpio_pin_write(GREEN_LED,LED_OFF);   
+            }
+
             nrf_delay_ms(10);
         }
-    #endif    
+        
+        while(1) {};
+    #endif    // end of self tests
     
     // Initialize
     sd_power_mode_set(NRF_POWER_MODE_LOWPWR);  //set low power sleep mode
@@ -243,8 +276,6 @@ int main(void)
     rtc_config();
     spi_init();
         
-    // Button
-    nrf_gpio_cfg_input(BUTTON_1,NRF_GPIO_PIN_PULLUP);  //button 4
     
     // Blink once on start
     nrf_gpio_pin_write(LED_1,LED_ON);
