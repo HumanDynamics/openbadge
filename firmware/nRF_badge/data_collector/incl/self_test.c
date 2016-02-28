@@ -76,7 +76,7 @@ uint8_t testMicAvg() {
         //debug_log("%d,", threshold_buffer.bytes[i]);
         sum += threshold_buffer.bytes[i];
     }
-    //debug_log("\r\n");
+    debug_log("Avg: %d\r\n", sum/THRESH_BUFSIZE);
     return sum/THRESH_BUFSIZE;
 }
 
