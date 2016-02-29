@@ -55,12 +55,22 @@ bool testExternalFlash(void)
     return true;
 }
 
-void testMicAddSample(int s) {
-    int abs_s = abs(s - threshold_buffer.zeroValue);
-    uint8_t clip_s = abs_s <= 255 ? abs_s : 255;  //clip reading
+void testMicAddSample() {
+    unsigned int readingsCount = 0;  //number of mic readings taken
+    unsigned long readingsSum = 0;  //sum of mic readings taken      } for computing average
+
+    for (int i=0; i<THRESH_SAMPLES; i++) {
+        int sample = analogRead(MIC_PIN);
+        readingsSum += abs(sample - threshold_buffer.zeroValue);
+        readingsCount++;
+    }
+
+    unsigned int micValue = readingsSum / readingsCount;
+    uint8_t reading = micValue <= 255 ? micValue : 255;  //clip reading
+
     threshold_buffer.pos = (threshold_buffer.pos + 1) % THRESH_BUFSIZE;;
-    threshold_buffer.bytes[threshold_buffer.pos] = clip_s;
-    debug_log("added : %d\r\n", clip_s);
+    threshold_buffer.bytes[threshold_buffer.pos] = reading;
+    debug_log("added : %d\r\n", reading);
 }
 
 void testMicInit(int zeroValue) {

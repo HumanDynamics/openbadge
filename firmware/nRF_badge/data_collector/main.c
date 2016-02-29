@@ -242,8 +242,7 @@ int main(void)
         while(1) // stay in infinite loop, spit out mic values
         {
             // update reading
-            int reading = analogRead(MIC_PIN);
-            testMicAddSample(reading);
+            testMicAddSample();
             
             if (testMicAboveThreshold()) {
                 nrf_gpio_pin_write(RED_LED,LED_ON);

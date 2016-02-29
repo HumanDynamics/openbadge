@@ -6,6 +6,7 @@
 #include "external_flash.h"
 
 #define THRESH_BUFSIZE 32  //size of the thresholding buffer, in bytes
+#define THRESH_SAMPLES 64 // number of samples averaged to create a single reading
 #define THRESH_SD 1.2 // 
 #define THRESH_MAGIC_NUMBER 15 // value to add to average to reduce sensitivity
 struct
@@ -21,8 +22,9 @@ bool testInternalFlash(void);
 // Tests external flash. Returns true on success
 bool testExternalFlash(void);
 
-// adds a mic sample to the thresholding array
-void testMicAddSample(int s);
+// adds a mic sample to the thresholding array. It will make
+// THRESH_SAMPLES samples and average them to create a single reading
+void testMicAddSample();
 
 // init the sampling threshold buffer
 void testMicInit(int zeroValue);
