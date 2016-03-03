@@ -26,8 +26,14 @@ bool testInternalFlash(void)
 
 bool testExternalFlash(void)
 {
+    // unlock flash
+    uint32_t stat = ext_flash_global_unprotect();
+    if (stat != EXT_FLASH_SUCCESS) {
+        return false;
+    }
+
     // erase the first data block
-    uint32_t stat = ext_flash_block_erase(0);
+    stat = ext_flash_block_erase(0);
     if (stat != EXT_FLASH_SUCCESS) {
         return false;
     }
