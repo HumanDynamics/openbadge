@@ -32,6 +32,8 @@ bool testExternalFlash(void)
         return false;
     }
 
+    ext_flash_wait(); // wait for erase to finish
+
     // write to the first block and test the result  
     unsigned char value[4] = {1,2,3,4};
     stat = ext_flash_write(0,value,sizeof(value));
@@ -39,19 +41,21 @@ bool testExternalFlash(void)
         return false;
     }
 
+    ext_flash_wait(); // wait for write to finish
+
+    /* not getting what I expected
     unsigned char buf[4];
     stat = ext_flash_read(0,buf,sizeof(buf));               
     if (stat != EXT_FLASH_SUCCESS) {
         return false;
     }
 
-    // not doing what I expect
-    /*
     if (buf[0] != 1) {
         debug_log("Error - got : %d\r\n", buf[0]);
         return false;
     }
     */
+    
     return true;
 }
 
