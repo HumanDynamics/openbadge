@@ -1,7 +1,7 @@
 OpenBadge project
 =================
 
-Welcome to the Open Badge project. Detailed information can be found on our [wiki](https://github.com/HumanDynamics/OpenBadge/wiki)
+Welcome to the Open Badge project. For more information, pease visit our [wiki](https://github.com/HumanDynamics/OpenBadge/wiki)
 
 ![Badge](/images/v3_badge.jpg?raw=true "Open Badge")
 
@@ -10,7 +10,7 @@ Installation
 
 This is a guide to install the libraries required for the badge server on Ubuntu Trusty 14.04 LTS. 
 
-The first thing you need is to download and install [BlueZ](http://www.bluez.org/download/) libraray with a version number that starts with 5.
+The first thing you need is to download and install [BlueZ](http://www.bluez.org/download/) version 5.29 or higher:
 
     wget http://www.kernel.org/pub/linux/bluetooth/bluez-5.37.tar.xz
     tar xf bluez-5.37.tar.xz
