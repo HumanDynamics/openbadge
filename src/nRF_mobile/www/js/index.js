@@ -81,9 +81,14 @@ var app = {
                 //resultDiv.innerHTML = "";
                 //app.showDetailPage();
                 app.disconnectFromDevice(deviceId);
+            },
+            onConnectError = function(reason) {
+                app.showStatusText('Error Connecting '+ deviceId);
+                app.disconnectFromDevice(deviceId); // just in case  
             };
 
-        ble.connect(deviceId, onConnect, app.onConnectError);
+
+        ble.connect(deviceId, onConnect, onConnectError);
     },
     disconnectFromDevice: function(deviceId) {
         app.showStatusText('Disconnecting '+ deviceId);
@@ -110,7 +115,6 @@ var app = {
                 resultDiv.innerHTML = "";
                 app.showDetailPage();
             };
-
         ble.connect(deviceId, onConnect, app.onConnectError);
     },
     determineWriteType: function(peripheral) {
@@ -181,12 +185,13 @@ var app = {
         mainPage.hidden = true;
         detailPage.hidden = false;
     },
+    /*
     onConnectError: function(reason) {
         console.log('Error connecting'+ reason);
         app.showStatusText('could not connect because'+ reason);
         //alert("ERROR Connecting: " + reason); // real apps should use notification.alert
     },
-
+    */
     onError: function(reason) {
         console.log('Error '+ reason);
         //alert("ERROR: " + reason); // real apps should use notification.alert
