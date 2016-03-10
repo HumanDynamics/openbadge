@@ -41,7 +41,7 @@ var app = {
     },
     onDeviceReady: function() {
         app.showStatusText("Ready");
-        app.refreshDeviceList();
+        setInterval(function(){ app.refreshDeviceList();; }, 5500); // keep scanning
     },
     refreshDeviceList: function() {
         app.showStatusText("Starting scan");
