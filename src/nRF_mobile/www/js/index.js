@@ -62,7 +62,40 @@ var app = {
         listItem.dataset.deviceId = device.id;
         listItem.innerHTML = html;
         deviceList.appendChild(listItem);
+
+        if (device.name == "BADGE") {
+            app.showStatusText('Found: '+ device.id);
+            app.connectToDevice(device.id);
+        }
     },
+    connectToDevice: function(deviceId) {
+        app.showStatusText('Attemping to connect '+ deviceId);
+        var onConnect = function(peripheral) {
+                app.showStatusText('Connected '+ deviceId);
+                //app.determineWriteType(peripheral);
+
+                // subscribe for incoming data
+                //ble.startNotification(deviceId, bluefruit.serviceUUID, bluefruit.rxCharacteristic, app.onData, app.onError);
+                //sendButton.dataset.deviceId = deviceId;
+                //disconnectButton.dataset.deviceId = deviceId;
+                //resultDiv.innerHTML = "";
+                //app.showDetailPage();
+                //app.disconnectFromDevice(deviceID);
+            };
+
+        ble.connect(deviceId, onConnect, app.onConnectError);
+    },
+    disconnectFromDevice: function(deviceId) {
+        app.showStatusText('Disconnecting '+ deviceId);
+        ble.disconnect(deviceId, app.onDisconnect, app.onError);
+        app.showStatusText('Disconnect call ended '+ deviceId);
+    },
+    onDisconnect: function(o) {
+        console.log('Disconnected '+ o);
+        app.showStatusText('Disconnected '+ o);
+    },
+
+
     connect: function(e) {
         app.showStatusText('Attemping to connect '+ e.target.dataset.deviceId);
         var deviceId = e.target.dataset.deviceId,
@@ -150,12 +183,13 @@ var app = {
     },
     onConnectError: function(reason) {
         console.log('Error connecting'+ reason);
-        alert("ERROR Connecting: " + reason); // real apps should use notification.alert
+        app.showStatusText('could not connect because'+ reason);
+        //alert("ERROR Connecting: " + reason); // real apps should use notification.alert
     },
 
     onError: function(reason) {
         console.log('Error '+ reason);
-        alert("ERROR: " + reason); // real apps should use notification.alert
+        //alert("ERROR: " + reason); // real apps should use notification.alert
     },
 
     showStatusText: function(info) {
