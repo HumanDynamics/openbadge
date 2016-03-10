@@ -54,7 +54,7 @@ help:
 	@echo "The following targets are available:"
 	@echo "  - Boards/options:  NRF51DK  badge_03  badge_03_noDebug"
 	@echo "                     badge_03v2_rigado  badge_03v2_dynastream"
-	@echo "                     badge_03v2_rigado_noDebug"
+	@echo "                     badge_03v2_rigado_noDebug	badge_03v2_rigado_tester"
 	@echo "  - Actions:         flashUnlock  flashErase  flashS130  flashAPP"
 	@echo "  - Info:            help  helpDetailed"
 	@echo
@@ -68,6 +68,7 @@ helpDetailed:
 	@echo "   - badge_03v2_[rigado|dynastream]:  compile for Badge 03v2"
 	@echo "   - badge_03v2_rigado_noDebug:  compile for Badge 03v2, UART disabled"
 	@echo "                          (with corresponding BLE module)"
+	@echo "   - badge_03v2_rigado_tester:       compile Rigado self tester"	
 	@echo "   - flashUnlock:       set flags required to enable erasing/programming of flash"
 	@echo "                          (only required for brand new NRF51 chips)"
 	@echo "   - flashErase:        erase all flash (including softdevice)"
@@ -89,6 +90,7 @@ incl/debug_log.c \
 incl/internal_flash.c \
 incl/external_flash.c \
 incl/scanning.c \
+incl/self_test.c \
 $(SDK_PATH)/components/libraries/util/app_error.c \
 $(SDK_PATH)/components/libraries/util/nrf_assert.c \
 $(SDK_PATH)/components/libraries/uart/retarget.c \
@@ -159,12 +161,18 @@ badge_03v2_rigado: CFLAGS += -DBOARD_CUSTOM
 badge_03v2_rigado: CFLAGS += -DBOARD_BADGE_03V2_RIGADO
 badge_03v2_rigado_noDebug: CFLAGS += -DBOARD_CUSTOM
 badge_03v2_rigado_noDebug: CFLAGS += -DBOARD_BADGE_03V2_RIGADO
+badge_03v2_rigado_tester: CFLAGS += -DBOARD_CUSTOM
+badge_03v2_rigado_tester: CFLAGS += -DBOARD_BADGE_03V2_RIGADO
+badge_03v2_rigado_tester: CFLAGS += -DTESTER_ENABLE #enables tester mode 
+
 badge_03v2_dynastream: CFLAGS += -DBOARD_CUSTOM
 badge_03v2_dynastream: CFLAGS += -DBOARD_BADGE_03V2_DYNASTREAM
 
 CFLAGS += -DDEBUG_LOG_ENABLE    #enable UART debug logger
 badge_03_noDebug: CFLAGS += -UDEBUG_LOG_ENABLE    #disable if noDebug target specified
 badge_03v2_rigado_noDebug: CFLAGS += -UDEBUG_LOG_ENABLE    #disable if noDebug target specified
+
+
 
 #======= Other compiler flags
 CFLAGS += -DSOFTDEVICE_PRESENT
@@ -291,6 +299,7 @@ badge_03: clean nrf51422_xxac_s130
 badge_03_noDebug: clean nrf51422_xxac_s130
 badge_03v2_rigado: clean nrf51422_xxac_s130
 badge_03v2_rigado_noDebug: clean nrf51422_xxac_s130
+badge_03v2_rigado_tester: clean nrf51422_xxac_s130
 badge_03v2_dynastream: clean nrf51422_xxac_s130
 NRF51DK: clean nrf51422_xxac_s130
 
