@@ -80,7 +80,7 @@ var app = {
                 //disconnectButton.dataset.deviceId = deviceId;
                 //resultDiv.innerHTML = "";
                 //app.showDetailPage();
-                //app.disconnectFromDevice(deviceID);
+                app.disconnectFromDevice(deviceId);
             };
 
         ble.connect(deviceId, onConnect, app.onConnectError);
@@ -90,9 +90,9 @@ var app = {
         ble.disconnect(deviceId, app.onDisconnect, app.onError);
         app.showStatusText('Disconnect call ended '+ deviceId);
     },
-    onDisconnect: function(o) {
-        console.log('Disconnected '+ o);
-        app.showStatusText('Disconnected '+ o);
+    onDisconnect: function(e) {
+        console.log('Disconnected '+ e);
+        app.showStatusText('Disconnected '+ e);
     },
 
 
