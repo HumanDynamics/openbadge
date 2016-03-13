@@ -14,9 +14,9 @@ The first thing you need is to download and install [BlueZ](http://www.bluez.org
 
     wget http://www.kernel.org/pub/linux/bluetooth/bluez-5.37.tar.xz
     tar xf bluez-5.37.tar.xz
-		cd bluez-5.37
+    cd bluez-5.37
     mkdir release
-    ../configure --disable-systemd
+    ./configure --disable-systemd
     make -j4
     sudo make install
 
