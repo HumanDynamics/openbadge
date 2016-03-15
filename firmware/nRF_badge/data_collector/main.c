@@ -85,6 +85,7 @@ bool storedSample = false;  //whether we've stored the sample from the current s
 //======================================================================================
 volatile bool BLEconnected = false;  //whether we're currently connected
 volatile bool sendStatus = false;  //flag signaling that the server asked for status
+volatile bool sendTime = false;  //flag signaling that the server asked for time
 
 
 //============================ time-related stuff ======================================
@@ -476,6 +477,25 @@ int main(void)
             }
         }
 
+        if (sendTime)  //triggered from onReceive 't'
+        {  
+            unsigned long timestamp = now();
+            char dateAsChars[4];
+            long2Chars(timestamp, dateAsChars);  //get date from flash
+
+            unsigned char dateAsuChars[4];
+            memcpy(dateAsuChars, dateAsChars, 4);
+
+            if (BLEwrite(dateAsuChars, sizeof(dateAsuChars)))
+            {
+                debug_log("Time sent - %lu\r\n",timestamp);  
+                sendTime = false;
+            }
+            else  {
+                sleep = false;  //if not able to send status, don't sleep yet.
+            }
+        }
+
 
         //================= Flash storage/sending handler ================
         
@@ -550,6 +570,11 @@ void BLEonReceive(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)
     {
         debug_log("status request.\r\n");
         sendStatus = true;
+    }
+    else if (p_data[0] == 't')  
+    {
+        debug_log("time request.\r\n");
+        sendTime = true;
     }
     else if (p_data[0] == 'd')  
     {
