@@ -382,9 +382,9 @@ package type OT</description>
 <smd name="P$2" x="1.25" y="0" dx="1.7" dy="1.1" layer="1" rot="R90"/>
 <text x="-1.5" y="1" size="0.8128" layer="25" font="vector" ratio="16">&gt;NAME</text>
 <rectangle x1="-1.6" y1="-0.75" x2="-0.8" y2="0.75" layer="51"/>
-<wire x1="-0.5" y1="0.75" x2="-0.5" y2="-0.75" width="0.254" layer="21"/>
-<wire x1="0.5" y1="-0.75" x2="0.5" y2="0.75" width="0.254" layer="21"/>
-<wire x1="0" y1="0.5" x2="0" y2="-0.5" width="0.4064" layer="21"/>
+<wire x1="-0.425" y1="0.75" x2="-0.425" y2="-0.75" width="0.2032" layer="21"/>
+<wire x1="0.425" y1="-0.75" x2="0.425" y2="0.75" width="0.2032" layer="21"/>
+<wire x1="0" y1="0.5" x2="0" y2="-0.5" width="0.3048" layer="21"/>
 <rectangle x1="0.8" y1="-0.75" x2="1.6" y2="0.75" layer="51"/>
 <rectangle x1="-0.8" y1="0.5" x2="0.8" y2="0.75" layer="51"/>
 <rectangle x1="-0.8" y1="-0.75" x2="0.8" y2="-0.5" layer="51"/>
@@ -7259,13 +7259,13 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <wire x1="8.5" y1="-8.5" x2="8.5" y2="8.5" width="0.127" layer="51"/>
 <wire x1="8.5" y1="8.5" x2="-8.5" y2="8.5" width="0.127" layer="51"/>
 <wire x1="-6.7" y1="8.7" x2="-8.7" y2="8.7" width="0.3" layer="21"/>
-<wire x1="-8.7" y1="8.7" x2="-8.7" y2="8.2" width="0.3" layer="21"/>
+<wire x1="-8.7" y1="8.7" x2="-8.7" y2="8.325" width="0.3" layer="21"/>
 <wire x1="8.7" y1="6.7" x2="8.7" y2="8.7" width="0.3" layer="21"/>
 <wire x1="8.7" y1="8.7" x2="6.7" y2="8.7" width="0.3" layer="21"/>
-<wire x1="6.7" y1="-8.7" x2="8.7" y2="-8.7" width="0.3" layer="21"/>
-<wire x1="8.7" y1="-8.7" x2="8.7" y2="-6.7" width="0.3" layer="21"/>
-<wire x1="-8.7" y1="-6.7" x2="-8.7" y2="-8.7" width="0.3" layer="21"/>
-<wire x1="-8.7" y1="-8.7" x2="-6.7" y2="-8.7" width="0.3" layer="21"/>
+<wire x1="6.825" y1="-8.7" x2="8.7" y2="-8.7" width="0.3" layer="21"/>
+<wire x1="8.7" y1="-8.7" x2="8.7" y2="-6.825" width="0.3" layer="21"/>
+<wire x1="-8.7" y1="-6.825" x2="-8.7" y2="-8.7" width="0.3" layer="21"/>
+<wire x1="-8.7" y1="-8.7" x2="-6.825" y2="-8.7" width="0.3" layer="21"/>
 <wire x1="6.35" y1="7.62" x2="6.35" y2="5.715" width="0.127" layer="21"/>
 <wire x1="6.35" y1="5.715" x2="0" y2="5.715" width="0.127" layer="21"/>
 <wire x1="0" y1="5.715" x2="0" y2="7.62" width="0.127" layer="21"/>
