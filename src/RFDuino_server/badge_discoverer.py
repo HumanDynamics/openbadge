@@ -23,7 +23,7 @@ class BadgeDiscoverer:
 		for device in raw_devices:
 			device_name = None
 			for (sdid, desc, val) in device.getScanData():
-				if sdid  == 9: device_name = val
+				if sdid  == self.DEVICE_NAME_FIELD_ID: device_name = val
 
 			if device_name == self.DEVICE_NAME:
 				rssi = device.rssi
