@@ -8,20 +8,20 @@
 </settings>
 <grid distance="0.1" unitdist="inch" unit="inch" style="lines" multiple="1" display="no" altdistance="0.01" altunitdist="inch" altunit="inch"/>
 <layers>
-<layer number="1" name="Top" color="4" fill="1" visible="yes" active="no"/>
-<layer number="16" name="Bottom" color="1" fill="1" visible="yes" active="no"/>
-<layer number="17" name="Pads" color="2" fill="1" visible="yes" active="no"/>
-<layer number="18" name="Vias" color="2" fill="1" visible="yes" active="no"/>
-<layer number="19" name="Unrouted" color="14" fill="1" visible="yes" active="no"/>
-<layer number="20" name="Dimension" color="15" fill="1" visible="yes" active="no"/>
-<layer number="21" name="tPlace" color="16" fill="1" visible="yes" active="no"/>
-<layer number="22" name="bPlace" color="7" fill="1" visible="yes" active="no"/>
-<layer number="23" name="tOrigins" color="15" fill="1" visible="yes" active="no"/>
-<layer number="24" name="bOrigins" color="15" fill="1" visible="yes" active="no"/>
-<layer number="25" name="tNames" color="7" fill="1" visible="yes" active="no"/>
-<layer number="26" name="bNames" color="7" fill="1" visible="yes" active="no"/>
-<layer number="27" name="tValues" color="7" fill="1" visible="yes" active="no"/>
-<layer number="28" name="bValues" color="7" fill="1" visible="yes" active="no"/>
+<layer number="1" name="Top" color="4" fill="1" visible="no" active="no"/>
+<layer number="16" name="Bottom" color="1" fill="1" visible="no" active="no"/>
+<layer number="17" name="Pads" color="2" fill="1" visible="no" active="no"/>
+<layer number="18" name="Vias" color="2" fill="1" visible="no" active="no"/>
+<layer number="19" name="Unrouted" color="14" fill="1" visible="no" active="no"/>
+<layer number="20" name="Dimension" color="15" fill="1" visible="no" active="no"/>
+<layer number="21" name="tPlace" color="16" fill="1" visible="no" active="no"/>
+<layer number="22" name="bPlace" color="7" fill="1" visible="no" active="no"/>
+<layer number="23" name="tOrigins" color="15" fill="1" visible="no" active="no"/>
+<layer number="24" name="bOrigins" color="15" fill="1" visible="no" active="no"/>
+<layer number="25" name="tNames" color="7" fill="1" visible="no" active="no"/>
+<layer number="26" name="bNames" color="7" fill="1" visible="no" active="no"/>
+<layer number="27" name="tValues" color="7" fill="1" visible="no" active="no"/>
+<layer number="28" name="bValues" color="7" fill="1" visible="no" active="no"/>
 <layer number="29" name="tStop" color="7" fill="3" visible="no" active="no"/>
 <layer number="30" name="bStop" color="7" fill="6" visible="no" active="no"/>
 <layer number="31" name="tCream" color="7" fill="4" visible="no" active="no"/>
@@ -30,8 +30,8 @@
 <layer number="34" name="bFinish" color="6" fill="6" visible="no" active="no"/>
 <layer number="35" name="tGlue" color="7" fill="4" visible="no" active="no"/>
 <layer number="36" name="bGlue" color="7" fill="5" visible="no" active="no"/>
-<layer number="37" name="tTest" color="7" fill="1" visible="yes" active="no"/>
-<layer number="38" name="bTest" color="7" fill="1" visible="yes" active="no"/>
+<layer number="37" name="tTest" color="7" fill="1" visible="no" active="no"/>
+<layer number="38" name="bTest" color="7" fill="1" visible="no" active="no"/>
 <layer number="39" name="tKeepout" color="4" fill="11" visible="no" active="no"/>
 <layer number="40" name="bKeepout" color="1" fill="11" visible="no" active="no"/>
 <layer number="41" name="tRestrict" color="4" fill="10" visible="no" active="no"/>
@@ -39,19 +39,19 @@
 <layer number="43" name="vRestrict" color="2" fill="10" visible="no" active="no"/>
 <layer number="44" name="Drills" color="7" fill="1" visible="no" active="no"/>
 <layer number="45" name="Holes" color="7" fill="1" visible="no" active="no"/>
-<layer number="46" name="Milling" color="3" fill="1" visible="yes" active="no"/>
-<layer number="47" name="Measures" color="7" fill="1" visible="yes" active="no"/>
-<layer number="48" name="Document" color="7" fill="1" visible="yes" active="no"/>
-<layer number="49" name="Reference" color="7" fill="1" visible="yes" active="no"/>
-<layer number="50" name="dxf" color="7" fill="1" visible="yes" active="no"/>
-<layer number="51" name="tDocu" color="6" fill="1" visible="yes" active="no"/>
-<layer number="52" name="bDocu" color="6" fill="1" visible="yes" active="no"/>
-<layer number="53" name="tGND_GNDA" color="7" fill="9" visible="yes" active="no"/>
-<layer number="54" name="bGND_GNDA" color="1" fill="9" visible="yes" active="no"/>
-<layer number="56" name="wert" color="7" fill="1" visible="yes" active="no"/>
-<layer number="57" name="tCAD" color="7" fill="1" visible="yes" active="no"/>
-<layer number="59" name="tCarbon" color="7" fill="1" visible="yes" active="no"/>
-<layer number="60" name="bCarbon" color="7" fill="1" visible="yes" active="no"/>
+<layer number="46" name="Milling" color="3" fill="1" visible="no" active="no"/>
+<layer number="47" name="Measures" color="7" fill="1" visible="no" active="no"/>
+<layer number="48" name="Document" color="7" fill="1" visible="no" active="no"/>
+<layer number="49" name="Reference" color="7" fill="1" visible="no" active="no"/>
+<layer number="50" name="dxf" color="7" fill="1" visible="no" active="no"/>
+<layer number="51" name="tDocu" color="6" fill="1" visible="no" active="no"/>
+<layer number="52" name="bDocu" color="6" fill="1" visible="no" active="no"/>
+<layer number="53" name="tGND_GNDA" color="7" fill="9" visible="no" active="no"/>
+<layer number="54" name="bGND_GNDA" color="1" fill="9" visible="no" active="no"/>
+<layer number="56" name="wert" color="7" fill="1" visible="no" active="no"/>
+<layer number="57" name="tCAD" color="7" fill="1" visible="no" active="no"/>
+<layer number="59" name="tCarbon" color="7" fill="1" visible="no" active="no"/>
+<layer number="60" name="bCarbon" color="7" fill="1" visible="no" active="no"/>
 <layer number="90" name="Modules" color="5" fill="1" visible="yes" active="yes"/>
 <layer number="91" name="Nets" color="2" fill="1" visible="yes" active="yes"/>
 <layer number="92" name="Busses" color="1" fill="1" visible="yes" active="yes"/>
@@ -7386,7 +7386,7 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <part name="SUPPLY7" library="Badge" deviceset="VCC" device=""/>
 <part name="C7" library="rcl" deviceset="C-EU" device="C0603" value="0u1"/>
 <part name="U3" library="Badge" deviceset="MCP6231" device=""/>
-<part name="MK1" library="Badge" deviceset="SPU0414(AMP)" device=""/>
+<part name="MK1" library="Badge" deviceset="SPU0414(AMP)" device="" value="SPU0414"/>
 <part name="GND13" library="Badge" deviceset="GND" device=""/>
 <part name="C9" library="rcl" deviceset="C-EU" device="C0603" value="1u"/>
 <part name="R6" library="rcl" deviceset="R-US_" device="R0603" value="100k"/>
@@ -7401,20 +7401,20 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <part name="SUPPLY17" library="Badge" deviceset="MICVCC" device=""/>
 <part name="BAT2" library="Badge" deviceset="BATTERY" device="20MM_ISO_NOCREAM" value="CR2032"/>
 <part name="SUPPLY4" library="Badge" deviceset="MICVCC" device=""/>
-<part name="J1" library="Badge" deviceset="PROG_CONN_6" device=""/>
+<part name="J1" library="Badge" deviceset="PROG_CONN_6" device="" value=""/>
 <part name="SUPPLY8" library="Badge" deviceset="VCC" device=""/>
 <part name="GND6" library="Badge" deviceset="GND" device=""/>
-<part name="S2" library="Badge" deviceset="TACT" device="6MM4" value="TACT6MM4"/>
+<part name="S2" library="Badge" deviceset="TACT" device="6MM4" value="TACT6mm"/>
 <part name="GND9" library="Badge" deviceset="GND" device=""/>
 <part name="R8" library="rcl" deviceset="R-US_" device="R0603" value="1k"/>
 <part name="GND2" library="Badge" deviceset="GND" device=""/>
-<part name="S1" library="Badge" deviceset="JS202011SCQN" device=""/>
+<part name="S1" library="Badge" deviceset="JS202011SCQN" device="" value="DPDT"/>
 <part name="BAT3" library="Badge" deviceset="BATTERY" device="HOLDER" value="CR2032"/>
-<part name="MIC" library="Badge" deviceset="TESTPOINT" device=""/>
+<part name="M_RAW" library="Badge" deviceset="TESTPOINT" device="" value=""/>
 <part name="C2" library="rcl" deviceset="C-EU" device="C0603" value="0u1"/>
 <part name="BAT4" library="Badge" deviceset="BATTERY" device="HOLDER" value="CR2032"/>
-<part name="MIC_F" library="Badge" deviceset="TESTPOINT" device=""/>
-<part name="MICVCC" library="Badge" deviceset="TESTPOINT" device=""/>
+<part name="MIC_F" library="Badge" deviceset="TESTPOINT" device="" value=""/>
+<part name="M_VCC" library="Badge" deviceset="TESTPOINT" device="" value=""/>
 <part name="GND5" library="Badge" deviceset="GND" device=""/>
 <part name="GND14" library="Badge" deviceset="GND" device=""/>
 <part name="Y2" library="Badge" deviceset="CRYSTAL" device="" value="32768Hz"/>
@@ -7456,7 +7456,7 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <attribute name="VALUE" x="115.57" y="122.682" size="1.778" layer="96" rot="R180"/>
 </instance>
 <instance part="BAT1" gate="G$1" x="35.56" y="17.78" rot="R270"/>
-<instance part="C1" gate="G$1" x="5.08" y="91.44"/>
+<instance part="C1" gate="G$1" x="-5.08" y="91.44"/>
 <instance part="C6" gate="G$1" x="162.56" y="93.98"/>
 <instance part="C8" gate="G$1" x="215.9" y="93.98"/>
 <instance part="R5" gate="G$1" x="279.4" y="86.36" smashed="yes" rot="MR180">
@@ -7475,8 +7475,8 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <instance part="SUPPLY11" gate="G$1" x="142.24" y="86.36" rot="MR0"/>
 <instance part="GND11" gate="1" x="142.24" y="66.04"/>
 <instance part="GND7" gate="1" x="78.74" y="68.58" rot="MR0"/>
-<instance part="SUPPLY1" gate="G$1" x="5.08" y="99.06"/>
-<instance part="GND1" gate="1" x="5.08" y="78.74"/>
+<instance part="SUPPLY1" gate="G$1" x="-5.08" y="99.06"/>
+<instance part="GND1" gate="1" x="-5.08" y="78.74"/>
 <instance part="Y1" gate="G$1" x="78.74" y="86.36" smashed="yes" rot="MR0">
 <attribute name="NAME" x="85.09" y="88.646" size="1.778" layer="95" rot="MR180"/>
 <attribute name="VALUE" x="85.09" y="86.36" size="1.778" layer="96" rot="MR180"/>
@@ -7531,11 +7531,11 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <instance part="GND2" gate="1" x="55.88" y="111.76" rot="R270"/>
 <instance part="S1" gate="G$1" x="35.56" y="33.02" rot="R270"/>
 <instance part="BAT3" gate="G$1" x="66.04" y="17.78" rot="R270"/>
-<instance part="MIC" gate="G$1" x="261.62" y="101.6" rot="R90"/>
-<instance part="C2" gate="G$1" x="-5.08" y="91.44"/>
+<instance part="M_RAW" gate="G$1" x="261.62" y="101.6" rot="R90"/>
+<instance part="C2" gate="G$1" x="5.08" y="91.44"/>
 <instance part="BAT4" gate="G$1" x="81.28" y="17.78" rot="R270"/>
 <instance part="MIC_F" gate="G$1" x="307.34" y="109.22" rot="R90"/>
-<instance part="MICVCC" gate="G$1" x="208.28" y="101.6" rot="R90"/>
+<instance part="M_VCC" gate="G$1" x="208.28" y="101.6" rot="R90"/>
 <instance part="GND5" gate="1" x="182.88" y="17.78"/>
 <instance part="GND14" gate="1" x="205.74" y="17.78" rot="MR0"/>
 <instance part="Y2" gate="G$1" x="200.66" y="33.02" smashed="yes" rot="MR0">
@@ -7613,12 +7613,12 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <segment>
 <pinref part="GND1" gate="1" pin="GND"/>
 <pinref part="C1" gate="G$1" pin="2"/>
-<wire x1="5.08" y1="81.28" x2="5.08" y2="83.82" width="0.1524" layer="91"/>
+<wire x1="-5.08" y1="81.28" x2="-5.08" y2="83.82" width="0.1524" layer="91"/>
 <pinref part="C2" gate="G$1" pin="2"/>
-<wire x1="5.08" y1="83.82" x2="5.08" y2="86.36" width="0.1524" layer="91"/>
-<wire x1="-5.08" y1="86.36" x2="-5.08" y2="83.82" width="0.1524" layer="91"/>
-<wire x1="-5.08" y1="83.82" x2="5.08" y2="83.82" width="0.1524" layer="91"/>
-<junction x="5.08" y="83.82"/>
+<wire x1="-5.08" y1="83.82" x2="-5.08" y2="86.36" width="0.1524" layer="91"/>
+<wire x1="5.08" y1="86.36" x2="5.08" y2="83.82" width="0.1524" layer="91"/>
+<wire x1="5.08" y1="83.82" x2="-5.08" y2="83.82" width="0.1524" layer="91"/>
+<junction x="-5.08" y="83.82"/>
 </segment>
 <segment>
 <wire x1="134.62" y1="111.76" x2="134.62" y2="114.3" width="0.1524" layer="91"/>
@@ -7728,12 +7728,12 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <segment>
 <pinref part="C1" gate="G$1" pin="1"/>
 <pinref part="SUPPLY1" gate="G$1" pin="VCC"/>
-<wire x1="5.08" y1="93.98" x2="5.08" y2="96.52" width="0.1524" layer="91"/>
-<wire x1="5.08" y1="96.52" x2="5.08" y2="99.06" width="0.1524" layer="91"/>
-<wire x1="5.08" y1="96.52" x2="-5.08" y2="96.52" width="0.1524" layer="91"/>
-<junction x="5.08" y="96.52"/>
+<wire x1="-5.08" y1="93.98" x2="-5.08" y2="96.52" width="0.1524" layer="91"/>
+<wire x1="-5.08" y1="96.52" x2="-5.08" y2="99.06" width="0.1524" layer="91"/>
+<wire x1="-5.08" y1="96.52" x2="5.08" y2="96.52" width="0.1524" layer="91"/>
+<junction x="-5.08" y="96.52"/>
 <pinref part="C2" gate="G$1" pin="1"/>
-<wire x1="-5.08" y1="96.52" x2="-5.08" y2="93.98" width="0.1524" layer="91"/>
+<wire x1="5.08" y1="96.52" x2="5.08" y2="93.98" width="0.1524" layer="91"/>
 </segment>
 <segment>
 <wire x1="109.22" y1="71.12" x2="109.22" y2="73.66" width="0.1524" layer="91"/>
@@ -8032,7 +8032,7 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <pinref part="MK1" gate="G$1" pin="OUT"/>
 <pinref part="C10" gate="G$1" pin="1"/>
 <wire x1="259.08" y1="91.44" x2="261.62" y2="91.44" width="0.1524" layer="91"/>
-<pinref part="MIC" gate="G$1" pin="&gt;NAME"/>
+<pinref part="M_RAW" gate="G$1" pin="&gt;NAME"/>
 <wire x1="261.62" y1="91.44" x2="264.16" y2="91.44" width="0.1524" layer="91"/>
 <wire x1="261.62" y1="101.6" x2="261.62" y2="91.44" width="0.1524" layer="91"/>
 <junction x="261.62" y="91.44"/>
@@ -8071,7 +8071,7 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <wire x1="208.28" y1="99.06" x2="203.2" y2="99.06" width="0.1524" layer="91"/>
 <wire x1="215.9" y1="99.06" x2="215.9" y2="104.14" width="0.1524" layer="91"/>
 <junction x="215.9" y="99.06"/>
-<pinref part="MICVCC" gate="G$1" pin="&gt;NAME"/>
+<pinref part="M_VCC" gate="G$1" pin="&gt;NAME"/>
 <wire x1="208.28" y1="101.6" x2="208.28" y2="99.06" width="0.1524" layer="91"/>
 <junction x="208.28" y="99.06"/>
 </segment>

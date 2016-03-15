@@ -1,0 +1,61 @@
+/*
+ *  This EAGLE User Language Program creates a centroid (pick-and-place)
+ *  reference file, containing (X,Y) centroid coordinates, rotation, and 
+ *  board side information for each SMD component.
+ *
+ *  Based on "Centroid_ScreamingCircuits_smd.ulp"
+ *    from www.screamingcircuits.com
+ *
+ */
+ #usage "Create Centroid file for assembly<p>"
+
+string Version = "1.2.0";  // Version 1.2,  March 22, 2012
+string fileMessage;
+
+string rotation(real Angle)
+{
+  string s;
+  sprintf(s, "%.1f", Angle);
+  int pos = strchr(s, '.');
+  if (pos >= 0) if (s[pos + 1] == '0') s[pos] = 0;
+  return s;
+}
+
+string side(int Mirror)
+{
+  string s;
+
+  if (Mirror){
+    s = "Bottom";
+  }
+  else {
+    s = "Top";
+  }
+  return s;
+}
+
+if (!board) {
+   dlgMessageBox("<hr><b>ERROR: This ULP will only operate in the board layout view.</b></hr><p>Switch to the board layout editor and re-run.");
+   exit(1);
+}
+
+if (board) board(B) {
+   output(filesetext(B.name, "_centroid.csv")) {
+     printf("SMD component position file.\n");
+     printf("Centroid Data for pc board: \"%s\" as of: %s\n", filename(B.name), t2string(time()));
+     printf("Measurements are in mm. Comma delimited\n");
+     printf("Only surface mount components included\n\n");
+     printf("%s,%s,%s,%s,%s\n", "RefDes", "LocationX", "LocationY", "Rotation", "Layer");
+     B.elements(E) {
+       int isSmd;
+       isSmd = 0;
+       E.package.contacts(C) { if (C.smd) isSmd = 1; }
+       if (isSmd) printf("%s,%5.3f,%5.3f,%s,%s\n", E.name, u2mm(E.x), u2mm(E.y), rotation(E.angle), side(E.mirror));
+       }
+     }
+
+	fileMessage = "<hr><b>Centroid file for PCB assembly.</b></hr><p><P>" + filesetext(B.name, "_centroid.csv\n");
+
+	dlgMessageBox(fileMessage);
+}
+
