@@ -519,6 +519,9 @@ void BLEonConnect()
     debug_log("Connected\r\n");
     sleep = false;
     disableStorage();  //don't manipulate flash while BLE is busy
+
+    // for app development. disable if forgotten in prod. version
+    nrf_gpio_pin_write(LED_1,LED_ON);
 }
 
 void BLEonDisconnect()
@@ -530,6 +533,9 @@ void BLEonDisconnect()
     if(getScanState() == SCAN_IDLE)  {
         enableStorage();  //continue storage operations now that connection is ended, if scans aren't active
     }
+
+    // for app development. disable if forgotten in prod. version
+    nrf_gpio_pin_write(LED_1,LED_OFF);
 }
 
 /** Function for handling incoming data from the BLE UART service

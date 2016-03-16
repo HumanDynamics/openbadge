@@ -36,21 +36,25 @@ var app = {
         document.addEventListener('deviceready', this.onDeviceReady, false);
         refreshButton.addEventListener('touchstart', this.refreshDeviceList, false);
         sendButton.addEventListener('click', this.sendData, false);
+        connectButton.addEventListener('touchstart', this.connect, false);
+        isConnectedButton.addEventListener('touchstart', this.isConnected, false);
         disconnectButton.addEventListener('touchstart', this.disconnect, false);
         deviceList.addEventListener('touchstart', this.connect, false); // assume not scrolling
     },
     onDeviceReady: function() {
         app.showStatusText("Ready");
-        setInterval(function(){ app.refreshDeviceList();; }, 5500); // keep scanning
+        //setInterval(function(){ app.refreshDeviceList();; }, 5500); // keep scanning
     },
     refreshDeviceList: function() {
         app.showStatusText("Starting scan");
         deviceList.innerHTML = ''; // empties the list
+        /*
         if (cordova.platformId === 'android') { // Android filtering is broken
             ble.scan([], 5, app.onDiscoverDevice, app.onError);
         } else {
             ble.scan([bluefruit.serviceUUID], 5, app.onDiscoverDevice, app.onError);
-        }
+        }*/
+        ble.startScan([], app.onDiscoverDevice, app.onError);
         console.log('Start scan call end');
     },
     onDiscoverDevice: function(device) {
@@ -65,7 +69,7 @@ var app = {
 
         if (device.name == "BADGE") {
             app.showStatusText('Found: '+ device.id);
-            app.connectToDevice(device.id);
+            //app.connectToDevice(device.id);
         }
     },
     connectToDevice: function(deviceId) {
@@ -80,11 +84,11 @@ var app = {
                 //disconnectButton.dataset.deviceId = deviceId;
                 //resultDiv.innerHTML = "";
                 //app.showDetailPage();
-                app.disconnectFromDevice(deviceId);
+                //app.disconnectFromDevice(deviceId);
             },
             onConnectError = function(reason) {
-                app.showStatusText('Error Connecting '+ deviceId);
-                app.disconnectFromDevice(deviceId); // just in case  
+                app.showStatusText('Error Connecting '+ deviceId + " "+reason);
+                //app.disconnectFromDevice(deviceId); // just in case  
             };
 
 
@@ -100,23 +104,6 @@ var app = {
         app.showStatusText('Disconnected '+ e);
     },
 
-
-    connect: function(e) {
-        app.showStatusText('Attemping to connect '+ e.target.dataset.deviceId);
-        var deviceId = e.target.dataset.deviceId,
-            onConnect = function(peripheral) {
-                app.showStatusText('Connected '+ e.target.dataset.deviceId);
-                app.determineWriteType(peripheral);
-
-                // subscribe for incoming data
-                ble.startNotification(deviceId, bluefruit.serviceUUID, bluefruit.rxCharacteristic, app.onData, app.onError);
-                sendButton.dataset.deviceId = deviceId;
-                disconnectButton.dataset.deviceId = deviceId;
-                resultDiv.innerHTML = "";
-                app.showDetailPage();
-            };
-        ble.connect(deviceId, onConnect, app.onConnectError);
-    },
     determineWriteType: function(peripheral) {
         // Adafruit nRF8001 breakout uses WriteWithoutResponse for the TX characteristic
         // Newer Bluefruit devices use Write Request for the TX characteristic
@@ -171,11 +158,45 @@ var app = {
         }
 
     },
+    connect: function(event) {
+        app.showStatusText('Connecting All');
+        //var deviceId = event.target.dataset.deviceId;
+        //ble.disconnect(deviceId, app.showMainPage, app.onError);
+        app.connectToDevice('D1:90:32:2F:F1:4B');
+        app.connectToDevice('E1:C1:21:A2:B2:E0');
+        app.showStatusText('Connect call ended');
+    },
+    isConnected: function(event) {
+        app.showStatusText('isConnected?');
+        //var deviceId = event.target.dataset.deviceId;
+        //ble.disconnect(deviceId, app.showMainPage, app.onError);
+        ble.isConnected(
+            'D1:90:32:2F:F1:4B',
+            function() {
+                console.log("Peripheral D1:90:32:2F:F1:4B is connected");
+            },
+            function() {
+                console.log("Peripheral D1:90:32:2F:F1:4B is *not* connected");
+            }
+        );
+        ble.isConnected(
+            'E1:C1:21:A2:B2:E0',
+            function() {
+                console.log("Peripheral E1:C1:21:A2:B2:E0 is connected");
+            },
+            function() {
+                console.log("Peripheral E1:C1:21:A2:B2:E0 is *not* connected");
+            }
+        );
+        app.showStatusText('isConnected? call ended');
+    },    
     disconnect: function(event) {
-        app.showStatusText('Disconnecting '+ event.target.dataset.deviceId);
-        var deviceId = event.target.dataset.deviceId;
-        ble.disconnect(deviceId, app.showMainPage, app.onError);
-        app.showStatusText('Disconnect call ended '+ event.target.dataset.deviceId);
+        app.showStatusText('Disconnecting All');
+        //var deviceId = event.target.dataset.deviceId;
+        //ble.disconnect(deviceId, app.showMainPage, app.onError);
+        ble.disconnect('D1:90:32:2F:F1:4B', app.showMainPage, app.onError);
+        ble.disconnect('E1:C1:21:A2:B2:E0', app.showMainPage, app.onError);
+        app.showStatusText('Disconnect call ended');
     },
     showMainPage: function() {
         mainPage.hidden = false;
