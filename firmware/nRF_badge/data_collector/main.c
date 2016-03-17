@@ -483,10 +483,7 @@ int main(void)
             char dateAsChars[4];
             long2Chars(timestamp, dateAsChars);  //get date from flash
 
-            unsigned char dateAsuChars[4];
-            memcpy(dateAsuChars, dateAsChars, 4);
-
-            if (BLEwrite(dateAsuChars, sizeof(dateAsuChars)))
+            if (BLEwrite((unsigned char*) dateAsChars, sizeof(dateAsChars)))
             {
                 debug_log("Time sent - %lu\r\n",timestamp);  
                 sendTime = false;
