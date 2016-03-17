@@ -94,31 +94,34 @@ var app = {
 
     connectToDevice: function(deviceId) {
         console.log('Attempingt to connect '+ deviceId);
-        var onConnect = function(peripheral) {
-                console.log('Connected '+ deviceId);
-                badgesConnStat[deviceId] = ConnStateEnum.CONNECTED;
-                //app.determineWriteType(peripheral);
+        var onConnect = function(d) { // creating a closure
+                return function(peripheral) {
+                    console.log('Connected '+ d);
+                    badgesConnStat[d] = ConnStateEnum.CONNECTED;
+                    //app.determineWriteType(peripheral);
 
-                // subscribe for incoming data
-                //ble.startNotification(deviceId, bluefruit.serviceUUID, bluefruit.rxCharacteristic, app.onData, app.onError);
-                //sendButton.dataset.deviceId = deviceId;
-                //disconnectButton.dataset.deviceId = deviceId;
-                //resultDiv.innerHTML = "";
-                //app.showDetailPage();
+                    // subscribe for incoming data
+                    //ble.startNotification(d, bluefruit.serviceUUID, bluefruit.rxCharacteristic, app.onData, app.onError);
+                    //sendButton.dataset.d = d;
+                    //disconnectButton.dataset.d = d;
+                    //resultDiv.innerHTML = "";
+                    //app.showDetailPage();
 
-                //app.disconnectFromDevice(deviceId);
+                    //app.disconnectFromDevice(d);
+                }
+            };
 
-            },
-            onConnectError = function(reason) {
-                console.log('Error Connecting '+ deviceId + " "+reason);
-                badgesConnStat[deviceId] = ConnStateEnum.DISCONNECTED;
-                //app.disconnectFromDevice(deviceId); // just in case  
+        var onConnectError = function(d) { // creating a closure
+                return function(reason) {
+                    console.log('Error Connecting '+ d + " "+reason);
+                    badgesConnStat[d] = ConnStateEnum.DISCONNECTED;
+                }
             };
 
         if (badgesConnStat[deviceId] == ConnStateEnum.DISCONNECTED) {
             console.log('Connecting '+ deviceId);
             badgesConnStat[deviceId] = ConnStateEnum.CONNECTING;
-            ble.connect(deviceId, onConnect, onConnectError);
+            ble.connect(deviceId, onConnect(deviceId), onConnectError(deviceId));
         } else {
             console.log('Will not try to connect. Already existing active connection '+ deviceId + ", Status: "+badgesConnStat[deviceId]);
         }
@@ -126,19 +129,23 @@ var app = {
 
     disconnectFromDevice: function(deviceId) {
         console.log('Attemping to disconnect '+ deviceId);
-        var onDisconnectError = function(reason) {
-                app.showStatusText('Error disconnecting '+ deviceId + " "+reason);
-                //app.disconnectFromDevice(deviceId); // just in case  
-            },
-            onDisconnect = function(e) {
-                console.log('Disconnected from '+ deviceId +' '+ e);
-                badgesConnStat[deviceId] = ConnStateEnum.DISCONNECTED;
-            };
+        var onDisconnect = function(d) {
+            return function(e) {
+                console.log("Disconnected from "+ d +" "+ e);
+                badgesConnStat[d] = ConnStateEnum.DISCONNECTED;
+            }
+        };
+
+        var onDisconnectError = function(d) {
+            return function(reason) {
+                app.showStatusText('Error disconnecting '+ d + " "+reason);
+            }
+        };
 
         if (badgesConnStat[deviceId] == ConnStateEnum.CONNECTED) {
             console.log('Disconnecting '+ deviceId);
             badgesConnStat[deviceId] = ConnStateEnum.DISCONNECTING;
-            ble.disconnect(deviceId, onDisconnect, onDisconnectError);
+            ble.disconnect(deviceId, onDisconnect(deviceId), onDisconnectError(deviceId));
         } else {
             console.log('Will not try to disconnect '+ deviceId + ", Status: "+badgesConnStat[deviceId]);
         }
