@@ -43,10 +43,13 @@ class BadgeDelegate(DefaultDelegate):
     chunks = []
     #to keep track of the dialogue
     gotStatus = False
+    gotDateTime = False
     gotHeader = False
     #badge states, reported from badge
     needDate = False
     dataReady = False
+    badge_sec = None # badge time in seconds
+    badge_ts = None # badge time as timestamp
 
     def __init__(self, params):
         btle.DefaultDelegate.__init__(self)
@@ -74,14 +77,16 @@ class BadgeDelegate(DefaultDelegate):
                 self.dataReady = False #synced but no data ready, no need to do anything
             else:
                 self.gotStatus = False #invalid status.  retry?
- 
+        elif not self.gotDateTime:
+            self.badge_sec = struct.unpack('<L',data)[0]
+            self.badge_ts = self._longToDatetime(self.badge_sec) #fix time
+            self.gotDateTime = True
         elif not self.gotHeader:
             self.tempChunk.reset()
             self.tempChunk.setHeader(struct.unpack('<Lfh',data)) #time, voltage, sample delay
             self.tempChunk.ts = self._longToDatetime(self.tempChunk.ts) #fix time
             #print "{},{},{}".format(self.ts, self.voltage, self.sampleDelay)
             self.gotHeader = True
-
         else: # just data
             sample_arr = struct.unpack('<%dB' % len(data),data) # Nrfuino bytes are unsigned bytes
             self.tempChunk.addData(sample_arr)
@@ -130,13 +135,25 @@ if __name__ == "__main__":
     import sys
     import argparse
 
-    bdg_addr = "D2:A3:CB:9E:AB:1D" #"CC:4A:FD:5C:E3:5B"
+    bdg_addr = "E1:C1:21:A2:B2:E0" #"CC:4A:FD:5C:E3:5B"
     bdg = Badge(bdg_addr)
     time.sleep(1.0)
 
     try:
-      print "Sending date and time"
-      bdg.sendDateTime()
+      while not bdg.dlg.gotStatus:
+            bdg.NrfReadWrite.write("s")  # ask for status
+            bdg.waitForNotifications(1.0)  # waiting for status report
+
+      print "got status"
+
+      while not bdg.dlg.gotDateTime:
+            bdg.NrfReadWrite.write("t")  # ask for time
+            bdg.waitForNotifications(1.0)
+            
+      print("Got datetime: {},{}".format(bdg.dlg.badge_sec,bdg.dlg.badge_ts))
+
+      #print "Sending date and time"
+      #bdg.sendDateTime()
 
       '''
       print "Getting data"
@@ -158,7 +175,7 @@ if __name__ == "__main__":
     except:
       retcode=-1
       e = sys.exc_info()[0]
-      logger.error("unexpected failure, {}".format(e))
+      print("unexpected failure, {}".format(e))
 
     finally:
       bdg.disconnect()

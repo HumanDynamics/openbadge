@@ -99,6 +99,12 @@ def dialogue(addr=""):
 		else:
 			logger.info("Already synced")
 		
+		while not bdg.dlg.gotDateTime:
+			bdg.NrfReadWrite.write("t")  # ask for time
+			bdg.waitForNotifications(1.0)
+
+		logger.info("Badge datetime: {},{}".format(bdg.dlg.badge_sec,bdg.dlg.badge_ts))
+
 		if bdg.dlg.dataReady:
 			logger.info("Requesting data...")
 			bdg.NrfReadWrite.write("d")  # ask for data
