@@ -27,6 +27,17 @@ var bluefruit = {
     rxCharacteristic: '6e400003-b5a3-f393-e0a9-e50e24dcca9e'  // receive is from the phone's perspective
 };
 
+var badges = ['D1:90:32:2F:F1:4B','E1:C1:21:A2:B2:E0'];
+var badgesConnStat = {};
+
+var ConnStateEnum = {
+    DISCONNECTED :1,
+    DISCONNECTING : 2,
+    CONNECTING : 3,
+    CONNECTED : 4,
+};
+
+
 var app = {
     initialize: function() {
         this.bindEvents();
@@ -43,8 +54,15 @@ var app = {
     },
     onDeviceReady: function() {
         app.showStatusText("Ready");
-        //setInterval(function(){ app.refreshDeviceList();; }, 5500); // keep scanning
+
+        for (var i = 0; i < badges.length; ++i) {
+            console.log("Adding: "+badges[i]);
+            badgesConnStat[badges[i]]=ConnStateEnum.DISCONNECTED;
+        }
+
+        console.log(badgesConnStat);
     },
+
     refreshDeviceList: function() {
         app.showStatusText("Starting scan");
         deviceList.innerHTML = ''; // empties the list
@@ -57,6 +75,7 @@ var app = {
         ble.startScan([], app.onDiscoverDevice, app.onError);
         console.log('Start scan call end');
     },
+
     onDiscoverDevice: function(device) {
         var listItem = document.createElement('li'),
             html = '<b>' + device.name + '</b><br/>' +
@@ -72,10 +91,12 @@ var app = {
             deviceList.appendChild(listItem);
         }
     },
+
     connectToDevice: function(deviceId) {
-        app.showStatusText('Attemping to connect '+ deviceId);
+        console.log('Attempingt to connect '+ deviceId);
         var onConnect = function(peripheral) {
-                app.showStatusText('Connected '+ deviceId);
+                console.log('Connected '+ deviceId);
+                badgesConnStat[deviceId] = ConnStateEnum.CONNECTED;
                 //app.determineWriteType(peripheral);
 
                 // subscribe for incoming data
@@ -84,30 +105,43 @@ var app = {
                 //disconnectButton.dataset.deviceId = deviceId;
                 //resultDiv.innerHTML = "";
                 //app.showDetailPage();
-                app.disconnectFromDevice(deviceId);
+
+                //app.disconnectFromDevice(deviceId);
 
             },
             onConnectError = function(reason) {
-                app.showStatusText('Error Connecting '+ deviceId + " "+reason);
+                console.log('Error Connecting '+ deviceId + " "+reason);
+                badgesConnStat[deviceId] = ConnStateEnum.DISCONNECTED;
                 //app.disconnectFromDevice(deviceId); // just in case  
             };
 
-
-        ble.connect(deviceId, onConnect, onConnectError);
+        if (badgesConnStat[deviceId] == ConnStateEnum.DISCONNECTED) {
+            console.log('Connecting '+ deviceId);
+            badgesConnStat[deviceId] = ConnStateEnum.CONNECTING;
+            ble.connect(deviceId, onConnect, onConnectError);
+        } else {
+            console.log('Will not try to connect. Already existing active connection '+ deviceId + ", Status: "+badgesConnStat[deviceId]);
+        }
     },
+
     disconnectFromDevice: function(deviceId) {
+        console.log('Attemping to disconnect '+ deviceId);
         var onDisconnectError = function(reason) {
                 app.showStatusText('Error disconnecting '+ deviceId + " "+reason);
                 //app.disconnectFromDevice(deviceId); // just in case  
             },
             onDisconnect = function(e) {
                 console.log('Disconnected from '+ deviceId +' '+ e);
-                app.showStatusText('Disconnected from '+ deviceId + ' '+ e);
+                badgesConnStat[deviceId] = ConnStateEnum.DISCONNECTED;
             };
 
-        app.showStatusText('Disconnecting '+ deviceId);
-        ble.disconnect(deviceId, onDisconnect, onDisconnectError);
-        app.showStatusText('Disconnect call ended '+ deviceId);
+        if (badgesConnStat[deviceId] == ConnStateEnum.CONNECTED) {
+            console.log('Disconnecting '+ deviceId);
+            badgesConnStat[deviceId] = ConnStateEnum.DISCONNECTING;
+            ble.disconnect(deviceId, onDisconnect, onDisconnectError);
+        } else {
+            console.log('Will not try to disconnect '+ deviceId + ", Status: "+badgesConnStat[deviceId]);
+        }
     },
 
     determineWriteType: function(peripheral) {
@@ -173,35 +207,28 @@ var app = {
         app.showStatusText('Connect call ended');
     },
     isConnected: function(event) {
-        app.showStatusText('isConnected?');
-        //var deviceId = event.target.dataset.deviceId;
-        //ble.disconnect(deviceId, app.showMainPage, app.onError);
-        ble.isConnected(
-            'D1:90:32:2F:F1:4B',
-            function() {
-                console.log("Peripheral D1:90:32:2F:F1:4B is connected");
-            },
-            function() {
-                console.log("Peripheral D1:90:32:2F:F1:4B is *not* connected");
-            }
-        );
-        ble.isConnected(
-            'E1:C1:21:A2:B2:E0',
-            function() {
-                console.log("Peripheral E1:C1:21:A2:B2:E0 is connected");
-            },
-            function() {
-                console.log("Peripheral E1:C1:21:A2:B2:E0 is *not* connected");
-            }
-        );
+        console.log('isConnected?');
+        for (var i = 0; i < badges.length; ++i) {
+            var badge = badges[i];
+            console.log("Status for "+badge+": "+badgesConnStat[badge]);
+            ble.isConnected(
+                badge,
+                function() {
+                    console.log("Peripheral "+badge+" is connected");
+                },
+                function() {
+                    console.log("Peripheral "+badge+" is *not* connected");
+                }
+            );    
+        }
         app.showStatusText('isConnected? call ended');
     },    
     disconnect: function(event) {
         app.showStatusText('Disconnecting All');
         //var deviceId = event.target.dataset.deviceId;
         //ble.disconnect(deviceId, app.showMainPage, app.onError);
-        ble.disconnect('D1:90:32:2F:F1:4B', app.showMainPage, app.onError);
-        ble.disconnect('E1:C1:21:A2:B2:E0', app.showMainPage, app.onError);
+        app.disconnectFromDevice('D1:90:32:2F:F1:4B');
+        app.disconnectFromDevice('E1:C1:21:A2:B2:E0');
         app.showStatusText('Disconnect call ended');
     },
     showMainPage: function() {
