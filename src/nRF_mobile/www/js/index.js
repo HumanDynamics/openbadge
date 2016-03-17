@@ -209,17 +209,22 @@ var app = {
     isConnected: function(event) {
         console.log('isConnected?');
         for (var i = 0; i < badges.length; ++i) {
-            var badge = badges[i];
+            // careful with te 
+            var badge=badges[i];
             console.log("Status for "+badge+": "+badgesConnStat[badge]);
             ble.isConnected(
                 badge,
-                function() {
-                    console.log("Peripheral "+badge+" is connected");
+                function(badge) { // careful - create a closure here
+                    return function() {
+                        console.log("Peripheral "+badge+" is connected");
+                    }
                 },
-                function() {
-                    console.log("Peripheral "+badge+" is *not* connected");
+                function(badge) { // careful - create a closure here
+                    return function() {
+                        console.log("Peripheral "+badge+" is *not* connected");
+                    }
                 }
-            );    
+            );
         }
         app.showStatusText('isConnected? call ended');
     },    
