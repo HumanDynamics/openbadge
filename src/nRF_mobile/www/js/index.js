@@ -63,13 +63,13 @@ var app = {
                 'RSSI: ' + device.rssi + '&nbsp;|&nbsp;' +
                 device.id;
 
-        listItem.dataset.deviceId = device.id;
-        listItem.innerHTML = html;
-        deviceList.appendChild(listItem);
-
         if (device.name == "BADGE") {
             app.showStatusText('Found: '+ device.id);
             //app.connectToDevice(device.id);
+
+            listItem.dataset.deviceId = device.id;
+            listItem.innerHTML = html;
+            deviceList.appendChild(listItem);
         }
     },
     connectToDevice: function(deviceId) {
@@ -84,7 +84,8 @@ var app = {
                 //disconnectButton.dataset.deviceId = deviceId;
                 //resultDiv.innerHTML = "";
                 //app.showDetailPage();
-                //app.disconnectFromDevice(deviceId);
+                app.disconnectFromDevice(deviceId);
+
             },
             onConnectError = function(reason) {
                 app.showStatusText('Error Connecting '+ deviceId + " "+reason);
@@ -95,13 +96,18 @@ var app = {
         ble.connect(deviceId, onConnect, onConnectError);
     },
     disconnectFromDevice: function(deviceId) {
+        var onDisconnectError = function(reason) {
+                app.showStatusText('Error disconnecting '+ deviceId + " "+reason);
+                //app.disconnectFromDevice(deviceId); // just in case  
+            },
+            onDisconnect = function(e) {
+                console.log('Disconnected from '+ deviceId +' '+ e);
+                app.showStatusText('Disconnected from '+ deviceId + ' '+ e);
+            };
+
         app.showStatusText('Disconnecting '+ deviceId);
-        ble.disconnect(deviceId, app.onDisconnect, app.onError);
+        ble.disconnect(deviceId, onDisconnect, onDisconnectError);
         app.showStatusText('Disconnect call ended '+ deviceId);
-    },
-    onDisconnect: function(e) {
-        console.log('Disconnected '+ e);
-        app.showStatusText('Disconnected '+ e);
     },
 
     determineWriteType: function(peripheral) {
