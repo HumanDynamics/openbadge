@@ -27,7 +27,8 @@ var bluefruit = {
     rxCharacteristic: '6e400003-b5a3-f393-e0a9-e50e24dcca9e'  // receive is from the phone's perspective
 };
 
-var badges = ['D1:90:32:2F:F1:4B','E1:C1:21:A2:B2:E0'];
+//var badges = ['D1:90:32:2F:F1:4B','E1:C1:21:A2:B2:E0'];
+var badges = ['E1:C1:21:A2:B2:E0','D1:90:32:2F:F1:4B'];
 var badgesConnStat = {};
 
 var ConnStateEnum = {
@@ -95,9 +96,7 @@ var app = {
         }
     },
 
-    connectToDevice: function(deviceId) {
-        console.log('Attempingt to connect '+ deviceId);
-        var onConnect = function(d) { // creating a closure
+    onConnect : function(d) { // creating a closure
                 return function(peripheral) {
                     console.log('Connected '+ d);
                     badgesConnStat[d] = ConnStateEnum.CONNECTED;
@@ -112,19 +111,22 @@ var app = {
 
                     //app.disconnectFromDevice(d);
                 }
-            };
-
-        var onConnectError = function(d) { // creating a closure
+            },
+    onConnectError: function(d) { // creating a closure
                 return function(reason) {
                     console.log('Error Connecting '+ d + " "+reason);
                     badgesConnStat[d] = ConnStateEnum.DISCONNECTED;
                 }
-            };
+    },
 
+    connectToDevice: function(deviceId) {
+        console.log('Attempting to connect '+ deviceId + " " + badgesConnStat[deviceId]);
         if (badgesConnStat[deviceId] == ConnStateEnum.DISCONNECTED) {
             console.log('Connecting '+ deviceId);
             badgesConnStat[deviceId] = ConnStateEnum.CONNECTING;
-            ble.connect(deviceId, onConnect(deviceId), onConnectError(deviceId));
+            var onConnect = app.onConnect(deviceId);
+            var onConnectError = app.onConnectError(deviceId);
+            ble.connect(deviceId, onConnect, onConnectError);
         } else {
             console.log('Will not try to connect. Already existing active connection '+ deviceId + ", Status: "+badgesConnStat[deviceId]);
         }
