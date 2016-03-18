@@ -51,6 +51,7 @@ var app = {
         isConnectedButton.addEventListener('touchstart', this.isConnected, false);
         disconnectButton.addEventListener('touchstart', this.disconnect, false);
         deviceList.addEventListener('touchstart', this.connect, false); // assume not scrolling
+        autogoButton.addEventListener('touchstart', this.autogo, false); 
     },
     onDeviceReady: function() {
         app.showStatusText("Ready");
@@ -244,6 +245,29 @@ var app = {
             app.disconnectFromDevice(badge);
         }
     },
+    connectToDeviceWrap : function(deviceId){
+        return function() {
+            app.connectToDevice(deviceId);
+        }
+    },
+    disconnectFromDeviceWrap : function(deviceId){
+        return function() {
+            app.disconnectFromDevice(deviceId);
+        }
+    },    
+    autogo: function(event) {
+        app.showStatusText('Starting auto connect and disconnect');
+        for (var i = 0; i < badges.length; ++i) {
+            var badge=badges[i];
+            var f = app.connectToDeviceWrap(badge);
+            console.log("Starting timer for connecting to "+badge);
+            var interval = setInterval(f,1000);
+
+            var f2 = app.disconnectFromDeviceWrap(badge);
+            console.log("Starting timer for disconnecting from "+badge);
+            var interval2 = setInterval(f2,1500);            
+        }
+    },
     showMainPage: function() {
         mainPage.hidden = false;
         detailPage.hidden = true;
@@ -260,4 +284,5 @@ var app = {
         console.log(info);
         document.getElementById("statusText").innerHTML = info;
     }
+    
 };
