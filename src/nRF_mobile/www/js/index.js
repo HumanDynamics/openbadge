@@ -55,6 +55,7 @@ var app = {
     onDeviceReady: function() {
         app.showStatusText("Ready");
 
+        // populate status dict
         for (var i = 0; i < badges.length; ++i) {
             console.log("Adding: "+badges[i]);
             badgesConnStat[badges[i]]=ConnStateEnum.DISCONNECTED;
@@ -82,7 +83,8 @@ var app = {
                 'RSSI: ' + device.rssi + '&nbsp;|&nbsp;' +
                 device.id;
 
-        if (device.name == "BADGE") {
+        //if (device.name == "BADGE") {
+        if (badges.indexOf(device.id) != -1) {
             app.showStatusText('Found: '+ device.id);
             //app.connectToDevice(device.id);
 
@@ -209,14 +211,15 @@ var app = {
         app.showStatusText('Connecting All');
         //var deviceId = event.target.dataset.deviceId;
         //ble.disconnect(deviceId, app.showMainPage, app.onError);
-        app.connectToDevice('D1:90:32:2F:F1:4B');
-        app.connectToDevice('E1:C1:21:A2:B2:E0');
-        app.showStatusText('Connect call ended');
+        for (var i = 0; i < badges.length; ++i) {
+            // careful with te 
+            var badge=badges[i];
+            app.connectToDevice(badge);
+        }
     },
     isConnected: function(event) {
         console.log('isConnected?');
         for (var i = 0; i < badges.length; ++i) {
-            // careful with te 
             var badge=badges[i];
             console.log("Status for "+badge+": "+badgesConnStat[badge]);
             ble.isConnected(
@@ -233,15 +236,13 @@ var app = {
                 }
             );
         }
-        app.showStatusText('isConnected? call ended');
     },    
     disconnect: function(event) {
         app.showStatusText('Disconnecting All');
-        //var deviceId = event.target.dataset.deviceId;
-        //ble.disconnect(deviceId, app.showMainPage, app.onError);
-        app.disconnectFromDevice('D1:90:32:2F:F1:4B');
-        app.disconnectFromDevice('E1:C1:21:A2:B2:E0');
-        app.showStatusText('Disconnect call ended');
+        for (var i = 0; i < badges.length; ++i) {
+            var badge=badges[i];
+            app.disconnectFromDevice(badge);
+        }
     },
     showMainPage: function() {
         mainPage.hidden = false;
@@ -251,18 +252,10 @@ var app = {
         mainPage.hidden = true;
         detailPage.hidden = false;
     },
-    /*
-    onConnectError: function(reason) {
-        console.log('Error connecting'+ reason);
-        app.showStatusText('could not connect because'+ reason);
-        //alert("ERROR Connecting: " + reason); // real apps should use notification.alert
-    },
-    */
     onError: function(reason) {
         console.log('Error '+ reason);
         //alert("ERROR: " + reason); // real apps should use notification.alert
     },
-
     showStatusText: function(info) {
         console.log(info);
         document.getElementById("statusText").innerHTML = info;
