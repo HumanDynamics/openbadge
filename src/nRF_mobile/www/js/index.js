@@ -225,16 +225,16 @@ var app = {
             console.log("Status for "+badge+": "+badgesConnStat[badge]);
             ble.isConnected(
                 badge,
-                function(badge) { // careful - create a closure here
+                (function(badge) { // careful - create a closure here
                     return function() {
                         console.log("Peripheral "+badge+" is connected");
                     }
-                },
-                function(badge) { // careful - create a closure here
+                })(badge),
+                (function(badge) { // careful - create a closure here
                     return function() {
                         console.log("Peripheral "+badge+" is *not* connected");
                     }
-                }
+                })(badge)
             );
         }
     },    
