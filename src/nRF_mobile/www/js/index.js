@@ -98,7 +98,7 @@ var app = {
 
     onConnect : function(d) { // creating a closure
                 return function(peripheral) {
-                    console.log('Connected '+ d);
+                    console.log('Connected '+ d + "status is still " + badgesConnStat[d]+" also - "+peripheral.id);
                     badgesConnStat[d] = ConnStateEnum.CONNECTED;
                     //app.determineWriteType(peripheral);
 
