@@ -27,11 +27,33 @@
 #include "nrf_drv_config.h"
 #include "boards.h"
 
-#define EXT_FLASH_SREG_BUSY 0x1         //bit in flash status register indicating an in-progress write or erase
-#define EXT_FLASH_SREG_WEL 0x2          //write enable bit
-#define EXT_FLASH_SREG_WPP 0x10         //state of write protect pin (active low)
-#define EXT_FLASH_SREG_EPE 0x20         //erase/program error
-#define EXT_FLASH_SREG_SPRL 0x80        //sector protect register lock
+
+// The following opcodes are common to both the ATXE flash and M95 EEPROM
+#define WEL_OPCODE        0x06          // enable write
+#define WRITESREG_OPCODE  0x01          // write to status register
+#define READSREG_OPCODE   0x05          // read status register
+#define WRITE_OPCODE      0x02          // write to main memory
+#define READ_OPCODE       0x03          // read from main memory
+
+// The following opcodes are exclusive to the ATXE flash - the M95 EEPROM will ignore them
+#define BLOCKERASE_OPCODE 0x20          // erase 4kByte block of memory
+#define READMFID_OPCODE   0x9f          // read manufacturer ID
+#define READOTP_OPCODE    0x77          // read one-time-programmable memory (includes some ID data)
+
+
+
+// The following status register flags are common to both the ATXE flash and M95 EEPROM
+#define EXT_FLASH_SREG_BUSY 0x1         // bit in flash status register indicating an in-progress write or erase
+#define EXT_FLASH_SREG_WEL  0x2         // write enable bit
+#define EXT_FLASH_SREG_PR0  0x04        // block/sector protect bit 0
+#define EXT_FLASH_SREG_PR1  0x08        // block/sector protect bit 1
+#define EXT_FLASH_SREG_SPRL 0x80        // sector protect register lock / status register lock
+
+// The following status register flags are exclusive to the ATXE flash - always 0 on M95 EEPROM
+#define EXT_FLASH_SREG_WPP  0x10        // state of write protect pin (active low)
+#define EXT_FLASH_SREG_EPE  0x20        // erase/program error
+#define EXT_FLASH_SREG_SPRG 0x40        // sequential program mode - unused here
+
 
 typedef enum
 {
