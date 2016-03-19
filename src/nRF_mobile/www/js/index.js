@@ -30,13 +30,15 @@ var app = {
     bindEvents: function() {
         document.addEventListener('deviceready', this.onDeviceReady, false);
         refreshButton.addEventListener('touchstart', this.refreshDeviceList, false);
+        connectButton.addEventListener('touchstart', this.connect, false);
+        disconnectButton.addEventListener('touchstart', this.disconnect, false);
+        autogoButton.addEventListener('touchstart', this.autogo, false); 
         /*
         sendButton.addEventListener('click', this.sendData, false);
-        connectButton.addEventListener('touchstart', this.connect, false);
         isConnectedButton.addEventListener('touchstart', this.isConnected, false);
         disconnectButton.addEventListener('touchstart', this.disconnect, false);
         deviceList.addEventListener('touchstart', this.connect, false); // assume not scrolling
-        autogoButton.addEventListener('touchstart', this.autogo, false); 
+        
         */
     },
     // deviceready Event Handler
@@ -80,6 +82,7 @@ var app = {
         {
             console.log("Found - "+obj.address);
             console.log("Found - "+Object.keys(obj));
+
             //console.log("Stopping scan..");
             //bluetoothle.stopScan(stopScanSuccess, stopScanError);
             //clearScanTimeout();
@@ -102,15 +105,15 @@ var app = {
                 deviceList.appendChild(listItem);
             }
         }
-      else if (obj.status == "scanStarted")
-      {
-        console.log("Scan was started successfully, stopping in 10");
-        scanTimer = setTimeout(app.scanTimeout, 10000);
-      }
-      else
-      {
-        console.log("Unexpected start scan status: " + obj.status);
-      }
+        else if (obj.status == "scanStarted")
+        {
+            console.log("Scan was started successfully, stopping in 10");
+            scanTimer = setTimeout(app.scanTimeout, 10000);
+        }
+        else
+        {
+            console.log("Unexpected start scan status: " + obj.status);
+        }
     },
     startScanError: function(obj) {
       console.log("Start scan error: " + obj.error + " - " + obj.message);
@@ -133,24 +136,73 @@ var app = {
         console.log("Scanning time out, stopping");
         bluetoothle.stopScan(stopScanSuccess, stopScanError);
     },
+    connect: function() {
+        app.connectDevice(badges[0]);
+    },
     /*
-    onDiscoverDevice: function(device) {
-        var listItem = document.createElement('li'),
-            html = '<b>' + device.name + '</b><br/>' +
-                'RSSI: ' + device.rssi + '&nbsp;|&nbsp;' +
-                device.id;
+    Connect to a Bluetooth LE device. The app should use a timer to limit the connecting time in case connecting 
+    is never successful. Once a device is connected, it may disconnect without user intervention. The original 
+    connection callback will be called again and receive an object with status => disconnected. To reconnect to 
+    the device, use the reconnect method. If a timeout occurs, the connection attempt should be canceled using
+    disconnect(). For simplicity, I recommend just using connect() and close(), don't use reconnect() or disconnect().
+    */
+    connectDevice: function(address)
+    {
+        var connectError = function(obj){
+            console.log("Connect error: " + obj.error + " - " + obj.message + " Keys: "+Object.keys(obj));
+            //todo: add close()
+        };
 
-        //if (device.name == "BADGE") {
-        if (badges.indexOf(device.id) != -1) {
-            app.showStatusText('Found: '+ device.id);
-            //app.connectToDevice(device.id);
+        var connectSuccess = function(obj){
+            console.log("Connected: " + obj.status + " - " + obj.address + " Keys: "+Object.keys(obj));
 
-            listItem.dataset.deviceId = device.id;
-            listItem.innerHTML = html;
-            deviceList.appendChild(listItem);
+            //todo: check status. If it's disconnceted, need to close()
+        };
+        console.log("Begining connection to: " + address + " with 5 second timeout");
+        var paramsObj = {"address":address, timeout: 5000};
+        bluetoothle.connect(connectSuccess, connectError, paramsObj);
+    },
+    disconnect: function() {
+        app.closeDevice(badges[0]);
+    },
+    closeDevice: function(address)
+    {
+        var closeError = function(obj){
+            console.log("Close error: " + obj.error + " - " + obj.message + " Keys: "+Object.keys(obj));
+            //todo: add close()
+        };
+
+        var closeSuccess = function(obj){
+            console.log("Close: " + obj.status + " - " + obj.address + " Keys: "+Object.keys(obj));
+
+            //todo: check status. If it's disconnceted, need to close()
+        };
+        console.log("Begining close from: " + address);
+        var paramsObj = {"address":address};
+        bluetoothle.close(closeSuccess, closeError, paramsObj);
+    },
+    connectToDeviceWrap : function(deviceId){
+        return function() {
+            app.connectDevice(deviceId);
+        }
+    },
+    disconnectFromDeviceWrap : function(deviceId){
+        return function() {
+            app.closeDevice(deviceId);
+        }
+    },    
+    autogo: function() {
+        for (var i = 0; i < badges.length; ++i) {
+            var badge=badges[i];
+            var f = app.connectToDeviceWrap(badge);
+            console.log("Starting timer for connecting to "+badge);
+            var interval = setInterval(f,1000);
+
+            var f2 = app.disconnectFromDeviceWrap(badge);
+            console.log("Starting timer for disconnecting from "+badge);
+            var interval2 = setInterval(f2,1500);            
         }
     }
-    */
 };
 
 app.initialize();
