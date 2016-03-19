@@ -16,7 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-var badges = ['E1:C1:21:A2:B2:E0','D1:90:32:2F:F1:4B'];
+//var badges = ['E1:C1:21:A2:B2:E0','D1:90:32:2F:F1:4B'];
+var badges = ['E1:C1:21:A2:B2:E0'];
+var badgesIntervals = {};
 var app = {
     // Application Constructor
     initialize: function() {
@@ -47,6 +49,12 @@ var app = {
     // function, we must explicitly call 'app.receivedEvent(...);'
     onDeviceReady: function() {
         console.log("HERE!");
+
+        // populate intervals dict
+        for (var i = 0; i < badges.length; ++i) {
+            console.log("Adding: "+badges[i]);
+            badgesIntervals[badges[i]]=null;
+        }
 
         bluetoothle.initialize(
             app.initializeSuccess, 
@@ -150,16 +158,20 @@ var app = {
     {
         var connectError = function(obj){
             console.log("Connect error: " + obj.error + " - " + obj.message + " Keys: "+Object.keys(obj));
-            //todo: add close()
+            app.closeDevice(obj.address); // closing the device, just in case
         };
 
         var connectSuccess = function(obj){
             console.log("Connected: " + obj.status + " - " + obj.address + " Keys: "+Object.keys(obj));
 
-            //todo: check status. If it's disconnceted, need to close()
+            //todo: check status. If status is disconnceted it means that the device disconnected
+            // for some reason so we need to close()
+
+            // Closes the device after we are done
+            app.closeDevice(obj.address);
         };
         console.log("Begining connection to: " + address + " with 5 second timeout");
-        var paramsObj = {"address":address, timeout: 5000};
+        var paramsObj = {"address":address};
         bluetoothle.connect(connectSuccess, connectError, paramsObj);
     },
     disconnect: function() {
@@ -169,13 +181,15 @@ var app = {
     {
         var closeError = function(obj){
             console.log("Close error: " + obj.error + " - " + obj.message + " Keys: "+Object.keys(obj));
-            //todo: add close()
+            // setting a timeout with several seconds before reconecting
+            setTimeout(app.connectToDeviceWrap(obj.address),2000);
         };
 
         var closeSuccess = function(obj){
             console.log("Close: " + obj.status + " - " + obj.address + " Keys: "+Object.keys(obj));
 
-            //todo: check status. If it's disconnceted, need to close()
+            // setting a timeout with several seconds before reconecting
+            setTimeout(app.connectToDeviceWrap(obj.address),2000);
         };
         console.log("Begining close from: " + address);
         var paramsObj = {"address":address};
@@ -196,11 +210,12 @@ var app = {
             var badge=badges[i];
             var f = app.connectToDeviceWrap(badge);
             console.log("Starting timer for connecting to "+badge);
-            var interval = setInterval(f,1000);
+            //var interval = setInterval(f,1000);
+            f();
 
-            var f2 = app.disconnectFromDeviceWrap(badge);
-            console.log("Starting timer for disconnecting from "+badge);
-            var interval2 = setInterval(f2,1500);            
+            //var f2 = app.disconnectFromDeviceWrap(badge);
+            //console.log("Starting timer for disconnecting from "+badge);
+            //var interval2 = setInterval(f2,1500);            
         }
     }
 };
