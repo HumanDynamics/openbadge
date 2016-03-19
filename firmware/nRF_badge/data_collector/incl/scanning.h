@@ -269,7 +269,7 @@ typedef union
  
 
 
-
+volatile bool scan_enable;
 
 // For keeping track of current state of scanning
 typedef enum scan_state_t
