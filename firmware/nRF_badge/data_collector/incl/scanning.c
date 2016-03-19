@@ -202,6 +202,10 @@ void scans_init()
     scanTiming.window = SCAN_WINDOW;
     scanTiming.timeout = SCAN_TIMEOUT;
     scanTiming.period = SCAN_PERIOD;
+    
+    scan_enable = false;  //default to no scanning
+    scan_state = SCAN_IDLE;
+    
 }
 
 
@@ -247,7 +251,6 @@ void startScan(int interval_ms, int window_ms, int timeout_s)
     sd_ble_gap_scan_start(&scan_params);
     
     scan_state = SCAN_SCANNING;
-    
     //debug_log("Scan started\r\n");
 }
     
@@ -303,9 +306,12 @@ void updateScanning()
     {
         case SCAN_IDLE:   // nothing to do, but check whether it's time to scan again.
             //debug_log("scan idle\r\n");
-            if(millis() - lastScanTime >= scanTiming.period)  // start scanning if it's time to scan
+            if(scan_enable)  // don't re-start scans if scanning is disabled
             {
-                startScan(scanTiming.interval,scanTiming.window,scanTiming.timeout);
+                if(millis() - lastScanTime >= scanTiming.period)  // start scanning if it's time to scan
+                {
+                    startScan(scanTiming.interval,scanTiming.window,scanTiming.timeout);
+                }
             }
             break;
         case SCAN_SCANNING:    // nothing to do, timeout callback will stop scans when it's time

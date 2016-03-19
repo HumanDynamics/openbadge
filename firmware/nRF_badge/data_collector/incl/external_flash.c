@@ -102,7 +102,7 @@ unsigned char dummyRxBuf[1];
 //enable writes to flash chip, needed before any writing command (status reg write, page erase, array write, etc)
 static void ext_flash_WEL()
 {
-    uint8_t txBuf[1] = {0x06};      //enable flash write
+    uint8_t txBuf[1] = {WEL_OPCODE};      //enable flash write
     spi_master_send_recv(SPI_MASTER_0,txBuf,sizeof(txBuf),dummyRxBuf,0);
     while(spi_busy());
 }
@@ -113,8 +113,8 @@ uint32_t ext_flash_global_unprotect()
         return EXT_FLASH_ERR_BUSY;
     }
     ext_flash_WEL();
-                    //  opcode  global unprotect
-    uint8_t txBuf[2] = {0x01,   0x00};          //Write to status register
+                    //  opcode              global unprotect
+    uint8_t txBuf[2] = {WRITESREG_OPCODE,   0x00};          //Write to status register
     extFlashState = EXT_FLASH_COMMAND;
     spi_master_send_recv(SPI_MASTER_0,txBuf,sizeof(txBuf),dummyRxBuf,0);
     return EXT_FLASH_SUCCESS;
@@ -126,7 +126,7 @@ uint8_t ext_flash_read_status()
         return EXT_FLASH_ERR_BUSY;
     }
                     //  opcode
-    uint8_t txBuf[1] = {0x05};
+    uint8_t txBuf[1] = {READSREG_OPCODE};
     uint8_t rxBuf[2] = {0,0};
     spi_master_send_recv(SPI_MASTER_0,txBuf,sizeof(txBuf),rxBuf,2);
     while(spi_busy());
@@ -139,7 +139,7 @@ uint32_t ext_flash_read_MFID()
         return EXT_FLASH_ERR_BUSY;
     }
                     //  opcode
-    uint8_t txBuf[1] = {0x9f};
+    uint8_t txBuf[1] = {READMFID_OPCODE};
     uint8_t rxBuf[5] = {0,0,0,0,0};
     spi_master_send_recv(SPI_MASTER_0,txBuf,sizeof(txBuf),rxBuf,5);
     while(spi_busy());
@@ -152,8 +152,8 @@ uint32_t ext_flash_read_OTP(unsigned int address, uint8_t* rx, unsigned int numB
     if(extFlashState != EXT_FLASH_SPI_IDLE)  {
         return EXT_FLASH_ERR_BUSY;
     }
-                    //  opcode  address                                             dummy
-    uint8_t txBuf[6] = {0x77,   (address>>16)&0xff,(address>>8)&0xff,address&0xff,  0x00,0x00};
+                    //  opcode           address                                             dummy
+    uint8_t txBuf[6] = {READOTP_OPCODE,  (address>>16)&0xff,(address>>8)&0xff,address&0xff,  0x00,0x00};
     extFlashState = EXT_FLASH_READ;
     spi_master_send_recv(SPI_MASTER_0,txBuf,sizeof(txBuf),rx,numBytes);
     return EXT_FLASH_SUCCESS;
@@ -165,8 +165,8 @@ uint32_t ext_flash_read(unsigned int address, uint8_t* rx, unsigned int numBytes
     if(extFlashState != EXT_FLASH_SPI_IDLE)  {
         return EXT_FLASH_ERR_BUSY;
     }
-                    //  opcode  address
-    uint8_t txBuf[4] = {0x03,   (address>>16)&0xff,(address>>8)&0xff,address&0xff};
+                    //  opcode        address
+    uint8_t txBuf[4] = {READ_OPCODE,  (address>>16)&0xff,(address>>8)&0xff,address&0xff};
     extFlashState = EXT_FLASH_READ;
     spi_master_send_recv(SPI_MASTER_0,txBuf,sizeof(txBuf),rx,numBytes);
     return EXT_FLASH_SUCCESS;
@@ -207,7 +207,7 @@ uint32_t ext_flash_write(unsigned int address, uint8_t* txRaw, unsigned int numB
         return EXT_FLASH_ERR_BUSY;
     }
     ext_flash_WEL();  //enable writes
-    txRaw[0] = 0x02;  //opcode
+    txRaw[0] = WRITE_OPCODE;  //opcode
     //address bytes
     txRaw[1] = (address>>16)&0xff;
     txRaw[2] = (address>>8)&0xff;
@@ -226,8 +226,8 @@ uint32_t ext_flash_block_erase(uint32_t address)
     }
     ext_flash_WEL();  //enable writes
     
-                    //  opcode  address bytes
-    uint8_t txBuf[4] = {0x20,   (address>>16)&0xff,(address>>8)&0xff,address&0xff};
+                    //  opcode              address bytes
+    uint8_t txBuf[4] = {BLOCKERASE_OPCODE,  (address>>16)&0xff,(address>>8)&0xff,address&0xff};
     extFlashState = EXT_FLASH_COMMAND;
     spi_master_send_recv(SPI_MASTER_0,txBuf,sizeof(txBuf),dummyRxBuf,0);
     return EXT_FLASH_SUCCESS;
