@@ -18,7 +18,7 @@
  */
 //var badges = ['E1:C1:21:A2:B2:E0','D1:90:32:2F:F1:4B'];
 var badges = ['E1:C1:21:A2:B2:E0'];
-var badgesIntervals = {};
+var badgesTimeouts = {};
 var app = {
     // Application Constructor
     initialize: function() {
@@ -53,7 +53,7 @@ var app = {
         // populate intervals dict
         for (var i = 0; i < badges.length; ++i) {
             console.log("Adding: "+badges[i]);
-            badgesIntervals[badges[i]]=null;
+            badgesTimeouts[badges[i]]=null;
         }
 
         bluetoothle.initialize(
@@ -158,19 +158,25 @@ var app = {
     {
         var connectError = function(obj){
             console.log("Connect error: " + obj.error + " - " + obj.message + " Keys: "+Object.keys(obj));
-            app.closeDevice(obj.address); // closing the device, just in case
+            //app.closeDevice(obj.address); //Best practice is to close on connection error
         };
 
         var connectSuccess = function(obj){
             console.log("Connected: " + obj.status + " - " + obj.address + " Keys: "+Object.keys(obj));
 
             //todo: check status. If status is disconnceted it means that the device disconnected
-            // for some reason so we need to close()
+            // for some reason so we need to close()... or do we?
 
             // Closes the device after we are done
-            app.closeDevice(obj.address);
+            if (obj.status == "connected") {
+                console.log("Done. Call disconnect")
+                app.closeDevice(obj.address);
+            } else {
+                console.log("Disconnect for some reason. Do nothing")
+            }
         };
-        console.log("Begining connection to: " + address + " with 5 second timeout");
+
+        console.log("Begining connection to: " + address);
         var paramsObj = {"address":address};
         bluetoothle.connect(connectSuccess, connectError, paramsObj);
     },
