@@ -165,7 +165,7 @@ var app = {
     {
         var connectError = function(obj){
             console.log("Connect error: " + obj.error + " - " + obj.message + " Keys: "+Object.keys(obj));
-            app.clearConnectTimeout();
+            //app.clearConnectTimeout();
 
             app.closeDevice(obj.address,true); //Best practice is to close on connection error. In our cae
                                                //we also want to reconnect afterwards
@@ -173,7 +173,7 @@ var app = {
 
         var connectSuccess = function(obj){
             console.log("Connected: " + obj.status + " - " + obj.address + " Keys: "+Object.keys(obj));
-            app.clearConnectTimeout();
+            //app.clearConnectTimeout();
             
             // Closes the device after we are done
             if (obj.status == "connected") {
@@ -190,29 +190,7 @@ var app = {
         console.log("Beginning connection to: " + address);
         var paramsObj = {"address":address};
         bluetoothle.connect(connectSuccess, connectError, paramsObj);
-
-        // timer for killing connections that take too long
-        console.log("Setting timeout (timer was: "+connectTimer+")");
-        var tf = app.connectTimeout(address);
-        connectTimer = setTimeout(tf, 5000);
     },
-    connectTimeout: function(address)
-    {
-        return function() {
-            console.log("Connection timed out for "+address);
-            app.closeDevice(address,true); // with reconnect
-        }
-    },
-    clearConnectTimeout: function()
-    { 
-        console.log("Clearing connect timeout");
-        if (connectTimer != null)
-        {
-            clearTimeout(connectTimer);
-        }
-    },
-
-
 
     disconnect: function() {
         app.closeDevice(badges[0],false);
