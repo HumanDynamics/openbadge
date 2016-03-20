@@ -190,6 +190,26 @@ var app = {
         console.log("Beginning connection to: " + address);
         var paramsObj = {"address":address};
         bluetoothle.connect(connectSuccess, connectError, paramsObj);
+
+        // timer for killing connections that take too long
+        //console.log("Setting timeout (timer was: "+connectTimer+")");
+        //var tf = app.connectTimeout(address);
+        //connectTimer = setTimeout(tf, 5000);
+    },
+    connectTimeout: function(address)
+    {
+        return function() {
+            console.log("Connection timed out for "+address);
+            app.closeDevice(address,true); // with reconnect
+        }
+    },
+    clearConnectTimeout: function()
+    { 
+        console.log("Clearing connect timeout");
+        if (connectTimer != null)
+        {
+            clearTimeout(connectTimer);
+        }
     },
 
     disconnect: function() {
