@@ -155,6 +155,11 @@ var app = {
     connection callback will be called again and receive an object with status => disconnected. To reconnect to 
     the device, use the reconnect method. If a timeout occurs, the connection attempt should be canceled using
     disconnect(). For simplicity, I recommend just using connect() and close(), don't use reconnect() or disconnect().
+
+    What do we have here?
+    * When we call disconnect, we want the app to reconnect to the badge again later
+    * Connection timeout is there to protect from cases in which the app gets stuck connecting
+
     */
     connectDevice: function(address)
     {
@@ -188,13 +193,15 @@ var app = {
 
         // timer for killing connections that take too long
         console.log("Setting timeout (timer was: "+connectTimer+")");
-        //console.log("Setting timeout");
-        connectTimer = setTimeout(app.connectTimeout, 5000);
+        var tf = app.connectTimeout(address);
+        connectTimer = setTimeout(tf, 5000);
     },
-    connectTimeout: function()
+    connectTimeout: function(address)
     {
-      console.log("Connection timed out");
-      app.closeDevice(badges[0],true); //TODO - change to a parameter!
+        return function() {
+            console.log("Connection timed out for "+address);
+            app.closeDevice(address,true); // with reconnect
+        }
     },
     clearConnectTimeout: function()
     { 
@@ -215,7 +222,8 @@ var app = {
         var onCloseReconnectError = function(obj){
             console.log("Close with reconnect error: " + obj.error + " - " + obj.message + " Keys: "+Object.keys(obj));
             // setting a timeout with several seconds before reconecting
-            setTimeout(app.connectToDeviceWrap(obj.address),2000);
+            var ct = app.connectToDeviceWrap(obj.address);
+            setTimeout(ct,2000);
         };
 
         var onCloseNoReconnectError = function(obj){
@@ -225,7 +233,8 @@ var app = {
         var onCloseReconnect = function(obj){
             console.log("Close with reconnect: " + obj.status + " - " + obj.address + " Keys: "+Object.keys(obj));
             // setting a timeout with several seconds before reconecting
-            setTimeout(app.connectToDeviceWrap(obj.address),2000);
+            var ct = app.connectToDeviceWrap(obj.address);
+            setTimeout(ct,2000);
         };
 
         var onCloseNoReconnect = function(obj){
