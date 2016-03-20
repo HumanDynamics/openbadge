@@ -162,24 +162,18 @@ var app = {
     * Connection timeout is there to protect from cases in which the app gets stuck connecting
 
     */
-    connectError: function(address) {
-        return function(obj){
-            console.log("Connect error: |"+address+"|"+ obj.address + "|" + obj.error + " - " + obj.message + " Keys: "+Object.keys(obj));
-            if (address != obj.address) {
-                alert(address +"!="+ obj.address)
-            };
+    connectDevice: function(address)
+    {
+        var connectError = function(obj){
+            console.log("Connect error: " + obj.address + " " + obj.error + " - " + obj.message + " Keys: "+Object.keys(obj));
             //app.clearConnectTimeout();
 
             app.closeDevice(obj.address,true); //Best practice is to close on connection error. In our cae
-        }
                                                //we also want to reconnect afterwards
-    },
-    connectSuccess: function(address) {
-        return function(obj){
-            console.log("Connected: |"+address+"|"+ obj.address + "|" + obj.status + " Keys: "+Object.keys(obj));
-            if (address != obj.address) {
-                alert(address +"!="+ obj.address)
-            };
+        };
+
+        var connectSuccess = function(obj){
+            console.log("Connected: " + obj.address + " - " + obj.status + " Keys: "+Object.keys(obj));
             //app.clearConnectTimeout();
             
             // Closes the device after we are done
@@ -192,17 +186,11 @@ var app = {
                 app.closeDevice(obj.address,false); //Best practice is to close on connection error. No need to
                                                     //reconnect here, it seems.
             }
-        }
-    },
-    connectDevice: function(address)
-    {
-        
-        var ce = app.connectError(address);
-        var cs = app.connectSuccess(address);
+        };
 
         console.log("Beginning connection to: " + address);
         var paramsObj = {"address":address};
-        bluetoothle.connect(cs, ce, paramsObj);
+        bluetoothle.connect(connectSuccess, connectError, paramsObj);
 
         // timer for killing connections that take too long
         //console.log("Setting timeout (timer was: "+connectTimer+")");
@@ -232,62 +220,36 @@ var app = {
     disconnect2: function() {
         app.closeDevice(badges[1],false);
     },
-    onCloseReconnectError: function(address) {
-        return function(obj){
-            console.log("Close with reconnect error: |"+address+"|"+ obj.address + "|" + obj.error + " - " + obj.message + " Keys: "+Object.keys(obj));
-            if (address != obj.address) {
-                alert(address +"!="+ obj.address)
-            };
-            // setting a timeout with several seconds before reconecting
-            var ct = app.connectToDeviceWrap(obj.address);
-            var r = Math.floor((Math.random() * 5) + 1) * 100 + 1000;
-            setTimeout(ct,r);
-        }
-    },
-    onCloseNoReconnectError: function(address) {
-        return function(obj){
-            console.log("Close without reconnect error: |"+address+"|"+ obj.address + "|" + obj.error + " - " + obj.message + " Keys: "+Object.keys(obj));
-            if (address != obj.address) {
-                alert(address +"!="+ obj.address)
-            };
-        }
-    },
-    onCloseReconnect: function(address) {
-        return function(obj){
-            console.log("Close with reconnect: |"+address+"|"+ obj.address + "|" + obj.status + " Keys: "+Object.keys(obj));
-            if (address != obj.address) {
-                alert(address +"!="+ obj.address)
-            };
-            // setting a timeout with several seconds before reconecting
-            var ct = app.connectToDeviceWrap(obj.address);
-            var r = Math.floor((Math.random() * 5) + 1) * 100 + 1000;
-            setTimeout(ct,r);
-        }
-    },
-    onCloseNoReconnect: function(address) {
-        return function(obj){
-            console.log("Close without reconnect: |"+address+"|"+ obj.address + "|" + obj.status + " Keys: "+Object.keys(obj));
-            if (address != obj.address) {
-                alert(address +"!="+ obj.address)
-            };
-        }
-    },
     closeDevice: function(address,reconnect)
     {
-        var cre = app.onCloseReconnectError(address);
+        var onCloseReconnectError = function(obj){
+            console.log("Close with reconnect error: " + obj.address + " " + obj.error + " - " + obj.message + " Keys: "+Object.keys(obj));
+            // setting a timeout with several seconds before reconecting
+            var ct = app.connectToDeviceWrap(obj.address);
+            setTimeout(ct,2000);
+        };
 
-        var cnre = app.onCloseNoReconnectError(address);
+        var onCloseNoReconnectError = function(obj){
+            console.log("Close without reconnect error: " + obj.address + " " + obj.error + " - " + obj.message + " Keys: "+Object.keys(obj));
+        };
 
-        var cr = app.onCloseReconnect(address);
+        var onCloseReconnect = function(obj){
+            console.log("Close with reconnect: " + obj.address + " - " + obj.status + " Keys: "+Object.keys(obj));
+            // setting a timeout with several seconds before reconecting
+            var ct = app.connectToDeviceWrap(obj.address);
+            setTimeout(ct,2000);
+        };
 
-        var cnr = app.onCloseNoReconnect(address);
+        var onCloseNoReconnect = function(obj){
+            console.log("Close without reconnect: " + obj.address + " - " + obj.status + " Keys: "+Object.keys(obj));
+        };
 
         console.log("Beginning close from: " + address + " Reconnect: "+reconnect);
         var paramsObj = {"address":address};
         if (reconnect) {
-            bluetoothle.close(cr, cre, paramsObj);
+            bluetoothle.close(onCloseReconnect, onCloseReconnectError, paramsObj);
         } else {
-            bluetoothle.close(cnr, cnre, paramsObj);
+            bluetoothle.close(onCloseNoReconnect, onCloseNoReconnectError, paramsObj);
         }
         
     },
