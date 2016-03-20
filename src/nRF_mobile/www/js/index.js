@@ -16,8 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-//var badges = ['E1:C1:21:A2:B2:E0','D1:90:32:2F:F1:4B'];
-var badges = ['E1:C1:21:A2:B2:E0'];
+var badges = ['E1:C1:21:A2:B2:E0','D1:90:32:2F:F1:4B'];
+//var badges = ['E1:C1:21:A2:B2:E0'];
 var badgesTimeouts = {};
 var connectTimer = null;
 
@@ -35,7 +35,8 @@ var app = {
         document.addEventListener('deviceready', this.onDeviceReady, false);
         refreshButton.addEventListener('touchstart', this.refreshDeviceList, false);
         connectButton.addEventListener('touchstart', this.connect, false);
-        disconnectButton.addEventListener('touchstart', this.disconnect, false);
+        disconnectButton1.addEventListener('touchstart', this.disconnect1, false);
+        disconnectButton2.addEventListener('touchstart', this.disconnect2, false);
         autogoButton.addEventListener('touchstart', this.autogo, false); 
         /*
         sendButton.addEventListener('click', this.sendData, false);
@@ -164,7 +165,7 @@ var app = {
     connectDevice: function(address)
     {
         var connectError = function(obj){
-            console.log("Connect error: " + obj.error + " - " + obj.message + " Keys: "+Object.keys(obj));
+            console.log("Connect error: " + obj.address + " " + obj.error + " - " + obj.message + " Keys: "+Object.keys(obj));
             //app.clearConnectTimeout();
 
             app.closeDevice(obj.address,true); //Best practice is to close on connection error. In our cae
@@ -172,7 +173,7 @@ var app = {
         };
 
         var connectSuccess = function(obj){
-            console.log("Connected: " + obj.status + " - " + obj.address + " Keys: "+Object.keys(obj));
+            console.log("Connected: " + obj.address + " - " + obj.status + " Keys: "+Object.keys(obj));
             //app.clearConnectTimeout();
             
             // Closes the device after we are done
@@ -196,6 +197,7 @@ var app = {
         //var tf = app.connectTimeout(address);
         //connectTimer = setTimeout(tf, 5000);
     },
+    /*
     connectTimeout: function(address)
     {
         return function() {
@@ -211,32 +213,35 @@ var app = {
             clearTimeout(connectTimer);
         }
     },
-
-    disconnect: function() {
+    */
+    disconnect1: function() {
         app.closeDevice(badges[0],false);
+    },
+    disconnect2: function() {
+        app.closeDevice(badges[1],false);
     },
     closeDevice: function(address,reconnect)
     {
         var onCloseReconnectError = function(obj){
-            console.log("Close with reconnect error: " + obj.error + " - " + obj.message + " Keys: "+Object.keys(obj));
+            console.log("Close with reconnect error: " + obj.address + " " + obj.error + " - " + obj.message + " Keys: "+Object.keys(obj));
             // setting a timeout with several seconds before reconecting
             var ct = app.connectToDeviceWrap(obj.address);
             setTimeout(ct,2000);
         };
 
         var onCloseNoReconnectError = function(obj){
-            console.log("Close without reconnect error: " + obj.error + " - " + obj.message + " Keys: "+Object.keys(obj));
+            console.log("Close without reconnect error: " + obj.address + " " + obj.error + " - " + obj.message + " Keys: "+Object.keys(obj));
         };
 
         var onCloseReconnect = function(obj){
-            console.log("Close with reconnect: " + obj.status + " - " + obj.address + " Keys: "+Object.keys(obj));
+            console.log("Close with reconnect: " + obj.address + " - " + obj.status + " Keys: "+Object.keys(obj));
             // setting a timeout with several seconds before reconecting
             var ct = app.connectToDeviceWrap(obj.address);
             setTimeout(ct,2000);
         };
 
         var onCloseNoReconnect = function(obj){
-            console.log("Close without reconnect: " + obj.status + " - " + obj.address + " Keys: "+Object.keys(obj));
+            console.log("Close without reconnect: " + obj.address + " - " + obj.status + " Keys: "+Object.keys(obj));
         };
 
         console.log("Beginning close from: " + address + " Reconnect: "+reconnect);
