@@ -19,6 +19,8 @@
 //var badges = ['E1:C1:21:A2:B2:E0','D1:90:32:2F:F1:4B'];
 var badges = ['E1:C1:21:A2:B2:E0'];
 var badgesTimeouts = {};
+var connectTimer = null;
+
 var app = {
     // Application Constructor
     initialize: function() {
@@ -158,29 +160,53 @@ var app = {
     {
         var connectError = function(obj){
             console.log("Connect error: " + obj.error + " - " + obj.message + " Keys: "+Object.keys(obj));
-            app.closeDevice(obj.address,true); //Best practice is to close on connection error
+            app.clearConnectTimeout();
+
+            app.closeDevice(obj.address,true); //Best practice is to close on connection error. In our cae
+                                               //we also want to reconnect afterwards
         };
 
         var connectSuccess = function(obj){
             console.log("Connected: " + obj.status + " - " + obj.address + " Keys: "+Object.keys(obj));
-
-            //todo: check status. If status is disconnceted it means that the device disconnected
-            // for some reason so we need to close()... or do we?
-
+            app.clearConnectTimeout();
+            
             // Closes the device after we are done
             if (obj.status == "connected") {
                 console.log("Done. Call disconnect")
+
                 app.closeDevice(obj.address, true);
             } else {
-                console.log("Disconnected for some reason.")
-                app.closeDevice(obj.address,false); //Best practice is to close on connection error
+                console.log("Unexpected disconnected")
+                app.closeDevice(obj.address,false); //Best practice is to close on connection error. No need to
+                                                    //reconnect here, it seems.
             }
         };
 
         console.log("Beginning connection to: " + address);
         var paramsObj = {"address":address};
         bluetoothle.connect(connectSuccess, connectError, paramsObj);
+
+        // timer for killing connections that take too long
+        console.log("Setting timeout (timer was: "+connectTimer+")");
+        //console.log("Setting timeout");
+        connectTimer = setTimeout(app.connectTimeout, 5000);
     },
+    connectTimeout: function()
+    {
+      console.log("Connection timed out");
+      app.closeDevice(badges[0],true); //TODO - change to a parameter!
+    },
+    clearConnectTimeout: function()
+    { 
+        console.log("Clearing connect timeout");
+        if (connectTimer != null)
+        {
+            clearTimeout(connectTimer);
+        }
+    },
+
+
+
     disconnect: function() {
         app.closeDevice(badges[0],false);
     },
