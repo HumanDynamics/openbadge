@@ -18,8 +18,8 @@
  */
 var badges = ['E1:C1:21:A2:B2:E0','D1:90:32:2F:F1:4B'];
 //var badges = ['E1:C1:21:A2:B2:E0'];
-var badgesTimeouts = {};
-var connectTimer = null;
+var badgesInfo = {};
+var watchdogTimer = null;
 
 var app = {
     // Application Constructor
@@ -37,13 +37,14 @@ var app = {
         connectButton.addEventListener('touchstart', this.connect, false);
         disconnectButton1.addEventListener('touchstart', this.disconnect1, false);
         disconnectButton2.addEventListener('touchstart', this.disconnect2, false);
-        autogoButton.addEventListener('touchstart', this.autogo, false); 
+        watchdogStartButton.addEventListener('touchstart', this.watchdogStart, false); 
+        watchdogEndButton.addEventListener('touchstart', this.watchdogEnd, false); 
+        stateButton.addEventListener('touchstart', this.stateButtonPressed, false); 
         /*
         sendButton.addEventListener('click', this.sendData, false);
         isConnectedButton.addEventListener('touchstart', this.isConnected, false);
         disconnectButton.addEventListener('touchstart', this.disconnect, false);
         deviceList.addEventListener('touchstart', this.connect, false); // assume not scrolling
-        
         */
     },
     // deviceready Event Handler
@@ -56,7 +57,9 @@ var app = {
         // populate intervals dict
         for (var i = 0; i < badges.length; ++i) {
             console.log("Adding: "+badges[i]);
-            badgesTimeouts[badges[i]]=null;
+            badgesInfo[badges[i]]={};
+            badgesInfo[badges[i]].lastActivity = new Date();
+            badgesInfo[badges[i]].lastDisconnect = new Date();
         }
 
         bluetoothle.initialize(
@@ -93,13 +96,6 @@ var app = {
         {
             console.log("Found - "+obj.address);
             console.log("Found - "+Object.keys(obj));
-
-            //console.log("Stopping scan..");
-            //bluetoothle.stopScan(stopScanSuccess, stopScanError);
-            //clearScanTimeout();
-
-            //window.localStorage.setItem(addressKey, obj.address);
-            //    connectDevice(obj.address);
 
             var listItem = document.createElement('li'),
                 html = '<b>' + obj.name + '</b><br/>' +
@@ -157,119 +153,147 @@ var app = {
     the device, use the reconnect method. If a timeout occurs, the connection attempt should be canceled using
     disconnect(). For simplicity, I recommend just using connect() and close(), don't use reconnect() or disconnect().
 
-    What do we have here?
-    * When we call disconnect, we want the app to reconnect to the badge again later
-    * Connection timeout is there to protect from cases in which the app gets stuck connecting
-
     */
     connectDevice: function(address)
     {
         var connectError = function(obj){
-            console.log("Connect error: " + obj.address + " " + obj.error + " - " + obj.message + " Keys: "+Object.keys(obj));
-            //app.clearConnectTimeout();
+            console.log(obj.address + "|Connect error: " + obj.error + " - " + obj.message + " Keys: "+Object.keys(obj));
+            app.touchLastActivity(obj.address);
 
-            app.closeDevice(obj.address,true); //Best practice is to close on connection error. In our cae
+            app.closeDevice(obj.address); //Best practice is to close on connection error. In our cae
                                                //we also want to reconnect afterwards
         };
 
         var connectSuccess = function(obj){
-            console.log("Connected: " + obj.address + " - " + obj.status + " Keys: "+Object.keys(obj));
-            //app.clearConnectTimeout();
+            console.log(obj.address + "|Connected: " + obj.status + " Keys: "+Object.keys(obj));
+            app.touchLastActivity(obj.address);
             
             // Closes the device after we are done
             if (obj.status == "connected") {
-                console.log("Done. Call disconnect")
+                console.log(obj.address + "|Done. Call disconnect")
 
-                app.closeDevice(obj.address, true);
+                app.closeDevice(obj.address);
             } else {
-                console.log("Unexpected disconnected")
-                app.closeDevice(obj.address,false); //Best practice is to close on connection error. No need to
+                console.log(obj.address + "|Unexpected disconnected")
+                app.closeDevice(obj.address); //Best practice is to close on connection error. No need to
                                                     //reconnect here, it seems.
             }
         };
 
-        console.log("Beginning connection to: " + address);
+        console.log(address+"|Beginning connection to");
+        app.touchLastActivity(address);
+
         var paramsObj = {"address":address};
         bluetoothle.connect(connectSuccess, connectError, paramsObj);
-
-        // timer for killing connections that take too long
-        //console.log("Setting timeout (timer was: "+connectTimer+")");
-        //var tf = app.connectTimeout(address);
-        //connectTimer = setTimeout(tf, 5000);
     },
-    /*
-    connectTimeout: function(address)
-    {
-        return function() {
-            console.log("Connection timed out for "+address);
-            app.closeDevice(address,true); // with reconnect
-        }
-    },
-    clearConnectTimeout: function()
-    { 
-        console.log("Clearing connect timeout");
-        if (connectTimer != null)
-        {
-            clearTimeout(connectTimer);
-        }
-    },
-    */
     disconnect1: function() {
-        app.closeDevice(badges[0],false);
+        app.closeDevice(badges[0]);
     },
     disconnect2: function() {
-        app.closeDevice(badges[1],false);
+        app.closeDevice(badges[1]);
     },
-    closeDevice: function(address,reconnect)
+    closeDevice: function(address)
     {
-        var onCloseReconnectError = function(obj){
-            console.log("Close with reconnect error: " + obj.address + " " + obj.error + " - " + obj.message + " Keys: "+Object.keys(obj));
-            // setting a timeout with several seconds before reconecting
-            var ct = app.connectToDeviceWrap(obj.address);
-            setTimeout(ct,2000);
-        };
-
         var onCloseNoReconnectError = function(obj){
-            console.log("Close without reconnect error: " + obj.address + " " + obj.error + " - " + obj.message + " Keys: "+Object.keys(obj));
+            console.log(obj.address+"|Close without reconnect error: " +  obj.error + " - " + obj.message + " Keys: "+Object.keys(obj));
+            app.touchLastDisconnect(obj.address);
         };
 
-        var onCloseReconnect = function(obj){
-            console.log("Close with reconnect: " + obj.address + " - " + obj.status + " Keys: "+Object.keys(obj));
-            // setting a timeout with several seconds before reconecting
-            var ct = app.connectToDeviceWrap(obj.address);
-            setTimeout(ct,2000);
-        };
+        //    var ct = app.connectToDeviceWrap(obj.address);
+        //    setTimeout(ct,2000);
 
         var onCloseNoReconnect = function(obj){
-            console.log("Close without reconnect: " + obj.address + " - " + obj.status + " Keys: "+Object.keys(obj));
+            console.log(obj.address+"|Close without reconnect: " + obj.status + " Keys: "+Object.keys(obj));
+            app.touchLastDisconnect(obj.address);
         };
 
-        console.log("Beginning close from: " + address + " Reconnect: "+reconnect);
+        console.log(address+"|Beginning close from");
         var paramsObj = {"address":address};
-        if (reconnect) {
-            bluetoothle.close(onCloseReconnect, onCloseReconnectError, paramsObj);
-        } else {
-            bluetoothle.close(onCloseNoReconnect, onCloseNoReconnectError, paramsObj);
+        bluetoothle.close(onCloseNoReconnect, onCloseNoReconnectError, paramsObj);
+    },
+    connectToDeviceWrap : function(address){
+        return function() {
+            app.connectDevice(address);
+        }
+    },
+    closeDeviceWrap : function(address){
+        return function() {
+            app.closeDevice(address);
+        }
+    },    
+    watchdogStart: function() {
+        console.log("Starting watchdog");
+        watchdogTimer = setInterval(function(){ app.watchdog() }, 1000);  
+    },
+    watchdogEnd: function() {
+        console.log("Ending watchdog");
+        if (watchdogTimer != null)
+        {
+            clearInterval(watchdogTimer);
+        }
+    },
+    stateButtonPressed: function() {
+        for (var i = 0; i < badges.length; ++i) {
+            var badge = badges[i];
+            var activityDatetime = badgesInfo[badge].lastActivity;
+            var disconnectDatetime = badgesInfo[badge].lastDisconnect;
+            console.log(badge+"|lastActivity: "+activityDatetime+"|lastDisconnect: "+disconnectDatetime);
+        }
+    },
+    watchdog: function() {
+        for (var i = 0; i < badges.length; ++i) {
+            var badge = badges[i];
+            var activityDatetime = badgesInfo[badge].lastActivity;
+            var disconnectDatetime = badgesInfo[badge].lastDisconnect;
+            console.log(badge+"|lastActivity: "+activityDatetime+"|lastDisconnect: "+disconnectDatetime);
+
+            var nowDatetimeMs = Date.now();
+            var activityDatetimeMs = activityDatetime.getTime();
+            var disconnectDatetimeMs = disconnectDatetime.getTime();
+
+            // kill if connecting for too long and/or if no activity (can update when data recieved)
+            // call close() just in case
+            // next watchdog call should perform connection
+            if (nowDatetimeMs - activityDatetimeMs > 15000) {
+                console.log(badge+"|Should timeout");
+
+                // touch activity and disconnect date to make sure we don't keep calling this
+                // and that we are not calling the next function while there's a disconnect hapenning already
+                app.touchLastActivity(badge);
+                app.touchLastDisconnect(badge);
+
+                // close
+                var cf = app.closeDeviceWrap(badge);
+                cf();
+
+            } else if (nowDatetimeMs - disconnectDatetimeMs > 5000 && disconnectDatetimeMs >= activityDatetimeMs) {
+                    // if more than XX seconds since last disconnect 
+                    // and disconnect occoured AFTER connect (meanning that there isn't an open session)
+                    // call connect
+                console.log(badge+"|Last disconnected XX seconds ago. Should try to connect again");
+
+                // touch activity date so we know not to try and connect again
+                app.touchLastActivity(badge);
+
+                // connect
+                var cf = app.connectToDeviceWrap(badge);
+                cf();
+            } else {
+                console.log(badge+"|Watchdog, Do nothing");
+            }
         }
         
-    },
-    connectToDeviceWrap : function(deviceId){
-        return function() {
-            app.connectDevice(deviceId);
-        }
-    },
-    autogo: function() {
-        for (var i = 0; i < badges.length; ++i) {
-            var badge=badges[i];
-            var f = app.connectToDeviceWrap(badge);
-            console.log("initializing connection to "+badge);
-            //var interval = setInterval(f,1000);
-            f();
 
-            //var f2 = app.disconnectFromDeviceWrap(badge);
-            //console.log("Starting timer for disconnecting from "+badge);
-            //var interval2 = setInterval(f2,1500);            
-        }
+    },
+    touchLastActivity: function(address) {
+        var d = new Date();
+        console.log(address+"|"+"Updating last activity: "+d);
+        badgesInfo[address].lastActivity = d;
+    },
+    touchLastDisconnect: function(address) {
+        var d = new Date();
+        console.log(address+"|"+"Updating last disconnect: "+d);
+        badgesInfo[address].lastDisconnect = d;
     }
 };
 
