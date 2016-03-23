@@ -46,6 +46,7 @@ var app = {
         watchdogStartButton.addEventListener('touchstart', this.watchdogStart, false); 
         watchdogEndButton.addEventListener('touchstart', this.watchdogEnd, false); 
         stateButton.addEventListener('touchstart', this.stateButtonPressed, false); 
+        sendButton.addEventListener('touchstart', this.sendButtonPressed, false);
         /*
         sendButton.addEventListener('click', this.sendData, false);
         isConnectedButton.addEventListener('touchstart', this.isConnected, false);
@@ -155,15 +156,20 @@ var app = {
 
     /* Send / Receive */
     subscribeSuccess: function(obj) {
-        if (obj.status == "subscribed") {
-            console.log(obj.address + "|Subscription: " + obj.status + " Keys: "+Object.keys(obj));
+        if (obj.status == "subscribed") 
+        {
+            console.log(obj.address + "|Subscribed. " + obj.status + "| Keys: "+Object.keys(obj));
         }
-        else {
-            console.log(obj.address + "|Subscription: " + obj.status + " Value: "+obj.Value);
+        else //status == subscribedResult / received data
+        { 
+            var bytes = bluetoothle.encodedStringToBytes(obj.value);
+            var str = bluetoothle.bytesToString(bytes); //This should equal Hello World
+
+            console.log(obj.address + "|Subscription message: " + obj.status + "|Value: "+str);
         }
     },
     subscribeError: function(obj) {
-        console.log(obj.address + "|Subscription error: " + obj.status + ". Keys: "+Object.keys(obj));
+        console.log(obj.address + "|Subscription error: " + obj.status + "| Keys: "+Object.keys(obj));
         app.closeDevice(obj.address); //disconnecton error
     },
     subscribeToDevice: function(address){
@@ -188,14 +194,14 @@ var app = {
             else
             {
                 console.log(obj.address + "|Unexpected discover status: " + obj.status);
-                disconnectDevice();
+                app.discoverDevice(obj.address);
             }
         };
 
         var discoverError = function (obj)
                 {
                   console.log(obj.address + "|Discover error: " + obj.error + " - " + obj.message);
-                  app.disconnectDevice(obj.address);
+                  app.discoverDevice(obj.address);
                 };
 
         var paramsObj = {"address":address};
@@ -288,6 +294,26 @@ var app = {
         {
             clearInterval(watchdogTimer);
         }
+    },
+    sendButtonPressed: function() {
+        var writeSuccess = function(obj) {
+            console.log(obj.address+"|Data sent! " + obj.status + " Keys: "+Object.keys(obj));
+        };
+        var writeError = function(obj) {
+            console.log(obj.address+"|Error sending data: " + obj.error + "|" + obj.message + "|" + " Keys: "+Object.keys(obj));
+        };
+        var address = badges[0];
+        var string = "s";
+        var bytes = bluetoothle.stringToBytes(string);
+        var encodedString = bluetoothle.bytesToEncodedString(bytes);
+        var paramsObj = {
+            "address":address,
+            "service": nrf51UART.serviceUUID,
+            "characteristic": nrf51UART.txCharacteristic,
+            "value" : encodedString
+        };
+        console.log(address+"|Trying to send data");
+        bluetoothle.write(writeSuccess, writeError, paramsObj);
     },
     stateButtonPressed: function() {
         for (var i = 0; i < badges.length; ++i) {
