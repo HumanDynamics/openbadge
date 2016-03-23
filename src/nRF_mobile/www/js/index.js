@@ -21,6 +21,12 @@ var badges = ['E1:C1:21:A2:B2:E0','D1:90:32:2F:F1:4B'];
 var badgesInfo = {};
 var watchdogTimer = null;
 
+var nrf51UART = {
+    serviceUUID:      '6e400001-b5a3-f393-e0a9-e50e24dcca9e', // 0x000c?
+    txCharacteristic: '6e400002-b5a3-f393-e0a9-e50e24dcca9e', // transmit is from the phone's perspective
+    rxCharacteristic: '6e400003-b5a3-f393-e0a9-e50e24dcca9e'  // receive is from the phone's perspective
+};
+
 var app = {
     // Application Constructor
     initialize: function() {
@@ -146,13 +152,61 @@ var app = {
     connect: function() {
         app.connectDevice(badges[0]);
     },
+
+    /* Send / Receive */
+    subscribeSuccess: function(obj) {
+        if (obj.status == "subscribed") {
+            console.log(obj.address + "|Subscription: " + obj.status + " Keys: "+Object.keys(obj));
+        }
+        else {
+            console.log(obj.address + "|Subscription: " + obj.status + " Value: "+obj.Value);
+        }
+    },
+    subscribeError: function(obj) {
+        console.log(obj.address + "|Subscription error: " + obj.status + ". Keys: "+Object.keys(obj));
+        app.closeDevice(obj.address); //disconnecton error
+    },
+    subscribeToDevice: function(address){
+        var paramsObj = {
+            "address":address,
+            "service": nrf51UART.serviceUUID,
+            "characteristic": nrf51UART.rxCharacteristic,
+            "isNotification" : true
+        };
+        console.log(address + "|Subscribing");
+        bluetoothle.subscribe(app.subscribeSuccess, app.subscribeError, paramsObj);
+    },
+
+    discoverDevice: function(address) {
+        var discoverSuccess = function (obj)
+        {
+            if (obj.status == "discovered")
+            {
+                console.log(obj.address + "|Discovery completed");
+                app.subscribeToDevice(obj.address);
+            }
+            else
+            {
+                console.log(obj.address + "|Unexpected discover status: " + obj.status);
+                disconnectDevice();
+            }
+        };
+
+        var discoverError = function (obj)
+                {
+                  console.log(obj.address + "|Discover error: " + obj.error + " - " + obj.message);
+                  app.disconnectDevice(obj.address);
+                };
+
+        var paramsObj = {"address":address};
+        bluetoothle.discover(discoverSuccess, discoverError,paramsObj);
+    },
     /*
     Connect to a Bluetooth LE device. The app should use a timer to limit the connecting time in case connecting 
     is never successful. Once a device is connected, it may disconnect without user intervention. The original 
     connection callback will be called again and receive an object with status => disconnected. To reconnect to 
     the device, use the reconnect method. If a timeout occurs, the connection attempt should be canceled using
     disconnect(). For simplicity, I recommend just using connect() and close(), don't use reconnect() or disconnect().
-
     */
     connectDevice: function(address)
     {
@@ -170,9 +224,12 @@ var app = {
             
             // Closes the device after we are done
             if (obj.status == "connected") {
-                console.log(obj.address + "|Done. Call disconnect")
+                // discover, then setup notifications              
+                // need to discover before subscribing
+                app.discoverDevice(obj.address);
 
-                app.closeDevice(obj.address);
+                //console.log(obj.address + "|Done. Call disconnect")
+                //app.closeDevice(obj.address);
             } else {
                 console.log(obj.address + "|Unexpected disconnected")
                 app.closeDevice(obj.address); //Best practice is to close on connection error. No need to
