@@ -1,4 +1,5 @@
 var Q = require('q');
+var qbluetoothle = require('./qbluetoothle');
 
 var badges = ['E1:C1:21:A2:B2:E0','D1:90:32:2F:F1:4B'];
 //var badges = ['E1:C1:21:A2:B2:E0'];
@@ -77,21 +78,19 @@ var app = {
     },
     refreshDeviceList: function() {
         deviceList.innerHTML = ''; // empties the list
-        app.startScan().then(
+        qbluetoothle.startScan().then(
         function(obj){ // success
             console.log("Scan completed successfully - "+obj.status)
         }, function(obj) { // error
             console.log("Scan Start error: " + obj.error + " - " + obj.message)
         }, function(obj) { // progress
-            console.log("Found - "+obj.address);
-            var listItem = document.createElement('li'),
-                html = '<b>' + obj.name + '</b><br/>' +
-                'RSSI: ' + obj.rssi + '&nbsp;|&nbsp;' +
-                obj.address;
-
             if (badges.indexOf(obj.address) != -1) {
+                    var listItem = document.createElement('li'),
+                        html = '<b>' + obj.name + '</b><br/>' +
+                        'RSSI: ' + obj.rssi + '&nbsp;|&nbsp;' +
+                        obj.address;
+
                     console.log('Found: '+ obj.address);
-                    //app.connectToDevice(device.id);
 
                     listItem.dataset.deviceId = obj.address;
                     listItem.innerHTML = html;
@@ -99,55 +98,7 @@ var app = {
             }
         });
     },
-    startScan: function() {
-        var deferred = Q.defer();
-        var params = {
-          services:[],
-          allowDuplicates: false,
-          scanMode: bluetoothle.SCAN_MODE_LOW_POWER,
-          matchMode: bluetoothle.MATCH_MODE_STICKY,
-          matchNum: bluetoothle.MATCH_NUM_ONE_ADVERTISEMENT,
-          //callbackType: bluetoothle.CALLBACK_TYPE_FIRST_MATCH,
-          scanTimeout: 10000,
-        };
-
-        // setup timeout if requested
-        var scanTimer = null;
-        if (params.scanTimeout) {
-            scanTimer = setTimeout(function() {
-                console.log('Stopping scan');
-                bluetoothle.stopScan(
-                    function(obj) {
-                      deferred.resolve(obj);
-                    },
-                    function(obj) {
-                      deferred.reject(obj);
-                    }
-                );
-            }, params.scanTimeout);
-        }
-
-        console.log('Start scan');
-        deviceList.innerHTML = ''; // empties the list
-
-        bluetoothle.startScan(
-            function startScanSuccess(obj) {
-                if (obj.status == "scanResult") {deferred.notify(obj);}
-                else if (obj.status == "scanStarted"){}// do nothing. it started ok
-                else {
-                    obj.error = "unhandled state";
-                    clearTimeout(scanTimer);
-                    deferred.reject(obj); // unhandled state
-                }
-            }, 
-            function startScanError(obj) {
-                clearTimeout(scanTimer);
-                deferred.reject(obj);
-            }, 
-            params);
-
-        return deferred.promise;
-    },
+ 
     connect: function() {
         app.connectDevice(badges[0]);
     },
