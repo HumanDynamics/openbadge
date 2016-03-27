@@ -20,12 +20,12 @@ function connectDevice(address) {
     };
     bluetoothle.connect(
         function(obj) { // success
-            console.log(obj.address + "|Connected: " + obj.status + " Keys: " + Object.keys(obj));
             if (obj.status == "connected") {
                 d.resolve(obj);
             } else {
                 // Todo - figure out how to handle this
                 console.log(obj.address + "|Unexpected disconnected. Not handled at this point");
+                //d.reject(obj); sould this work? it might be a delayed error
             }
         },
         function(obj) { // failure function
@@ -36,6 +36,50 @@ function connectDevice(address) {
     return d.promise;
 }
 
+function discoverDevice(address) {
+    var d = Q.defer();
+    var paramsObj = {"address":address};
+    bluetoothle.discover(
+        function(obj) { // success
+            if (obj.status == "discovered") {
+                d.resolve(obj);
+            } else {
+                d.reject(obj);
+            }
+        },
+        function(obj) { // failure function
+            d.reject(obj);
+        },
+        paramsObj);
+
+    return d.promise;   
+}
+
+function subscribeToDevice(address) {
+    var d = Q.defer();    
+    var paramsObj = {
+        "address":address,
+        "service": nrf51UART.serviceUUID,
+        "characteristic": nrf51UART.rxCharacteristic,
+        "isNotification" : true
+    };
+
+
+    bluetoothle.subscribe(
+        function(obj) { // success
+            if (obj.status == "subscribed") {
+                // do nothing
+            } else { //status == subscribedResult / received data
+                d.notify(obj);
+            }
+        },
+        function(obj) { // failure function
+            d.reject(obj);
+        },
+        paramsObj);
+    return d.promise; 
+}
+ 
 function startScan() {
     var deferred = Q.defer();
     var params = {

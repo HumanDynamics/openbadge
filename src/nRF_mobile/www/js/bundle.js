@@ -103,10 +103,8 @@ var app = {
     connectDevice: function(address) {
         console.log(address + "|Beginning connection to");
         app.touchLastActivity(address);
-
-        var c = qbluetoothle.connectDevice(address);
-
-        c.then(
+        
+        qbluetoothle.connectDevice(address).then(
             function(obj) { // success
                 console.log(obj.address + "|Connected: " + obj.status + " Keys: " + Object.keys(obj));
                 app.touchLastActivity(obj.address);
@@ -124,25 +122,7 @@ var app = {
     connect: function() {
         app.connectDevice(badges[0]);
     },
-
-    /* Send / Receive */
-    subscribeSuccess: function(obj) {
-        if (obj.status == "subscribed") 
-        {
-            console.log(obj.address + "|Subscribed. " + obj.status + "| Keys: "+Object.keys(obj));
-        }
-        else //status == subscribedResult / received data
-        { 
-            var bytes = bluetoothle.encodedStringToBytes(obj.value);
-            var str = bluetoothle.bytesToString(bytes); //This should equal Hello World
-
-            console.log(obj.address + "|Subscription message: " + obj.status + "|Value: "+str);
-        }
-    },
-    subscribeError: function(obj) {
-        console.log(obj.address + "|Subscription error: " + obj.status + "| Keys: "+Object.keys(obj));
-        app.closeDevice(obj.address); //disconnecton error
-    },
+    
     subscribeToDevice: function(address){
         var paramsObj = {
             "address":address,
@@ -152,31 +132,47 @@ var app = {
         };
         console.log(address + "|Subscribing");
         bluetoothle.subscribe(app.subscribeSuccess, app.subscribeError, paramsObj);
-    },
 
+        qbluetoothle.subscribeToDevice(address).then(
+            function(obj) { // success
+                // shouldn't get called?
+                app.touchLastActivity(address);
+                console.log(obj.address + "|Subscribed. " + obj.status + "| Keys: "+Object.keys(obj));
+            },
+            function(obj) { // failure
+                app.touchLastActivity(obj.address);
+                console.log(obj.address + "|Subscription error: " + obj.status + "| Keys: "+Object.keys(obj));
+                app.closeDevice(obj.address); //disconnecton error
+            },
+            function(obj) { // notification
+                var bytes = bluetoothle.encodedStringToBytes(obj.value);
+                var str = bluetoothle.bytesToString(bytes); 
+                console.log(obj.address + "|Subscription message: " + obj.status + "|Value: "+str);
+            }
+        );
+    },
     discoverDevice: function(address) {
-        var discoverSuccess = function (obj)
-        {
-            if (obj.status == "discovered")
-            {
+        qbluetoothle.discoverDevice(address).then(
+            function(obj) { // success
+                app.touchLastActivity(address);
                 console.log(obj.address + "|Discovery completed");
                 app.subscribeToDevice(obj.address);
-            }
-            else
-            {
-                console.log(obj.address + "|Unexpected discover status: " + obj.status);
-                app.discoverDevice(obj.address);
-            }
-        };
-
-        var discoverError = function (obj)
+            },
+            function(obj) { // failure
+                app.touchLastActivity(obj.address);
+                if (obj.status == "discovered")
                 {
-                  console.log(obj.address + "|Discover error: " + obj.error + " - " + obj.message);
-                  app.discoverDevice(obj.address);
-                };
-
-        var paramsObj = {"address":address};
-        bluetoothle.discover(discoverSuccess, discoverError,paramsObj);
+                    console.log(obj.address + "|Unexpected discover status: " + obj.status);
+                }
+                else
+                {
+                    
+                    console.log(obj.address + "|Discover error: " + obj.error + " - " + obj.message);
+                }
+                app.closeDevice(obj.address);   //Best practice is to close on connection error. In our case
+                                                //we also want to reconnect afterwards
+            }
+        );
     },
     disconnect1: function() {
         app.closeDevice(badges[0]);
@@ -2386,12 +2382,12 @@ function connectDevice(address) {
     };
     bluetoothle.connect(
         function(obj) { // success
-            console.log(obj.address + "|Connected: " + obj.status + " Keys: " + Object.keys(obj));
             if (obj.status == "connected") {
                 d.resolve(obj);
             } else {
                 // Todo - figure out how to handle this
                 console.log(obj.address + "|Unexpected disconnected. Not handled at this point");
+                //d.reject(obj); sould this work? it might be a delayed error
             }
         },
         function(obj) { // failure function
@@ -2399,9 +2395,53 @@ function connectDevice(address) {
         },
         paramsObj);
 
-    return d;
+    return d.promise;
 }
 
+function discoverDevice(address) {
+    var d = Q.defer();
+    var paramsObj = {"address":address};
+    bluetoothle.discover(
+        function(obj) { // success
+            if (obj.status == "discovered") {
+                d.resolve(obj);
+            } else {
+                d.reject(obj);
+            }
+        },
+        function(obj) { // failure function
+            d.reject(obj);
+        },
+        paramsObj);
+
+    return d.promise;   
+}
+
+function subscribeToDevice(address) {
+    var d = Q.defer();    
+    var paramsObj = {
+        "address":address,
+        "service": nrf51UART.serviceUUID,
+        "characteristic": nrf51UART.rxCharacteristic,
+        "isNotification" : true
+    };
+
+
+    bluetoothle.subscribe(
+        function(obj) { // success
+            if (obj.status == "subscribed") {
+                // do nothing
+            } else { //status == subscribedResult / received data
+                d.notify(obj);
+            }
+        },
+        function(obj) { // failure function
+            d.reject(obj);
+        },
+        paramsObj);
+    return d.promise; 
+}
+ 
 function startScan() {
     var deferred = Q.defer();
     var params = {

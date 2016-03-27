@@ -103,7 +103,7 @@ var app = {
         console.log(address + "|Beginning connection to");
         app.touchLastActivity(address);
         
-        bluetoothle.connectDevice(address).then(
+        qbluetoothle.connectDevice(address).then(
             function(obj) { // success
                 console.log(obj.address + "|Connected: " + obj.status + " Keys: " + Object.keys(obj));
                 app.touchLastActivity(obj.address);
@@ -121,25 +121,7 @@ var app = {
     connect: function() {
         app.connectDevice(badges[0]);
     },
-
-    /* Send / Receive */
-    subscribeSuccess: function(obj) {
-        if (obj.status == "subscribed") 
-        {
-            console.log(obj.address + "|Subscribed. " + obj.status + "| Keys: "+Object.keys(obj));
-        }
-        else //status == subscribedResult / received data
-        { 
-            var bytes = bluetoothle.encodedStringToBytes(obj.value);
-            var str = bluetoothle.bytesToString(bytes); //This should equal Hello World
-
-            console.log(obj.address + "|Subscription message: " + obj.status + "|Value: "+str);
-        }
-    },
-    subscribeError: function(obj) {
-        console.log(obj.address + "|Subscription error: " + obj.status + "| Keys: "+Object.keys(obj));
-        app.closeDevice(obj.address); //disconnecton error
-    },
+    
     subscribeToDevice: function(address){
         var paramsObj = {
             "address":address,
@@ -149,31 +131,47 @@ var app = {
         };
         console.log(address + "|Subscribing");
         bluetoothle.subscribe(app.subscribeSuccess, app.subscribeError, paramsObj);
-    },
 
+        qbluetoothle.subscribeToDevice(address).then(
+            function(obj) { // success
+                // shouldn't get called?
+                app.touchLastActivity(address);
+                console.log(obj.address + "|Subscribed. " + obj.status + "| Keys: "+Object.keys(obj));
+            },
+            function(obj) { // failure
+                app.touchLastActivity(obj.address);
+                console.log(obj.address + "|Subscription error: " + obj.status + "| Keys: "+Object.keys(obj));
+                app.closeDevice(obj.address); //disconnecton error
+            },
+            function(obj) { // notification
+                var bytes = bluetoothle.encodedStringToBytes(obj.value);
+                var str = bluetoothle.bytesToString(bytes); 
+                console.log(obj.address + "|Subscription message: " + obj.status + "|Value: "+str);
+            }
+        );
+    },
     discoverDevice: function(address) {
-        var discoverSuccess = function (obj)
-        {
-            if (obj.status == "discovered")
-            {
+        qbluetoothle.discoverDevice(address).then(
+            function(obj) { // success
+                app.touchLastActivity(address);
                 console.log(obj.address + "|Discovery completed");
                 app.subscribeToDevice(obj.address);
-            }
-            else
-            {
-                console.log(obj.address + "|Unexpected discover status: " + obj.status);
-                app.discoverDevice(obj.address);
-            }
-        };
-
-        var discoverError = function (obj)
+            },
+            function(obj) { // failure
+                app.touchLastActivity(obj.address);
+                if (obj.status == "discovered")
                 {
-                  console.log(obj.address + "|Discover error: " + obj.error + " - " + obj.message);
-                  app.discoverDevice(obj.address);
-                };
-
-        var paramsObj = {"address":address};
-        bluetoothle.discover(discoverSuccess, discoverError,paramsObj);
+                    console.log(obj.address + "|Unexpected discover status: " + obj.status);
+                }
+                else
+                {
+                    
+                    console.log(obj.address + "|Discover error: " + obj.error + " - " + obj.message);
+                }
+                app.closeDevice(obj.address);   //Best practice is to close on connection error. In our case
+                                                //we also want to reconnect afterwards
+            }
+        );
     },
     disconnect1: function() {
         app.closeDevice(badges[0]);
