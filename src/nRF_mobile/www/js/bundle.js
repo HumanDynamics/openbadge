@@ -80,28 +80,47 @@ var app = {
     refreshDeviceList: function() {
         deviceList.innerHTML = ''; // empties the list
         qbluetoothle.startScan().then(
-        function(obj){ // success
-            console.log("Scan completed successfully - "+obj.status)
-        }, function(obj) { // error
-            console.log("Scan Start error: " + obj.error + " - " + obj.message)
-        }, function(obj) { // progress
-            console.log("Found - "+obj.address);
-            var listItem = document.createElement('li'),
-                html = '<b>' + obj.name + '</b><br/>' +
-                'RSSI: ' + obj.rssi + '&nbsp;|&nbsp;' +
-                obj.address;
+            function(obj){ // success
+                console.log("Scan completed successfully - "+obj.status)
+            }, function(obj) { // error
+                console.log("Scan Start error: " + obj.error + " - " + obj.message)
+            }, function(obj) { // progress
+                if (badges.indexOf(obj.address) != -1) {
+                        var listItem = document.createElement('li'),
+                            html = '<b>' + obj.name + '</b><br/>' +
+                            'RSSI: ' + obj.rssi + '&nbsp;|&nbsp;' +
+                            obj.address;
 
-            if (badges.indexOf(obj.address) != -1) {
-                    console.log('Found: '+ obj.address);
-                    //app.connectToDevice(device.id);
+                        console.log('Found: '+ obj.address);
 
-                    listItem.dataset.deviceId = obj.address;
-                    listItem.innerHTML = html;
-                    deviceList.appendChild(listItem);
-            }
+                        listItem.dataset.deviceId = obj.address;
+                        listItem.innerHTML = html;
+                        deviceList.appendChild(listItem);
+                }
         });
     },
  
+    connectDevice: function(address) {
+        console.log(address + "|Beginning connection to");
+        app.touchLastActivity(address);
+
+        var c = qbluetoothle.connectDevice(address);
+
+        c.then(
+            function(obj) { // success
+                console.log(obj.address + "|Connected: " + obj.status + " Keys: " + Object.keys(obj));
+                app.touchLastActivity(obj.address);
+                app.discoverDevice(obj.address);
+            },
+            function(obj) { // failure
+                console.log(obj.address + "|Connect error: " + obj.error + " - " + obj.message + " Keys: " + Object.keys(obj));
+                app.touchLastActivity(obj.address);
+                app.closeDevice(obj.address); //Best practice is to close on connection error. In our cae
+                //we also want to reconnect afterwards
+            }
+        );
+    },
+
     connect: function() {
         app.connectDevice(badges[0]);
     },
@@ -158,48 +177,6 @@ var app = {
 
         var paramsObj = {"address":address};
         bluetoothle.discover(discoverSuccess, discoverError,paramsObj);
-    },
-    /*
-    Connect to a Bluetooth LE device. The app should use a timer to limit the connecting time in case connecting 
-    is never successful. Once a device is connected, it may disconnect without user intervention. The original 
-    connection callback will be called again and receive an object with status => disconnected. To reconnect to 
-    the device, use the reconnect method. If a timeout occurs, the connection attempt should be canceled using
-    disconnect(). For simplicity, I recommend just using connect() and close(), don't use reconnect() or disconnect().
-    */
-    connectDevice: function(address)
-    {
-        var connectError = function(obj){
-            console.log(obj.address + "|Connect error: " + obj.error + " - " + obj.message + " Keys: "+Object.keys(obj));
-            app.touchLastActivity(obj.address);
-
-            app.closeDevice(obj.address); //Best practice is to close on connection error. In our cae
-                                               //we also want to reconnect afterwards
-        };
-
-        var connectSuccess = function(obj){
-            console.log(obj.address + "|Connected: " + obj.status + " Keys: "+Object.keys(obj));
-            app.touchLastActivity(obj.address);
-            
-            // Closes the device after we are done
-            if (obj.status == "connected") {
-                // discover, then setup notifications              
-                // need to discover before subscribing
-                app.discoverDevice(obj.address);
-
-                //console.log(obj.address + "|Done. Call disconnect")
-                //app.closeDevice(obj.address);
-            } else {
-                console.log(obj.address + "|Unexpected disconnected")
-                app.closeDevice(obj.address); //Best practice is to close on connection error. No need to
-                                                    //reconnect here, it seems.
-            }
-        };
-
-        console.log(address+"|Beginning connection to");
-        app.touchLastActivity(address);
-
-        var paramsObj = {"address":address};
-        bluetoothle.connect(connectSuccess, connectError, paramsObj);
     },
     disconnect1: function() {
         app.closeDevice(badges[0]);
@@ -2387,61 +2364,97 @@ return Q;
 
 }).call(this,require('_process'))
 },{"_process":4}],3:[function(require,module,exports){
-/* A Q wrapper for bluetoothle */
+/* A Q wrapper for bluetoothle 
+ * References:
+ *  https://github.com/randdusing/cordova-plugin-bluetoothle
+ *  https://github.com/randdusing/ng-cordova-bluetoothle/blob/master/ng-cordova-bluetoothle.js
+ *  https://github.com/randdusing/ng-cordova-bluetoothle/blob/master/example/index.js
+ */
 var Q = require('q');
 
-function startScan() {
-        var deferred = Q.defer();
-        var params = {
-          services:[],
-          allowDuplicates: false,
-          scanMode: bluetoothle.SCAN_MODE_LOW_POWER,
-          matchMode: bluetoothle.MATCH_MODE_STICKY,
-          matchNum: bluetoothle.MATCH_NUM_ONE_ADVERTISEMENT,
-          //callbackType: bluetoothle.CALLBACK_TYPE_FIRST_MATCH,
-          scanTimeout: 10000,
-        };
+/*
+    Connect to a Bluetooth LE device. The app should use a timer to limit the connecting time in case connecting 
+    is never successful. Once a device is connected, it may disconnect without user intervention. The original 
+    connection callback will be called again and receive an object with status => disconnected. To reconnect to 
+    the device, use the reconnect method. If a timeout occurs, the connection attempt should be canceled using
+    disconnect(). For simplicity, I recommend just using connect() and close(), don't use reconnect() or disconnect().
+    */
+function connectDevice(address) {
+    var d = Q.defer();
+    var paramsObj = {
+        "address": address
+    };
+    bluetoothle.connect(
+        function(obj) { // success
+            console.log(obj.address + "|Connected: " + obj.status + " Keys: " + Object.keys(obj));
+            if (obj.status == "connected") {
+                d.resolve(obj);
+            } else {
+                // Todo - figure out how to handle this
+                console.log(obj.address + "|Unexpected disconnected. Not handled at this point");
+            }
+        },
+        function(obj) { // failure function
+            d.reject(obj);
+        },
+        paramsObj);
 
-        // setup timeout if requested
-        var scanTimer = null;
-        if (params.scanTimeout) {
-            scanTimer = setTimeout(function() {
-                console.log('Stopping scan');
-                bluetoothle.stopScan(
-                    function(obj) {
-                      deferred.resolve(obj);
-                    },
-                    function(obj) {
-                      deferred.reject(obj);
-                    }
-                );
-            }, params.scanTimeout);
-        }
-
-        console.log('Start scan');
-        deviceList.innerHTML = ''; // empties the list
-
-        bluetoothle.startScan(
-            function startScanSuccess(obj) {
-                if (obj.status == "scanResult") {deferred.notify(obj);}
-                else if (obj.status == "scanStarted"){}// do nothing. it started ok
-                else {
-                    obj.error = "unhandled state";
-                    clearTimeout(scanTimer);
-                    deferred.reject(obj); // unhandled state
-                }
-            }, 
-            function startScanError(obj) {
-                clearTimeout(scanTimer);
-                deferred.reject(obj);
-            }, 
-            params);
-
-        return deferred.promise;
+    return d;
 }
 
+function startScan() {
+    var deferred = Q.defer();
+    var params = {
+        services: [],
+        allowDuplicates: false,
+        scanMode: bluetoothle.SCAN_MODE_LOW_POWER,
+        matchMode: bluetoothle.MATCH_MODE_STICKY,
+        matchNum: bluetoothle.MATCH_NUM_ONE_ADVERTISEMENT,
+        //callbackType: bluetoothle.CALLBACK_TYPE_FIRST_MATCH,
+        scanTimeout: 10000, // 10 seconds
+    };
+
+    // setup timeout if requested
+    var scanTimer = null;
+    if (params.scanTimeout) {
+        scanTimer = setTimeout(function() {
+            console.log('Stopping scan');
+            bluetoothle.stopScan(
+                function(obj) {
+                    deferred.resolve(obj);
+                },
+                function(obj) {
+                    deferred.reject(obj);
+                }
+            );
+        }, params.scanTimeout);
+    }
+
+    console.log('Start scan');
+    deviceList.innerHTML = ''; // empties the list
+
+    bluetoothle.startScan(
+        function startScanSuccess(obj) {
+            if (obj.status == "scanResult") {
+                deferred.notify(obj);
+            } else if (obj.status == "scanStarted") {} // do nothing. it started ok
+            else {
+                obj.error = "unhandled state";
+                clearTimeout(scanTimer);
+                deferred.reject(obj); // unhandled state
+            }
+        },
+        function startScanError(obj) {
+            clearTimeout(scanTimer);
+            deferred.reject(obj);
+        },
+        params);
+
+    return deferred.promise;
+}
 module.exports = {
-    startScan: startScan
+    startScan: startScan,
+    connectDevice: connectDevice
 };
 },{"q":2}],4:[function(require,module,exports){
 // shim for using process in browser

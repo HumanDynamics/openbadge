@@ -79,26 +79,45 @@ var app = {
     refreshDeviceList: function() {
         deviceList.innerHTML = ''; // empties the list
         qbluetoothle.startScan().then(
-        function(obj){ // success
-            console.log("Scan completed successfully - "+obj.status)
-        }, function(obj) { // error
-            console.log("Scan Start error: " + obj.error + " - " + obj.message)
-        }, function(obj) { // progress
-            if (badges.indexOf(obj.address) != -1) {
-                    var listItem = document.createElement('li'),
-                        html = '<b>' + obj.name + '</b><br/>' +
-                        'RSSI: ' + obj.rssi + '&nbsp;|&nbsp;' +
-                        obj.address;
+            function(obj){ // success
+                console.log("Scan completed successfully - "+obj.status)
+            }, function(obj) { // error
+                console.log("Scan Start error: " + obj.error + " - " + obj.message)
+            }, function(obj) { // progress
+                if (badges.indexOf(obj.address) != -1) {
+                        var listItem = document.createElement('li'),
+                            html = '<b>' + obj.name + '</b><br/>' +
+                            'RSSI: ' + obj.rssi + '&nbsp;|&nbsp;' +
+                            obj.address;
 
-                    console.log('Found: '+ obj.address);
+                        console.log('Found: '+ obj.address);
 
-                    listItem.dataset.deviceId = obj.address;
-                    listItem.innerHTML = html;
-                    deviceList.appendChild(listItem);
-            }
+                        listItem.dataset.deviceId = obj.address;
+                        listItem.innerHTML = html;
+                        deviceList.appendChild(listItem);
+                }
         });
     },
  
+    connectDevice: function(address) {
+        console.log(address + "|Beginning connection to");
+        app.touchLastActivity(address);
+        
+        bluetoothle.connectDevice(address).then(
+            function(obj) { // success
+                console.log(obj.address + "|Connected: " + obj.status + " Keys: " + Object.keys(obj));
+                app.touchLastActivity(obj.address);
+                app.discoverDevice(obj.address);
+            },
+            function(obj) { // failure
+                console.log(obj.address + "|Connect error: " + obj.error + " - " + obj.message + " Keys: " + Object.keys(obj));
+                app.touchLastActivity(obj.address);
+                app.closeDevice(obj.address); //Best practice is to close on connection error. In our cae
+                //we also want to reconnect afterwards
+            }
+        );
+    },
+
     connect: function() {
         app.connectDevice(badges[0]);
     },
@@ -155,48 +174,6 @@ var app = {
 
         var paramsObj = {"address":address};
         bluetoothle.discover(discoverSuccess, discoverError,paramsObj);
-    },
-    /*
-    Connect to a Bluetooth LE device. The app should use a timer to limit the connecting time in case connecting 
-    is never successful. Once a device is connected, it may disconnect without user intervention. The original 
-    connection callback will be called again and receive an object with status => disconnected. To reconnect to 
-    the device, use the reconnect method. If a timeout occurs, the connection attempt should be canceled using
-    disconnect(). For simplicity, I recommend just using connect() and close(), don't use reconnect() or disconnect().
-    */
-    connectDevice: function(address)
-    {
-        var connectError = function(obj){
-            console.log(obj.address + "|Connect error: " + obj.error + " - " + obj.message + " Keys: "+Object.keys(obj));
-            app.touchLastActivity(obj.address);
-
-            app.closeDevice(obj.address); //Best practice is to close on connection error. In our cae
-                                               //we also want to reconnect afterwards
-        };
-
-        var connectSuccess = function(obj){
-            console.log(obj.address + "|Connected: " + obj.status + " Keys: "+Object.keys(obj));
-            app.touchLastActivity(obj.address);
-            
-            // Closes the device after we are done
-            if (obj.status == "connected") {
-                // discover, then setup notifications              
-                // need to discover before subscribing
-                app.discoverDevice(obj.address);
-
-                //console.log(obj.address + "|Done. Call disconnect")
-                //app.closeDevice(obj.address);
-            } else {
-                console.log(obj.address + "|Unexpected disconnected")
-                app.closeDevice(obj.address); //Best practice is to close on connection error. No need to
-                                                    //reconnect here, it seems.
-            }
-        };
-
-        console.log(address+"|Beginning connection to");
-        app.touchLastActivity(address);
-
-        var paramsObj = {"address":address};
-        bluetoothle.connect(connectSuccess, connectError, paramsObj);
     },
     disconnect1: function() {
         app.closeDevice(badges[0]);
