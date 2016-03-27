@@ -144,6 +144,7 @@ var app = {
                 app.closeDevice(obj.address); //disconnecton error
             },
             function(obj) { // notification
+                app.touchLastActivity(obj.address);
                 var bytes = bluetoothle.encodedStringToBytes(obj.value);
                 var str = bluetoothle.bytesToString(bytes); 
                 console.log(obj.address + "|Subscription message: " + obj.status + "|Value: "+str);
@@ -181,22 +182,18 @@ var app = {
     },
     closeDevice: function(address)
     {
-        var onCloseNoReconnectError = function(obj){
-            console.log(obj.address+"|Close without reconnect error: " +  obj.error + " - " + obj.message + " Keys: "+Object.keys(obj));
-            app.touchLastDisconnect(obj.address);
-        };
-
-        //    var ct = app.connectToDeviceWrap(obj.address);
-        //    setTimeout(ct,2000);
-
-        var onCloseNoReconnect = function(obj){
-            console.log(obj.address+"|Close without reconnect: " + obj.status + " Keys: "+Object.keys(obj));
-            app.touchLastDisconnect(obj.address);
-        };
-
         console.log(address+"|Beginning close from");
         var paramsObj = {"address":address};
-        bluetoothle.close(onCloseNoReconnect, onCloseNoReconnectError, paramsObj);
+        qbluetoothle.close().then(
+            function(obj) { // success
+                console.log(obj.address+"|Close completed: " + obj.status + " Keys: "+Object.keys(obj));
+                app.touchLastDisconnect(obj.address);
+            },
+            function(obj) { // failure
+                console.log(obj.address+"|Close error: " +  obj.error + " - " + obj.message + " Keys: "+Object.keys(obj));
+                app.touchLastDisconnect(obj.address);
+            }
+        );
     },
     connectToDeviceWrap : function(address){
         return function() {

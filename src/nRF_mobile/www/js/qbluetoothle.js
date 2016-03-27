@@ -36,6 +36,23 @@ function connectDevice(address) {
     return d.promise;
 }
 
+function closeDevice(address) {
+    var d = Q.defer();
+    var paramsObj = {
+        "address": address
+    };
+    bluetoothle.close(
+        function(obj) { // success
+            d.resolve(obj);
+        },
+        function(obj) { // failure function
+            d.reject(obj);
+        },
+        paramsObj);
+
+    return d.promise;
+}
+
 function discoverDevice(address) {
     var d = Q.defer();
     var paramsObj = {"address":address};
