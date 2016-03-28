@@ -101,7 +101,30 @@ function subscribeToDevice(address) {
         paramsObj);
     return d.promise; 
 }
- 
+
+function writeToDevice(address,strValue) {
+    var d = Q.defer();    
+
+    var bytes = bluetoothle.stringToBytes(strValue);
+    var encodedString = bluetoothle.bytesToEncodedString(bytes);
+    var paramsObj = {
+        "address":address,
+        "service": nrf51UART.serviceUUID,
+        "characteristic": nrf51UART.txCharacteristic,
+        "value" : encodedString
+    };
+
+    bluetoothle.write(
+        function(obj) { // success
+            d.resolve(obj);
+        },
+        function(obj) { // failure function
+            d.reject(obj);
+        },
+        paramsObj);
+    return d.promise;    
+}
+
 function startScan() {
     var deferred = Q.defer();
     var params = {
@@ -157,5 +180,6 @@ module.exports = {
     connectDevice: connectDevice,
     discoverDevice: discoverDevice,
     closeDevice: closeDevice,
-    subscribeToDevice: subscribeToDevice
+    subscribeToDevice: subscribeToDevice,
+    writeToDevice: writeToDevice
 };

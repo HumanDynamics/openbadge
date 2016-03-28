@@ -134,7 +134,7 @@ var app = {
     subscribeToDevice: function(address) {
         console.log(address + "|Subscribing (do not wait for success, will notify only)");
 
-        var a = qbluetoothle.subscribeToDevice(address).then(
+        qbluetoothle.subscribeToDevice(address).then(
             function(obj) { // success
                 // shouldn't get called?
                 app.touchLastActivity(address);
@@ -152,7 +152,6 @@ var app = {
                 console.log(obj.address + "|Subscription message: " + obj.status + "|Value: " + str);
             }
         );
-        console.log(address + "|Value of a: " + a+ "| Keys: " + Object.keys(a));
     },
     discoverDevice: function(address) {
         console.log(address + "|Starting discovery");
@@ -218,24 +217,20 @@ var app = {
         }
     },
     sendButtonPressed: function() {
-        var writeSuccess = function(obj) {
-            console.log(obj.address+"|Data sent! " + obj.status + " Keys: "+Object.keys(obj));
-        };
-        var writeError = function(obj) {
-            console.log(obj.address+"|Error sending data: " + obj.error + "|" + obj.message + "|" + " Keys: "+Object.keys(obj));
-        };
         var address = badges[0];
         var string = "s";
-        var bytes = bluetoothle.stringToBytes(string);
-        var encodedString = bluetoothle.bytesToEncodedString(bytes);
-        var paramsObj = {
-            "address":address,
-            "service": nrf51UART.serviceUUID,
-            "characteristic": nrf51UART.txCharacteristic,
-            "value" : encodedString
-        };
-        console.log(address+"|Trying to send data");
-        bluetoothle.write(writeSuccess, writeError, paramsObj);
+
+        console.log(address + "|Trying to send data");
+        qbluetoothle.writeToDevice(address, string).then(
+            function(obj) { // success
+                console.log(obj.address + "|Data sent! " + obj.status + " Keys: " + Object.keys(obj));
+                app.touchLastDisconnect(obj.address);
+            },
+            function(obj) { // failure
+                console.log(obj.address + "|Error sending data: " + obj.error + "|" + obj.message + "|" + " Keys: " + Object.keys(obj));
+                app.touchLastDisconnect(obj.address);
+            }
+        );
     },
     stateButtonPressed: function() {
         for (var i = 0; i < badges.length; ++i) {
@@ -2460,7 +2455,30 @@ function subscribeToDevice(address) {
         paramsObj);
     return d.promise; 
 }
- 
+
+function writeToDevice(address,strValue) {
+    var d = Q.defer();    
+
+    var bytes = bluetoothle.stringToBytes(strValue);
+    var encodedString = bluetoothle.bytesToEncodedString(bytes);
+    var paramsObj = {
+        "address":address,
+        "service": nrf51UART.serviceUUID,
+        "characteristic": nrf51UART.txCharacteristic,
+        "value" : encodedString
+    };
+
+    bluetoothle.write(
+        function(obj) { // success
+            d.resolve(obj);
+        },
+        function(obj) { // failure function
+            d.reject(obj);
+        },
+        paramsObj);
+    return d.promise;    
+}
+
 function startScan() {
     var deferred = Q.defer();
     var params = {
@@ -2516,7 +2534,8 @@ module.exports = {
     connectDevice: connectDevice,
     discoverDevice: discoverDevice,
     closeDevice: closeDevice,
-    subscribeToDevice: subscribeToDevice
+    subscribeToDevice: subscribeToDevice,
+    writeToDevice: writeToDevice
 };
 },{"q":2}],4:[function(require,module,exports){
 // shim for using process in browser

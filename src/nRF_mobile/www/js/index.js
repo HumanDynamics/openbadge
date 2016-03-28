@@ -216,24 +216,20 @@ var app = {
         }
     },
     sendButtonPressed: function() {
-        var writeSuccess = function(obj) {
-            console.log(obj.address+"|Data sent! " + obj.status + " Keys: "+Object.keys(obj));
-        };
-        var writeError = function(obj) {
-            console.log(obj.address+"|Error sending data: " + obj.error + "|" + obj.message + "|" + " Keys: "+Object.keys(obj));
-        };
         var address = badges[0];
         var string = "s";
-        var bytes = bluetoothle.stringToBytes(string);
-        var encodedString = bluetoothle.bytesToEncodedString(bytes);
-        var paramsObj = {
-            "address":address,
-            "service": nrf51UART.serviceUUID,
-            "characteristic": nrf51UART.txCharacteristic,
-            "value" : encodedString
-        };
-        console.log(address+"|Trying to send data");
-        bluetoothle.write(writeSuccess, writeError, paramsObj);
+
+        console.log(address + "|Trying to send data");
+        qbluetoothle.writeToDevice(address, string).then(
+            function(obj) { // success
+                console.log(obj.address + "|Data sent! " + obj.status + " Keys: " + Object.keys(obj));
+                app.touchLastDisconnect(obj.address);
+            },
+            function(obj) { // failure
+                console.log(obj.address + "|Error sending data: " + obj.error + "|" + obj.message + "|" + " Keys: " + Object.keys(obj));
+                app.touchLastDisconnect(obj.address);
+            }
+        );
     },
     stateButtonPressed: function() {
         for (var i = 0; i < badges.length; ++i) {
