@@ -131,13 +131,13 @@ var app = {
         app.subscribeToDevice(badges[0]);
     },
     subscribeToDevice: function(address) {
-        console.log(address + "|Subscribing (do not wait for success, will notify only)");
+        console.log(address + "|Subscribing");
 
         qbluetoothle.subscribeToDevice(address).then(
             function(obj) { // success
                 // shouldn't get called?
                 app.touchLastActivity(address);
-                console.log(obj.address + "|Subscribed. " + obj.status + "| Keys: " + Object.keys(obj));
+                console.log(obj.address + "|Subscribed. Not supposed to ge here." + obj.status + "| Keys: " + Object.keys(obj));
             },
             function(obj) { // failure
                 app.touchLastActivity(obj.address);
@@ -146,9 +146,15 @@ var app = {
             },
             function(obj) { // notification
                 app.touchLastActivity(obj.address);
-                var bytes = bluetoothle.encodedStringToBytes(obj.value);
-                var str = bluetoothle.bytesToString(bytes);
-                console.log(obj.address + "|Subscription message: " + obj.status + "|Value: " + str);
+                if (obj.status == "subscribedResult") {
+                    var bytes = bluetoothle.encodedStringToBytes(obj.value);
+                    var str = bluetoothle.bytesToString(bytes);
+                    console.log(obj.address + "|Subscription message: " + obj.status + "|Value: " + str);
+                } else if (obj.status == "subscribed") {
+                    console.log(obj.address + "|Subscribed: " + obj.status);
+                } else {
+                    console.log("Unexpected Subscribe Status");
+                }
             }
         );
     },

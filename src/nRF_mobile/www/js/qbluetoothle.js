@@ -89,11 +89,7 @@ function subscribeToDevice(address) {
 
     bluetoothle.subscribe(
         function(obj) { // success
-            if (obj.status == "subscribed") {
-                // do nothing
-            } else { //status == subscribedResult / received data
-                d.notify(obj);
-            }
+            d.notify(obj); // notify and not resolve, so code can get notifications
         },
         function(obj) { // failure function
             d.reject(obj);
