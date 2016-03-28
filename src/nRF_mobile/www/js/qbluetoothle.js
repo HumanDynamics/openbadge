@@ -6,6 +6,12 @@
  */
 var Q = require('q');
 
+var nrf51UART = {
+    serviceUUID:      '6e400001-b5a3-f393-e0a9-e50e24dcca9e', // 0x000c?
+    txCharacteristic: '6e400002-b5a3-f393-e0a9-e50e24dcca9e', // transmit is from the phone's perspective
+    rxCharacteristic: '6e400003-b5a3-f393-e0a9-e50e24dcca9e'  // receive is from the phone's perspective
+};
+
 /*
     Connect to a Bluetooth LE device. The app should use a timer to limit the connecting time in case connecting 
     is never successful. Once a device is connected, it may disconnect without user intervention. The original 
@@ -81,7 +87,6 @@ function subscribeToDevice(address) {
         "isNotification" : true
     };
 
-
     bluetoothle.subscribe(
         function(obj) { // success
             if (obj.status == "subscribed") {
@@ -149,5 +154,8 @@ function startScan() {
 }
 module.exports = {
     startScan: startScan,
-    connectDevice: connectDevice
+    connectDevice: connectDevice,
+    discoverDevice: discoverDevice,
+    closeDevice: closeDevice,
+    subscribeToDevice: subscribeToDevice
 };
