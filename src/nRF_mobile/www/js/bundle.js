@@ -124,10 +124,10 @@ var app = {
     },
 
     connect: function() {
-        //app.connectDevice(badges[0]);
         var address = badges[0];
-        app.connectDevice(address);
-        /*
+        //app.connectDevice(address);
+
+        var params = {address:address};
         qbluetoothle.connectDevice(params)
         .then(qbluetoothle.discoverDevice)
         .then(qbluetoothle.subscribeToDevice)
@@ -155,9 +155,8 @@ var app = {
         )
         .fail(function (error) { // Handle any uncaught error from all above steps
               console.log(obj.address + "|Unexpected error, so disconnecing: "+error);
-              app.closeDevice(obj.address);
+              app.closeDevice(address);
         })
-        */
     },
     discoverButtonPressed:function() {
         var address = badges[0];
