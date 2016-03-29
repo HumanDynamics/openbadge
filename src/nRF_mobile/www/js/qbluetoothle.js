@@ -19,13 +19,16 @@ var nrf51UART = {
     the device, use the reconnect method. If a timeout occurs, the connection attempt should be canceled using
     disconnect(). For simplicity, I recommend just using connect() and close(), don't use reconnect() or disconnect().
     */
-function connectDevice(address) {
+function connectDevice(params) {
+    var address = params.address;
+    console.log(address + "|Internal call to connect");
     var d = Q.defer();
     var paramsObj = {
         "address": address
     };
     bluetoothle.connect(
         function(obj) { // success
+            console.log(address + "|Internal call to connect - success");
             if (obj.status == "connected") {
                 d.resolve(obj);
             } else {
@@ -42,7 +45,8 @@ function connectDevice(address) {
     return d.promise;
 }
 
-function closeDevice(address) {
+function closeDevice(params) {
+    var address = params.address;
     var d = Q.defer();
     var paramsObj = {
         "address": address
@@ -59,11 +63,14 @@ function closeDevice(address) {
     return d.promise;
 }
 
-function discoverDevice(address) {
+function discoverDevice(params) {
+    var address = params.address;
+    console.log(address + "|Internal call to discover");
     var d = Q.defer();
     var paramsObj = {"address":address};
     bluetoothle.discover(
         function(obj) { // success
+            console.log(address + "|Internal call to discover - success");
             if (obj.status == "discovered") {
                 d.resolve(obj);
             } else {
@@ -71,6 +78,7 @@ function discoverDevice(address) {
             }
         },
         function(obj) { // failure function
+            console.log(address + "|Internal call to discover - failure: " + obj.error + " - " + obj.message + " Keys: " + Object.keys(obj));
             d.reject(obj);
         },
         paramsObj);
@@ -78,7 +86,9 @@ function discoverDevice(address) {
     return d.promise;   
 }
 
-function subscribeToDevice(address) {
+function subscribeToDevice(params) {
+    var address = params.address;
+    console.log(address + "|Internal call to subscribe");    
     var d = Q.defer();    
     var paramsObj = {
         "address":address,
@@ -89,9 +99,11 @@ function subscribeToDevice(address) {
 
     bluetoothle.subscribe(
         function(obj) { // success
+            console.log(address + "|Internal call to subscribe - success");
             d.notify(obj); // notify and not resolve, so code can get notifications
         },
         function(obj) { // failure function
+            console.log(address + "|Internal call to subscribe - error: " + obj.error + " - " + obj.message + " Keys: " + Object.keys(obj));
             d.reject(obj);
         },
         paramsObj);

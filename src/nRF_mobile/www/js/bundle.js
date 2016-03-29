@@ -106,44 +106,81 @@ var app = {
     connectDevice: function(address) {
         console.log(address + "|Beginning connection to");
         app.touchLastActivity(address);
-        
-        qbluetoothle.connectDevice(address).then(
+
+        var params = {address:address};
+        qbluetoothle.connectDevice(params).then(
             function(obj) { // success
                 app.touchLastActivity(obj.address);
                 console.log(obj.address + "|Connected: " + obj.status + " Keys: " + Object.keys(obj));
-                app.discoverDevice(obj.address);
+                //app.discoverDevice(obj);
             },
             function(obj) { // failure
                 app.touchLastActivity(obj.address);
                 console.log(obj.address + "|Connect error: " + obj.error + " - " + obj.message + " Keys: " + Object.keys(obj));
-                app.closeDevice(obj.address); //Best practice is to close on connection error. In our cae
+                app.closeDevice(obj); //Best practice is to close on connection error. In our cae
                 //we also want to reconnect afterwards
             }
         );
     },
 
     connect: function() {
-        app.connectDevice(badges[0]);
+        //app.connectDevice(badges[0]);
+        var address = badges[0];
+        app.connectDevice(address);
+        /*
+        qbluetoothle.connectDevice(params)
+        .then(qbluetoothle.discoverDevice)
+        .then(qbluetoothle.subscribeToDevice)
+        .then(
+            function(obj) { // success (of chain). Shouldn't really be called
+                console.log(obj.address + "|Success:" + obj.status + "| Keys: " + Object.keys(obj));
+            },
+            function(obj) { // failure
+                app.touchLastActivity(obj.address);
+                console.log(obj.address + "|General error: " + obj.error + " - " + obj.message + " Keys: " + Object.keys(obj));
+                app.closeDevice(obj); //disconnecton error
+            },
+            function(obj) { // notification
+                app.touchLastActivity(obj.address);
+                if (obj.status == "subscribedResult") {
+                    var bytes = bluetoothle.encodedStringToBytes(obj.value);
+                    var str = bluetoothle.bytesToString(bytes);
+                    console.log(obj.address + "|Subscription message: " + obj.status + "|Value: " + str);
+                } else if (obj.status == "subscribed") {
+                    console.log(obj.address + "|Subscribed: " + obj.status);
+                } else {
+                    console.log(obj.address + "|Unexpected Subscribe Status");
+                }   
+            }
+        )
+        .fail(function (error) { // Handle any uncaught error from all above steps
+              console.log(obj.address + "|Unexpected error, so disconnecing: "+error);
+              app.closeDevice(obj.address);
+        })
+        */
     },
     discoverButtonPressed:function() {
-        app.discoverDevice(badges[0]);
+        var address = badges[0];
+        app.discoverDevice(address);
     },
     subscribeButtonPressed:function() {
-        app.subscribeToDevice(badges[0]);
+        var address = badges[0];
+        app.subscribeToDevice(address);
     },
     subscribeToDevice: function(address) {
         console.log(address + "|Subscribing");
 
-        qbluetoothle.subscribeToDevice(address).then(
+        var params = {address:address};
+        qbluetoothle.subscribeToDevice(params).then(
             function(obj) { // success
                 // shouldn't get called?
                 app.touchLastActivity(address);
-                console.log(obj.address + "|Subscribed. Not supposed to ge here." + obj.status + "| Keys: " + Object.keys(obj));
+                console.log(obj.address + "|Subscribed. Not supposed to get here." + obj.status + "| Keys: " + Object.keys(obj));
             },
             function(obj) { // failure
                 app.touchLastActivity(obj.address);
                 console.log(obj.address + "|Subscription error: " + obj.error + " - " + obj.message + " Keys: " + Object.keys(obj));
-                app.closeDevice(obj.address); //disconnecton error
+                app.closeDevice(obj.address); //disconnection error
             },
             function(obj) { // notification
                 app.touchLastActivity(obj.address);
@@ -161,11 +198,13 @@ var app = {
     },
     discoverDevice: function(address) {
         console.log(address + "|Starting discovery");
-        qbluetoothle.discoverDevice(address).then(
+
+        var params = {address:address};
+        qbluetoothle.discoverDevice(params).then(
             function(obj) { // success
                 app.touchLastActivity(address);
                 console.log(obj.address + "|Discovery completed");
-                app.subscribeToDevice(obj.address);
+                //app.subscribeToDevice(obj);
             },
             function(obj) { // failure
                 app.touchLastActivity(obj.address);
@@ -181,16 +220,18 @@ var app = {
         );
     },
     disconnect1: function() {
-        app.closeDevice(badges[0]);
+        var address = badges[0];
+        app.closeDevice(address);
     },
     disconnect2: function() {
-        app.closeDevice(badges[1]);
+        var address = badges[1];
+        app.closeDevice(address);
     },
     closeDevice: function(address)
     {
         console.log(address+"|Beginning close from");
-        var paramsObj = {"address":address};
-        qbluetoothle.closeDevice(address).then(
+        var params = {"address":address};
+        qbluetoothle.closeDevice(params).then(
             function(obj) { // success
                 console.log(obj.address+"|Close completed: " + obj.status + " Keys: "+Object.keys(obj));
                 app.touchLastDisconnect(obj.address);
@@ -2379,13 +2420,16 @@ var nrf51UART = {
     the device, use the reconnect method. If a timeout occurs, the connection attempt should be canceled using
     disconnect(). For simplicity, I recommend just using connect() and close(), don't use reconnect() or disconnect().
     */
-function connectDevice(address) {
+function connectDevice(params) {
+    var address = params.address;
+    console.log(address + "|Internal call to connect");
     var d = Q.defer();
     var paramsObj = {
         "address": address
     };
     bluetoothle.connect(
         function(obj) { // success
+            console.log(address + "|Internal call to connect - success");
             if (obj.status == "connected") {
                 d.resolve(obj);
             } else {
@@ -2402,7 +2446,8 @@ function connectDevice(address) {
     return d.promise;
 }
 
-function closeDevice(address) {
+function closeDevice(params) {
+    var address = params.address;
     var d = Q.defer();
     var paramsObj = {
         "address": address
@@ -2419,11 +2464,14 @@ function closeDevice(address) {
     return d.promise;
 }
 
-function discoverDevice(address) {
+function discoverDevice(params) {
+    var address = params.address;
+    console.log(address + "|Internal call to discover");
     var d = Q.defer();
     var paramsObj = {"address":address};
     bluetoothle.discover(
         function(obj) { // success
+            console.log(address + "|Internal call to discover - success");
             if (obj.status == "discovered") {
                 d.resolve(obj);
             } else {
@@ -2431,6 +2479,7 @@ function discoverDevice(address) {
             }
         },
         function(obj) { // failure function
+            console.log(address + "|Internal call to discover - failure: " + obj.error + " - " + obj.message + " Keys: " + Object.keys(obj));
             d.reject(obj);
         },
         paramsObj);
@@ -2438,7 +2487,9 @@ function discoverDevice(address) {
     return d.promise;   
 }
 
-function subscribeToDevice(address) {
+function subscribeToDevice(params) {
+    var address = params.address;
+    console.log(address + "|Internal call to subscribe");    
     var d = Q.defer();    
     var paramsObj = {
         "address":address,
@@ -2449,9 +2500,11 @@ function subscribeToDevice(address) {
 
     bluetoothle.subscribe(
         function(obj) { // success
+            console.log(address + "|Internal call to subscribe - success");
             d.notify(obj); // notify and not resolve, so code can get notifications
         },
         function(obj) { // failure function
+            console.log(address + "|Internal call to subscribe - error: " + obj.error + " - " + obj.message + " Keys: " + Object.keys(obj));
             d.reject(obj);
         },
         paramsObj);
