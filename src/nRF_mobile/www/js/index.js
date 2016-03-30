@@ -25,12 +25,12 @@ var app = {
     bindEvents: function() {
         document.addEventListener('deviceready', this.onDeviceReady, false);
         refreshButton.addEventListener('touchstart', this.refreshDeviceList, false);
-        connectButton.addEventListener('touchstart', this.connect, false);
+        connectButton.addEventListener('touchstart', this.connectButtonPressed, false);
         discoverButton1.addEventListener('touchstart', this.discoverButtonPressed, false);
         subscribeButton1.addEventListener('touchstart', this.subscribeButtonPressed, false);
         
-        disconnectButton1.addEventListener('touchstart', this.disconnect1, false);
-        disconnectButton2.addEventListener('touchstart', this.disconnect2, false);
+        disconnectButton1.addEventListener('touchstart', this.disconnect1ButtonPressed, false);
+        disconnectButton2.addEventListener('touchstart', this.disconnect2ButtonPressed, false);
         watchdogStartButton.addEventListener('touchstart', this.watchdogStart, false); 
         watchdogEndButton.addEventListener('touchstart', this.watchdogEnd, false); 
         stateButton.addEventListener('touchstart', this.stateButtonPressed, false); 
@@ -121,7 +121,7 @@ var app = {
         );
     },
 
-    connect: function() {
+    connectButtonPressed: function() {
         var address = badges[0];
         //app.connectDevice(address);
 
@@ -136,7 +136,6 @@ var app = {
             function(obj) { // failure
                 app.touchLastActivity(obj.address);
                 console.log(obj.address + "|General error: " + obj.error + " - " + obj.message + " Keys: " + Object.keys(obj));
-                app.closeDevice(obj.address); //disconnecton error
             },
             function(obj) { // notification
                 app.touchLastActivity(obj.address);
@@ -151,8 +150,8 @@ var app = {
                 }   
             }
         )
-        .fail(function (error) { // Handle any uncaught error from all above steps
-              console.log(obj.address + "|Unexpected error, so disconnecing: "+error);
+        .fin(function () { // always close conncetion when done
+              console.log(address + "|Finished communicating with device. Disconnecing");
               app.closeDevice(address);
         })
         .done(); // wrap things up. notifications will stop here
@@ -217,11 +216,11 @@ var app = {
             }
         );
     },
-    disconnect1: function() {
+    disconnect1ButtonPressed: function() {
         var address = badges[0];
         app.closeDevice(address);
     },
-    disconnect2: function() {
+    disconnect2ButtonPressed: function() {
         var address = badges[1];
         app.closeDevice(address);
     },
