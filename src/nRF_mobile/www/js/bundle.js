@@ -117,7 +117,7 @@ var app = {
             function(obj) { // failure
                 app.touchLastActivity(obj.address);
                 console.log(obj.address + "|Connect error: " + obj.error + " - " + obj.message + " Keys: " + Object.keys(obj));
-                app.closeDevice(obj); //Best practice is to close on connection error. In our cae
+                app.closeDevice(obj.address); //Best practice is to close on connection error. In our cae
                 //we also want to reconnect afterwards
             }
         );
@@ -138,7 +138,7 @@ var app = {
             function(obj) { // failure
                 app.touchLastActivity(obj.address);
                 console.log(obj.address + "|General error: " + obj.error + " - " + obj.message + " Keys: " + Object.keys(obj));
-                app.closeDevice(obj); //disconnecton error
+                app.closeDevice(obj.address); //disconnecton error
             },
             function(obj) { // notification
                 app.touchLastActivity(obj.address);
@@ -157,6 +157,7 @@ var app = {
               console.log(obj.address + "|Unexpected error, so disconnecing: "+error);
               app.closeDevice(address);
         })
+        .done(); // wrap things up. notifications will stop here
     },
     discoverButtonPressed:function() {
         var address = badges[0];
@@ -2432,9 +2433,8 @@ function connectDevice(params) {
             if (obj.status == "connected") {
                 d.resolve(obj);
             } else {
-                // Todo - figure out how to handle this
                 console.log(obj.address + "|Unexpected disconnected. Not handled at this point");
-                //d.reject(obj); sould this work? it might be a delayed error
+                d.reject(obj); //sould this work? it might be a delayed error
             }
         },
         function(obj) { // failure function
@@ -2501,6 +2501,7 @@ function subscribeToDevice(params) {
         function(obj) { // success
             console.log(address + "|Internal call to subscribe - success");
             d.notify(obj); // notify and not resolve, so code can get notifications
+            //d.resolve(obj);
         },
         function(obj) { // failure function
             console.log(address + "|Internal call to subscribe - error: " + obj.error + " - " + obj.message + " Keys: " + Object.keys(obj));

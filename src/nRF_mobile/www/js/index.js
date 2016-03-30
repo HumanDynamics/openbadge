@@ -116,8 +116,7 @@ var app = {
             function(obj) { // failure
                 app.touchLastActivity(obj.address);
                 console.log(obj.address + "|Connect error: " + obj.error + " - " + obj.message + " Keys: " + Object.keys(obj));
-                app.closeDevice(obj); //Best practice is to close on connection error. In our cae
-                //we also want to reconnect afterwards
+                app.closeDevice(obj.address); //Best practice is to close on connection error.
             }
         );
     },
@@ -137,7 +136,7 @@ var app = {
             function(obj) { // failure
                 app.touchLastActivity(obj.address);
                 console.log(obj.address + "|General error: " + obj.error + " - " + obj.message + " Keys: " + Object.keys(obj));
-                app.closeDevice(obj); //disconnecton error
+                app.closeDevice(obj.address); //disconnecton error
             },
             function(obj) { // notification
                 app.touchLastActivity(obj.address);
@@ -156,6 +155,7 @@ var app = {
               console.log(obj.address + "|Unexpected error, so disconnecing: "+error);
               app.closeDevice(address);
         })
+        .done(); // wrap things up. notifications will stop here
     },
     discoverButtonPressed:function() {
         var address = badges[0];
