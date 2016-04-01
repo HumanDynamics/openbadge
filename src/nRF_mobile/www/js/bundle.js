@@ -26,7 +26,8 @@ var app = {
     bindEvents: function() {
         document.addEventListener('deviceready', this.onDeviceReady, false);
         refreshButton.addEventListener('touchstart', this.refreshDeviceList, false);
-        connectButton.addEventListener('touchstart', this.connectButtonPressed, false);
+        connectButton1.addEventListener('touchstart', this.connectButtonPressed1, false);
+        connectButton2.addEventListener('touchstart', this.connectButtonPressed2, false);
         discoverButton1.addEventListener('touchstart', this.discoverButtonPressed, false);
         subscribeButton1.addEventListener('touchstart', this.subscribeButtonPressed, false);
         
@@ -122,8 +123,17 @@ var app = {
         );
     },
 
-    connectButtonPressed: function() {
+    connectButtonPressed1: function() {
         var address = badges[0];
+        console.log("will try to connect - "+address);
+        app.connectButton(address);
+    },
+    connectButtonPressed2: function() {
+        var address = badges[1];
+        console.log("will try to connect - "+address);
+        app.connectButton(address);
+    },    
+    connectButton: function(address) {
         //app.connectDevice(address);
 
         var params = {address:address};
