@@ -115,9 +115,13 @@ var app = {
                 //app.discoverDevice(obj);
             },
             function(obj) { // failure
-                app.touchLastActivity(obj.address);
-                console.log(obj.address + "|Connect error: " + obj.error + " - " + obj.message + " Keys: " + Object.keys(obj));
-                app.closeDevice(obj.address); //Best practice is to close on connection error.
+                if (obj.address) {
+                    app.touchLastActivity(obj.address);
+                    console.log(obj.address + "|General error: " + obj.error + " - " + obj.message + " Keys: " + Object.keys(obj));
+                } else {
+                    // must be an exception
+                    console.error(obj);
+                }
             }
         );
     },
