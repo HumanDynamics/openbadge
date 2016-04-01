@@ -60,6 +60,8 @@ var app = {
             badgesInfo[badges[i]]={};
             badgesInfo[badges[i]].lastActivity = new Date();
             badgesInfo[badges[i]].lastDisconnect = new Date();
+
+            dataPoints[badges[i]] = [];
         }
 
         bluetoothle.initialize(
@@ -142,6 +144,9 @@ var app = {
     connectButton: function(address) {
         //app.connectDevice(address);
 
+        //
+        dataPoints[address] = [];
+
         var params = {address:address};
         qbluetoothle.connectDevice(params)
         .then(qbluetoothle.discoverDevice)
@@ -176,9 +181,7 @@ var app = {
                     //var str = bluetoothle.bytesToString(bytes);
                     //console.log(obj.address + "|Subscription message: " + obj.status + "|Value: " + str);
                     console.log(obj.address + "|Subscription message: " + obj.status + "|Value: " + bytes[0]);
-
-                    // hack to print the data
-                    //app.drawLines(device.address,[new DataView(data).getUint8(0, true)]);
+                    app.drawLines(obj.address,[bytes[0]]);
 
                 } else if (obj.status == "subscribed") {
                     console.log(obj.address + "|Subscribed: " + obj.status);
@@ -194,19 +197,27 @@ var app = {
         .done(); // wrap things up. notifications will stop here
     },
     clearCanvas: function() {
+        console.log("Clearing canvas");
         var canvas = document.getElementById('canvas');
         var context = canvas.getContext('2d');
         context.clearRect(0, 0, canvas.width, canvas.height);
+        /*
+        context.beginPath();
+        context.moveTo(0,0);
+        context.lineTo(300,150);
+        context.stroke();
+        */
     },
     drawLines: function(deviceAddress,dataArray)
     {
         var canvas = document.getElementById('canvas');
+        //console.log("Canvas - "+canvas.width+" x "+canvas.height);        
         var context = canvas.getContext('2d');
-        var dataPoints = app.dataPoints;
 
         thisDeviceDataPoints = dataPoints[deviceAddress];
         
         thisDeviceDataPoints.push(dataArray);
+        //console.log("Datapoints - "+thisDeviceDataPoints);
         if (thisDeviceDataPoints.length > canvas.width)
         {
             thisDeviceDataPoints.splice(0, (thisDeviceDataPoints.length - canvas.width));
@@ -236,13 +247,12 @@ var app = {
         }
 
         context.clearRect(0, 0, canvas.width, canvas.height);
-        var i = 0;
-        for (var key in app.devices)
-        {
+        //for (var key in badges)
+        for (var i = 0; i < badges.length; ++i) {
+            var key = badges[i];
             if (dataPoints[key].length > 0) {
-                drawLine(dataPoints[key],0, app.colors[i]);
+                drawLine(dataPoints[key],0, colors[i]);
             }
-            i = i+1;
         }
     },
     discoverButtonPressed:function() {
