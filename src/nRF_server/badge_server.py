@@ -2,6 +2,9 @@
 from bluepy import btle
 from bluepy.btle import BTLEException
 from badge import Badge, BadgeDelegate
+
+from badge_discoverer import BadgeDiscoverer
+
 import struct
 import logging
 import logging.handlers
@@ -12,7 +15,10 @@ import shlex
 import sys
 import time
 import csv
-from badge_discoverer import BadgeDiscoverer
+
+from functools import wraps
+import errno
+import signal
 
 log_file_name = 'out.log'
 scans_file_name = 'rssi_scan.txt'
@@ -53,6 +59,24 @@ class ContextFilter(logging.Filter):
 f = ContextFilter()
 logger.addFilter(f)
 
+# Raises a timeout exception if a function takes too long
+# http://stackoverflow.com/questions/2281850/timeout-function-if-it-takes-too-long-to-finish
+class TimeoutError(Exception):
+    pass
+
+# Or, to use with a "with" statement
+class timeout:
+    def __init__(self, seconds=1, error_message='Timeout'):
+        self.seconds = seconds
+        self.error_message = error_message
+    def handle_timeout(self, signum, frame):
+        raise TimeoutError(self.error_message)
+    def __enter__(self):
+        signal.signal(signal.SIGALRM, self.handle_timeout)
+        signal.alarm(self.seconds)
+    def __exit__(self, type, value, traceback):
+        signal.alarm(0)
+
 '''
 Returns a list of devices included in device_macs.txt 
 Format is device_mac<space>device_name
@@ -82,23 +106,33 @@ def get_devices(device_file="device_macs.txt"):
 Attempts to read data from the device specified by the address. Reading is handled by gatttool.
 '''
 def dialogue(addr=""):
-	logger.info("Talking with {}".format(addr))
+	logger.info("Connecting to {}".format(addr))
 	retcode = 0
 	bdg = None
 	try:
-		bdg = Badge(addr)
+		with timeout(seconds=5, error_message="Connect timeout"):
+			bdg = Badge(addr)
+
 		logger.info("Connected")
-		while not bdg.dlg.gotStatus:
-			bdg.NrfReadWrite.write("s")  # ask for status
-			bdg.waitForNotifications(1.0)  # waiting for status report
-		
-		logger.info("Got status")
-		if bdg.dlg.needDate:
-			bdg.sendDateTime()
-			logger.info("Date sent")
-		else:
-			logger.info("Already synced")
-		
+
+		with timeout(seconds=5, error_message="Dialogue timeout (wrong firmware version?)"):
+			while not bdg.dlg.gotStatus:
+				bdg.NrfReadWrite.write("s")  # ask for status
+				bdg.waitForNotifications(1.0)  # waiting for status report
+			
+			logger.info("Got status")
+			if bdg.dlg.needDate:
+				bdg.sendDateTime()
+				logger.info("Date sent")
+			else:
+				logger.info("Already synced")
+			
+			while not bdg.dlg.gotDateTime:
+				bdg.NrfReadWrite.write("t")  # ask for time
+				bdg.waitForNotifications(1.0)
+
+			logger.info("Badge datetime: {},{}".format(bdg.dlg.badge_sec,bdg.dlg.badge_ts))
+
 		if bdg.dlg.dataReady:
 			logger.info("Requesting data...")
 			bdg.NrfReadWrite.write("d")  # ask for data
@@ -117,6 +151,9 @@ def dialogue(addr=""):
 		logger.error("failed pulling data")
 		logger.error(e.code)
 		logger.error(e.message)
+	except TimeoutError, te:
+		retcode=-1
+		logger.error("TimeoutError: "+te.message)
 	except:
 		retcode=-1
 		e = sys.exc_info()[0]
@@ -264,11 +301,9 @@ if __name__ == "__main__":
 			for device in scanned_devices:
 					mac=device['mac']
 					scan_date=device['device_info']['scan_date']
-					rssis=device['device_info']['rssis']
-					# average RSSI. Consider a moving average
-					avg_rssi = sum(rssis) / float(len(rssis))
-					logger.debug("{},{},{:.2f}".format(scan_date,mac,avg_rssi))
-					fout.write("{},{},{:.2f}\n".format(scan_date,mac,avg_rssi))
+					rssi=device['device_info']['rssi']
+					logger.debug("{},{},{:.2f}".format(scan_date,mac,rssi))
+					fout.write("{},{},{:.2f}\n".format(scan_date,mac,rssi))
 			fout.close()
 		
 	# pull data from all devices

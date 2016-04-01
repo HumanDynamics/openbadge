@@ -1,4 +1,9 @@
-
+/**
+ * Hardware configuration for Badge 03 (square blue badges)
+ * Badges implement external SPI-connected flash
+ *   and a Sparkfun MEMS mic module, on separate 1.8V regulated supply (fed to AREF01)
+ *   and 2 LEDs
+ */
 
 
 #ifndef BADGE_03_H

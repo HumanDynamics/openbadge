@@ -1,8 +1,10 @@
 /**
- * Hardware configuration for Badge 03 (square blue badges)
- * Badges implement external SPI-connected flash
- *   and Sparkfun MEMS mic module, on separate 1.8V regulated supply (fed to AREF01)
- *   and 2 LEDs
+ * Hardware configuration for Badge 03v2 (tall narrow blue badges), Dynastream module populated
+ * Badges implement:
+ *   external SPI-connected flash
+ *   a MEMS mic plus amplifier circuit, on separate 1.8V regulated supply (fed to AREF01)
+ *   2 LEDs
+ *   tact switch
  */
 
 

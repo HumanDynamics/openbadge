@@ -52,9 +52,10 @@ remduplicates = $(strip $(if $1,$(firstword $1) $(call remduplicates,$(filter-ou
 help:
 	@echo
 	@echo "The following targets are available:"
-	@echo "  - Boards/options:  NRF51DK  badge_03  badge_03_noDebug"
-	@echo "                     badge_03v2_rigado  badge_03v2_dynastream"
+	@echo "  - Boards/options:  NRF51DK   badge_03   badge_03_noDebug"
+	@echo "                     badge_03v2_rigado   badge_03v2_dynastream"
 	@echo "                     badge_03v2_rigado_noDebug	badge_03v2_rigado_tester"
+	@echo "                     badge_03v4	 badge_03v4_noDebug   badge_03v4_tester"
 	@echo "  - Actions:         flashUnlock  flashErase  flashS130  flashAPP"
 	@echo "  - Info:            help  helpDetailed"
 	@echo
@@ -62,18 +63,24 @@ help:
 helpDetailed:
 	@echo
 	@echo "The following targets are available:"
-	@echo "   - NRF51DK:           compile for NRF51 devkit board."
-	@echo "   - badge_03:          compile for Badge 03 board (square blue badge)"
-	@echo "   - badge_03_noDebug:  compile for Badge 03, UART disabled"
+	@echo "   - NRF51DK:            compile for NRF51 devkit board."
+	@echo "   - badge_03:           compile for Badge 03 board (square blue badge)"
+	@echo "   - badge_03_noDebug:   compile for Badge 03, UART disabled"
+	@echo " -----"
 	@echo "   - badge_03v2_[rigado|dynastream]:  compile for Badge 03v2"
+	@echo "                           (with corresponding BLE module)"
 	@echo "   - badge_03v2_rigado_noDebug:  compile for Badge 03v2, UART disabled"
-	@echo "                          (with corresponding BLE module)"
-	@echo "   - badge_03v2_rigado_tester:       compile Rigado self tester"	
-	@echo "   - flashUnlock:       set flags required to enable erasing/programming of flash"
-	@echo "                          (only required for brand new NRF51 chips)"
-	@echo "   - flashErase:        erase all flash (including softdevice)"
-	@echo "   - flashS130:         flash S130 (BLE simultaneous central/peripheral) softdevice"
-	@echo "   - flashAPP:          flash the badge firmware (after the softdevice)"
+	@echo "   - badge_03v2_rigado_tester:   compile 03v2 Rigado self tester"
+	@echo " -----"
+	@echo "   - badge_03v4:         compile for Badge 03v4 board"
+	@echo "   - badge_03v4_noDebug: compile for Badge 03v4 board, UART disabled"
+	@echo "   - badge_03v4_tester:  compile for Badge 03v4 board, UART disabled"
+	@echo " -----"
+	@echo "   - flashUnlock:        set flags required to enable erasing/programming of flash"
+	@echo "                           (only required for brand new NRF51 chips)"
+	@echo "   - flashErase:         erase all flash (including softdevice)"
+	@echo "   - flashS130:          flash S130 (BLE simultaneous central/peripheral) softdevice"
+	@echo "   - flashAPP:           flash the badge firmware (after the softdevice)"
 	@echo
 
 
@@ -153,10 +160,12 @@ BUILD_DIRECTORIES := $(sort $(OBJECT_DIRECTORY) $(OUTPUT_BINARY_DIRECTORY) $(LIS
 
 #======= Target-dependent compiler flags
 NRF51DK: CFLAGS += -DBOARD_PCA10028
+
 badge_03: CFLAGS += -DBOARD_CUSTOM
 badge_03: CFLAGS += -DBOARD_BADGE_03
 badge_03_noDebug: CFLAGS += -DBOARD_CUSTOM
 badge_03_noDebug: CFLAGS += -DBOARD_BADGE_03
+
 badge_03v2_rigado: CFLAGS += -DBOARD_CUSTOM
 badge_03v2_rigado: CFLAGS += -DBOARD_BADGE_03V2_RIGADO
 badge_03v2_rigado_noDebug: CFLAGS += -DBOARD_CUSTOM
@@ -164,13 +173,23 @@ badge_03v2_rigado_noDebug: CFLAGS += -DBOARD_BADGE_03V2_RIGADO
 badge_03v2_rigado_tester: CFLAGS += -DBOARD_CUSTOM
 badge_03v2_rigado_tester: CFLAGS += -DBOARD_BADGE_03V2_RIGADO
 badge_03v2_rigado_tester: CFLAGS += -DTESTER_ENABLE #enables tester mode 
-
 badge_03v2_dynastream: CFLAGS += -DBOARD_CUSTOM
 badge_03v2_dynastream: CFLAGS += -DBOARD_BADGE_03V2_DYNASTREAM
 
+badge_03v4: CFLAGS += -DBOARD_CUSTOM
+badge_03v4: CFLAGS += -DBOARD_BADGE_03V4
+badge_03v4_noDebug: CFLAGS += -DBOARD_CUSTOM
+badge_03v4_noDebug: CFLAGS += -DBOARD_BADGE_03V4
+badge_03v4_tester: CFLAGS += -DBOARD_CUSTOM
+badge_03v4_tester: CFLAGS += -DBOARD_BADGE_03V4
+badge_03v4_tester: CFLAGS += -DTESTER_ENABLE #enables tester mode
+
+
+
 CFLAGS += -DDEBUG_LOG_ENABLE    #enable UART debug logger
 badge_03_noDebug: CFLAGS += -UDEBUG_LOG_ENABLE    #disable if noDebug target specified
-badge_03v2_rigado_noDebug: CFLAGS += -UDEBUG_LOG_ENABLE    #disable if noDebug target specified
+badge_03v2_rigado_noDebug: CFLAGS += -UDEBUG_LOG_ENABLE
+badge_03v4_noDebug: CFLAGS += -UDEBUG_LOG_ENABLE
 
 
 
@@ -204,6 +223,7 @@ LDFLAGS += --specs=nano.specs -lc -lnosys
 
 # Assembler flags
 ASMFLAGS += -x assembler-with-cpp
+# ! vvv this has been here since badge 03, hasn't been updated, but hasn't seemed to cause any issues?
 ASMFLAGS  += -DBOARD_PCA10028  #default to NRF51DK board
 badge_03: ASMFLAGS += -UBOARD_PCA10028  #undefine NRF51DK, to define custom board flag
 badge_03: ASMFLAGS += -DBOARD_CUSTOM
@@ -295,13 +315,19 @@ cleanobj:
 
 #==============================  Board option rules  ===================================
 
+NRF51DK: clean nrf51422_xxac_s130
+
 badge_03: clean nrf51422_xxac_s130
 badge_03_noDebug: clean nrf51422_xxac_s130
+
 badge_03v2_rigado: clean nrf51422_xxac_s130
 badge_03v2_rigado_noDebug: clean nrf51422_xxac_s130
 badge_03v2_rigado_tester: clean nrf51422_xxac_s130
 badge_03v2_dynastream: clean nrf51422_xxac_s130
-NRF51DK: clean nrf51422_xxac_s130
+
+badge_03v4: clean nrf51422_xxac_s130
+badge_03v4_noDebug: clean nrf51422_xxac_s130
+badge_03v4_tester: clean nrf51422_xxac_s130
 
 
 #=================================  Action rules  =====================================

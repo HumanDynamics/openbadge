@@ -13,6 +13,8 @@
   #include "badge_03v2_rigado.h"
 #elif defined(BOARD_BADGE_03V2_DYNASTREAM)
   #include "badge_03v2_dynastream.h"
+#elif defined(BOARD_BADGE_03V4)
+  #include "badge_03v4.h"
 #else
   #error "Board is not defined"
 #endif
