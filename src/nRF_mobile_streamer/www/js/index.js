@@ -12,6 +12,10 @@ var nrf51UART = {
     rxCharacteristic: '6e400003-b5a3-f393-e0a9-e50e24dcca9e'  // receive is from the phone's perspective
 };
 
+var colors = ['#fa0','#0ff','#f00','#0f0','#00f'];
+// Devices data.
+var dataPoints = {};
+
 var app = {
     // Application Constructor
     initialize: function() {
@@ -79,6 +83,9 @@ var app = {
             }
             );
         }
+
+        // clear canvas
+        app.clearCanvas();
     },
     refreshDeviceList: function() {
         deviceList.innerHTML = ''; // empties the list
@@ -138,21 +145,41 @@ var app = {
         var params = {address:address};
         qbluetoothle.connectDevice(params)
         .then(qbluetoothle.discoverDevice)
+        .then(function(obj) {
+            var string = "1234"; //set fake date by sending >2 bytes
+            console.log(obj.address + "|Trying to call send");
+            return qbluetoothle.writeToDevice(obj.address,string)}
+        )
+        .then(function(obj) {
+            var string = "f"; //enable stream
+            console.log(obj.address + "|Trying to call send");
+            return qbluetoothle.writeToDevice(obj.address,string)}
+        )
         .then(qbluetoothle.subscribeToDevice)
         .then(
             function(obj) { // success (of chain). Shouldn't really be called
                 console.log(obj.address + "|Success:" + obj.status + "| Keys: " + Object.keys(obj));
             },
             function(obj) { // failure
-                app.touchLastActivity(obj.address);
-                console.log(obj.address + "|General error: " + obj.error + " - " + obj.message + " Keys: " + Object.keys(obj));
+                if (obj.address) {
+                    app.touchLastActivity(obj.address);
+                    console.log(obj.address + "|General error: " + obj.error + " - " + obj.message + " Keys: " + Object.keys(obj));
+                } else {
+                    // must be an exception
+                    console.error(obj);
+                }
             },
             function(obj) { // notification
                 app.touchLastActivity(obj.address);
                 if (obj.status == "subscribedResult") {
                     var bytes = bluetoothle.encodedStringToBytes(obj.value);
-                    var str = bluetoothle.bytesToString(bytes);
-                    console.log(obj.address + "|Subscription message: " + obj.status + "|Value: " + str);
+                    //var str = bluetoothle.bytesToString(bytes);
+                    //console.log(obj.address + "|Subscription message: " + obj.status + "|Value: " + str);
+                    console.log(obj.address + "|Subscription message: " + obj.status + "|Value: " + bytes[0]);
+
+                    // hack to print the data
+                    //app.drawLines(device.address,[new DataView(data).getUint8(0, true)]);
+
                 } else if (obj.status == "subscribed") {
                     console.log(obj.address + "|Subscribed: " + obj.status);
                 } else {
@@ -165,6 +192,58 @@ var app = {
               app.closeDevice(address);
         })
         .done(); // wrap things up. notifications will stop here
+    },
+    clearCanvas: function() {
+        var canvas = document.getElementById('canvas');
+        var context = canvas.getContext('2d');
+        context.clearRect(0, 0, canvas.width, canvas.height);
+    },
+    drawLines: function(deviceAddress,dataArray)
+    {
+        var canvas = document.getElementById('canvas');
+        var context = canvas.getContext('2d');
+        var dataPoints = app.dataPoints;
+
+        thisDeviceDataPoints = dataPoints[deviceAddress];
+        
+        thisDeviceDataPoints.push(dataArray);
+        if (thisDeviceDataPoints.length > canvas.width)
+        {
+            thisDeviceDataPoints.splice(0, (thisDeviceDataPoints.length - canvas.width));
+        }
+
+        var magnitude = 100;
+
+        function calcY(i)
+        {
+            return canvas.height - ((i * canvas.height) / magnitude);
+        }
+
+        function drawLine(deviceDataPoints,offset, color)
+        {
+            context.strokeStyle = color;
+            context.lineWidth = 2;
+            context.beginPath();
+            context.moveTo(0, calcY(deviceDataPoints[deviceDataPoints.length-1][offset]));
+            var x = 1;
+            for (var i = deviceDataPoints.length - 2; i >= 0; i--)
+            {
+                var y = calcY(deviceDataPoints[i][offset]);
+                context.lineTo(x, y);
+                x++;
+            }
+            context.stroke();
+        }
+
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        var i = 0;
+        for (var key in app.devices)
+        {
+            if (dataPoints[key].length > 0) {
+                drawLine(dataPoints[key],0, app.colors[i]);
+            }
+            i = i+1;
+        }
     },
     discoverButtonPressed:function() {
         var address = badges[0];

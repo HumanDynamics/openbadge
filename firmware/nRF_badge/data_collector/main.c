@@ -116,7 +116,7 @@ void sampleData()  {
     storeByte(reading,now());
   }
   if (streamSamples) {
-    debug_log("Seding %d\r\n",reading);
+    debug_log("Sending %d\r\n",reading);
     BLEwriteChar(reading);
   }
 }

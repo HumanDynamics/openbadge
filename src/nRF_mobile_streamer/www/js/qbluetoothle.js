@@ -122,6 +122,7 @@ function writeToDevice(address,strValue) {
         "value" : encodedString
     };
 
+    console.log(address + "|Internal call to writetoDevice");
     bluetoothle.write(
         function(obj) { // success
             d.resolve(obj);
