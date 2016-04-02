@@ -2,7 +2,8 @@
 var Q = require('q');
 var qbluetoothle = require('./qbluetoothle');
 
-var badges = ['E1:C1:21:A2:B2:E0','D1:90:32:2F:F1:4B'];
+//var badges = ['E1:C1:21:A2:B2:E0','D1:90:32:2F:F1:4B'];
+var badges = ['EC:21:82:A8:0B:59','D1:90:32:2F:F1:4B'];
 //var badges = ['E1:C1:21:A2:B2:E0'];
 var badgesInfo = {};
 var watchdogTimer = null;
@@ -13,7 +14,7 @@ var nrf51UART = {
     rxCharacteristic: '6e400003-b5a3-f393-e0a9-e50e24dcca9e'  // receive is from the phone's perspective
 };
 
-var colors = ['#fa0','#0ff','#f00','#0f0','#00f'];
+var colors = ['red','blue','#f00','#0f0','#00f'];
 // Devices data.
 var dataPoints = {};
 
