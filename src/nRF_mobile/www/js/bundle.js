@@ -2,7 +2,8 @@
 var Q = require('q');
 var qbluetoothle = require('./qbluetoothle');
 
-var badges = ['E1:C1:21:A2:B2:E0','D1:90:32:2F:F1:4B'];
+//var badges = ['E1:C1:21:A2:B2:E0','D1:90:32:2F:F1:4B'];
+var badges = ['EC:21:82:A8:0B:59','D1:90:32:2F:F1:4B'];
 //var badges = ['E1:C1:21:A2:B2:E0'];
 var badgesInfo = {};
 var watchdogTimer = null;
@@ -116,9 +117,13 @@ var app = {
                 //app.discoverDevice(obj);
             },
             function(obj) { // failure
-                app.touchLastActivity(obj.address);
-                console.log(obj.address + "|Connect error: " + obj.error + " - " + obj.message + " Keys: " + Object.keys(obj));
-                app.closeDevice(obj.address); //Best practice is to close on connection error.
+                if (obj.address) {
+                    app.touchLastActivity(obj.address);
+                    console.log(obj.address + "|General error: " + obj.error + " - " + obj.message + " Keys: " + Object.keys(obj));
+                } else {
+                    // must be an exception
+                    console.error(obj);
+                }
             }
         );
     },
