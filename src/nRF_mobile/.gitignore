@@ -1,3 +1,4 @@
 platforms
 plugins
 www/js/node_modules
+www/js/bundle.js
