@@ -85,8 +85,8 @@ bool storedSample = false;  //whether we've stored the sample from the current s
 //======================================================================================
 volatile bool BLEconnected = false;  //whether we're currently connected
 volatile bool sendStatus = false;  //flag signaling that the server asked for status
+volatile bool streamSamples = false;  //flag signaling that the server asked for stream of samples
 volatile bool sendTime = false;  //flag signaling that the server asked for time
-
 
 //============================ time-related stuff ======================================
 //======================================================================================
@@ -114,6 +114,10 @@ void sampleData()  {
   readingsSum = 0;
   if (dateReceived)  {
     storeByte(reading,now());
+  }
+  if (streamSamples) {
+    debug_log("Sending %d\r\n",reading);
+    BLEwriteChar(reading);
   }
 }
 
@@ -287,6 +291,7 @@ int main(void)
      * If the board resets for some reason, an LED will blink.
      * To intentionally reset the board, the button must be held on start.
      */
+     /*
     if(nrf_gpio_pin_read(BUTTON_1) != 0)
     {
         nrf_gpio_pin_write(LED_1,LED_ON);
@@ -302,7 +307,7 @@ int main(void)
         }
             
     }
-    
+    */
     nrf_delay_ms(1000);
     
     
@@ -536,17 +541,24 @@ void BLEonConnect()
     debug_log("Connected\r\n");
     sleep = false;
     disableStorage();  //don't manipulate flash while BLE is busy
+
+    // for app development. disable if forgotten in prod. version
+    nrf_gpio_pin_write(LED_1,LED_ON);
 }
 
 void BLEonDisconnect()
 {
     debug_log("Disconnected\r\n");
     sleep = false;
+    streamSamples = false;
     //sendStatus = false;
     disableSending();  // stop sending
     if(getScanState() == SCAN_IDLE)  {
         enableStorage();  //continue storage operations now that connection is ended, if scans aren't active
     }
+
+    // for app development. disable if forgotten in prod. version
+    nrf_gpio_pin_write(LED_1,LED_OFF);
 }
 
 /** Function for handling incoming data from the BLE UART service
@@ -580,6 +592,11 @@ void BLEonReceive(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)
         {
             enableSending();
         }
+    }
+    else if (p_data[0] == 'f')  
+    {
+        debug_log("samples stream request.\r\n");
+        streamSamples = true;
     }
     else  
     {
