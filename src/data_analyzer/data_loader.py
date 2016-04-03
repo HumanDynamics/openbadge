@@ -36,3 +36,4 @@ if __name__ == '__main__':
     print("Yay")
     plt.plot(sorted(data.data, key=lambda x: x['samples']))
     plt.show()
+
