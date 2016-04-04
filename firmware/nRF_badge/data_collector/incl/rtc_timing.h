@@ -27,6 +27,7 @@ void rtc_config(void);
 
 /**
  * set a compare interrupt to occur a number of milliseconds from now (i.e. to break from sleep)
+ * NOTE: Maximum countdown time is 130 seconds.
  */
 void countdown_set(unsigned long ms);
 
@@ -34,7 +35,7 @@ void countdown_set(unsigned long ms);
 /**
  * returns 32768Hz ticks of RTC, extended to 43 bits  (from built-in 24 bits)
  */
-unsigned long ticks(void);
+unsigned long long ticks(void);
 
 /**
  * emulate functionality of millis() in arduino
