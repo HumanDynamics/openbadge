@@ -10,14 +10,14 @@ class Chunk():
     maxSamples = 116
     
     def __init__(self, header, data):
-        self.ts,self.voltage,self.sampleDelay = header
+        self.ts,self.fract,self.voltage,self.sampleDelay = header
         self.samples = data[0:]
     
     def setHeader(self,header):
-        self.ts,self.voltage,self.sampleDelay = header
+        self.ts,self.fract,self.voltage,self.sampleDelay = header
     
     def getHeader(self):
-        return (self.ts,self.voltage,self.sampleDelay)
+        return (self.ts,self.fract,self.voltage,self.sampleDelay)
         
     def addData(self,data):
         self.samples.extend(data)
@@ -27,6 +27,7 @@ class Chunk():
     
     def reset(self):
         self.ts = None
+        self.fract = None
         self.voltage = None
         self.sampleDelay = None
         self.samples = []
@@ -38,7 +39,7 @@ class Chunk():
 # data so exeternal processes can read from it more easy. Reset will
 # delete all buffered data
 class BadgeDelegate(DefaultDelegate):
-    tempChunk = Chunk((None,None,None),[])
+    tempChunk = Chunk((None,None,None,None),[])
     #data is received as chunks, keep the chunk organization
     chunks = []
     #to keep track of the dialogue
@@ -56,7 +57,7 @@ class BadgeDelegate(DefaultDelegate):
         self.reset()
    
     def reset(self):
-        self.tempChunk = Chunk((None,None,None),[])
+        self.tempChunk = Chunk((None,None,None,None),[])
         self.chunks = [] 
         self.gotStatus = False
         self.gotHeader = False
@@ -83,7 +84,7 @@ class BadgeDelegate(DefaultDelegate):
             self.gotDateTime = True
         elif not self.gotHeader:
             self.tempChunk.reset()
-            self.tempChunk.setHeader(struct.unpack('<Lfh',data)) #time, voltage, sample delay
+            self.tempChunk.setHeader(struct.unpack('<Lhfh',data)) #time, fraction time (ms), voltage, sample delay
             self.tempChunk.ts = self._longToDatetime(self.tempChunk.ts) #fix time
             #print "{},{},{}".format(self.ts, self.voltage, self.sampleDelay)
             self.gotHeader = True
@@ -120,6 +121,16 @@ class Badge(Nrf):
     def write(self,arr,fmt):
         s = struct.pack(fmt, arr)
         return self.NrfReadWrite.write(s)
+
+    # sends status request with UTC time to the badge
+    '''
+    def sendStatusRequest(self):
+        n = datetime.datetime.utcnow()
+        epoch_seconds = (n - datetime.datetime(1970,1,1)).total_seconds()
+        long_epoch_seconds = long(round(epoch_seconds))
+        self.dlg.needDate = False
+        return self.write(long_epoch_seconds,'<L') 
+    '''
 
     # sends UTC time to the badge
     def sendDateTime(self):

@@ -173,7 +173,7 @@ def dialogue(addr=""):
 				i = 0
 				fout = open(outfile, "a")
 				for chunk in bdg.dlg.chunks:
-					logger.info("Chunk timestamp: {}, Voltage: {}, Samples in chunk: {}".format(chunk.ts,chunk.voltage,len(chunk.samples)))
+					logger.info("Chunk timestamp: {}, Chunk fraction time: {}, Voltage: {}, Samples in chunk: {}".format(chunk.ts,chunk.fract,chunk.voltage,len(chunk.samples)))
 					fout.write("{},{},{}".format(chunk.ts,chunk.voltage,chunk.sampleDelay))
 					for sample in chunk.samples:
 						fout.write(",{}".format(sample))

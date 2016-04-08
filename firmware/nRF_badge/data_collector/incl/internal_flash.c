@@ -231,16 +231,19 @@ bool updateSending()
             uint32_t* toSendAddr = ADDRESS_OF_CHUNK(send.chunk);
             // send date
             char dateAsChars[4];
+            char dateFractAsChars[2];
             char batAsChars[4];
             char delayAsChars[2];
             long2Chars(*toSendAddr, dateAsChars);  //get date from flash
+            long2Chars(0, dateFractAsChars);  //get date fractional (ms) from flash -- TODO - replace dummy data with stored info
             long2Chars(*(toSendAddr + 1), batAsChars);  //get battery voltage from flash
             short2Chars(send.samplePeriod, delayAsChars);  //turn sample period into chars
             // pack and send
-            unsigned char header[10];
+            unsigned char header[12];
             memcpy(header, dateAsChars, 4);
-            memcpy(header + 4, batAsChars, 4);
-            memcpy(header + 8, delayAsChars, 2);
+            memcpy(header + 4, dateFractAsChars, 2);
+            memcpy(header + 6, batAsChars, 4);
+            memcpy(header + 10, delayAsChars, 2);
             if (BLEwrite(header, sizeof(header)))  //try to send header
             {
                 //debug_log("OK.\r\n");
