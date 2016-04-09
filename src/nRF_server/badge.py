@@ -1,6 +1,7 @@
 from bluepy import btle
 from bluepy.btle import UUID, Peripheral, DefaultDelegate, AssignedNumbers
 from nrf import Nrf, SimpleDelegate
+from math import floor
 import struct
 import datetime
 import time
@@ -50,6 +51,7 @@ class BadgeDelegate(DefaultDelegate):
     dataReady = False
     badge_sec = None # badge time in seconds
     badge_ts = None # badge time as timestamp
+    badge_ts_fract = None # fraction time of the timestamp (ms)
 
     def __init__(self, params):
         btle.DefaultDelegate.__init__(self)
@@ -72,12 +74,12 @@ class BadgeDelegate(DefaultDelegate):
             else:
                 self.gotStatus = False #invalid status.  retry?
         elif not self.gotDateTime:
-            self.badge_sec = struct.unpack('<L',data)[0]
+            self.badge_sec,self.badge_ts_fract = struct.unpack('<LH',data)
             self.badge_ts = self._longToDatetime(self.badge_sec) #fix time
             self.gotDateTime = True
         elif not self.gotHeader:
             self.tempChunk.reset()
-            self.tempChunk.setHeader(struct.unpack('<Lhfh',data)) #time, fraction time (ms), voltage, sample delay
+            self.tempChunk.setHeader(struct.unpack('<LHfH',data)) #time, fraction time (ms), voltage, sample delay
             self.tempChunk.ts = self._longToDatetime(self.tempChunk.ts) #fix time
             #print "{},{},{}".format(self.ts, self.voltage, self.sampleDelay)
             self.gotHeader = True
@@ -119,16 +121,9 @@ class Badge(Nrf):
     def sendStatusRequest(self):
         n = datetime.datetime.utcnow()
         epoch_seconds = (n - datetime.datetime(1970,1,1)).total_seconds()
-        long_epoch_seconds = long(round(epoch_seconds))
-        return self.write('<cL',"s",long_epoch_seconds) 
-
-    # sends UTC time to the badge
-    def sendDateTime(self):
-        n = datetime.datetime.utcnow()
-        epoch_seconds = (n - datetime.datetime(1970,1,1)).total_seconds()
-        long_epoch_seconds = long(round(epoch_seconds))
-        return self.write('<L',long_epoch_seconds) 
-
+        long_epoch_seconds = long(floor(epoch_seconds))
+        ts_fract = n.microsecond/1000;
+        return self.write('<cLH',"s",long_epoch_seconds,ts_fract)
 
 if __name__ == "__main__":
     import time

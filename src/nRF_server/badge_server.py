@@ -126,7 +126,7 @@ def dialogue(addr=""):
 				bdg.NrfReadWrite.write("t")  # ask for time
 				bdg.waitForNotifications(1.0)
 
-			logger.info("Badge datetime: {},{}".format(bdg.dlg.badge_sec,bdg.dlg.badge_ts))
+			logger.info("Badge datetime: {},{},{}".format(bdg.dlg.badge_sec,bdg.dlg.badge_ts,bdg.dlg.badge_ts_fract))
 
 		if bdg.dlg.dataReady:
 			logger.info("Requesting data...")
@@ -168,7 +168,7 @@ def dialogue(addr=""):
 				i = 0
 				fout = open(outfile, "a")
 				for chunk in bdg.dlg.chunks:
-					logger.info("Chunk timestamp: {}, Chunk fraction time: {}, Voltage: {}, Samples in chunk: {}".format(chunk.ts,chunk.fract,chunk.voltage,len(chunk.samples)))
+					logger.info("Chunk timestamp: {}, Chunk fraction time: {}, Voltage: {}, Delay: {}, Samples in chunk: {}".format(chunk.ts,chunk.fract,chunk.voltage,chunk.sampleDelay,len(chunk.samples)))
 					fout.write("{},{},{}".format(chunk.ts,chunk.voltage,chunk.sampleDelay))
 					for sample in chunk.samples:
 						fout.write(",{}".format(sample))

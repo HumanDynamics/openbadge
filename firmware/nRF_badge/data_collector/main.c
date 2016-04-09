@@ -485,12 +485,19 @@ int main(void)
         if (sendTime)  //triggered from onReceive 't'
         {  
             unsigned long timestamp = now();
+            unsigned long timestamp_fract = nowFractional();
             char dateAsChars[4];
-            long2Chars(timestamp, dateAsChars);  //get date from flash
+            char dateFractAsChars[2];
+            long2Chars(timestamp, dateAsChars); 
+            short2Chars((unsigned short) timestamp_fract, dateFractAsChars); 
 
-            if (BLEwrite((unsigned char*) dateAsChars, sizeof(dateAsChars)))
+            unsigned char buf[6];
+            memcpy(buf, dateAsChars, 4);
+            memcpy(buf + 4, dateFractAsChars, 2);
+
+            if (BLEwrite((unsigned char*) buf, sizeof(buf)))
             {
-                debug_log("Time sent - %lu\r\n",timestamp);  
+                debug_log("Time sent - %lu.%lu\r\n",timestamp,timestamp_fract);  
                 sendTime = false;
             }
             else  {
@@ -570,8 +577,10 @@ void BLEonReceive(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)
     {
         debug_log("status request with date.\r\n");
         debug_log("sync timestamp.\r\n");
-        unsigned long f = readLong(p_data+1); // skip first element
-        setTime(f);
+        unsigned long ts = readLong(p_data+1); // skip first element
+        unsigned short f = readShort(p_data + 5);
+        unsigned long fs =  (unsigned long) f;
+        setTimeFractional(ts,fs);
         disableSending();
         dateReceived = true;
         sendStatus = true;

@@ -235,7 +235,7 @@ bool updateSending()
             char batAsChars[4];
             char delayAsChars[2];
             long2Chars(*toSendAddr, dateAsChars);  //get date from flash
-            long2Chars(0, dateFractAsChars);  //get date fractional (ms) from flash -- TODO - replace dummy data with stored info
+            short2Chars(0, dateFractAsChars);  //get date fractional (ms) from flash -- TODO - replace dummy data with stored info
             long2Chars(*(toSendAddr + 1), batAsChars);  //get battery voltage from flash
             short2Chars(send.samplePeriod, delayAsChars);  //turn sample period into chars
             // pack and send
@@ -418,6 +418,12 @@ unsigned long readLong(uint8_t *a) {
   return retval;
 }
 
+// Convert chars to short (expects little endian)
+unsigned short readShort(uint8_t *a) {
+  unsigned short retval;
+  retval = (unsigned short) a[1] << 8 | a[0];
+  return retval;
+}
 
 //Halt the main loop if doWePanic == true
 void panic(int doWePanic)  

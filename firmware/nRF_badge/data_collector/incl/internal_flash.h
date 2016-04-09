@@ -204,6 +204,8 @@ unsigned long float2Long(float val);
 
 unsigned long readLong(uint8_t *a);
 
+unsigned short readShort(uint8_t *a);
+
 //Halt the program if doWePanic == true
 void panic(int doWePanic);
 
