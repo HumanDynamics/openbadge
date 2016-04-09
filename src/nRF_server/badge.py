@@ -76,12 +76,13 @@ class BadgeDelegate(DefaultDelegate):
         elif not self.gotDateTime:
             self.badge_sec,self.badge_ts_fract = struct.unpack('<LH',data)
             self.badge_ts = self._longToDatetime(self.badge_sec) #fix time
+            self.badge_ts = self.badge_ts + datetime.timedelta(milliseconds=self.badge_ts_fract) # add ms
             self.gotDateTime = True
         elif not self.gotHeader:
             self.tempChunk.reset()
             self.tempChunk.setHeader(struct.unpack('<LHfH',data)) #time, fraction time (ms), voltage, sample delay
             self.tempChunk.ts = self._longToDatetime(self.tempChunk.ts) #fix time
-            #print "{},{},{}".format(self.ts, self.voltage, self.sampleDelay)
+            self.tempChunk.ts = self.tempChunk.ts + datetime.timedelta(milliseconds=self.tempChunk.fract) # add ms
             self.gotHeader = True
         else: # just data
             sample_arr = struct.unpack('<%dB' % len(data),data) # Nrfuino bytes are unsigned bytes
