@@ -47,7 +47,6 @@ class BadgeDelegate(DefaultDelegate):
     gotDateTime = False
     gotHeader = False
     #badge states, reported from badge
-    needDate = False
     dataReady = False
     badge_sec = None # badge time in seconds
     badge_ts = None # badge time as timestamp
@@ -61,20 +60,14 @@ class BadgeDelegate(DefaultDelegate):
         self.chunks = [] 
         self.gotStatus = False
         self.gotHeader = False
-        self.needDate = False
         self.dataReady = False
 
     def handleNotification(self, cHandle, data):
         if not self.gotStatus:  # whether date has been set
             self.gotStatus = True  #reverted to false if it turns out invalid
-            if str(data) == 'n':
-                self.needDate = True
-                self.dataReady = False
-            elif str(data) == 'd':
-                self.needDate = False
+            if str(data) == 'd':
                 self.dataReady = True
             elif str(data) == 's':
-                self.needDate = False
                 self.dataReady = False #synced but no data ready, no need to do anything
             else:
                 self.gotStatus = False #invalid status.  retry?
@@ -118,27 +111,23 @@ class Badge(Nrf):
         return arr
 
 
-    def write(self,arr,fmt):
-        s = struct.pack(fmt, arr)
+    def write(self,fmt,*arr):
+        s = struct.pack(fmt, *arr)
         return self.NrfReadWrite.write(s)
 
     # sends status request with UTC time to the badge
-    '''
     def sendStatusRequest(self):
         n = datetime.datetime.utcnow()
         epoch_seconds = (n - datetime.datetime(1970,1,1)).total_seconds()
         long_epoch_seconds = long(round(epoch_seconds))
-        self.dlg.needDate = False
-        return self.write(long_epoch_seconds,'<L') 
-    '''
+        return self.write('<cL',"s",long_epoch_seconds) 
 
     # sends UTC time to the badge
     def sendDateTime(self):
         n = datetime.datetime.utcnow()
         epoch_seconds = (n - datetime.datetime(1970,1,1)).total_seconds()
         long_epoch_seconds = long(round(epoch_seconds))
-        self.dlg.needDate = False
-        return self.write(long_epoch_seconds,'<L') 
+        return self.write('<L',long_epoch_seconds) 
 
 
 if __name__ == "__main__":

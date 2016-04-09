@@ -566,18 +566,14 @@ void BLEonDisconnect()
 void BLEonReceive(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)  
 {
     debug_log("Received: ");
-    if (length > 2)  
-    {  //is it long enough to be a timestamp.
+    if (p_data[0] == 's')  
+    {
+        debug_log("status request with date.\r\n");
         debug_log("sync timestamp.\r\n");
-        unsigned long f = readLong(p_data);
+        unsigned long f = readLong(p_data+1); // skip first element
         setTime(f);
-        //Serial.printf("%d:%d:%d %d-%d-%d\n", hour(), minute(), second(), month(), day(), year());
         disableSending();
         dateReceived = true;
-    }
-    else if (p_data[0] == 's')  
-    {
-        debug_log("status request.\r\n");
         sendStatus = true;
     }
     else if (p_data[0] == 't')  

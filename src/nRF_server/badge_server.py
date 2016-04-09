@@ -117,16 +117,11 @@ def dialogue(addr=""):
 
 		with timeout(seconds=5, error_message="Dialogue timeout (wrong firmware version?)"):
 			while not bdg.dlg.gotStatus:
-				bdg.NrfReadWrite.write("s")  # ask for status
+				bdg.sendStatusRequest()  # ask for status
 				bdg.waitForNotifications(1.0)  # waiting for status report
 			
 			logger.info("Got status")
-			if bdg.dlg.needDate:
-				bdg.sendDateTime()
-				logger.info("Date sent")
-			else:
-				logger.info("Already synced")
-			
+						
 			while not bdg.dlg.gotDateTime:
 				bdg.NrfReadWrite.write("t")  # ask for time
 				bdg.waitForNotifications(1.0)
