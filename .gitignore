@@ -7,8 +7,9 @@ _build/
 *.out
 *.bin
 device_macs*
-*.log
 rssi_scan.txt
+data.db
+*.log
 *.s#*
 *.b#*
 *.l#*

@@ -2,7 +2,7 @@
 from bluepy import btle
 from bluepy.btle import BTLEException
 from badge import Badge, BadgeDelegate
-
+from badge_db import badgeDB
 from badge_discoverer import BadgeDiscoverer
 
 import struct
@@ -166,6 +166,8 @@ def dialogue(addr=""):
 				logger.info("saving chunks to file")
 				outfile = addr.replace(":","_") + ".scn"
 				i = 0
+
+				# store in CSV file
 				fout = open(outfile, "a")
 				for chunk in bdg.dlg.chunks:
 					logger.info("Chunk timestamp: {}, Voltage: {}, Delay: {}, Samples in chunk: {}".format(chunk.ts,chunk.voltage,chunk.sampleDelay,len(chunk.samples)))
@@ -175,6 +177,15 @@ def dialogue(addr=""):
 		
 					fout.write("\n")
 				fout.close()
+
+				# store in DB
+				with badgeDB() as db:
+					for chunk in bdg.dlg.chunks:
+						logger.info("Chunk timestamp: {}, Voltage: {}, Delay: {}, Samples in chunk: {}".format(chunk.ts,chunk.voltage,chunk.sampleDelay,len(chunk.samples)))
+						db.insertChunk(addr,chunk.ts,chunk.voltage)
+						#for sample in chunk.samples:
+						#	fout.write(",{}".format(sample))			
+
 				logger.info("done writing")
 
 			else:
