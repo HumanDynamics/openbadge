@@ -18,7 +18,6 @@ function Badge(address) {
 
 	this.sendString = function(stringValue) {
 		var address = this.address;
-		console.log(address + "|Trying to send data");
 		qbluetoothle.writeToDevice(address, stringValue).then(
 			function(obj) { // success
 				console.log(obj.address + "|Data sent! " + obj.status + "|Keys: " + Object.keys(obj));
@@ -62,6 +61,9 @@ function Badge(address) {
 						badge.badgeDialogue.onData(str);
 					} else if (obj.status == "subscribed") {
 						console.log(obj.address + "|Subscribed: " + obj.status);
+
+						// start the dialog
+						badge.sendStatusRequest();
 					} else {
 						console.log(obj.address + "|Unexpected Subscribe Status");
 					}
@@ -74,6 +76,31 @@ function Badge(address) {
 			.done(); // wrap things up. notifications will stop here
 	};
 
+	// Sends a request for status from the badge
+	this.sendStatusRequest = function() {
+		var address = this.address;
+		console.log(address + "|Requesting status: ");
+		var s = "s"; //status
+        this.sendString(s);
+	};
+
+	this.touchLastActivity = function() {
+		var address = this.address;
+        var d = new Date();
+        console.log(address+"|"+"Updating last activity: "+d);
+        this.lastActivity = d;
+    };
+
+    this.touchLastDisconnect = function() {
+    	var address = this.address;
+        var d = new Date();
+        console.log(address+"|"+"Updating last disconnect: "+d);
+        this.lastDisconnect = d;
+    }
+
+	/******************************************************************
+	* Lower level commands
+	*******************************************************************/
 	this.connect = function() {
 		var address = this.address;
 		console.log(address + "|Beginning connection to");
@@ -178,20 +205,6 @@ function Badge(address) {
 		);
 	};
 
-
-	this.touchLastActivity = function() {
-		var address = this.address;
-        var d = new Date();
-        console.log(address+"|"+"Updating last activity: "+d);
-        this.lastActivity = d;
-    };
-
-    this.touchLastDisconnect = function() {
-    	var address = this.address;
-        var d = new Date();
-        console.log(address+"|"+"Updating last disconnect: "+d);
-        this.lastDisconnect = d;
-    }
 }
 
 module.exports = {

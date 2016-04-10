@@ -126,7 +126,7 @@ function BadgeDialogue(address, send, log) {
             } else if (data == 'd') {
                 this.log("Data available, extracting: ");
                 //data ready
-                this.status = this.StatusEnum.HEADER;
+                this.status = this.StatusEnum.HEADER; // expecting a header next
                 this.send('d'); //request data
             } else if (data == 's') {
                 this.log("Badge Synced but no new data");
@@ -139,14 +139,12 @@ function BadgeDialogue(address, send, log) {
             this.log("Received a header: ");
             var header = struct.Unpack('<Lfh',data);
 
-            var d = new Date();
-            var seconds = Math.round(d.getTime()/1000);
             if (header[1] > 2 && header[1] < 4) {
                 //valid header?, voltage between 2 and 4
                 this.log("&nbsp Timestamp " + header[0]);
                 this.log("&nbsp Voltage " + header[1]);
 
-                this.status = this.StatusEnum.DATA;
+                this.status = this.StatusEnum.DATA; // expecting a data buffer next
                 this.dataPackets = 0;
 
                 this.workingChunk = new Chunk();
@@ -160,8 +158,6 @@ function BadgeDialogue(address, send, log) {
 
             //attempt to parse as a header for debug purposes
             var header = struct.Unpack('<Lfh',data);
-            var d = new Date();
-            var seconds = Math.round(d.getTime()/1000);
             if (header[1] > 2 && header[1] < 4) {
                 //valid header?, voltage between 2 and 4
                 this.log("probably missed a header");
@@ -172,10 +168,9 @@ function BadgeDialogue(address, send, log) {
             this.workingChunk.addSamples(sample_arr);
 
 
-            //if (this.dataPackets == 6) { //old way, tested to work
             if (this.workingChunk.completed()) {
                 //we finished a chunk
-                this.status = this.StatusEnum.HEADER;
+                this.status = this.StatusEnum.HEADER; // expecting a header next
                 this.chunks.push(this.workingChunk);
                 this.log("Added another chunk, storing " + this.chunks.length + " chunks");
 
