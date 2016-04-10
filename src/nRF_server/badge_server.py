@@ -5,6 +5,7 @@ from badge import Badge, BadgeDelegate
 from badge_db import badgeDB
 from badge_discoverer import BadgeDiscoverer
 
+import datetime
 import struct
 import logging
 import logging.handlers
@@ -62,20 +63,20 @@ logger.addFilter(f)
 # Raises a timeout exception if a function takes too long
 # http://stackoverflow.com/questions/2281850/timeout-function-if-it-takes-too-long-to-finish
 class TimeoutError(Exception):
-    pass
+	pass
 
 # Or, to use with a "with" statement
 class timeout:
-    def __init__(self, seconds=1, error_message='Timeout'):
-        self.seconds = seconds
-        self.error_message = error_message
-    def handle_timeout(self, signum, frame):
-        raise TimeoutError(self.error_message)
-    def __enter__(self):
-        signal.signal(signal.SIGALRM, self.handle_timeout)
-        signal.alarm(self.seconds)
-    def __exit__(self, type, value, traceback):
-        signal.alarm(0)
+	def __init__(self, seconds=1, error_message='Timeout'):
+		self.seconds = seconds
+		self.error_message = error_message
+	def handle_timeout(self, signum, frame):
+		raise TimeoutError(self.error_message)
+	def __enter__(self):
+		signal.signal(signal.SIGALRM, self.handle_timeout)
+		signal.alarm(self.seconds)
+	def __exit__(self, type, value, traceback):
+		signal.alarm(0)
 
 '''
 Returns a list of devices included in device_macs.txt 
@@ -128,6 +129,8 @@ def dialogue(addr=""):
 
 			logger.info("Badge datetime: {},{}".format(bdg.dlg.badge_sec,bdg.dlg.badge_ts))
 
+		'''
+		# data request using the "d" command
 		if bdg.dlg.dataReady:
 			logger.info("Requesting data...")
 			bdg.NrfReadWrite.write("d")  # ask for data
@@ -140,6 +143,30 @@ def dialogue(addr=""):
 				wait_count = wait_count+1
 				if wait_count >= PULL_WAIT: break
 			logger.info("finished reading data")
+		'''
+
+		# data request using the "r" command - data since time X
+		logger.info("Requesting data...")
+		lastChunkDate = None
+		with badgeDB() as db:
+			lastChunkDate = db.getLastChunkDate(addr)
+
+		if (lastChunkDate == None):
+			lastChunkDate = datetime.datetime.now()
+			logger.info("Cannot find saved chunks. Setting last chunk date to: {}".format(lastChunkDate))
+		else:
+			logger.info("Last chunk date: {}".format(lastChunkDate))
+
+		bdg.sendDataRequest(lastChunkDate) # ask for data
+		wait_count = 0;
+		while True:
+			if bdg.waitForNotifications(1.0):
+				# if got data, don't inrease the wait counter
+				continue
+			logger.info("Waiting for more data...")
+			wait_count = wait_count+1
+			if wait_count >= PULL_WAIT: break
+		logger.info("finished reading data")
 
 	except BTLEException, e:
 		retcode=-1
@@ -149,9 +176,9 @@ def dialogue(addr=""):
 	except TimeoutError, te:
 		retcode=-1
 		logger.error("TimeoutError: "+te.message)
-	except:
-		retcode=-1
-		e = sys.exc_info()[0]
+	except Exception as e:
+		#retcode=-1
+		#e = sys.exc_info()[0]
 		logger.error("unexpected failure, {}".format(e))
 	finally:
 		if bdg:
@@ -170,7 +197,7 @@ def dialogue(addr=""):
 				# store in CSV file
 				fout = open(outfile, "a")
 				for chunk in bdg.dlg.chunks:
-					logger.info("Chunk timestamp: {}, Voltage: {}, Delay: {}, Samples in chunk: {}".format(chunk.ts,chunk.voltage,chunk.sampleDelay,len(chunk.samples)))
+					logger.info("CSV: Chunk timestamp: {}, Voltage: {}, Delay: {}, Samples in chunk: {}".format(chunk.ts,chunk.voltage,chunk.sampleDelay,len(chunk.samples)))
 					fout.write("{},{},{}".format(chunk.ts,chunk.voltage,chunk.sampleDelay))
 					for sample in chunk.samples:
 						fout.write(",{}".format(sample))
@@ -181,7 +208,7 @@ def dialogue(addr=""):
 				# store in DB
 				with badgeDB() as db:
 					for chunk in bdg.dlg.chunks:
-						logger.info("Chunk timestamp: {}, Voltage: {}, Delay: {}, Samples in chunk: {}".format(chunk.ts,chunk.voltage,chunk.sampleDelay,len(chunk.samples)))
+						logger.info("DB: Chunk timestamp: {}, Voltage: {}, Delay: {}, Samples in chunk: {}".format(chunk.ts,chunk.voltage,chunk.sampleDelay,len(chunk.samples)))
 						db.insertChunk(addr,chunk.ts,chunk.voltage)
 						db.insertSamples(addr,chunk)
 						#for sample in chunk.samples:

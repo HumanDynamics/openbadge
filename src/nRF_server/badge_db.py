@@ -9,7 +9,7 @@ class badgeDB():
     conn = None
     
     def __init__(self):
-        self.conn = sqlite3.connect(self.db_file_name, detect_types=sqlite3.PARSE_DECLTYPES)
+        self.conn = sqlite3.connect(self.db_file_name)
         #print("Openning db")
         # create table if needed
         sql = 'create table if not exists ' + self.t_samples + '(' + \
@@ -55,7 +55,12 @@ class badgeDB():
         if ret == None or ret[0] == None:
             return None
         else:
-            return datetime.datetime.strptime(ret[0],'%Y-%m-%d %H:%M:%S.%f')
+            # Where microseconds = 0 the date is returned with there is no fractional part
+            datestr = ret[0]
+            if datestr.find(".") >0 :
+                return datetime.datetime.strptime(datestr,'%Y-%m-%d %H:%M:%S.%f')
+            else:
+                return datetime.datetime.strptime(datestr,'%Y-%m-%d %H:%M:%S')
 
 if __name__ == "__main__":
     with badgeDB() as db:
@@ -64,4 +69,11 @@ if __name__ == "__main__":
         a = db.getLastChunkDate('AAB')
         print(a)
         a = db.getLastChunkDate('AAA')
+        print (a)
+
+        # Do we handle cases with 0 microseconds well?
+        n = datetime.datetime.now().replace(microsecond=0)
+        print(n)
+        db.insertChunk('BBB',n,2.888)
+        a = db.getLastChunkDate('BBB')
         print (a)

@@ -579,7 +579,7 @@ void BLEonReceive(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)
         debug_log("sync timestamp.\r\n");
         unsigned long ts = readLong(p_data+1); // skip first element
         unsigned short f = readShort(p_data + 5);
-        unsigned long fs =  (unsigned long) f;
+        unsigned long fs =  (unsigned long) f; // frational time
         setTimeFractional(ts,fs);
         disableSending();
         dateReceived = true;
@@ -597,6 +597,21 @@ void BLEonReceive(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)
         {
             enableSending();
         }
+    }
+    else if (p_data[0] == 'r')
+    {
+        debug_log("data request with date.\r\n");
+        // TODO: modify this part to send data from given datetime (ts,fs)
+        /*
+        unsigned long ts = readLong(p_data+1); // skip first element
+        unsigned short f = readShort(p_data + 5);
+        unsigned long fs =  (unsigned long) f; // frational time
+
+        if (dateReceived && unsentChunkReady())
+        {
+            enableSending();
+        }
+        */
     }
     else if (p_data[0] == 'f')  
     {

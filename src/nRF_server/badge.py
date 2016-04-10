@@ -2,6 +2,7 @@ from bluepy import btle
 from bluepy.btle import UUID, Peripheral, DefaultDelegate, AssignedNumbers
 from nrf import Nrf, SimpleDelegate
 from math import floor
+from dateutil import tz
 import struct
 import datetime
 import time
@@ -94,7 +95,7 @@ class BadgeDelegate(DefaultDelegate):
                 self.gotHeader = False  #we should move on to a new chunk
 
     # reads UTC time from badge, stores is at local time (that what datetime
-    # does for some reason
+    # does for some reason)
     def _longToDatetime(self,n):
         local_ts = datetime.datetime.fromtimestamp(n)
         return local_ts
@@ -121,17 +122,39 @@ class Badge(Nrf):
     # sends status request with UTC time to the badge
     def sendStatusRequest(self):
         n = datetime.datetime.utcnow()
+        long_epoch_seconds, ts_fract = self._datetimeToEpoch(n)
+        return self.write('<cLH',"s",long_epoch_seconds,ts_fract)
+
+    # send request for data since given date
+    # Note - given date should be in local timezone. It will
+    # be converted to UTC before sending to the badge
+    def sendDataRequest(self, lastChunkDate):
+        n = self._localToUTC(lastChunkDate)
+        long_epoch_seconds, ts_fract = self._datetimeToEpoch(n)
+        return self.write('<cLH',"r",long_epoch_seconds,ts_fract)
+
+    def _datetimeToEpoch(self, n):
         epoch_seconds = (n - datetime.datetime(1970,1,1)).total_seconds()
         long_epoch_seconds = long(floor(epoch_seconds))
         ts_fract = n.microsecond/1000;
-        return self.write('<cLH',"s",long_epoch_seconds,ts_fract)
+        return(long_epoch_seconds,ts_fract)
+
+    # converts local time to UTC
+    def _localToUTC(self, localDateTime):
+        localTz = tz.tzlocal()
+        utcTz = tz.gettz('UTC')
+        localDateTimeWithTz = localDateTime.replace(tzinfo=localTz)
+        return localDateTimeWithTz.astimezone(utcTz).replace(tzinfo=None)
 
 if __name__ == "__main__":
     import time
     import sys
     import argparse
+    import datetime
 
-    bdg_addr = "E1:C1:21:A2:B2:E0" #"CC:4A:FD:5C:E3:5B"
+    print(Badge.localToUTC(datetime.datetime.now()))
+
+    bdg_addr = "E1:C1:21:A2:B2:E0"
     bdg = Badge(bdg_addr)
     time.sleep(1.0)
 
@@ -148,26 +171,6 @@ if __name__ == "__main__":
             
       print("Got datetime: {},{}".format(bdg.dlg.badge_sec,bdg.dlg.badge_ts))
 
-      #print "Sending date and time"
-      #bdg.sendDateTime()
-
-      '''
-      print "Getting data"
-      wait_count = 0;
-      while True:
-        if bdg.waitForNotifications(1.0):
-           # handleNotification() was called
-           continue
-        print "Waiting..."
-        wait_count = wait_count+1
-        if wait_count > 3: break
-      print bdg.dlg.samples 
-      print bdg.dlg.ts
-      print bdg.dlg.voltage
-      print bdg.dlg.sampleDelay
-      bdg.dlg.reset()
-      print bdg.dlg.sampleDelay
-      '''
     except:
       retcode=-1
       e = sys.exc_info()[0]
