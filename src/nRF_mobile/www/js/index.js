@@ -3,7 +3,8 @@ var qbluetoothle = require('./qbluetoothle');
 var Badge = require('./badge');
 
 //var badges = ['E1:C1:21:A2:B2:E0','D1:90:32:2F:F1:4B'];
-var badgeAddresses = ['EC:21:82:A8:0B:59','D1:90:32:2F:F1:4B'];
+//var badgeAddresses = ['EC:21:82:A8:0B:59','D1:90:32:2F:F1:4B'];
+var badgeAddresses = ['D1:90:32:2F:F1:4B','EC:21:82:A8:0B:59'];
 var badges = [];
 //var badges = ['E1:C1:21:A2:B2:E0'];
 
