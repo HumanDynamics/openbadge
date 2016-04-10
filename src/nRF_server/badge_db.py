@@ -10,7 +10,7 @@ class badgeDB():
     
     def __init__(self):
         self.conn = sqlite3.connect(self.db_file_name, detect_types=sqlite3.PARSE_DECLTYPES)
-        print("Openning db")
+        #print("Openning db")
         # create table if needed
         sql = 'create table if not exists ' + self.t_samples + '(' + \
             'mac TEXT'+\
@@ -31,10 +31,15 @@ class badgeDB():
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        print("Commiting")
+        #print("Commiting")
         self.conn.commit()
-        print("Closing db")
+        #print("Closing db")
         self.conn.close()
+
+    def insertSamples(self,mac, chunk):
+        samples = [{"ts": chunk.ts + datetime.timedelta(milliseconds=mul*chunk.sampleDelay), "value": int(i)} for mul, i in enumerate(chunk.samples)]
+        for s in samples:
+            self.insertSample(mac,s['ts'],s['value'])
 
     def insertSample(self, mac,ts,value):
         self.conn.execute('insert into '+self.t_samples+' values(?, ?, ?)', (mac, ts, value))

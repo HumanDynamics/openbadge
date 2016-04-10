@@ -183,6 +183,7 @@ def dialogue(addr=""):
 					for chunk in bdg.dlg.chunks:
 						logger.info("Chunk timestamp: {}, Voltage: {}, Delay: {}, Samples in chunk: {}".format(chunk.ts,chunk.voltage,chunk.sampleDelay,len(chunk.samples)))
 						db.insertChunk(addr,chunk.ts,chunk.voltage)
+						db.insertSamples(addr,chunk)
 						#for sample in chunk.samples:
 						#	fout.write(",{}".format(sample))			
 
