@@ -20,7 +20,7 @@ function Badge(address) {
 		var address = this.address;
 		qbluetoothle.writeToDevice(address, stringValue).then(
 			function(obj) { // success
-				console.log(obj.address + "|Data sent! " + obj.status + "|Keys: " + Object.keys(obj));
+				console.log(obj.address + "|Data sent! " + obj.status + "|Value: " + stringValue + "|Keys: " + Object.keys(obj));
 				this.touchLastDisconnect();
 			},
 			function(obj) { // failure
@@ -187,7 +187,7 @@ function Badge(address) {
 
 	this.close = function() {
 		var address = this.address;
-		console.log(address + "|Beginning close from");
+		console.log(address + "|Calling close");
 		var params = {
 			"address": address
 		};
