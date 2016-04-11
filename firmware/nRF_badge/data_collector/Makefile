@@ -98,6 +98,7 @@ incl/internal_flash.c \
 incl/external_flash.c \
 incl/scanning.c \
 incl/self_test.c \
+incl/collector.c \
 $(SDK_PATH)/components/libraries/util/app_error.c \
 $(SDK_PATH)/components/libraries/util/nrf_assert.c \
 $(SDK_PATH)/components/libraries/uart/retarget.c \

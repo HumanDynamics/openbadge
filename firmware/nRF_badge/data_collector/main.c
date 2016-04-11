@@ -56,10 +56,13 @@
 #include "external_flash.h"  //for interfacing to external SPI flash
 #include "scanning.h"       //for performing scans and storing scan data
 #include "self_test.h"   // for built-in tests
+#include "collector.h"  // for collecting data from mic
 
 
 
-
+unsigned long cycleStart;       // start of main loop cycle (e.g. sampling cycle)
+int cycleState;     // to keep track of state of main loop
+enum cycleStates {SLEEP, SAMPLE, STORE, SEND};
 
 
 //============================= I/O-related stuff ======================================
@@ -73,12 +76,12 @@ const int zeroValue = 166;
 
 //============================ sound-related stuff =====================================
 //======================================================================================
-const unsigned long SAMPLE_WINDOW = 100; // how long we should sample
-const unsigned long SAMPLE_PERIOD = 250;   // time between samples - must exceed SAMPLE_WINDOW
-unsigned int readingsCount = 0;  //number of mic readings taken
-unsigned long readingsSum = 0;  //sum of mic readings taken      } for computing average
-unsigned long sampleStart = 0;  //beginning of sample period
-bool storedSample = false;  //whether we've stored the sample from the current sampling period
+//const unsigned long SAMPLE_WINDOW = 100; // how long we should sample
+//const unsigned long SAMPLE_PERIOD = 250;   // time between samples - must exceed SAMPLE_WINDOW
+//unsigned int readingsCount = 0;  //number of mic readings taken
+//unsigned long readingsSum = 0;  //sum of mic readings taken      } for computing average
+//unsigned long sampleStart = 0;  //beginning of sample period
+//bool storedSample = false;  //whether we've stored the sample from the current sampling period
 
 
 //============================ BLE/data-related stuff ==================================
@@ -278,6 +281,7 @@ int main(void)
     adc_config();
     rtc_config();
     spi_init();
+    collector_init();
         
     
     // Blink once on start
@@ -422,7 +426,9 @@ int main(void)
 
     debug_log("Done with setup().  Entering main loop.\r\n");
     
-    //dateReceived = true;
+    setTime(0xdead0000UL);
+    dateReceived = true;
+    
     //enableStorage();
     
     // Enter main loop
@@ -430,7 +436,7 @@ int main(void)
         //================ Sampling/Sleep handler ================
         sleep = true;  //default to sleeping at the end of loop()
         
-        if (dateReceived)  
+        /*if (dateReceived)  
         {  //don't start sampling unless we have valid date
             if (millis() - sampleStart <= SAMPLE_WINDOW)  // are we within the sampling window
             {  
@@ -456,10 +462,47 @@ int main(void)
         }
         else  {
             sampleStart = millis();  //if not synced, we still need to set this to sleep properly.
+        }*/
+        
+        if(dateReceived)  // don't start main cycle unless we have a valid date
+        {
+            switch(cycleState)
+            {
+                case SAMPLE:
+                    if(millis() - cycleStart < SAMPLE_WINDOW)
+                    {
+                        takeMicReading();
+                        sleep = false;
+                    }
+                    else  {
+                        collectSample();
+                        cycleState = SLEEP;
+                    }
+                    break;
+                case STORE:
+                    break;
+                case SEND:
+                    break;
+                case SLEEP:
+                    if(millis() - cycleStart >= SAMPLE_PERIOD)  // should we start sampling again
+                    {
+                        cycleState = SAMPLE;
+                        cycleStart = millis();
+                        sleep = false;
+                        //debug_log("startSAMPLE\r\n");
+                    }
+                    break;
+                default:
+                    break;
+            }
         }
+        /*  required?
+        else  {
+            cycleStart = millis();
+        }
+        */
         
-        
-        if (sendStatus)  //triggered from onReceive 's'
+        /*if (sendStatus)  //triggered from onReceive 's'
         {  
             unsigned char status = 'n';  //not synced
             if(dateReceived)
@@ -515,14 +558,28 @@ int main(void)
         
         updateScanning();
 
-
+*/
         //============== Sleep, if we're supposed to =================
-        if (!dateReceived)  {
+        /*if (!dateReceived)  {
             goToSleep(-1);  //sleep infinitely till interrupt
         }
         else if (sleep)  //if not synced, just sleep.
         {
             unsigned long elapsed = millis() - sampleStart;
+            if (elapsed < SAMPLE_PERIOD)  
+            {  //avoid wraparound in delay time calculation
+                //debug_log("Sleeping...\r\n");
+                unsigned long sleepDuration = SAMPLE_PERIOD - elapsed;
+                //unsigned long sleepStart = millis();
+                goToSleep(sleepDuration);
+            }
+        }*/
+        if (!dateReceived)  {
+            goToSleep(-1);  //sleep infinitely till interrupt
+        }
+        else if (sleep)  //if not synced, just sleep.
+        {
+            unsigned long elapsed = millis() - cycleStart;
             if (elapsed < SAMPLE_PERIOD)  
             {  //avoid wraparound in delay time calculation
                 //debug_log("Sleeping...\r\n");
