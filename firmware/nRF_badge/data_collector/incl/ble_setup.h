@@ -26,7 +26,7 @@
 #endif
 
 #define APP_ADV_INTERVAL                320                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 200 ms). */
-#define APP_ADV_TIMEOUT_IN_SECONDS      180                                          
+#define APP_ADV_TIMEOUT_IN_SECONDS      10                                          
 
 #define SEC_PARAM_BOND                  1                                           /**< Perform bonding. */
 #define SEC_PARAM_MITM                  0                                           /**< Man In The Middle protection not required. */
@@ -40,8 +40,14 @@
 
 volatile bool isConnected;
 volatile bool isAdvertising;
+volatile bool pauseRequest;
 
-
+typedef enum ble_status_t
+{
+    BLE_INACTIVE,             // no radio activity should be occurring
+    BLE_CONNECTED,            // connection active
+    BLE_ADVERTISING,          // advertising active
+} ble_status_t;
 
 /**
  * Callback function for asserts in the SoftDevice; called in case of SoftDevice assert.
@@ -143,10 +149,19 @@ void BLEbegin();
  */
 void BLEdisable();
 
+
+bool BLEpause();
+
 /**
- * Resume softdevice (after stopping it - skips some initialization processes that are in begin)
+ * Resume advertising (after pausing it)
  */
 void BLEresume();
+
+/**
+ * Get BLE status.
+ *   See ble_status_t enum above
+ */
+ble_status_t BLEgetStatus();
 
 /**
  * Functions called on connection or disconnection events
