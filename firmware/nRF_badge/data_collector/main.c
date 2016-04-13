@@ -52,11 +52,12 @@
 #include "analog.h"     //analog inputs, battery reading
 #include "rtc_timing.h"  //support millis(), micros(), countdown timer interrupts
 #include "ble_setup.h"  //stuff relating to BLE initialization/configuration
-#include "internal_flash.h"  //for managing storage and sending from internal flash
+//#include "internal_flash.h"  //for managing storage and sending from internal flash
 #include "external_flash.h"  //for interfacing to external SPI flash
 #include "scanning.h"       //for performing scans and storing scan data
 #include "self_test.h"   // for built-in tests
 #include "collector.h"  // for collecting data from mic
+#include "storer.h"
 
 
 
@@ -101,15 +102,15 @@ volatile bool sleep = false;  //whether we should sleep (so actions like data se
 
 //=========================== Global function definitions ==================================
 //==========================================================================================
-
-/* Reading mic values */
+/*
+// Reading mic values
 void addMicReading() {
   int sample = analogRead(MIC_PIN);
   readingsSum += abs(sample - zeroValue);
   readingsCount++;
 }
 
-/* read and store data samples */
+// read and store data samples
 void sampleData()  {
   unsigned int micValue = readingsSum / readingsCount;
   unsigned char reading = micValue <= 255 ? micValue : 255;  //clip reading
@@ -122,7 +123,7 @@ void sampleData()  {
     debug_log("Sending %d\r\n",reading);
     BLEwriteChar(reading);
   }
-}
+}*/
 
 void goToSleep(long ms)  {
     if(ms == -1)  
@@ -277,12 +278,54 @@ int main(void)
     
     // Initialize
     sd_power_mode_set(NRF_POWER_MODE_LOWPWR);  //set low power sleep mode
-    BLEbegin();
+    BLE_init();
     adc_config();
     rtc_config();
     spi_init();
+
+    
+    /*printStorerChunk(0);
+    printStorerChunk(1);
+    printStorerChunk(2);
+    printStorerChunk(3);*/
+    
     collector_init();
-        
+    storer_init();
+    
+
+    
+    /*   ======================== Test functionality of BLE pausing
+    nrf_delay_ms(1000);
+    
+    bool pause = BLEpause();
+    if(pause == false)
+    {
+        debug_log("Advertising on.  pause requested.\r\n");
+    }
+    nrf_delay_ms(500);
+    ble_status_t state = BLEgetStatus();
+    if(state == BLE_ADVERTISING)
+    {
+        debug_log("Advertising still on.\r\n");
+    }
+    while(BLEgetStatus() != BLE_INACTIVE);
+    nrf_delay_ms(4000);
+    pause = BLEpause();
+    state = BLEgetStatus();
+    if(pause == false)
+    {
+        debug_log("Paused advertising.\r\n");
+    }
+    if(state == BLE_ADVERTISING)
+    {
+        debug_log("Advertising still on? ?\r\n");
+    }
+    else
+    {
+        debug_log("cool.  restarting advertising.\r\n");
+        BLEresume();
+    }
+    */
     
     // Blink once on start
     nrf_gpio_pin_write(LED_1,LED_ON);
@@ -315,7 +358,7 @@ int main(void)
     nrf_delay_ms(1000);
     
     
-    int numDevices = sizeof(masterDeviceList)/sizeof(device_t);
+    /*int numDevices = sizeof(masterDeviceList)/sizeof(device_t);
     for(int i = 0; i < numDevices; i++)
     {
         deviceList[i] = masterDeviceList[i];
@@ -324,7 +367,7 @@ int main(void)
     sortDeviceList(deviceList,numDevices);
     printDeviceList(deviceList,numDevices);
     
-    debug_log("\r\n\r\n");
+    debug_log("\r\n\r\n");*/
     
     nrf_gpio_pin_write(LED_2,LED_ON);
     scans_init();
@@ -348,7 +391,7 @@ int main(void)
     
     
 
-    send.samplePeriod = SAMPLE_PERIOD;  //kludgey, give Flash access to SAMPLE_PERIOD
+    //send.samplePeriod = SAMPLE_PERIOD;  //kludgey, give Flash access to SAMPLE_PERIOD
 
     //=========================== Resume after reset ================================
     /**
@@ -360,7 +403,7 @@ int main(void)
     nrf_gpio_pin_write(LED_2,LED_ON);  //red LED says we're intializing flash
     debug_log("\n\n\nInitializing...\r\n");
 
-
+    /*
     // Find the latest stored chunk, to start storing after it
     unsigned long lastStoredTime = MODERN_TIME;  //ignore obviously false timestamps from way in past
     int lastStoredChunk = 0;
@@ -417,7 +460,7 @@ int main(void)
     }
 
     initSendingFromChunk(earliestUnsentChunk);    
-    
+    */
 
     nrf_gpio_pin_write(LED_2,LED_OFF);  //done initializing
 
@@ -425,6 +468,8 @@ int main(void)
 
 
     debug_log("Done with setup().  Entering main loop.\r\n");
+    
+    BLEstartAdvertising();
     
     setTime(0xdead0000UL);
     dateReceived = true;
@@ -476,12 +521,15 @@ int main(void)
                     }
                     else  {
                         collectSample();
-                        cycleState = SLEEP;
+                        cycleState = STORE;
                     }
                     break;
                 case STORE:
+                    updateStorer();
+                    cycleState = SEND;
                     break;
                 case SEND:
+                    cycleState = SLEEP;
                     break;
                 case SLEEP:
                     if(millis() - cycleStart >= SAMPLE_PERIOD)  // should we start sampling again
@@ -597,7 +645,7 @@ void BLEonConnect()
 {
     debug_log("Connected\r\n");
     sleep = false;
-    disableStorage();  //don't manipulate flash while BLE is busy
+    //disableStorage();  //don't manipulate flash while BLE is busy
 
     // for app development. disable if forgotten in prod. version
     nrf_gpio_pin_write(LED_1,LED_ON);
@@ -609,14 +657,23 @@ void BLEonDisconnect()
     sleep = false;
     streamSamples = false;
     //sendStatus = false;
-    disableSending();  // stop sending
+    //disableSending();  // stop sending
     if(getScanState() == SCAN_IDLE)  {
-        enableStorage();  //continue storage operations now that connection is ended, if scans aren't active
+        //enableStorage();  //continue storage operations now that connection is ended, if scans aren't active
     }
 
     // for app development. disable if forgotten in prod. version
     nrf_gpio_pin_write(LED_1,LED_OFF);
 }
+
+// Convert chars to long (expects little endian)
+unsigned long readLong(uint8_t *a) {
+  unsigned long retval;
+  retval  = (unsigned long) a[3] << 24 | (unsigned long) a[2] << 16;
+  retval |= (unsigned long) a[1] << 8 | a[0];
+  return retval;
+}
+
 
 /** Function for handling incoming data from the BLE UART service
  */
@@ -629,7 +686,7 @@ void BLEonReceive(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)
         unsigned long f = readLong(p_data);
         setTime(f);
         //Serial.printf("%d:%d:%d %d-%d-%d\n", hour(), minute(), second(), month(), day(), year());
-        disableSending();
+        //disableSending();
         dateReceived = true;
     }
     else if (p_data[0] == 's')  
@@ -645,10 +702,10 @@ void BLEonReceive(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)
     else if (p_data[0] == 'd')  
     {
         debug_log("data request.\r\n");
-        if (dateReceived && unsentChunkReady())  
+        /*if (dateReceived && unsentChunkReady())  
         {
             enableSending();
-        }
+        }*/
     }
     else if (p_data[0] == 'f')  
     {
@@ -661,3 +718,5 @@ void BLEonReceive(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)
     }
     sleep = false;  //break from sleep
 }
+
+

@@ -9,6 +9,7 @@ static ble_nus_t                        m_nus;      //Struct for Nordic UART Ser
 
 volatile bool isConnected = false;
 volatile bool isAdvertising = false;
+volatile bool isScanning = false;
 
 ble_uuid_t m_adv_uuids[] = {{BLE_UUID_BATTERY_SERVICE, BLE_UUID_TYPE_BLE},        /**< Universally unique service identifiers. */
                             {BLE_UUID_NUS_SERVICE,     BLE_UUID_TYPE_BLE}};     
@@ -199,6 +200,7 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 static void sys_evt_dispatch(uint32_t sys_evt)
 {
     ble_advertising_on_sys_evt(sys_evt);
+    storer_on_sys_evt(sys_evt);
 }
 
 
@@ -238,7 +240,7 @@ static void on_adv_evt(ble_adv_evt_t const adv_evt)
             {
                 isAdvertising = false;
                 pauseRequest = false;
-                //debug_log("ADV: advertising paused\r\n");
+                debug_log("ADV: advertising paused\r\n");
             }
             else
             {
@@ -253,7 +255,7 @@ static void on_adv_evt(ble_adv_evt_t const adv_evt)
         case BLE_ADV_EVT_FAST_WHITELIST:
         case BLE_ADV_EVT_SLOW_WHITELIST:
             isAdvertising = true;
-            //debug_log("ADV: advertising active\r\n");
+            debug_log("ADV: advertising active\r\n");
             break;
         default:
             break;
@@ -286,15 +288,24 @@ static void advertising_init(void)
 }
 
 
-void BLEbegin()
+void BLE_init()
 {
     ble_stack_init();
     gap_params_init();
     services_init();
     sec_params_init();
     advertising_init();
-    uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
-    BLE_ERROR_CHECK(err_code);
+    //uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
+    //BLE_ERROR_CHECK(err_code);
+}
+
+void BLEstartAdvertising()
+{
+    if((!isConnected) && (!isAdvertising))
+    {
+        uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
+        BLE_ERROR_CHECK(err_code);
+    }
 }
 
 
@@ -307,24 +318,18 @@ void BLEdisable()
 
 bool BLEpause()
 {
+    if(isConnected)  return false;  // if we're connected, don't try anything.
     if(isAdvertising)
     {
         pauseRequest = true;
         return false;
     }
-    else
-    {
-        return true;
-    }
+    else return true;
 }
 
 void BLEresume()
 {
-    if(!isConnected)
-    {
-        uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
-        BLE_ERROR_CHECK(err_code);
-    }
+    BLEstartAdvertising();
 }
 
 

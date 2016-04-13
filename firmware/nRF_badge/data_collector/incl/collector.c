@@ -50,7 +50,7 @@ void takeMicReading()
 
 static void setupChunk(int chunk, unsigned long timestamp, unsigned long msTimestamp)
 {
-    if(chunk >= MIC_BUFFER_SIZE || chunk < 0)  // invalid chunk
+    if(chunk > LAST_RAM_CHUNK || chunk < 0)  // invalid chunk
     {
         debug_log("ERR: Invalid collector chunk\r\n");
         return;
@@ -72,7 +72,10 @@ void collectSample()  {
     if(collect.loc == 0)  // are we at start of a new chunk
     {
         setupChunk(collect.chunk,sampleStart,sampleStartms);
+        debug_log("Started RAM chunk %d.\r\n",collect.chunk);
+        //printCollectorChunk(collect.chunk);
     }
+    
     
     micBuffer[collect.chunk].samples[collect.loc] = reading;    // add reading
     collect.loc++;                     // move to next location in sample array
@@ -80,12 +83,7 @@ void collectSample()  {
     if(collect.loc >= SAMPLES_PER_CHUNK)    // did we reach the end of the chunk
     {
         micBuffer[collect.chunk].check = micBuffer[collect.chunk].timestamp;  // mark chunk as complete
-        //printCollectorChunk(collect.chunk);
-        collect.chunk++;
-        if(collect.chunk >= MIC_BUFFER_SIZE)  //did we reach end of buffer
-        {
-            collect.chunk = 0;
-        }
+        collect.chunk = (collect.chunk < LAST_RAM_CHUNK) ? collect.chunk+1 : 0;
         collect.loc = 0;
     }
     
@@ -101,26 +99,26 @@ void stopCollector()
     // Current chunk may be incomplete, but if collecting restarts, it should resume from a new chunk in RAM buffer.
     micBuffer[collect.chunk].check = CHECK_TRUNC;  // mark chunk as truncated; it's not full, but we're done writing in it
     collect.loc = 0;    // reset to start of sample array
-    collect.chunk = (collect.chunk < MIC_BUFFER_SIZE) ? collect.chunk+1 : 0;  // advance to next chunk in buffer
+    collect.chunk = (collect.chunk < LAST_RAM_CHUNK) ? collect.chunk+1 : 0;  // advance to next chunk in buffer
 }
 
 
 void printCollectorChunk(int chunk)
 {
-    if(chunk >= MIC_BUFFER_SIZE || chunk < 0)  // invalid chunk
+    if(chunk > LAST_RAM_CHUNK || chunk < 0)  // invalid chunk
     {
         debug_log("ERR: Invalid collector chunk to print\r\n");
         return;
     }
     debug_log("RAM chunk %d:\r\n",chunk);
-    debug_log("ts: 0x%lX - ms: %hd - ba: %d",micBuffer[chunk].timestamp,micBuffer[chunk].msTimestamp,
-                                               (int)(micBuffer[chunk].battery*1000));
+    debug_log("ts: 0x%lX - ms: %hd - ba: %d -- ch: 0x%lX",micBuffer[chunk].timestamp,micBuffer[chunk].msTimestamp,
+                                                          (int)(micBuffer[chunk].battery*1000),micBuffer[chunk].check);
+    nrf_delay_ms(3);
     for(int i = 0; i < SAMPLES_PER_CHUNK; i++)
     {
         if(i%10 == 0)
         {
             debug_log("\r\n  ");
-            nrf_delay_ms(2);
         }
         unsigned char sample = micBuffer[chunk].samples[i];
         if(sample != INVALID_SAMPLE)
@@ -131,6 +129,8 @@ void printCollectorChunk(int chunk)
         {
             debug_log("- , ");
         }
+        nrf_delay_ms(2);
     }
     debug_log("\r\n---\r\n");
+    nrf_delay_ms(10);
 }

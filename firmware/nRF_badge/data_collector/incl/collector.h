@@ -25,8 +25,8 @@
 #include "ble_setup.h"         // do we need this?
 #include "rtc_timing.h"        // uses now() to get chunk timestamp
 #include "analog.h"            // uses analogRead() to get mic data; readBattery() to get battery voltage
-#include "internal_flash.h"    // uses some #defined constants related to memory usage
-
+//#include "internal_flash.h"    // uses some #defined constants related to memory usage
+#include "storer.h"
 
 // Setup expected "zero" for the mic value.
 // analog ref is mic VCC, mic is 1/2 VCC biased, input is 1/3 scaled, so zero value is approx. (1023/2)/3 ~= 170
@@ -59,14 +59,15 @@ unsigned long readingsSum;    // sum of all mic readings taken for current sampl
 
 #define SAMPLES_PER_CHUNK 114   // 128-(4+2+4+4)  ---  see chunk structure below
 #define MIC_BUFFER_SIZE 4       // number of chunks in mic RAM buffer
+#define LAST_RAM_CHUNK 3        // index of last chunk in RAM buffer
 
 typedef union
 {
     struct
     {
         unsigned long timestamp;        // Timestamp of first sample in chunk           4byte
-        unsigned short msTimestamp;     // Fractional part of chunk timestamp (0-999)   2byte
         float battery;                  // Battery voltage                              4byte
+        unsigned short msTimestamp;     // Fractional part of chunk timestamp (0-999)   2byte
         unsigned char samples[SAMPLES_PER_CHUNK];    // Sound data samples               114byte
         unsigned long check;            // Copy of timestamp, to validate chunk         4byte
     };                                  //                                              128byte total

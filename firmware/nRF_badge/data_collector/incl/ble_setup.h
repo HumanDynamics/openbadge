@@ -15,7 +15,8 @@
 #include "ble_bas.h"  //battery service
 #include "ble_nus.h"  //Nordic UART service
  
-#include "internal_flash.h"
+//#include "internal_flash.h"
+#include "storer.h" 
  
 #define IS_SRVC_CHANGED_CHARACT_PRESENT 0                                           /**< Include or not the service_changed characteristic. if not enabled, the server's database cannot be changed for the lifetime of the device*/
 
@@ -142,7 +143,12 @@ static void advertising_init(void);
 /**
  * Initialize BLE structures
  */
-void BLEbegin();
+void BLE_init();
+
+/**
+ * Initialize BLE structures
+ */
+void BLEstartAdvertising();
 
 /**
  * Stop softdevice
