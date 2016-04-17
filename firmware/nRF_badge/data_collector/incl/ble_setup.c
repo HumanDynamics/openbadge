@@ -9,6 +9,7 @@ static ble_nus_t                        m_nus;      //Struct for Nordic UART Ser
 
 volatile bool isConnected = false;
 volatile bool isAdvertising = false;
+volatile bool isScanning = false;
 
 ble_uuid_t m_adv_uuids[] = {{BLE_UUID_BATTERY_SERVICE, BLE_UUID_TYPE_BLE},        /**< Universally unique service identifiers. */
                             {BLE_UUID_NUS_SERVICE,     BLE_UUID_TYPE_BLE}};     
@@ -82,21 +83,6 @@ static void sec_params_init(void)
     m_sec_params.max_key_size = SEC_PARAM_MAX_KEY_SIZE;
 }
 
-
-static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
-{
-    switch (ble_adv_evt)
-    {
-        case BLE_ADV_EVT_FAST:
-            break;
-
-        case BLE_ADV_EVT_IDLE:
-            break;
-
-        default:
-            break;
-    }
-}
 
 
 static void on_ble_evt(ble_evt_t * p_ble_evt)
@@ -183,18 +169,29 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 {
     on_ble_evt(p_ble_evt);
     
+    /*
     //Intercept an advertising timeout event, so we have infinite advertising.
     if(p_ble_evt->header.evt_id == BLE_GAP_EVT_TIMEOUT  &&
         p_ble_evt->evt.gap_evt.params.timeout.src == BLE_GAP_TIMEOUT_SRC_ADVERTISING)
     {
-        uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);  //infinite advertising
-        BLE_ERROR_CHECK(err_code);
+        if(pauseRequest)
+        {
+            isAdvertising = false;
+            pauseRequest = false;
+        }
+        else
+        {
+            isAdvertising = true;
+            uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);  //infinite advertising
+            BLE_ERROR_CHECK(err_code);
+        }
     }
     else
     {
-        ble_advertising_on_ble_evt(p_ble_evt);
-    }
+        
+    }*/
     
+    ble_advertising_on_ble_evt(p_ble_evt);
     ble_bas_on_ble_evt(&m_bas, p_ble_evt);
     ble_nus_on_ble_evt(&m_nus, p_ble_evt);
 }
@@ -203,6 +200,7 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 static void sys_evt_dispatch(uint32_t sys_evt)
 {
     ble_advertising_on_sys_evt(sys_evt);
+    storer_on_sys_evt(sys_evt);
 }
 
 
@@ -232,6 +230,38 @@ static void ble_stack_init(void)
 }
 
 
+
+static void on_adv_evt(ble_adv_evt_t const adv_evt)
+{
+    switch(adv_evt)
+    {
+        case BLE_ADV_EVT_IDLE:
+            if(pauseRequest)
+            {
+                isAdvertising = false;
+                pauseRequest = false;
+                debug_log("ADV: advertising paused\r\n");
+            }
+            else
+            {
+                uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);  // restart advertising immediately
+                BLE_ERROR_CHECK(err_code);
+                //debug_log("ADV: advertising restarted...\r\n");
+            }
+            break;
+        case BLE_ADV_EVT_FAST:          // Advertising config should only allow fast mode, so following cases should be irrelevant
+        case BLE_ADV_EVT_DIRECTED:
+        case BLE_ADV_EVT_SLOW:
+        case BLE_ADV_EVT_FAST_WHITELIST:
+        case BLE_ADV_EVT_SLOW_WHITELIST:
+            isAdvertising = true;
+            debug_log("ADV: advertising active\r\n");
+            break;
+        default:
+            break;
+    }
+}
+
 static void advertising_init(void)
 {
     uint32_t      err_code;
@@ -249,21 +279,33 @@ static void advertising_init(void)
     options.ble_adv_fast_enabled  = BLE_ADV_FAST_ENABLED;
     options.ble_adv_fast_interval = APP_ADV_INTERVAL;
     options.ble_adv_fast_timeout  = APP_ADV_TIMEOUT_IN_SECONDS;
+    options.ble_adv_slow_enabled = BLE_ADV_SLOW_DISABLED;
+    options.ble_adv_directed_enabled = BLE_ADV_DIRECTED_DISABLED;
+    options.ble_adv_whitelist_enabled = BLE_ADV_WHITELIST_DISABLED;
 
     err_code = ble_advertising_init(&advdata, NULL, &options, on_adv_evt, NULL);
     BLE_ERROR_CHECK(err_code);
 }
 
 
-void BLEbegin()
+void BLE_init()
 {
     ble_stack_init();
     gap_params_init();
     services_init();
     sec_params_init();
     advertising_init();
-    uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
-    BLE_ERROR_CHECK(err_code);
+    //uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
+    //BLE_ERROR_CHECK(err_code);
+}
+
+void BLEstartAdvertising()
+{
+    if((!isConnected) && (!isAdvertising))
+    {
+        uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
+        BLE_ERROR_CHECK(err_code);
+    }
 }
 
 
@@ -272,9 +314,39 @@ void BLEdisable()
     uint32_t err_code = softdevice_handler_sd_disable();
     BLE_ERROR_CHECK(err_code);
 }
+
+
+bool BLEpause()
+{
+    if(isConnected)  return false;  // if we're connected, don't try anything.
+    if(isAdvertising)
+    {
+        pauseRequest = true;
+        return false;
+    }
+    else return true;
+}
+
 void BLEresume()
 {
-    BLEbegin();
+    BLEstartAdvertising();
+}
+
+
+ble_status_t BLEgetStatus()
+{
+    if(isConnected)
+    {
+        return BLE_CONNECTED;
+    }
+    else if(isAdvertising)
+    {
+        return BLE_ADVERTISING;
+    }
+    else
+    {
+        return BLE_INACTIVE;
+    }
 }
 
 
