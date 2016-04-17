@@ -4,13 +4,15 @@
 
 const nrf_drv_rtc_t rtc = NRF_DRV_RTC_INSTANCE(1);  //instance for RTC1 driver (RTC0 is used by BLE)
 volatile uint64_t extTicks = 0;  //extension of the rtc1 24-bit timer, for millis() etc
+                                 // i.e. extTicks+rtcTicks is the number of ticks elapsed since counter initiation
+
 volatile bool countdownOver = false;  //used to give rtc_timing access to sleep from main loop
 
 void rtc_handler(nrf_drv_rtc_int_type_t int_type)
 {
     if (int_type == NRF_DRV_RTC_INT_OVERFLOW)  {
-        extTicks += 0x1000000LLU;  //increment rtc extension by 2^24
-        extTicks &= 0x7ffffffffffLLU;  //clip it to 43bits (so doesn't overflow when *1000000 in micros()
+        extTicks += 0x1000000ULL;  //increment rtc extension by 2^24
+        extTicks &= 0x7ffffffffffULL;  //clip it to 43bits (so doesn't overflow when *1000000 in micros()
     }
     else if(int_type == NRF_DRV_RTC_INT_COMPARE0)  //countdown timer interrupt
     {
@@ -43,23 +45,26 @@ void rtc_config(void)
 
 void countdown_set(unsigned long ms)
 {
+    if(ms > 130000UL)  {  // 130 seconds.
+        ms = 130000UL;  // avoid overflow in calculation of compareTicks below.
+    }
     //Set compare value so that an interrupt will occur ms milliseconds from now
     countdownOver = false;
-    unsigned long compare = (nrf_drv_rtc_counter_get(&rtc) + (32768UL * ms / 1000UL));  //convert ms to ticks
-    compare &= 0xffffff; //clip to 24bits.
-    nrf_drv_rtc_cc_set(&rtc,0,compare,true);  //set compare channel 0 to interrupt when counter hits compare
+    unsigned long compareTicks = (nrf_drv_rtc_counter_get(&rtc) + (32768UL * ms / 1000UL));  //convert ms to ticks
+    compareTicks &= 0xffffff; //clip to 24bits
+    nrf_drv_rtc_cc_set(&rtc,0,compareTicks,true);  //set compare channel 0 to interrupt when counter hits compareTicks
 }
 
-unsigned long ticks(void)  {
+unsigned long long ticks(void)  {
     return extTicks+nrf_drv_rtc_counter_get(&rtc);
 }
 
 unsigned long millis(void)  {
-    return (ticks() * 1000LLU) >> 15;
+    return (ticks() * 1000ULL) >> 15;
 }
 
 unsigned long micros(void)  {
-    return (ticks() * 1000000LLU) >> 15;
+    return (ticks() * 1000000ULL) >> 15;
 }
 
 
