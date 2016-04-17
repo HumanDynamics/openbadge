@@ -42,4 +42,8 @@
 #define SPIM0_SCK_PIN   5    // SPI SCK signal. 
 
 
+#define MIC_PIN ADC_CONFIG_PSEL_AnalogInput2  //GPIO P01
+#define MIC_AREF NRF_ADC_CONFIG_REF_EXT_REF0  //GPIO P00
+
+
 #endif // BADGE_03V2_DYNASTREAM_H
