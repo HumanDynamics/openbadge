@@ -4,46 +4,60 @@
         <meta charset="utf-8" />
         <meta name="format-detection" content="telephone=no" />
         <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1,  target-densitydpi=device-dpi" />
-        <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com; style-src 'self' 'unsafe-inline'; media-src *">
+        <meta http-equiv="Content-Security-Policy"
+              content="default-src *;
+               script-src 'self' 'unsafe-inline' 'unsafe-eval'
+                           http://*.firebase.com
+                           http://*.firebaseio.com
+                           https://*.firebaseio.com
+                           ;
+               style-src  'self' 'unsafe-inline'
+                           http://*.firebase.com
+                           http://*.firebaseio.com
+                           https://*.firebaseio.com
+">
 
+        <link rel="stylesheet" type="text/css" href="css/ionic.min.css" />
+        <link rel="stylesheet" type="text/css" href="js/libs/toastr.min.css" />
         <link rel="stylesheet" type="text/css" href="css/index.css" />
         <title>CordovaBadge</title>
     </head>
     <body>
-        <div class="app">
-            <h1>CordovaBadge</h1>
-            <div id="mainPage">
-                <ul id="deviceList">                    
-                </ul>
-                <button id="refreshButton">Refresh</button>
-                <button id="connectButton1">Connect1</button>
-                <button id="connectButton2">Connect2</button>
-                <button id="isConnectedButton">isConnected</button>
-                <br/><br/>
-                <button id="discoverButton1">Discover1</button>
-                <button id="subscribeButton1">Subscribe1</button>
-                <br/><br/>
-                <button id="disconnectButton1">Disconnect1</button><br/>
-                <button id="disconnectButton2">Disconnect2</button><br/>
-                <br/><br/>
-                <button id="watchdogStartButton">Start watchdog!</button>
-                <button id="watchdogEndButton">End watchdog!</button>
-                <br/><br/>
-                <button id="stateButton">Print states</button>
-                <button id="sendButton">Send</button>
+        <div id="main" class="page active">
+            <div class="bar bar-header bar-light">
+                <h1 class="title">OpenBadge</h1>
+                <a id="settings-button" class="button button-icon icon button-clear ion-android-settings"></a>
             </div>
-            <!--
-            <div id="detailPage">
-                <div id="resultDiv"></div>
-                <div>
-                    <input type="text" id="messageInput" value="Hello"/>
-                    <button id="sendButton">Send</button>                    
+            <div>
+                <div id="devicelistLoader" class="loader-area hidden">
+                    <div class="loader"></div>
                 </div>
-               
+                <div class="list" id="devicelistContainer">
+                    <div class="item item-divider">
+                        Group Members
+                    </div>
+                    <ul id="devicelist" class="devicelist"></ul>
+                </div>
             </div>
-            <p id="statusText">Status...</p>
-            -->
         </div>
+        <div id="settings" class="page">
+            <div class="bar bar-header bar-light">
+                <a class="button button-icon icon ion-arrow-left-b back-button"></a>
+                <h1 class="title">Settings</h1>
+            </div>
+            <div class="list settings-options">
+                <label class="item item-input">
+                    <span class="input-label">Group ID</span>
+                    <input type="text" id="groupIdField">
+                </label>
+            </div>
+            <div class="button-bar cta-button">
+                <button class="button button-positive" id="saveButton">Save</button>
+            </div>
+        </div>
+        <script type="text/javascript" src="js/libs/jquery-1.12.3.min.js"></script>
+        <script type="text/javascript" src="js/libs/firebase.js"></script>
+        <script type="text/javascript" src="js/libs/toastr.min.js"></script>
         <script type="text/javascript" src="cordova.js"></script>
         <!-- <script type="text/javascript" src="js/index.js"></script> -->
         <script type="text/javascript" src="js/bundle.js"></script>

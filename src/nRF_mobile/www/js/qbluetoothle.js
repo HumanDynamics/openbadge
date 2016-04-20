@@ -162,7 +162,6 @@ function startScan() {
     }
 
     console.log('Start scan');
-    deviceList.innerHTML = ''; // empties the list
 
     bluetoothle.startScan(
         function startScanSuccess(obj) {

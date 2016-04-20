@@ -13,14 +13,103 @@ var app = {
     // Application Constructor
     initialize: function() {
         this.bindEvents();
-        //detailPage.hidden = true;
+        this.initBluetooth();
+
+        this.initMainPage();
+        this.initSettingsPage();
+
+        this.showPage("main");
+
     },
+
+    showPage: function(id) {
+        $(".page").removeClass("active");
+        $("#" + id).addClass("active").trigger("showPage");
+    },
+
+    initMainPage: function() {
+        $("#settings-button").click(function() {
+            app.showPage("settings");
+        });
+        $(".back-button").click(function() {
+            app.showPage("main");
+        });
+        document.addEventListener("backbutton", function(e) {
+            e.preventDefault();
+            if ($("#main").hasClass("active")) {
+                navigator.app.exitApp();
+            } else {
+                app.showPage("main");
+            }
+        }, false);
+        app.refreshGroupData();
+    },
+    initSettingsPage: function() {
+        $("#settings").on("showPage", function() {
+            var groupId = localStorage.getItem("groupId");
+           $("#groupIdField").val(groupId);
+        });
+        $("#saveButton").click(function() {
+            localStorage.setItem("groupId", $("#groupIdField").val());
+            app.showPage("main");
+            app.refreshGroupData();
+            toastr.success("Settings Saved!");
+        });
+    },
+    
+    refreshGroupData: function() {
+        $("#devicelistContainer").addClass("hidden");
+        $("#devicelistLoader").removeClass("hidden");
+        var groupId = localStorage.getItem("groupId");
+        firebase.authThen(function() {
+            firebase.child("groups").once("value", function(groupDataResult) {
+                var groupData = groupDataResult.val();
+                app.group = null;
+                for (var i = 0; i < groupData.length; i++) {
+                    var group = groupData[i];
+                    if (group.id == groupId) {
+                        app.group = group;
+                        break;
+                    }
+                }
+                app.createGroupUserList();
+            });
+        });
+    },
+    createGroupUserList: function() {
+        $("#devicelistContainer").removeClass("hidden");
+        $("#devicelistLoader").addClass("hidden");
+        app.refreshDeviceList();
+
+        $("#devicelist").empty();
+        if (! app.group || ! app.group.members) {
+            return;
+        }
+        for (var i = 0; i < app.group.members.length; i++) {
+            var member = app.group.members[i];
+            $("#devicelist").append($("<li class=\"item\" data-device='{badge}'>{name}</li>".format(member)));
+        }
+
+        app.updateKnownDevices();
+    },
+    updateKnownDevices: function(foundDevices) {
+        app.knownDevices = foundDevices || app.knownDevices;
+        app.knownDevices = app.knownDevices || [];
+
+        $("#devicelist .item").removeClass("active");
+        for (var i = 0; i < app.knownDevices.length; i++) {
+            var device = app.knownDevices[i];
+            $("#devicelist .item[data-device='" + device + "']").addClass("active");
+        }
+    },
+
+
     // Bind Event Listeners
     //
     // Bind any events that are required on startup. Common events are:
     // 'load', 'deviceready', 'offline', and 'online'.
     bindEvents: function() {
-        document.addEventListener('deviceready', this.onDeviceReady, false);
+        /*
         refreshButton.addEventListener('touchstart', this.refreshDeviceList, false);
         connectButton1.addEventListener('touchstart', this.connectButtonPressed1, false);
         connectButton2.addEventListener('touchstart', this.connectButtonPressed2, false);
@@ -33,12 +122,9 @@ var app = {
         watchdogEndButton.addEventListener('touchstart', this.watchdogEnd, false); 
         stateButton.addEventListener('touchstart', this.stateButtonPressed, false); 
         sendButton.addEventListener('touchstart', this.sendButtonPressed, false);
+        */
     },
-    // deviceready Event Handler
-    //
-    // The scope of 'this' is the event. In order to call the 'receivedEvent'
-    // function, we must explicitly call 'app.receivedEvent(...);'
-    onDeviceReady: function() {
+    initBluetooth: function() {
         // populate intervals dict
         for (var i = 0; i < badgeAddresses.length; ++i) {
             var address = badgeAddresses[i];
@@ -69,26 +155,18 @@ var app = {
         }
     },
     refreshDeviceList: function() {
-        deviceList.innerHTML = ''; // empties the list
+        var foundDevices = [];
         qbluetoothle.startScan().then(
             function(obj){ // success
                 console.log("Scan completed successfully - "+obj.status)
             }, function(obj) { // error
                 console.log("Scan Start error: " + obj.error + " - " + obj.message)
             }, function(obj) { // progress
-                if (badges.indexOf(obj.address) != -1) {
-                        var listItem = document.createElement('li'),
-                            html = '<b>' + obj.name + '</b><br/>' +
-                            'RSSI: ' + obj.rssi + '&nbsp;|&nbsp;' +
-                            obj.address;
-
-                        console.log('Found: '+ obj.address);
-
-                        listItem.dataset.deviceId = obj.address;
-                        listItem.innerHTML = html;
-                        deviceList.appendChild(listItem);
-                }
+                foundDevices.push(obj.address);
+                app.updateKnownDevices(foundDevices);
         });
+
+        app.updateKnownDevices(foundDevices);
     },
 
     connectButtonPressed1: function() {
@@ -201,5 +279,44 @@ var app = {
     },
 };
 
+toastr.options = {
+    "closeButton": false,
+    "positionClass": "toast-bottom-center",
+    "preventDuplicates": true,
+    "showDuration": "200",
+    "hideDuration": "500",
+    "timeOut": "1000",
+}
 
-app.initialize();
+var firebase = new Firebase("https://openbadge.firebaseio.com");
+firebase.authThen = function(callback) {
+    if (firebase.getAuth()) {
+        callback();
+        return;
+    }
+    firebase.authWithPassword({
+        email    : 'openbadge@openbadge.mit.edu',
+        password : 'openestofallthebadges'
+    }, function(error, authData) {
+        if (error) {
+            toastr.error("Authentication error!");
+        } else {
+            callback();
+        }
+    });
+};
+
+if (!String.prototype.format) {
+    String.prototype.format = function() {
+        var str = this.toString();
+        if (!arguments.length)
+            return str;
+        var args = typeof arguments[0],
+            args = (("string" == args || "number" == args) ? arguments : arguments[0]);
+        for (arg in args)
+            str = str.replace(RegExp("\\{" + arg + "\\}", "gi"), args[arg]);
+        return str;
+    }
+}
+
+document.addEventListener('deviceready', function() {app.initialize() }, false);
