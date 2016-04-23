@@ -29,16 +29,26 @@
                 <a id="settings-button" class="button button-icon icon button-clear ion-android-settings"></a>
             </div>
             <div>
-                <div id="devicelistLoader" class="loader-area hidden">
+                <div id="devicelistLoader" class="loader-area">
                     <div class="loader"></div>
                 </div>
-                <div class="list" id="devicelistContainer">
+                <div class="list hidden" id="devicelistContainer">
                     <div class="item item-divider">
                         Group Members
                     </div>
                     <ul id="devicelist" class="devicelist"></ul>
                 </div>
+                <div id="devicelistError" class="error-message hidden">
+                    <div class="icon"><i class="icon ion-alert-circled"></i></div>
+                    <div class="message">Couldn't find your group. Please check your group ID and ensure you're online.</div>
+                    <a id="retryDeviceList" class="error-retry">Retry</a>
+                </div>
             </div>
+            <footer>
+                <div class="button-bar cta-button">
+                    <button class="button button-positive" id="startMeetingButton">Start Meeting</button>
+                </div>
+            </footer>
         </div>
         <div id="settings" class="page">
             <div class="bar bar-header bar-light">

@@ -35,8 +35,14 @@ body {
     min-height: 100%;
     margin:0px;
     padding:0px;
-    text-transform:uppercase;
     width:100%;
+    line-height:2.2em;
+}
+footer {
+    position:absolute;
+    bottom:0;
+    left:0;
+    right:0;
 }
 
 .event {
@@ -136,7 +142,7 @@ body {
         height: 5em;
     }
 }
-#toast-container>div{
+#toast-container>div {
     margin:0;
     font-size:16px;
     width:100% !important;
@@ -170,10 +176,41 @@ body {
 .settings-options {
 }
 .cta-button {
-    padding:30px 15px 0;
+    padding:30px 15px 15px;
     box-sizing: border-box;
 }
-
 .devicelist .item.active {
-    background-color:#4cd964;
+    background-color:transparent;
+}
+.devicelist .item * {
+    vertical-align: middle;
+}
+.devicelist .item i {
+    color: #ccc;
+    font-size:26px;
+    float:right;
+    margin-right:10px;
+    margin-left:15px;
+}
+.devicelist .item.active i.present-icon {
+    color: #3dd928;
+}
+
+.error-message {
+    text-align: center;
+}
+.error-message .icon {
+    color:#FFC107;
+    font-size:80px;
+    margin-top:60px;
+    margin-bottom:30px;
+}
+.error-message .message {
+    margin: 0 40px;
+    font-size:20px;
+}
+.error-retry {
+    margin: 20px 0 0;
+    display:inline-block;
+    font-size:24px;
 }

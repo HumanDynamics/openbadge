@@ -46,7 +46,7 @@ var app = {
     },
     bindEvents: function() {
         document.addEventListener('deviceready', this.onDeviceReady, false);
-        refreshButton.addEventListener('touchstart', this.refreshDeviceList, false);
+        refreshButton.addEventListener('touchstart', this.scanForBadges, false);
         sendButton.addEventListener('click', this.sendData, false);
         connectButton.addEventListener('touchstart', this.connect, false);
         isConnectedButton.addEventListener('touchstart', this.isConnected, false);
@@ -66,7 +66,7 @@ var app = {
         console.log(badgesConnStat);
     },
 
-    refreshDeviceList: function() {
+    scanForBadges: function() {
         app.showStatusText("Starting scan");
         deviceList.innerHTML = ''; // empties the list
         /*

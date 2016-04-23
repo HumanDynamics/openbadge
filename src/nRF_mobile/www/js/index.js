@@ -2,38 +2,15 @@ var Q = require('q');
 var qbluetoothle = require('./qbluetoothle');
 var Badge = require('./badge');
 
-//var badges = ['E1:C1:21:A2:B2:E0','D1:90:32:2F:F1:4B'];
-var badgeAddresses = ['EC:21:82:A8:0B:59','D1:90:32:2F:F1:4B'];
 var badges = [];
-//var badges = ['E1:C1:21:A2:B2:E0'];
 
 var watchdogTimer = null;
 
-var app = {
+app = {
     // Application Constructor
     initialize: function() {
-        this.bindEvents();
         this.initBluetooth();
 
-        this.initMainPage();
-        this.initSettingsPage();
-
-        this.showPage("main");
-
-    },
-
-    showPage: function(id) {
-        $(".page").removeClass("active");
-        $("#" + id).addClass("active").trigger("showPage");
-    },
-
-    initMainPage: function() {
-        $("#settings-button").click(function() {
-            app.showPage("settings");
-        });
-        $(".back-button").click(function() {
-            app.showPage("main");
-        });
         document.addEventListener("backbutton", function(e) {
             e.preventDefault();
             if ($("#main").hasClass("active")) {
@@ -42,7 +19,44 @@ var app = {
                 app.showPage("main");
             }
         }, false);
+
+        this.initMainPage();
+        this.initSettingsPage();
+
         app.refreshGroupData();
+        this.showPage("main");
+
+    },
+
+
+    initMainPage: function() {
+        app.presentBadges = [];
+        $("#settings-button").click(function() {
+            app.showPage("settings");
+        });
+        $(".back-button").click(function() {
+            app.showPage("main");
+        });
+        $("#startMeetingButton").click(function() {
+            if (app.presentBadges.length < 2) {
+                navigator.notification.alert("Need at least 2 people present to start a meeting.");
+                return;
+            }
+
+            // TODO: show the dialog before the meeting starts!
+        });
+        $("#retryDeviceList").click(function() {
+            app.refreshGroupData();
+        });
+        $("#main").on("hidePage", function() {
+            clearInterval(app.badgeScanIntervalID);
+        });
+        $("#main").on("showPage", function() {
+            app.badgeScanIntervalID = setInterval(function() {
+                app.scanForBadges();
+            }, 5000);
+            app.scanForBadges();
+        });
     },
     initSettingsPage: function() {
         $("#settings").on("showPage", function() {
@@ -58,11 +72,18 @@ var app = {
     },
     
     refreshGroupData: function() {
+        app.refreshingGroupData = true;
+        $("#devicelistError").addClass("hidden");
         $("#devicelistContainer").addClass("hidden");
         $("#devicelistLoader").removeClass("hidden");
         var groupId = localStorage.getItem("groupId");
         firebase.authThen(function() {
+            var timeout = setTimeout(function() {
+                app.group = null;
+                app.createGroupUserList();
+            }, 3000);
             firebase.child("groups").once("value", function(groupDataResult) {
+                clearTimeout(timeout);
                 var groupData = groupDataResult.val();
                 app.group = null;
                 for (var i = 0; i < groupData.length; i++) {
@@ -73,71 +94,57 @@ var app = {
                     }
                 }
                 app.createGroupUserList();
+            },
+            function() {
+                clearTimeout(timeout);
+                app.group = null;
+                app.createGroupUserList();
             });
         });
     },
     createGroupUserList: function() {
-        $("#devicelistContainer").removeClass("hidden");
+        app.refreshingGroupData = false;
         $("#devicelistLoader").addClass("hidden");
-        app.refreshDeviceList();
+
+        if (app.group == null) {
+            $("#devicelistError").removeClass("hidden");
+            return;
+        }
+
+        $("#devicelistError").addClass("hidden");
+        $("#devicelistContainer").removeClass("hidden");
 
         $("#devicelist").empty();
         if (! app.group || ! app.group.members) {
             return;
         }
+        app.group.memberBadges = [];
         for (var i = 0; i < app.group.members.length; i++) {
             var member = app.group.members[i];
-            $("#devicelist").append($("<li class=\"item\" data-device='{badge}'>{name}</li>".format(member)));
+            app.group.memberBadges.push(member.badge);
+            $("#devicelist").append($("<li class=\"item\" data-device='{badge}'><span class='name'>{name}</span><i class='icon ion-battery-full battery-icon' /><i class='icon ion-happy present-icon' /></li>".format(member)));
         }
 
-        app.updateKnownDevices();
+        app.scanForBadges();
     },
-    updateKnownDevices: function(foundDevices) {
-        app.knownDevices = foundDevices || app.knownDevices;
-        app.knownDevices = app.knownDevices || [];
+    displayPresentBadges: function() {
 
         $("#devicelist .item").removeClass("active");
-        for (var i = 0; i < app.knownDevices.length; i++) {
-            var device = app.knownDevices[i];
+        for (var i = 0; i < app.presentBadges.length; i++) {
+            var device = app.presentBadges[i];
             $("#devicelist .item[data-device='" + device + "']").addClass("active");
         }
     },
 
 
-    // Bind Event Listeners
-    //
-    // Bind any events that are required on startup. Common events are:
-    // 'load', 'deviceready', 'offline', and 'online'.
-    bindEvents: function() {
-        /*
-        refreshButton.addEventListener('touchstart', this.refreshDeviceList, false);
-        connectButton1.addEventListener('touchstart', this.connectButtonPressed1, false);
-        connectButton2.addEventListener('touchstart', this.connectButtonPressed2, false);
-        discoverButton1.addEventListener('touchstart', this.discoverButtonPressed, false);
-        subscribeButton1.addEventListener('touchstart', this.subscribeButtonPressed, false);
-        
-        disconnectButton1.addEventListener('touchstart', this.disconnect1ButtonPressed, false);
-        disconnectButton2.addEventListener('touchstart', this.disconnect2ButtonPressed, false);
-        watchdogStartButton.addEventListener('touchstart', this.watchdogStart, false); 
-        watchdogEndButton.addEventListener('touchstart', this.watchdogEnd, false); 
-        stateButton.addEventListener('touchstart', this.stateButtonPressed, false); 
-        sendButton.addEventListener('touchstart', this.sendButtonPressed, false);
-        */
-    },
     initBluetooth: function() {
-        // populate intervals dict
-        for (var i = 0; i < badgeAddresses.length; ++i) {
-            var address = badgeAddresses[i];
-            console.log("Adding: "+address);
-            badges.push(new Badge.Badge(address));
-        }
 
         bluetoothle.initialize(
-            app.initializeSuccess, 
+            app.bluetoothInitializeSuccess,
             {request: true,statusReceiver: true}
         );
     },
-    initializeSuccess: function (obj) {
+    bluetoothInitializeSuccess: function (obj) {
         console.log('Success');
 
         // Android v6.0 required requestPermissions. If it's Android < 5.0 there'll
@@ -154,21 +161,45 @@ var app = {
             );
         }
     },
-    refreshDeviceList: function() {
-        var foundDevices = [];
-        qbluetoothle.startScan().then(
-            function(obj){ // success
-                console.log("Scan completed successfully - "+obj.status)
-            }, function(obj) { // error
-                console.log("Scan Start error: " + obj.error + " - " + obj.message)
-            }, function(obj) { // progress
-                foundDevices.push(obj.address);
-                app.updateKnownDevices(foundDevices);
+    scanForBadges: function() {
+        if (app.scanning || app.refreshingGroupData) {
+            return;
+        }
+        app.scanning = true;
+        app.presentBadges = [];
+        qbluetoothle.stopScan().then(function() {
+            qbluetoothle.startScan().then(
+                function(obj){ // success
+                    app.scanning = false;
+                    app.displayPresentBadges();
+                    console.log("Scan completed successfully - "+obj.status)
+                }, function(obj) { // error
+                    app.scanning = false;
+                    app.displayPresentBadges();
+                    console.log("Scan Start error: " + obj.error + " - " + obj.message)
+                }, function(obj) { // progress
+                    if (~app.group.memberBadges.indexOf(obj.address) && !~app.presentBadges.indexOf(obj.address)) {
+                        app.presentBadges.push(obj.address);
+                    }
+                });
         });
-
-        app.updateKnownDevices(foundDevices);
     },
 
+    showDialog: function($dialog) {
+        $(".dialog").hide(0);
+        $dialog.show();
+    },
+    hideDialog: function($dialog) {
+        $dialog.hide(200);
+    },
+    showPage: function(id) {
+        $(".page.active").trigger("hidePage");
+        $(".page").removeClass("active");
+        $("#" + id).addClass("active").trigger("showPage");
+    },
+
+    
+    
     connectButtonPressed1: function() {
         var badge = badges[0];
         console.log("will try to connect - "+badge.address);
