@@ -9,7 +9,7 @@ import time
 
 #This class is the contents of one chunk of data
 class Chunk():
-    maxSamples = 116
+    maxSamples = 114
     
     def __init__(self, header, data):
         self.ts,self.fract,self.voltage,self.sampleDelay = header
@@ -38,7 +38,7 @@ class Chunk():
         return len(self.samples) >= self.maxSamples
 
 # This class handles incoming data from the badge. It will buffer the
-# data so exeternal processes can read from it more easy. Reset will
+# data so external processes can read from it more easy. Reset will
 # delete all buffered data
 class BadgeDelegate(DefaultDelegate):
     tempChunk = Chunk((None,None,None,None),[])
@@ -49,10 +49,15 @@ class BadgeDelegate(DefaultDelegate):
     gotDateTime = False
     gotHeader = False
     #badge states, reported from badge
-    dataReady = False
-    badge_sec = None # badge time in seconds
-    badge_ts = None # badge time as timestamp
-    badge_ts_fract = None # fraction time of the timestamp (ms)
+    
+    clockSet = False  # whether the badge's time had been set
+    dataReady = False # whether there's unsent data in FLASH
+    recording = False # whether the badge is collecting samples
+    timestamp_sec = None # badge time in seconds
+    timestamp_ms = None  # fractional part of badge time
+    voltage = None       # badge battery voltage
+    
+    timestamp = None # badge time as timestamp (includes seconds+milliseconds)
 
     def __init__(self, params):
         btle.DefaultDelegate.__init__(self)
@@ -62,23 +67,14 @@ class BadgeDelegate(DefaultDelegate):
         self.tempChunk = Chunk((None,None,None,None),[])
         self.chunks = [] 
         self.gotStatus = False
-        self.gotHeader = False
         self.dataReady = False
+        self.gotHeader = False
+        
 
     def handleNotification(self, cHandle, data):
         if not self.gotStatus:  # whether date has been set
-            self.gotStatus = True  #reverted to false if it turns out invalid
-            if str(data) == 'd':
-                self.dataReady = True
-            elif str(data) == 's':
-                self.dataReady = False #synced but no data ready, no need to do anything
-            else:
-                self.gotStatus = False #invalid status.  retry?
-        elif not self.gotDateTime:
-            self.badge_sec,self.badge_ts_fract = struct.unpack('<LH',data)
-            self.badge_ts = self._longToDatetime(self.badge_sec) #fix time
-            self.badge_ts = self.badge_ts + datetime.timedelta(milliseconds=self.badge_ts_fract) # add ms
-            self.gotDateTime = True
+            self.clockSet,self.dataReady,self.recording,self.timestamp_sec,self.timestamp_ms,self.voltage = struct.unpack('<BBBLHf',data)
+            self.gotStatus = True
         elif not self.gotHeader:
             self.tempChunk.reset()
             self.tempChunk.setHeader(struct.unpack('<LHfH',data)) #time, fraction time (ms), voltage, sample delay

@@ -123,11 +123,11 @@ def dialogue(addr=""):
 			
 			logger.info("Got status")
 						
-			while not bdg.dlg.gotDateTime:
-				bdg.NrfReadWrite.write("t")  # ask for time
-				bdg.waitForNotifications(1.0)
+			#while not bdg.dlg.gotDateTime:
+			#	bdg.NrfReadWrite.write("t")  # ask for time
+			#	bdg.waitForNotifications(1.0)
 
-			logger.info("Badge datetime: {},{}".format(bdg.dlg.badge_sec,bdg.dlg.badge_ts))
+			logger.info("Badge datetime: {},{}".format(bdg.dlg.timestamp_sec,bdg.dlg.timestamp_ms))
 
 		'''
 		# data request using the "d" command
