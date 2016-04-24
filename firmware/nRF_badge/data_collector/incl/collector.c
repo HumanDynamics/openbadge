@@ -27,6 +27,8 @@ void collector_init()
     readingsSum = 0;
     sampleStart = 0;
     sampleStartms = 0;
+    
+    collecting = true;
 }
 
 
@@ -100,6 +102,19 @@ void stopCollector()
     micBuffer[collect.chunk].check = CHECK_TRUNC;  // mark chunk as truncated; it's not full, but we're done writing in it
     collect.loc = 0;    // reset to start of sample array
     collect.chunk = (collect.chunk < LAST_RAM_CHUNK) ? collect.chunk+1 : 0;  // advance to next chunk in buffer
+}
+
+
+float getBatteryVoltage()
+{
+    if(0)  // COLLECTING
+    {
+        return micBuffer[collect.chunk].battery;
+    }
+    else
+    {
+        return readBattery();
+    }
 }
 
 

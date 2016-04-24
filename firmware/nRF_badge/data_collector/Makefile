@@ -99,6 +99,7 @@ incl/scanning.c \
 incl/self_test.c \
 incl/collector.c \
 incl/storer.c \
+incl/sender.c \
 $(SDK_PATH)/components/libraries/util/app_error.c \
 $(SDK_PATH)/components/libraries/util/nrf_assert.c \
 $(SDK_PATH)/components/libraries/uart/retarget.c \

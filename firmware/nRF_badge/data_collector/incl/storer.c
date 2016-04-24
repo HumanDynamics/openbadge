@@ -41,10 +41,10 @@ void storer_init()
                     store.to = c; //keep track of latest stored chunk
                     lastStoredTime = timestamp;
                 }
-            }   //if("completetely stored")
-        }   //if("timestamp is valid")
+            }
+        }
         //nrf_delay_ms(50);
-    }  //end of for loop
+    }
     
     if(lastStoredTime == MODERN_TIME)   // no valid chunk found
     {
@@ -84,13 +84,14 @@ void storer_init()
 }
 
 
-void updateStorer()
+bool updateStorer()
 {
     if(!flashWorking)       // Can't do any flash stuff if there's a pending flash operation already
     {
         storer_mode_t modeLocal = storerMode;  // local copy, in case interrupt somehow changes it mid-switch
         switch(modeLocal)
         {
+        
             case STORER_IDLE:
                 if(store.from != collect.chunk)
                 {
@@ -109,6 +110,7 @@ void updateStorer()
                     BLEresume();
                 }
                 break;
+                
             case STORER_STORE:
                 if(BLEgetStatus() != BLE_CONNECTED)          // no storage if we're in a connection
                 {
@@ -120,6 +122,7 @@ void updateStorer()
                     }
                 }
                 break;
+                
             case STORER_ADVANCE:
                 ;  // can't have declaration directly after switch case label
                 //printStorerChunk(store.to);
@@ -145,10 +148,12 @@ void updateStorer()
                     storerMode = STORER_IDLE;         // If we don't need to erase, we can just go straight to idle mode
                 }
                 break;
+                
             default:
                 break;
         }   // switch(modeLocal)
-    }      // if(!flashWorking)
+    }    // if(!flashWorking)
+    return false;  // if flash is working, storage is done for now
 }
 
 

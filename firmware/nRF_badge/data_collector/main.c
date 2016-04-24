@@ -58,6 +58,7 @@
 #include "self_test.h"   // for built-in tests
 #include "collector.h"  // for collecting data from mic
 #include "storer.h"
+#include "sender.h"
 
 
 
@@ -94,8 +95,7 @@ volatile bool sendTime = false;  //flag signaling that the server asked for time
 
 //============================ time-related stuff ======================================
 //======================================================================================
-volatile int dateReceived = false; // signifies whether or not the badge has received a date
-volatile unsigned long dataTimestamp;    // holds the date
+//volatile int dateReceived = false; // signifies whether or not the badge has received a date
 
 volatile bool sleep = false;  //whether we should sleep (so actions like data sending can override sleep)
 
@@ -126,6 +126,7 @@ void sampleData()  {
 }*/
 
 void goToSleep(long ms)  {
+    sleep = true;
     if(ms == -1)  
     {
         while(sleep)  {  //infinite sleep until an interrupt cancels it
@@ -188,7 +189,7 @@ int main(void)
         debug_log("Starting BLE\r\n");
         nrf_gpio_pin_write(GREEN_LED,LED_ON);
         
-        BLEbegin();
+        BLE_init();
         
         nrf_delay_ms(LED_BLINK_MS);
         nrf_gpio_pin_write(GREEN_LED,LED_OFF);
@@ -291,6 +292,7 @@ int main(void)
     
     collector_init();
     storer_init();
+    sender_init();
     
 
     
@@ -338,8 +340,8 @@ int main(void)
      * If the board resets for some reason, an LED will blink.
      * To intentionally reset the board, the button must be held on start.
      */
-     /*
-    if(nrf_gpio_pin_read(BUTTON_1) != 0)
+     
+    /*if(nrf_gpio_pin_read(BUTTON_1) != 0)
     {
         nrf_gpio_pin_write(LED_1,LED_ON);
         nrf_delay_ms(1000);
@@ -353,8 +355,8 @@ int main(void)
             goToSleep(1000);
         }
             
-    }
-    */
+    }*/
+    
     nrf_delay_ms(1000);
     
     
@@ -479,7 +481,7 @@ int main(void)
     // Enter main loop
     for (;;)  {
         //================ Sampling/Sleep handler ================
-        sleep = true;  //default to sleeping at the end of loop()
+        //sleep = true;  //default to sleeping at the end of loop()
         
         /*if (dateReceived)  
         {  //don't start sampling unless we have valid date
@@ -511,17 +513,28 @@ int main(void)
         
         if(dateReceived)  // don't start main cycle unless we have a valid date
         {
+            bool active = false;
             switch(cycleState)
             {
                 case SAMPLE:
-                    if(millis() - cycleStart < SAMPLE_WINDOW)
+                    if(dateReceived)
                     {
-                        takeMicReading();
-                        sleep = false;
-                    }
-                    else  {
-                        collectSample();
-                        cycleState = STORE;
+                        if(collecting)
+                        {
+                            if(millis() - cycleStart < SAMPLE_WINDOW)
+                            {
+                                takeMicReading();
+                                //sleep = false;
+                            }
+                            else  {
+                                collectSample();
+                                cycleState = STORE;
+                            }
+                        }
+                        else
+                        {
+                            cycleState = STORE;
+                        }
                     }
                     break;
                 case STORE:
@@ -529,14 +542,18 @@ int main(void)
                     cycleState = SEND;
                     break;
                 case SEND:
-                    cycleState = SLEEP;
+                    active = updateSender();
+                    if( (!active) || millis() - cycleStart > 200 )   // if sending is finished, or it's time to sleep, SLEEP
+                    {
+                        cycleState = SLEEP;
+                    }
                     break;
                 case SLEEP:
                     if(millis() - cycleStart >= SAMPLE_PERIOD)  // should we start sampling again
                     {
                         cycleState = SAMPLE;
                         cycleStart = millis();
-                        sleep = false;
+                        //sleep = false;
                         //debug_log("startSAMPLE\r\n");
                     }
                     break;
@@ -625,7 +642,7 @@ int main(void)
         if (!dateReceived)  {
             goToSleep(-1);  //sleep infinitely till interrupt
         }
-        else if (sleep)  //if not synced, just sleep.
+        else if (cycleState == SLEEP)  //if not synced, just sleep.
         {
             unsigned long elapsed = millis() - cycleStart;
             if (elapsed < SAMPLE_PERIOD)  
@@ -655,12 +672,12 @@ void BLEonDisconnect()
 {
     debug_log("Disconnected\r\n");
     sleep = false;
-    streamSamples = false;
+    //streamSamples = false;
     //sendStatus = false;
     //disableSending();  // stop sending
-    if(getScanState() == SCAN_IDLE)  {
+    /*if(getScanState() == SCAN_IDLE)  {
         //enableStorage();  //continue storage operations now that connection is ended, if scans aren't active
-    }
+    }*/
 
     // for app development. disable if forgotten in prod. version
     nrf_gpio_pin_write(LED_1,LED_OFF);
@@ -679,7 +696,12 @@ unsigned long readLong(uint8_t *a) {
  */
 void BLEonReceive(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)  
 {
-    debug_log("Received: ");
+    if(length > 0)
+    {
+        pendingCommand = unpackCommand(p_data);
+    }
+    sleep = false;
+    /*debug_log("Received: ");
     if (length > 2)  
     {  //is it long enough to be a timestamp.
         debug_log("sync timestamp.\r\n");
@@ -702,10 +724,10 @@ void BLEonReceive(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)
     else if (p_data[0] == 'd')  
     {
         debug_log("data request.\r\n");
-        /*if (dateReceived && unsentChunkReady())  
-        {
-            enableSending();
-        }*/
+        //if (dateReceived && unsentChunkReady())  
+        //{
+        //    enableSending();
+        //}
     }
     else if (p_data[0] == 'f')  
     {
@@ -716,7 +738,7 @@ void BLEonReceive(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)
     {
         debug_log("unknown receive!\r\n");
     }
-    sleep = false;  //break from sleep
+    sleep = false;  //break from sleep*/
 }
 
 

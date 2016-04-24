@@ -59,6 +59,7 @@ const int LAST_CHUNK;  // = numberOfPages*8 + 7, defined in flash_handling.c
 #define MODERN_TIME 1434240000UL  // Unix time in the recent past (sometime June 2015), used to check for reasonable times
 
 #include "collector.h"
+#include "sender.h"
 
 
 
@@ -80,7 +81,7 @@ struct
 
 void storer_init();
 
-void updateStorer();
+bool updateStorer();
 
 void storer_on_sys_evt(uint32_t sys_evt);
 

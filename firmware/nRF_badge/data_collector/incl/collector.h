@@ -47,6 +47,7 @@ unsigned long samplePeriod;   // time between samples - must exceed SAMPLE_WINDO
 #define SAMPLE_PERIOD 250UL
 
 
+bool collecting;
 
 bool takingReadings;  // whether we're currently taking readings for a sample
 unsigned long sampleStart;    // timestamp of first reading for current sample
@@ -102,6 +103,12 @@ void collectSample();
  * Next call to addMicReading will start from next chunk in RAM buffer
  */
 void stopCollector();
+
+/**
+ * Get battery voltage
+ * Returns the current chunk's voltage if collecting is enabled; otherwise, returns an analogRead of VCC
+ */
+float getBatteryVoltage();
 
 /**
  * Print chunk contents from the RAM buffer to the debug log
