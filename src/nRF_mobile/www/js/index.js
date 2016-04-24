@@ -13,6 +13,11 @@ app = {
 
         document.addEventListener("backbutton", function(e) {
             e.preventDefault();
+            if ($(".dialog.active").length > 0) {
+                app.hideDialog($(".dialog.active"));
+                return;
+            }
+
             if ($("#main").hasClass("active")) {
                 navigator.app.exitApp();
             } else {
@@ -22,6 +27,7 @@ app = {
 
         this.initMainPage();
         this.initSettingsPage();
+        this.initMeetingDialog();
 
         app.refreshGroupData();
         this.showPage("main");
@@ -37,13 +43,26 @@ app = {
         $(".back-button").click(function() {
             app.showPage("main");
         });
+        $(".close-dialog-button").click(function() {
+            app.hideDialog($(this).parents(".dialog"));
+        });
         $("#startMeetingButton").click(function() {
-            if (app.presentBadges.length < 2) {
+            if (false && app.presentBadges.length < 2) {
                 navigator.notification.alert("Need at least 2 people present to start a meeting.");
                 return;
             }
+            var $meetingMembers = $(".devicelist .item.active");
+            var names = [];
+            $("#mediatorField").empty();
+            for (var i = 0; i < $meetingMembers.length; i++) {
+                var name = $($meetingMembers[i]).data("name");
+                names.push(name);
+                $("#mediatorField").append($("<option>" + name + "</option>"));
+            }
+            $("#memberNameList").text(names.join(", "));
 
-            // TODO: show the dialog before the meeting starts!
+
+            app.showDialog($("#meetingDialog"));
         });
         $("#retryDeviceList").click(function() {
             app.refreshGroupData();
@@ -68,6 +87,11 @@ app = {
             app.showPage("main");
             app.refreshGroupData();
             toastr.success("Settings Saved!");
+        });
+    },
+    initMeetingDialog: function() {
+        $("#startMeetingConfirmButton").click(function() {
+            // TODO: form validation, getting data, and opening the meeting page
         });
     },
     
@@ -122,7 +146,7 @@ app = {
         for (var i = 0; i < app.group.members.length; i++) {
             var member = app.group.members[i];
             app.group.memberBadges.push(member.badge);
-            $("#devicelist").append($("<li class=\"item\" data-device='{badge}'><span class='name'>{name}</span><i class='icon ion-battery-full battery-icon' /><i class='icon ion-happy present-icon' /></li>".format(member)));
+            $("#devicelist").append($("<li class=\"item\" data-name='{name}' data-device='{badge}'><span class='name'>{name}</span><i class='icon ion-battery-full battery-icon' /><i class='icon ion-happy present-icon' /></li>".format(member)));
         }
 
         app.scanForBadges();
@@ -186,11 +210,13 @@ app = {
     },
 
     showDialog: function($dialog) {
-        $(".dialog").hide(0);
-        $dialog.show();
+        $(".dialog").hide(0).removeClass("active");
+        $dialog.fadeIn();
+        $dialog.addClass("active");
     },
     hideDialog: function($dialog) {
-        $dialog.hide(200);
+        $dialog.fadeOut(200);
+        $dialog.removeClass("active");
     },
     showPage: function(id) {
         $(".page.active").trigger("hidePage");
