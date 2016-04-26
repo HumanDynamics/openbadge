@@ -43,4 +43,8 @@
 #define SPIM0_SCK_PIN   2    // SPI clock signal. 
 
 
+#define MIC_PIN ADC_CONFIG_PSEL_AnalogInput6  //GPIO P05
+#define MIC_AREF NRF_ADC_CONFIG_REF_EXT_REF0  //GPIO P00
+
+
 #endif // BADGE_03_H
