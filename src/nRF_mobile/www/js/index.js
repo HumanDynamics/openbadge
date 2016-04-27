@@ -6,161 +6,255 @@ var badges = [];
 
 var watchdogTimer = null;
 
-app = {
-    // Application Constructor
-    initialize: function() {
-        this.initBluetooth();
+var LOCALSTORAGE_GROUP_KEY = "groupkey";
+var APP_KEY = "$*)J#(KD#()#Fj80qf80jq4f*)JFQ$";
+var BASE_URL = "http://18.111.23.176:8000/";
 
-        document.addEventListener("backbutton", function(e) {
-            e.preventDefault();
-            if ($(".dialog.active").length > 0) {
-                app.hideDialog($(".dialog.active"));
-                return;
+/***********************************************************************
+ * Model Declarations
+ */
+
+function Group(groupJson) {
+    this.name = groupJson.name;
+    this.key = groupJson.key;
+    this.show_widget = groupJson.show_widget;
+    this.members = [];
+    for (var i = 0; i < groupJson.members.length; i++) {
+        this.members.push(new GroupMember(groupJson.members[i]));
+    }
+}
+
+function GroupMember(memberJson) {
+    this.name = memberJson.name;
+    this.key = memberJson.key;
+    this.badge = memberJson.badge;
+}
+
+function Meeting(members, type, moderator, description) {
+    this.members = members;
+    this.type = type;
+    this.moderator = moderator;
+    this.description = description;
+}
+
+PAGES = [];
+
+function Page(id, onInit, onShow, onHide, extras) {
+    PAGES.push(this);
+    if (extras) {
+        for (var key in extras) {
+            this[key] = extras[key];
+            if (typeof this[key] === "function") {
+                this[key] = this[key].bind(this);
             }
+        }
+    }
 
-            if ($("#main").hasClass("active")) {
-                navigator.app.exitApp();
-            } else {
-                app.showPage("main");
-            }
-        }, false);
-
-        this.initMainPage();
-        this.initSettingsPage();
-        this.initMeetingDialog();
-
-        app.refreshGroupData();
-        this.showPage("main");
-
-    },
+    this.id = id;
+    this.onInit = onInit.bind(this);
+    this.onShow = onShow.bind(this);
+    this.onHide = onHide.bind(this);
+}
 
 
-    initMainPage: function() {
-        app.presentBadges = [];
+/***********************************************************************
+ * Page Configurations
+ */
+
+
+/**
+ * Main Page that displays the list of present users for the group
+ * @type {Page}
+ */
+mainPage = new Page("main",
+    function onInit() {
+        this.presentBadges = [];
         $("#settings-button").click(function() {
-            app.showPage("settings");
-        });
-        $(".back-button").click(function() {
-            app.showPage("main");
-        });
-        $(".close-dialog-button").click(function() {
-            app.hideDialog($(this).parents(".dialog"));
+            app.showPage(settingsPage);
         });
         $("#startMeetingButton").click(function() {
             if (false && app.presentBadges.length < 2) {
                 navigator.notification.alert("Need at least 2 people present to start a meeting.");
                 return;
             }
-            var $meetingMembers = $(".devicelist .item.active");
-            var names = [];
-            $("#mediatorField").empty();
-            for (var i = 0; i < $meetingMembers.length; i++) {
-                var name = $($meetingMembers[i]).data("name");
-                names.push(name);
-                $("#mediatorField").append($("<option>" + name + "</option>"));
-            }
-            $("#memberNameList").text(names.join(", "));
-
-
-            app.showDialog($("#meetingDialog"));
+            app.showPage(meetingConfigPage);
         });
         $("#retryDeviceList").click(function() {
             app.refreshGroupData();
         });
-        $("#main").on("hidePage", function() {
-            clearInterval(app.badgeScanIntervalID);
-        });
-        $("#main").on("showPage", function() {
-            app.badgeScanIntervalID = setInterval(function() {
-                app.scanForBadges();
-            }, 5000);
+    },
+    function onShow() {
+        app.badgeScanIntervalID = setInterval(function() {
             app.scanForBadges();
-        });
+        }, 5000);
+        app.scanForBadges();
     },
-    initSettingsPage: function() {
-        $("#settings").on("showPage", function() {
-            var groupId = localStorage.getItem("groupId");
-           $("#groupIdField").val(groupId);
-        });
-        $("#saveButton").click(function() {
-            localStorage.setItem("groupId", $("#groupIdField").val());
-            app.showPage("main");
-            app.refreshGroupData();
-            toastr.success("Settings Saved!");
-        });
+    function onHide() {
+        clearInterval(app.badgeScanIntervalID);
     },
-    initMeetingDialog: function() {
-        $("#startMeetingConfirmButton").click(function() {
-            // TODO: form validation, getting data, and opening the meeting page
-        });
-    },
-    
-    refreshGroupData: function() {
-        app.refreshingGroupData = true;
-        $("#devicelistError").addClass("hidden");
-        $("#devicelistContainer").addClass("hidden");
-        $("#devicelistLoader").removeClass("hidden");
-        var groupId = localStorage.getItem("groupId");
-        firebase.authThen(function() {
-            var timeout = setTimeout(function() {
-                app.group = null;
-                app.createGroupUserList();
-            }, 3000);
-            firebase.child("groups").once("value", function(groupDataResult) {
-                clearTimeout(timeout);
-                var groupData = groupDataResult.val();
-                app.group = null;
-                for (var i = 0; i < groupData.length; i++) {
-                    var group = groupData[i];
-                    if (group.id == groupId) {
-                        app.group = group;
-                        break;
-                    }
+    {
+        beginRefreshData: function() {
+            $("#devicelistError").addClass("hidden");
+            $("#devicelistContainer").addClass("hidden");
+            $("#devicelistLoader").removeClass("hidden");
+        },
+        createGroupUserList: function() {
+            $("#devicelistLoader").addClass("hidden");
+
+            if (app.group == null) {
+                $("#devicelistError").removeClass("hidden");
+                return;
+            }
+
+            $("#devicelistError").addClass("hidden");
+            $("#devicelistContainer").removeClass("hidden");
+
+            $("#devicelist").empty();
+            if (! app.group || ! app.group.members) {
+                return;
+            }
+            for (var i = 0; i < app.group.members.length; i++) {
+                var member = app.group.members[i];
+                $("#devicelist").append($("<li class=\"item\" data-name='{name}' data-device='{badge}' data-key='{key}'><span class='name'>{name}</span><i class='icon ion-battery-full battery-icon' /><i class='icon ion-happy present-icon' /></li>".format(member)));
+            }
+
+            app.scanForBadges();
+        },
+        displayActiveBadges: function() {
+
+            $("#devicelist .item").removeClass("active");
+            for (var i = 0; i < app.group.members.length; i++) {
+                var member = app.group.members[i];
+                if (member.active) {
+                    $("#devicelist .item[data-device='" + member.badge + "']").addClass("active");
                 }
-                app.createGroupUserList();
-            },
-            function() {
-                clearTimeout(timeout);
-                app.group = null;
-                app.createGroupUserList();
+            }
+        },
+
+    }
+);
+
+
+/**
+ * Settings Page that lets you save settings
+ * @type {Page}
+ */
+settingsPage = new Page("settings",
+    function onInit() {
+        $("#saveButton").click(function() {
+            localStorage.setItem(LOCALSTORAGE_GROUP_KEY, $("#groupIdField").val());
+            app.showPage(mainPage);
+            app.refreshGroupData(function (success) {
+                toastr.success("Settings Saved!");
             });
         });
     },
-    createGroupUserList: function() {
-        app.refreshingGroupData = false;
-        $("#devicelistLoader").addClass("hidden");
+    function onShow() {
+        var groupId = localStorage.getItem(LOCALSTORAGE_GROUP_KEY);
+        $("#groupIdField").val(groupId);
+    },
+    function onHide() {
+    }
+);
 
-        if (app.group == null) {
-            $("#devicelistError").removeClass("hidden");
-            return;
-        }
 
-        $("#devicelistError").addClass("hidden");
-        $("#devicelistContainer").removeClass("hidden");
-
-        $("#devicelist").empty();
-        if (! app.group || ! app.group.members) {
-            return;
-        }
-        app.group.memberBadges = [];
+/**
+ * Meeting Config Page that sets up the meeting before it starts
+ * @type {Page}
+ */
+meetingConfigPage = new Page("meetingConfig",
+    function onInit() {
+        $("#startMeetingConfirmButton").click(function() {
+            var type = $("#meetingTypeField").val();
+            var moderator = $("#mediatorField option:selected").data("key");
+            var description = $("#meetingDescriptionField").val();
+            app.meeting = new Meeting(this.meetingMembers, type, moderator, description);
+            app.showPage(meetingPage);
+        });
+    },
+    function onShow() {
+        this.meetingMembers = [];
         for (var i = 0; i < app.group.members.length; i++) {
             var member = app.group.members[i];
-            app.group.memberBadges.push(member.badge);
-            $("#devicelist").append($("<li class=\"item\" data-name='{name}' data-device='{badge}'><span class='name'>{name}</span><i class='icon ion-battery-full battery-icon' /><i class='icon ion-happy present-icon' /></li>".format(member)));
+            if (member.active) {
+                this.meetingMembers.push(member);
+            }
+        }
+        var names = [];
+        $("#mediatorField").empty();
+        for (var i = 0; i < this.meetingMembers.length; i++) {
+            var member = this.meetingMembers[i];
+            names.push(member.name);
+            $("#mediatorField").append($("<option data-key='" + member.key + "'>" + member.name + "</option>"));
+        }
+        $("#memberNameList").text(names.join(", "));
+    },
+    function onHide() {
+    }
+);
+
+/**
+ * Meeting Page that records data from badges for all members
+ * @type {Page}
+ */
+meetingPage = new Page("meeting",
+    function onInit() {
+        var $this = this;
+        $("#endMeetingButton").click(function() {
+            navigator.notification.confirm("Are you sure?", function() {
+                $this.onMeetingComplete();
+            });
+        });
+    },
+    function onShow() {
+        window.plugins.insomnia.keepAwake();
+    },
+    function onHide() {
+        window.plugins.insomnia.allowSleepAgain();
+    },
+    {
+        onMeetingComplete: function() {
+            app.showPage(mainPage);
+        }
+    }
+);
+
+
+
+
+/***********************************************************************
+ * App Navigation Behavior Configurations
+ */
+
+
+app = {
+    /**
+     * Initializations
+     */
+    initialize: function() {
+        this.initBluetooth();
+
+        document.addEventListener("backbutton", function(e) {
+            e.preventDefault();
+
+            if (mainPage.active) {
+                navigator.app.exitApp();
+            } else {
+                app.showPage(mainPage);
+            }
+        }, false);
+
+        $(".back-button").click(function() {
+            app.showPage(mainPage);
+        });
+
+        for (var i = 0; i < PAGES.length; i++) {
+            PAGES[i].onInit();
         }
 
-        app.scanForBadges();
+        this.refreshGroupData();
+        this.showPage(mainPage);
     },
-    displayPresentBadges: function() {
-
-        $("#devicelist .item").removeClass("active");
-        for (var i = 0; i < app.presentBadges.length; i++) {
-            var device = app.presentBadges[i];
-            $("#devicelist .item[data-device='" + device + "']").addClass("active");
-        }
-    },
-
-
     initBluetooth: function() {
 
         bluetoothle.initialize(
@@ -174,58 +268,104 @@ app = {
         // Android v6.0 required requestPermissions. If it's Android < 5.0 there'll
         // be an error, but don't worry about it.
         if (cordova.platformId === 'android') {
-            console.log('Asking for permissions');            
+            console.log('Asking for permissions');
             bluetoothle.requestPermission(
-            function(obj) {
-                console.log('permissions ok');
-            },
-            function(obj) {
-                console.log('permissions err');
-            }
+                function(obj) {
+                    console.log('permissions ok');
+                },
+                function(obj) {
+                    console.log('permissions err');
+                }
             );
         }
     },
+
+
+    /**
+     * Functions to refresh the group data from the backend
+     */
+    refreshGroupData: function() {
+        app.onrefreshGroupDataStart();
+        var groupId = localStorage.getItem(LOCALSTORAGE_GROUP_KEY);
+
+        $.ajax(BASE_URL + "get_group/" + groupId + "/", {
+            dataType:"json",
+            success: function(result) {
+                if (result.success) {
+                    app.group = new Group(result.group);
+                } else {
+                    app.group = null;
+                }
+                app.onrefreshGroupDataComplete();
+            },
+            error: function() {
+                app.group = null;
+                app.onrefreshGroupDataComplete();
+            }
+        });
+
+    },
+    onrefreshGroupDataStart: function() {
+        app.refreshingGroupData = true;
+        mainPage.beginRefreshData();
+    },
+    onrefreshGroupDataComplete: function() {
+        app.refreshingGroupData = false;
+        mainPage.createGroupUserList();
+    },
+
+    /**
+     * Functions to get which badges are present
+     */
     scanForBadges: function() {
         if (app.scanning || app.refreshingGroupData) {
             return;
         }
         app.scanning = true;
-        app.presentBadges = [];
+        var activeBadges = [];
         qbluetoothle.stopScan().then(function() {
             qbluetoothle.startScan().then(
                 function(obj){ // success
-                    app.scanning = false;
-                    app.displayPresentBadges();
                     console.log("Scan completed successfully - "+obj.status)
+                    app.onScanComplete(activeBadges);
                 }, function(obj) { // error
-                    app.scanning = false;
-                    app.displayPresentBadges();
                     console.log("Scan Start error: " + obj.error + " - " + obj.message)
+                    app.onScanComplete(activeBadges);
                 }, function(obj) { // progress
-                    if (~app.group.memberBadges.indexOf(obj.address) && !~app.presentBadges.indexOf(obj.address)) {
-                        app.presentBadges.push(obj.address);
-                    }
+                    activeBadges.push(obj.address);
                 });
         });
     },
+    onScanComplete: function(activeBadges) {
+        app.scanning = false;
+        if (! app.group) {
+            return;
+        }
+        for (var i = 0; i < app.group.members.length; i++) {
+            var member = app.group.members[i];
+            member.active = ~activeBadges.indexOf(member.badge);
+        }
+        mainPage.displayActiveBadges();
+    },
 
-    showDialog: function($dialog) {
-        $(".dialog").hide(0).removeClass("active");
-        $dialog.fadeIn();
-        $dialog.addClass("active");
-    },
-    hideDialog: function($dialog) {
-        $dialog.fadeOut(200);
-        $dialog.removeClass("active");
-    },
-    showPage: function(id) {
-        $(".page.active").trigger("hidePage");
+
+    /**
+     * Navigation
+     */
+    showPage: function(page) {
+        if (app.activePage) {
+            app.activePage.onHide();
+        }
+        app.activePage = page;
         $(".page").removeClass("active");
-        $("#" + id).addClass("active").trigger("showPage");
+        $("#" + page.id).addClass("active");
+        page.onShow();
     },
 
-    
-    
+
+    /**
+     * Legacy
+     */
     connectButtonPressed1: function() {
         var badge = badges[0];
         console.log("will try to connect - "+badge.address);
@@ -336,6 +476,13 @@ app = {
     },
 };
 
+
+
+/***********************************************************************
+ * Initialization of various libraries and global prototype overloads
+ */
+
+
 toastr.options = {
     "closeButton": false,
     "positionClass": "toast-bottom-center",
@@ -344,24 +491,6 @@ toastr.options = {
     "hideDuration": "500",
     "timeOut": "1000",
 }
-
-var firebase = new Firebase("https://openbadge.firebaseio.com");
-firebase.authThen = function(callback) {
-    if (firebase.getAuth()) {
-        callback();
-        return;
-    }
-    firebase.authWithPassword({
-        email    : 'openbadge@openbadge.mit.edu',
-        password : 'openestofallthebadges'
-    }, function(error, authData) {
-        if (error) {
-            toastr.error("Authentication error!");
-        } else {
-            callback();
-        }
-    });
-};
 
 if (!String.prototype.format) {
     String.prototype.format = function() {
@@ -375,5 +504,11 @@ if (!String.prototype.format) {
         return str;
     }
 }
+
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        xhr.setRequestHeader("X-APPKEY", APP_KEY);
+    }
+});
 
 document.addEventListener('deviceready', function() {app.initialize() }, false);
