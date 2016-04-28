@@ -18,17 +18,18 @@ function Badge(address) {
 
 	this.sendString = function(stringValue) {
 		var address = this.address;
+		var badge = this;
 		qbluetoothle.writeToDevice(address, stringValue).then(
 			function(obj) { // success
 				console.log(obj.address + "|Data sent! " + obj.status + "|Value: " + stringValue + "|Keys: " + Object.keys(obj));
-				this.touchLastDisconnect();
+				badge.touchLastDisconnect();
 			},
 			function(obj) { // failure
 				console.log(obj.address + "|Error sending data: " + obj.error + "|" + obj.message + "|" + " Keys: " + Object.keys(obj));
-				this.touchLastDisconnect();
+				badge.touchLastDisconnect();
 			}
 		);
-	};
+	}.bind(this);
 
 	this.badgeDialogue = new BadgeDialogue(address, this.sendString, function(str){console.log(address + "|dialogue: " + str)});
 
@@ -38,7 +39,7 @@ function Badge(address) {
 			address: this.address
 		};
 
-		var badge = this; // seems to be required for nested callback			
+		var badge = this; // because javascript
 		this.touchLastActivity();
 		qbluetoothle.connectDevice(params)
 			.then(qbluetoothle.discoverDevice)
@@ -74,49 +75,51 @@ function Badge(address) {
 				badge.close();
 			})
 			.done(); // wrap things up. notifications will stop here
-	};
+	}.bind(this);
 
 	// Sends a request for status from the badge
 	this.sendStatusRequest = function() {
 		var address = this.address;
 		console.log(address + "|Requesting status: ");
 		var s = "s"; //status
-        this.sendString(s);
-	};
+		this.sendString(s);
+	}.bind(this);
 
 	this.touchLastActivity = function() {
 		var address = this.address;
-        var d = new Date();
-        console.log(address+"|"+"Updating last activity: "+d);
-        this.lastActivity = d;
-    };
+		var d = new Date();
+		console.log(address+"|"+"Updating last activity: "+d);
+		this.lastActivity = d;
+	}.bind(this);
 
-    this.touchLastDisconnect = function() {
-    	var address = this.address;
-        var d = new Date();
-        console.log(address+"|"+"Updating last disconnect: "+d);
-        this.lastDisconnect = d;
-    }
+	this.touchLastDisconnect = function() {
+		var address = this.address;
+		var d = new Date();
+		console.log(address+"|"+"Updating last disconnect: "+d);
+		this.lastDisconnect = d;
+	}.bind(this);
 
 	/******************************************************************
-	* Lower level commands
-	*******************************************************************/
+	 * Lower level commands
+	 *******************************************************************/
 	this.connect = function() {
 		var address = this.address;
 		console.log(address + "|Beginning connection to");
 		this.touchLastActivity();
+
+		var badge = this;
 
 		var params = {
 			address: address
 		};
 		qbluetoothle.connectDevice(params).then(
 			function(obj) { // success
-				this.touchLastActivity();
+				badge.touchLastActivity();
 				console.log(obj.address + "|Connected: " + obj.status + "|Keys: " + Object.keys(obj));
 			},
 			function(obj) { // failure
 				if (obj.address) {
-					this.touchLastActivity();
+					badge.touchLastActivity();
 					console.log(obj.address + "|General error: " + obj.error + " - " + obj.message + "|Keys: " + Object.keys(obj));
 				} else {
 					// must be an exception
@@ -124,11 +127,13 @@ function Badge(address) {
 				}
 			}
 		);
-	};
+	}.bind(this);
 
 	this.subscribe = function() {
 		var address = this.address;
 		console.log(address + "|Subscribing");
+
+		var badge = this;
 
 		var params = {
 			address: address
@@ -136,16 +141,16 @@ function Badge(address) {
 		qbluetoothle.subscribeToDevice(params).then(
 			function(obj) { // success
 				// shouldn't get called?
-				this.touchLastActivity(address);
+				badge.touchLastActivity(address);
 				console.log(obj.address + "|Subscribed. Not supposed to get here." + obj.status + "|Keys: " + Object.keys(obj));
 			},
 			function(obj) { // failure
-				this.touchLastActivity();
+				badge.touchLastActivity();
 				console.log(obj.address + "|Subscription error: " + obj.error + " - " + obj.message + "|Keys: " + Object.keys(obj));
-				this.close(); //disconnection error
+				badge.close(); //disconnection error
 			},
 			function(obj) { // notification
-				this.touchLastActivity();
+				badge.touchLastActivity();
 				if (obj.status == "subscribedResult") {
 					var bytes = bluetoothle.encodedStringToBytes(obj.value);
 					var str = bluetoothle.bytesToString(bytes);
@@ -157,53 +162,58 @@ function Badge(address) {
 				}
 			}
 		);
-	};
+	}.bind(this);
 
 	this.discover = function() {
 		var address = this.address;
 		console.log(address + "|Starting discovery");
+
+		var badge = this;
 
 		var params = {
 			address: address
 		};
 		qbluetoothle.discoverDevice(params).then(
 			function(obj) { // success
-				this.touchLastActivity(address);
+				badge.touchLastActivity(address);
 				console.log(obj.address + "|Discovery completed");
 			},
 			function(obj) { // failure
-				this.touchLastActivity();
+				badge.touchLastActivity();
 				if (obj.status == "discovered") {
 					console.log(obj.address + "|Unexpected discover status: " + obj.status);
 				} else {
 
 					console.log(obj.address + "|Discover error: " + obj.error + " - " + obj.message);
 				}
-				this.close(); //Best practice is to close on connection error. In our case
+				badge.close(); //Best practice is to close on connection error. In our case
 				//we also want to reconnect afterwards
 			}
 		);
-	};
+	}.bind(this);
 
 	this.close = function() {
 		var address = this.address;
 		console.log(address + "|Calling close");
+
+		var badge = this;
+
 		var params = {
 			"address": address
 		};
 		qbluetoothle.closeDevice(params).then(
 			function(obj) { // success
 				console.log(obj.address + "|Close completed: " + obj.status + "|Keys: " + Object.keys(obj));
-				this.touchLastActivity();
-				this.touchLastDisconnect();
+				badge.touchLastActivity();
+				badge.touchLastDisconnect();
 			},
 			function(obj) { // failure
 				console.log(obj.address + "|Close error: " + obj.error + " - " + obj.message + "|Keys: " + Object.keys(obj));
-				this.touchLastActivity();
-				this.touchLastDisconnect();
+				badge.touchLastActivity();
+				badge.touchLastDisconnect();
 			}
 		);
-	};
+	}.bind(this);
 
 }
 

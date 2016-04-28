@@ -2,13 +2,14 @@ var Q = require('q');
 var qbluetoothle = require('./qbluetoothle');
 var Badge = require('./badge');
 
-var badges = [];
-
-var watchdogTimer = null;
-
 var LOCALSTORAGE_GROUP_KEY = "groupkey";
 var APP_KEY = "$*)J#(KD#()#Fj80qf80jq4f*)JFQ$";
 var BASE_URL = "http://18.111.23.176:8000/";
+
+var WATCHDOG_INACTIVITY_TIMEOUT = 3000; // kill after 2 ms of no activity
+var WATCHDOG_RECONNECT_WAIT = 2000; // Reconnect after X ms
+var WATCHDOG_SLEEP = 500; // Check status every X ms
+
 
 /***********************************************************************
  * Model Declarations
@@ -27,14 +28,69 @@ function Group(groupJson) {
 function GroupMember(memberJson) {
     this.name = memberJson.name;
     this.key = memberJson.key;
-    this.badge = memberJson.badge;
+    this.badgeId = memberJson.badge;
 }
 
-function Meeting(members, type, moderator, description) {
+function Meeting(group, members, type, moderator, description) {
     this.members = members;
+    this.group = group;
     this.type = type;
+    this.startTime = new Date().getTime();
     this.moderator = moderator;
     this.description = description;
+    this.uuid = group.key + "_" + this.startTime;
+
+    $.each(this.members, function(index, member) {
+        member.badge = new Badge.Badge(member.badgeId);
+    });
+
+    window.resolveLocalFileSystemURL(cordova.file.dataDirectory, function(dir) {
+        dir.getFile(this.uuid + ".txt", {create:true}, function(file) {
+            this.logFile = file;
+
+            var memberIds = [];
+            $.each(this.members, function(index, member) {
+                memberIds.push(member.key);
+            });
+
+            this.writeLog("Meeting started: " + this.uuid);
+            this.writeLog("Group: " + this.group.key);
+            this.writeLog("Members: " + JSON.stringify(memberIds));
+            this.writeLog("Start Time: " + this.startTime);
+            this.writeLog("Moderator: " + this.moderator.key);
+            this.writeLog("Type: " + this.type);
+            this.writeLog("Description: " + this.description);
+
+            this.printLogFile();
+        }.bind(this));
+    }.bind(this));
+
+    this.writeLog = function(str) {
+        if(! this.logFile) return;
+
+        this.logFile.createWriter(function(fileWriter) {
+
+            fileWriter.seek(fileWriter.length);
+
+            var blob = new Blob([str], {type:'text/plain'});
+            fileWriter.write(blob);
+        }, null);
+    }.bind(this);
+
+
+    this.printLogFile = function() {
+        this.logFile.file(function(file) {
+            var reader = new FileReader();
+
+            reader.onloadend = function(e) {
+                console.log(this.result);
+            };
+
+            reader.readAsText(file);
+        }, fail);
+
+    }.bind(this);
+
 }
 
 PAGES = [];
@@ -115,7 +171,7 @@ mainPage = new Page("main",
             }
             for (var i = 0; i < app.group.members.length; i++) {
                 var member = app.group.members[i];
-                $("#devicelist").append($("<li class=\"item\" data-name='{name}' data-device='{badge}' data-key='{key}'><span class='name'>{name}</span><i class='icon ion-battery-full battery-icon' /><i class='icon ion-happy present-icon' /></li>".format(member)));
+                $("#devicelist").append($("<li class=\"item\" data-name='{name}' data-device='{badgeId}' data-key='{key}'><span class='name'>{name}</span><i class='icon ion-battery-full battery-icon' /><i class='icon ion-happy present-icon' /></li>".format(member)));
             }
 
             app.scanForBadges();
@@ -126,7 +182,7 @@ mainPage = new Page("main",
             for (var i = 0; i < app.group.members.length; i++) {
                 var member = app.group.members[i];
                 if (member.active) {
-                    $("#devicelist .item[data-device='" + member.badge + "']").addClass("active");
+                    $("#devicelist .item[data-device='" + member.badgeId + "']").addClass("active");
                 }
             }
         },
@@ -168,9 +224,9 @@ meetingConfigPage = new Page("meetingConfig",
             var type = $("#meetingTypeField").val();
             var moderator = $("#mediatorField option:selected").data("key");
             var description = $("#meetingDescriptionField").val();
-            app.meeting = new Meeting(this.meetingMembers, type, moderator, description);
+            app.meeting = new Meeting(app.group, this.meetingMembers, type, moderator, description);
             app.showPage(meetingPage);
-        });
+        }.bind(this));
     },
     function onShow() {
         this.meetingMembers = [];
@@ -208,9 +264,11 @@ meetingPage = new Page("meeting",
     },
     function onShow() {
         window.plugins.insomnia.keepAwake();
+        app.watchdogStart();
     },
     function onHide() {
         window.plugins.insomnia.allowSleepAgain();
+        app.watchdogEnd();
     },
     {
         onMeetingComplete: function() {
@@ -225,10 +283,6 @@ meetingPage = new Page("meeting",
 /***********************************************************************
  * App Navigation Behavior Configurations
  */
-
-var WATCHDOG_INACTIVITY_TIMEOUT = 3000; // kill after 2 ms of no activity
-var WATCHDOG_RECONNECT_WAIT = 2000; // Reconnect after X ms
-var WATCHDOG_SLEEP = 500; // Check status every X ms
 
 app = {
     /**
@@ -346,7 +400,7 @@ app = {
         }
         for (var i = 0; i < app.group.members.length; i++) {
             var member = app.group.members[i];
-            member.active = ~activeBadges.indexOf(member.badge);
+            member.active = !!~activeBadges.indexOf(member.badgeId);
         }
         mainPage.displayActiveBadges();
     },
@@ -369,60 +423,25 @@ app = {
     /**
      * Legacy
      */
-    connectButtonPressed1: function() {
-        var badge = badges[0];
-        console.log("will try to connect - "+badge.address);
-        badge.connectDialog();
-    },
-    connectButtonPressed2: function() {
-        var badge = badges[1];
-        console.log("will try to connect - "+badge.address);
-        badge.connectDialog();
-    },
-    disconnect1ButtonPressed: function() {
-        var badge = badges[0];
-        badge.close();
-    },
-    disconnect2ButtonPressed: function() {
-        var badge = badges[1];
-        badge.close();
-    },
-    connectToDeviceWrap : function(badge){
-        return function() {
-            badge.connectDialog();
-        }
-    },
-    closeDeviceWrap : function(badge){
-        return function() {
-            badge.close();
-        }
-    },    
     watchdogStart: function() {
-        console.log("Starting watchdog");
-        watchdogTimer = setInterval(function(){ app.watchdog() }, WATCHDOG_SLEEP);  
+        // console.log("Starting watchdog");
+        app.watchdogTimer = setTimeout(function(){ app.watchdog() }, WATCHDOG_SLEEP);
     },
     watchdogEnd: function() {
-        console.log("Ending watchdog");
-        if (watchdogTimer != null)
-        {
-            clearInterval(watchdogTimer);
-        }
-    },
-    stateButtonPressed: function() {
-        for (var i = 0; i < badges.length; ++i) {
-            var badge = badges[i];
-            var activityDatetime = badge.lastActivity;
-            var disconnectDatetime = badge.lastDisconnect;
-            console.log(badge.address+"|lastActivity: "+activityDatetime+"|lastDisconnect: "+disconnectDatetime);
+        // console.log("Ending watchdog");
+        if (app.watchdogTimer) {
+            clearTimeout(app.watchdogTimer);
         }
     },
     watchdog: function() {
-        // Stop watchdog timer
-        clearInterval(watchdogTimer);
+
+        if (! app.meeting) {
+            return;
+        }
 
         // Iterate over badges
-        for (var i = 0; i < badges.length; ++i) {
-            var badge = badges[i];
+        for (var i = 0; i < app.meeting.members.length; ++i) {
+            var badge = app.meeting.members[i].badge;
             var activityDatetime = badge.lastActivity;
             var disconnectDatetime = badge.lastDisconnect;
             //console.log(badge.address+"|lastActivity: "+activityDatetime+"|lastDisconnect: "+disconnectDatetime);
@@ -443,21 +462,19 @@ app = {
                 badge.touchLastDisconnect();
 
                 // close
-                var cf = app.closeDeviceWrap(badge);
-                cf();
+                badge.close();
 
             } else if (nowDatetimeMs - disconnectDatetimeMs > WATCHDOG_RECONNECT_WAIT && disconnectDatetimeMs >= activityDatetimeMs) {
                     // if more than XX seconds since last disconnect 
-                    // and disconnect occoured AFTER connect (meanning that there isn't an open session)
+                    // and disconnect occurred AFTER connect (meaning that there isn't an open session)
                     // call connect
                 console.log(badge.address+"|Last disconnected XX seconds ago. Should try to connect again");
 
                 // touch activity date so we know not to try and connect again
-                //badge.touchLastActivity();
+                // badge.touchLastActivity();
 
                 // connect
-                var cf = app.connectToDeviceWrap(badge);
-                cf();
+                badge.connectDialog();
             } else {
                 //console.log(badge.address+"|Watchdog, Do nothing");
             }
@@ -502,3 +519,29 @@ $.ajaxSetup({
 });
 
 document.addEventListener('deviceready', function() {app.initialize() }, false);
+
+
+
+
+
+writeFile = function (filename, data) {
+
+    myfile.createWriter(function(fileWriter) {
+
+        fileWriter.onwriteend = function(e) {
+            console.log('Write completed.');
+        };
+
+        fileWriter.onerror = function(e) {
+            console.log('Write failed: ' + e.toString());
+        };
+
+        // Create a new Blob and write it to log.txt.
+        fileWriter.seek(fileWriter.length);
+
+        fileWriter.write(data);
+
+    }, errorHandler);
+
+
+};
