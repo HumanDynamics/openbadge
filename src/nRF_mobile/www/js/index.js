@@ -226,6 +226,9 @@ meetingPage = new Page("meeting",
  * App Navigation Behavior Configurations
  */
 
+var WATCHDOG_INACTIVITY_TIMEOUT = 3000; // kill after 2 ms of no activity
+var WATCHDOG_RECONNECT_WAIT = 2000; // Reconnect after X ms
+var WATCHDOG_SLEEP = 500; // Check status every X ms
 
 app = {
     /**
@@ -369,25 +372,13 @@ app = {
     connectButtonPressed1: function() {
         var badge = badges[0];
         console.log("will try to connect - "+badge.address);
-        app.connectButton(badge);
+        badge.connectDialog();
     },
     connectButtonPressed2: function() {
         var badge = badges[1];
         console.log("will try to connect - "+badge.address);
-        app.connectButton(badge);
-    },    
-    connectButton: function(badge) {
         badge.connectDialog();
     },
-    discoverButtonPressed:function() {
-        var badge = badges[0];
-        badge.discover();
-    },
-    subscribeButtonPressed:function() {
-        var badge = badges[0];
-        badge.subscribe();
-    },
-    
     disconnect1ButtonPressed: function() {
         var badge = badges[0];
         badge.close();
@@ -398,7 +389,7 @@ app = {
     },
     connectToDeviceWrap : function(badge){
         return function() {
-            badge.connect();
+            badge.connectDialog();
         }
     },
     closeDeviceWrap : function(badge){
@@ -408,7 +399,7 @@ app = {
     },    
     watchdogStart: function() {
         console.log("Starting watchdog");
-        watchdogTimer = setInterval(function(){ app.watchdog() }, 1000);  
+        watchdogTimer = setInterval(function(){ app.watchdog() }, WATCHDOG_SLEEP);  
     },
     watchdogEnd: function() {
         console.log("Ending watchdog");
@@ -416,12 +407,6 @@ app = {
         {
             clearInterval(watchdogTimer);
         }
-    },
-    sendButtonPressed: function() {
-        var badge = badges[0];
-        var s = "s"; //status
-
-        badge.sendString(s);
     },
     stateButtonPressed: function() {
         for (var i = 0; i < badges.length; ++i) {
@@ -432,11 +417,15 @@ app = {
         }
     },
     watchdog: function() {
+        // Stop watchdog timer
+        clearInterval(watchdogTimer);
+
+        // Iterate over badges
         for (var i = 0; i < badges.length; ++i) {
             var badge = badges[i];
             var activityDatetime = badge.lastActivity;
             var disconnectDatetime = badge.lastDisconnect;
-            console.log(badge.address+"|lastActivity: "+activityDatetime+"|lastDisconnect: "+disconnectDatetime);
+            //console.log(badge.address+"|lastActivity: "+activityDatetime+"|lastDisconnect: "+disconnectDatetime);
 
             var nowDatetimeMs = Date.now();
             var activityDatetimeMs = activityDatetime.getTime();
@@ -445,7 +434,7 @@ app = {
             // kill if connecting for too long and/or if no activity (can update when data recieved)
             // call close() just in case
             // next watchdog call should perform connection
-            if (nowDatetimeMs - activityDatetimeMs > 15000) {
+            if (nowDatetimeMs - activityDatetimeMs > WATCHDOG_INACTIVITY_TIMEOUT) {
                 console.log(badge.address+"|Should timeout");
 
                 // touch activity and disconnect date to make sure we don't keep calling this
@@ -457,7 +446,7 @@ app = {
                 var cf = app.closeDeviceWrap(badge);
                 cf();
 
-            } else if (nowDatetimeMs - disconnectDatetimeMs > 5000 && disconnectDatetimeMs >= activityDatetimeMs) {
+            } else if (nowDatetimeMs - disconnectDatetimeMs > WATCHDOG_RECONNECT_WAIT && disconnectDatetimeMs >= activityDatetimeMs) {
                     // if more than XX seconds since last disconnect 
                     // and disconnect occoured AFTER connect (meanning that there isn't an open session)
                     // call connect
@@ -470,9 +459,10 @@ app = {
                 var cf = app.connectToDeviceWrap(badge);
                 cf();
             } else {
-                console.log(badge.address+"|Watchdog, Do nothing");
+                //console.log(badge.address+"|Watchdog, Do nothing");
             }
         }
+        app.watchdogStart(); // Re-set watchdog timer
     },
 };
 
