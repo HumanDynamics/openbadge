@@ -2,6 +2,7 @@
  *  Badge object. Handles all communication with the badge
  */
 var qbluetoothle = require('./qbluetoothle');
+var BadgeDialogue = require('./badgeDialogue.js').BadgeDialogue;
 
 var nrf51UART = {
 	serviceUUID: '6e400001-b5a3-f393-e0a9-e50e24dcca9e', //
@@ -13,6 +14,23 @@ function Badge(address) {
 	this.address = address;
 	this.lastActivity = new Date();
 	this.lastDisconnect = new Date();
+
+
+	this.sendString = function(stringValue) {
+		var address = this.address;
+		qbluetoothle.writeToDevice(address, stringValue).then(
+			function(obj) { // success
+				console.log(obj.address + "|Data sent! " + obj.status + "|Value: " + stringValue + "|Keys: " + Object.keys(obj));
+				this.touchLastDisconnect();
+			},
+			function(obj) { // failure
+				console.log(obj.address + "|Error sending data: " + obj.error + "|" + obj.message + "|" + " Keys: " + Object.keys(obj));
+				this.touchLastDisconnect();
+			}
+		);
+	};
+
+	this.badgeDialogue = new BadgeDialogue(address, this.sendString, function(str){console.log(address + "|dialogue: " + str)});
 
 	// Connects to a badge, run discovery, subscribe, etc
 	this.connectDialog = function() {
@@ -40,9 +58,12 @@ function Badge(address) {
 					if (obj.status == "subscribedResult") {
 						var bytes = bluetoothle.encodedStringToBytes(obj.value);
 						var str = bluetoothle.bytesToString(bytes);
-						console.log(obj.address + "|Subscription message: " + obj.status + "|Value: " + str);
+						badge.badgeDialogue.onData(str);
 					} else if (obj.status == "subscribed") {
 						console.log(obj.address + "|Subscribed: " + obj.status);
+
+						// start the dialog
+						badge.sendStatusRequest();
 					} else {
 						console.log(obj.address + "|Unexpected Subscribe Status");
 					}
@@ -55,6 +76,31 @@ function Badge(address) {
 			.done(); // wrap things up. notifications will stop here
 	};
 
+	// Sends a request for status from the badge
+	this.sendStatusRequest = function() {
+		var address = this.address;
+		console.log(address + "|Requesting status: ");
+		var s = "s"; //status
+        this.sendString(s);
+	};
+
+	this.touchLastActivity = function() {
+		var address = this.address;
+        var d = new Date();
+        console.log(address+"|"+"Updating last activity: "+d);
+        this.lastActivity = d;
+    };
+
+    this.touchLastDisconnect = function() {
+    	var address = this.address;
+        var d = new Date();
+        console.log(address+"|"+"Updating last disconnect: "+d);
+        this.lastDisconnect = d;
+    }
+
+	/******************************************************************
+	* Lower level commands
+	*******************************************************************/
 	this.connect = function() {
 		var address = this.address;
 		console.log(address + "|Beginning connection to");
@@ -141,7 +187,7 @@ function Badge(address) {
 
 	this.close = function() {
 		var address = this.address;
-		console.log(address + "|Beginning close from");
+		console.log(address + "|Calling close");
 		var params = {
 			"address": address
 		};
@@ -159,34 +205,6 @@ function Badge(address) {
 		);
 	};
 
-	this.sendString = function(stringValue) {
-		var address = this.address;
-		console.log(address + "|Trying to send data");
-		qbluetoothle.writeToDevice(address, stringValue).then(
-			function(obj) { // success
-				console.log(obj.address + "|Data sent! " + obj.status + "|Keys: " + Object.keys(obj));
-				this.touchLastDisconnect();
-			},
-			function(obj) { // failure
-				console.log(obj.address + "|Error sending data: " + obj.error + "|" + obj.message + "|" + " Keys: " + Object.keys(obj));
-				this.touchLastDisconnect();
-			}
-		);
-	};
-
-	this.touchLastActivity = function() {
-		var address = this.address;
-        var d = new Date();
-        console.log(address+"|"+"Updating last activity: "+d);
-        this.lastActivity = d;
-    };
-
-    this.touchLastDisconnect = function() {
-    	var address = this.address;
-        var d = new Date();
-        console.log(address+"|"+"Updating last disconnect: "+d);
-        this.lastDisconnect = d;
-    }
 }
 
 module.exports = {
