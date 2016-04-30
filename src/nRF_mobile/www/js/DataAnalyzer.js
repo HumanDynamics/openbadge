@@ -13,7 +13,8 @@ function DataAnalyzer(sampleFreq) {
     // If we get no signal for this amount of time, consider them no
     // longer talking.
     var TALK_TIMEOUT = 1000;
-
+    // Time length used for taking talking intervals in ms
+    var BUFFER_LENGTH = 1000 * 60 * 5; // 5 minutes
 
     var samples = []; // array of samples : timestamp, volume
     var smoother = new SmoothArray(); // array object used for caluclating smooth value
@@ -23,13 +24,17 @@ function DataAnalyzer(sampleFreq) {
     // Timestamp is a Date object
     this.addSample = function(vol,timestamp) {
         // remove old objects samples array
-        // TODO - implement
+        console.log("Adding to samples:",timestamp);
+        while (samples.length > 0  &&(timestamp - samples[0].timestamp > BUFFER_LENGTH)) {
+            console.log("Removing from samples:",samples[0]);
+            samples.shift();
+        }
 
         // Calc smoothened volume
         var sv = smoother.push(vol);
 
         // update RMS with new sample
-        rmsThreshold.addSample(sv);
+        rmsThreshold.addSample(sv,timestamp);
 
         // speaking indicator is 1 if smoothened volume is above the threshold
         var isSpeak = rmsThreshold.compareToThreshold(sv);
@@ -100,8 +105,17 @@ function RMSThreshold() {
     var meanSquaredThreshold = 0; // (R)MS threshold. It's a sum of squared volumes
     var meanSquaredThresholdCount = 0; // number of elements in the sum. required for calcualting the mean
 
+    // Time length used for RMS threshold in ms
+    var BUFFER_LENGTH = 1000 * 60 * 1; // 1 minute
+
     this.addSample = function(v,timestamp) {
         // Todo - remove obsolete samples
+        // remove old objects samples array
+        console.log("Adding to rms:",timestamp);
+        while (samples.length > 0  &&(timestamp - samples[0].timestamp > BUFFER_LENGTH)) {
+            console.log("Removing from rms:",samples[0]);
+            samples.shift();
+        }
 
         // adding sample and updating the threshold
         samples.push({'v': v, 'timestamp': timestamp});
@@ -124,10 +138,8 @@ function SmoothArray() {
 
     this.push = function(vol) {
         // adds the sample to the correct location
-        console.log("Adding "+vol+" to array size "+smoothArray.length);
         smoothArray[pos] = vol;
         pos = (pos +1) % SAMPLES_SMOOTHING;
-        console.log("Pos is now "+pos+" to array size "+smoothArray.length);
 
         // returns smoothened value
         var sum = smoothArray.reduce(function(a, b) { return a + b; });
@@ -144,12 +156,14 @@ var myHeading = document.querySelector('h1');
 
 a = new DataAnalyzer(250);
 myHeading.textContent = 'Hello world!';
-a.addSample(1, new Date(2016,4,28,9,55,0,0));
-a.addSample(1, new Date(2016,4,28,9,55,0,250));
-a.addSample(1, new Date(2016,4,28,9,55,0,500));
-a.addSample(4, new Date(2016,4,28,9,55,0,750));
-a.addSample(4, new Date(2016,4,28,9,55,2,000));
-a.addSample(1, new Date(2016,4,28,9,55,2,250));
+/*
+a.addSample(1, new Date(2016,4,28,9,50,0,0));
+a.addSample(1, new Date(2016,4,28,9,50,0,250));
+a.addSample(1, new Date(2016,4,28,9,50,0,500));
+a.addSample(4, new Date(2016,4,28,9,52,0,750));
+a.addSample(4, new Date(2016,4,28,9,56,2,000));
+a.addSample(1, new Date(2016,4,28,10,55,2,250));
+*/
 samples = a.getSamples();
 b = a.generateTalkIntervals();
 console.log();
