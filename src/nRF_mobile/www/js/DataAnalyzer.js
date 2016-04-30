@@ -9,7 +9,7 @@ function DataAnalyzer(sampleFreq) {
 
     // if at least this amount of time happens between a null signal
     // and a talk signal, they are considered to have started talking.
-    var MIN_TALK_LENGTH = 200;
+    var MIN_TALK_LENGTH = 300;
     // If we get no signal for this amount of time, consider them no
     // longer talking.
     var TALK_TIMEOUT = 1000;
@@ -54,21 +54,23 @@ function DataAnalyzer(sampleFreq) {
     this.generateTalkIntervals = function() {
         var talkIntervals = []; // startTime, endTime
 
-        var intervalStart = null;
-        var intervalEnd = null;
+        function isSpeak(sample) {
+            return sample.isSpeak == 1;
+        }
+        var speakSamples = samples.filter(isSpeak);
 
         i = 0;
-        while (i < samples.length) {
+        while (i < speakSamples.length) {
             j = i;
 
             // traverse the array while samples belong to the same talking interval
-            while (j < samples.length - 1 && this.isWithinTalkTimeout(samples[j].timestamp, samples[j+1].timestamp))
+            while (j < speakSamples.length - 1 && this.isWithinTalkTimeout(speakSamples[j].timestamp, speakSamples[j+1].timestamp))
             {
                 j = j + 1
             }
 
             // new interval ended. Because each sample is sampleFreq millisecond long, we add this to the endTime
-            var newTalkInterval = {'startTime':samples[i].timestamp, 'endTime':samples[j].timestamp + this.sampleFreq};
+            var newTalkInterval = {'startTime':speakSamples[i].timestamp, 'endTime':new Date(speakSamples[j].timestamp.getTime() + this.sampleFreq)};
             if (!this.isMinTalkLength(newTalkInterval)) {
                 console.log("Not adding (too short): " + newTalkInterval.startTime + " " + newTalkInterval.endTime);
             } else {
@@ -146,8 +148,8 @@ a.addSample(1, new Date(2016,4,28,9,55,0,0));
 a.addSample(1, new Date(2016,4,28,9,55,0,250));
 a.addSample(1, new Date(2016,4,28,9,55,0,500));
 a.addSample(4, new Date(2016,4,28,9,55,0,750));
-a.addSample(4, new Date(2016,5,28,9,55,1,000));
-a.addSample(1, new Date(2016,5,28,9,55,1,250));
+a.addSample(4, new Date(2016,4,28,9,55,2,000));
+a.addSample(1, new Date(2016,4,28,9,55,2,250));
 samples = a.getSamples();
 b = a.generateTalkIntervals();
 console.log();
