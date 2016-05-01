@@ -14,7 +14,7 @@ function DataAnalyzer(sampleFreq) {
     // longer talking.
     var TALK_TIMEOUT = 1000;
     // Time length used for taking talking intervals in ms
-    var BUFFER_LENGTH = 1000 * 60 * 5; // 5 minutes
+    var BUFFER_LENGTH = 1000 * 60 * 200; // 5 minutes
 
     var samples = []; // array of samples : timestamp, volume
     var smoother = new SmoothArray(); // array object used for caluclating smooth value
@@ -24,9 +24,9 @@ function DataAnalyzer(sampleFreq) {
     // Timestamp is a Date object
     this.addSample = function(vol,timestamp) {
         // remove old objects samples array
-        console.log("Adding to samples:",timestamp);
+        //console.log("Adding to samples:",timestamp);
         while (samples.length > 0  &&(timestamp - samples[0].timestamp > BUFFER_LENGTH)) {
-            console.log("Removing from samples:",samples[0]);
+            //console.log("Removing from samples:",samples[0]);
             samples.shift();
         }
 
@@ -35,12 +35,13 @@ function DataAnalyzer(sampleFreq) {
 
         // update RMS with new sample
         rmsThreshold.addSample(sv,timestamp);
+        var meanSquare = rmsThreshold.getThreshold();
 
         // speaking indicator is 1 if smoothened volume is above the threshold
         var isSpeak = rmsThreshold.compareToThreshold(sv);
 
         // add sample to array
-        samples.push({'vol': vol, 'sv' : sv, 'isSpeak' : isSpeak,'timestamp': timestamp});
+        samples.push({'vol': vol, 'sv' : sv, 'meanSquare' : meanSquare , 'isSpeak' : isSpeak,'timestamp': timestamp});
     };
 
     // Returns true if the two samples are "close" enough together
@@ -76,11 +77,9 @@ function DataAnalyzer(sampleFreq) {
 
             // new interval ended. Because each sample is sampleFreq millisecond long, we add this to the endTime
             var newTalkInterval = {'startTime':speakSamples[i].timestamp, 'endTime':new Date(speakSamples[j].timestamp.getTime() + this.sampleFreq)};
-            if (!this.isMinTalkLength(newTalkInterval)) {
-                console.log("Not adding (too short): " + newTalkInterval.startTime + " " + newTalkInterval.endTime);
-            } else {
+            if (this.isMinTalkLength(newTalkInterval)) {
                 console.log("Adding: ",newTalkInterval.startTime,".",newTalkInterval.startTime.getMilliseconds()," ",newTalkInterval.endTime,".",newTalkInterval.endTime.getMilliseconds());
-                talkIntervals.push();
+                talkIntervals.push(newTalkInterval);
             }
 
             // set i to hold the next startTime
@@ -106,21 +105,25 @@ function RMSThreshold() {
     var meanSquaredThresholdCount = 0; // number of elements in the sum. required for calcualting the mean
 
     // Time length used for RMS threshold in ms
-    var BUFFER_LENGTH = 1000 * 60 * 1; // 1 minute
+    var BUFFER_LENGTH = 1000 * 30 * 1; // 30 seconds
 
     this.addSample = function(v,timestamp) {
         // Todo - remove obsolete samples
         // remove old objects samples array
-        console.log("Adding to rms:",timestamp);
+        //console.log("Adding to rms:",timestamp);
         while (samples.length > 0  &&(timestamp - samples[0].timestamp > BUFFER_LENGTH)) {
-            console.log("Removing from rms:",samples[0]);
+            //console.log("Removing from rms:",samples[0]);
             samples.shift();
+            meanSquaredThresholdCount--;
         }
 
         // adding sample and updating the threshold
         samples.push({'v': v, 'timestamp': timestamp});
         meanSquaredThreshold = meanSquaredThreshold + (v*v);
         meanSquaredThresholdCount++;
+    };
+    this.getThreshold = function() {
+        return meanSquaredThreshold/meanSquaredThresholdCount;
     };
 
     this.compareToThreshold = function(v) {
@@ -153,7 +156,6 @@ function SmoothArray() {
 }
 
 var myHeading = document.querySelector('h1');
-
 a = new DataAnalyzer(250);
 myHeading.textContent = 'Hello world!';
 /*
@@ -163,8 +165,73 @@ a.addSample(1, new Date(2016,4,28,9,50,0,500));
 a.addSample(4, new Date(2016,4,28,9,52,0,750));
 a.addSample(4, new Date(2016,4,28,9,56,2,000));
 a.addSample(1, new Date(2016,4,28,10,55,2,250));
+
 */
+/*
+date,val,smooth, rms,spk
+2016-01-27 14:26:00.000	2	2.0	2.000000	0
+2016-01-27 14:26:00.250	2	2.0	2.000000	0
+2016-01-27 14:26:00.500	2	2.0	2.000000	0
+2016-01-27 14:26:00.750	2	2.0	2.000000	0
+2016-01-27 14:26:01.000	2	2.0	2.000000	0
+2016-01-27 14:26:01.250	3	2.2	2.034699	1
+2016-01-27 14:26:01.500	2	2.2	2.059126	1
+2016-01-27 14:26:01.750	2	2.2	2.077258	1
+2016-01-27 14:26:02.000	2	2.2	2.091252	1
+2016-01-27 14:26:02.250	2	2.2	2.102380	1
+*/
+/*
+a.addSample(2, new Date(2016,01,27,14,26,0,0));
+a.addSample(2, new Date(2016,01,27,14,26,0,250));
+a.addSample(2, new Date(2016,01,27,14,26,0,500));
+a.addSample(2, new Date(2016,01,27,14,26,0,750));
+a.addSample(2, new Date(2016,01,27,14,26,1,0));
+a.addSample(3, new Date(2016,01,27,14,26,1,250));
+a.addSample(2, new Date(2016,01,27,14,26,1,500));
+a.addSample(2, new Date(2016,01,27,14,26,1,750));
+a.addSample(2, new Date(2016,01,27,14,26,2,0));
+a.addSample(2, new Date(2016,01,27,14,26,2,250));
 samples = a.getSamples();
 b = a.generateTalkIntervals();
-console.log();
-console.log("Done");
+*/
+
+
+window.onload = function() {
+    var fileInput = document.getElementById('fileInput');
+
+    fileInput.addEventListener('change', function(e) {
+        var file = fileInput.files[0];
+        var reader = new FileReader();
+
+        reader.onload = function(e)
+        {
+            console.log("Started!");
+            var csv = event.target.result;
+            var allTextLines = csv.split(/\r\n|\n/);
+            var lines = [];
+            for (var i=0; i<allTextLines.length; i++) {
+                if (allTextLines[i].length > 20) {
+                    dateInParts=allTextLines[i].split(/-| |:|\.|,/);
+                    var d = new Date(dateInParts[0],dateInParts[1],dateInParts[2],dateInParts[3],dateInParts[4],dateInParts[5],dateInParts[6]);
+                    var v = parseInt(dateInParts[7]);
+                    a.addSample(v,d);
+                }
+            }
+            console.log("Done!");
+            samples = a.getSamples();
+            b = a.generateTalkIntervals();
+            console.log("Intervals:");
+            b.forEach(function(x) {
+                console.log(x.startTime,".",x.startTime.getMilliseconds()," ",x.endTime,".",x.endTime.getMilliseconds());
+            });
+        }
+        reader.readAsText(file);
+    });
+}
+
+/*
+dateStr="2016-01-27 14:45:58.500";
+dateInParts=dateStr.split(/-| |:|\./);
+console.log(dateInParts);
+console.log(new Date(dateInParts[0],dateInParts[1],dateInParts[2],dateInParts[3],dateInParts[4],dateInParts[5],dateInParts[6]));
+*/
