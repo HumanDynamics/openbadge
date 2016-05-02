@@ -77,7 +77,36 @@ function Meeting(group, members, type, moderator, description) {
     this.writeLog("Type: " + this.type);
     this.writeLog("Description: " + this.description);
 
-    this.printLogFile();
+    // this.printLogFile();
+
+    this.syncLogFile = function() {
+        var fileTransfer = new FileTransfer();
+        var uri = encodeURI(BASE_URL + "log_data/");
+
+        var fileURL = cordova.file.externalDataDirectory + this.getLogName();
+
+        var options = new FileUploadOptions();
+        options.fileKey = "file";
+        options.fileName = fileURL.substr(fileURL.lastIndexOf('/') + 1);
+        options.mimeType = "text/plain";
+        options.headers = {"X-APPKEY": APP_KEY};
+
+        options.params = {
+            uuid:this.uuid,
+            moderator:this.moderator
+        };
+
+        function win() {
+            console.log("Log backed up successfully!");
+        }
+
+        function fail() {
+
+        }
+
+        fileTransfer.upload(fileURL, uri, win, fail, options);
+
+    }.bind(this);
 
 }
 
@@ -252,10 +281,15 @@ meetingPage = new Page("meeting",
     function onShow() {
         window.plugins.insomnia.keepAwake();
         app.watchdogStart();
+        this.syncTimeout = setInterval(function() {
+            app.meeting.syncLogFile();
+        }, 2000);
     },
     function onHide() {
+        clearInterval(this.syncTimeout);
         window.plugins.insomnia.allowSleepAgain();
         app.watchdogEnd();
+        app.meeting.syncLogFile();
     },
     {
         onMeetingComplete: function() {
