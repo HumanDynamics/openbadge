@@ -44,14 +44,18 @@
                         }
                         console.log("Done!");
                         var samples = a.getSamples();
-                        b = a.generateTalkIntervals();
+                        var periodStartDate = new Date(samples[samples.length-1].timestamp - 1000 * 60 * 5);
+                        var periodEndDate = samples[samples.length-1].timestamp;
+                        console.log("Time period:",periodStartDate,periodEndDate);
+                        b = a.generateTalkIntervals(periodStartDate,periodEndDate);
+                        console.log("# of intervals: ",a.length)
                         console.log("Intervals:");
                         b.forEach(function(x) {
                             console.log(dateToString(x.startTime),dateToString(x.endTime));
                         });
                         //console.log("Samples:");
                         //samples.forEach(function(x) {
-                        //    console.log(dateToString(x.timestamp),x.vol,x.sv,Math.sqrt(x.meanSquare),x.isSpeak);
+                        //    console.log(x.timestamp,dateToString(x.timestamp),x.vol,x.sv,Math.sqrt(x.meanSquare),x.isSpeak);
                         //});
                     }
                     reader.readAsText(file);

@@ -60,11 +60,11 @@ function DataAnalyzer(sampleFreq) {
         return talkIntervalInMs >= MIN_TALK_LENGTH;
     };
 
-    this.generateTalkIntervals = function() {
+    // Generates talking intervals using samples collected during the given time period
+    this.generateTalkIntervals = function(periodStartTime,periodEndTime) {
         var talkIntervals = []; // startTime, endTime
-
         function isSpeak(sample) {
-            return sample.isSpeak == 1;
+            return sample.isSpeak == 1 && sample.timestamp >= periodStartTime && sample.timestamp <= periodEndTime;
         }
         var speakSamples = samples.filter(isSpeak);
 
@@ -154,7 +154,7 @@ function SmoothArray() {
 }
 
 function dateToString(d) {
-    var s = d.getFullYear().toString()+"-"+d.getMonth().toString()+"-"+d.getDate().toString();
+    var s = d.getFullYear().toString()+"-"+(d.getMonth()+1).toString()+"-"+d.getDate().toString();
     s = s + " "+d.getHours().toString()+":"+d.getMinutes().toString()+":"+d.getSeconds()+"."+d.getMilliseconds().toString();
     return s;
 }
