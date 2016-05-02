@@ -7423,7 +7423,7 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <part name="R10" library="rcl" deviceset="R-US_" device="R0603" value="1k"/>
 <part name="SUPPLY5" library="Badge" deviceset="VCC" device=""/>
 <part name="SUPPLY6" library="Badge" deviceset="VCC" device=""/>
-<part name="C12" library="rcl" deviceset="C-EU" device="C0603" value="0u1"/>
+<part name="C12" library="rcl" deviceset="C-EU" device="C0603" value="4n7"/>
 <part name="C14" library="rcl" deviceset="C-EU" device="C0603" value="0u1"/>
 <part name="R1" library="rcl" deviceset="R-US_" device="R0603" value="6k8"/>
 <part name="U4" library="Badge" deviceset="PCF85263" device=""/>
