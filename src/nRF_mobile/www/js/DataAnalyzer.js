@@ -24,7 +24,6 @@ function DataAnalyzer(sampleFreq) {
     // Timestamp is a Date object
     this.addSample = function(vol,timestamp) {
         // remove old objects samples array
-        //console.log("Adding to samples:",timestamp);
         while (samples.length > 0  &&(timestamp - samples[0].timestamp > BUFFER_LENGTH)) {
             //console.log("Removing from samples:",samples[0]);
             samples.shift();
@@ -78,7 +77,7 @@ function DataAnalyzer(sampleFreq) {
             // new interval ended. Because each sample is sampleFreq millisecond long, we add this to the endTime
             var newTalkInterval = {'startTime':speakSamples[i].timestamp, 'endTime':new Date(speakSamples[j].timestamp.getTime() + this.sampleFreq)};
             if (this.isMinTalkLength(newTalkInterval)) {
-                console.log("Adding: ",newTalkInterval.startTime,".",newTalkInterval.startTime.getMilliseconds()," ",newTalkInterval.endTime,".",newTalkInterval.endTime.getMilliseconds());
+                //console.log("Adding: ",newTalkInterval.startTime,".",newTalkInterval.startTime.getMilliseconds()," ",newTalkInterval.endTime,".",newTalkInterval.endTime.getMilliseconds());
                 talkIntervals.push(newTalkInterval);
             }
 
@@ -92,10 +91,6 @@ function DataAnalyzer(sampleFreq) {
     this.getSamples = function() {
         return samples;
     };
-
-    this.getSamplesSmooth = function() {
-        return samplesSmooth;
-    }
 }
 
 // Class for handling the threshold
@@ -108,12 +103,10 @@ function RMSThreshold() {
     var BUFFER_LENGTH = 1000 * 30 * 1; // 30 seconds
 
     this.addSample = function(v,timestamp) {
-        // Todo - remove obsolete samples
-        // remove old objects samples array
-        //console.log("Adding to rms:",timestamp);
+        // remove old objects samples array and update MS
         while (samples.length > 0  &&(timestamp - samples[0].timestamp > BUFFER_LENGTH)) {
-            //console.log("Removing from rms:",samples[0]);
-            samples.shift();
+            var toDel = samples.shift();
+            meanSquaredThreshold = meanSquaredThreshold - (toDel.v * toDel.v);
             meanSquaredThresholdCount--;
         }
 
@@ -155,83 +148,8 @@ function SmoothArray() {
     }
 }
 
-var myHeading = document.querySelector('h1');
-a = new DataAnalyzer(250);
-myHeading.textContent = 'Hello world!';
-/*
-a.addSample(1, new Date(2016,4,28,9,50,0,0));
-a.addSample(1, new Date(2016,4,28,9,50,0,250));
-a.addSample(1, new Date(2016,4,28,9,50,0,500));
-a.addSample(4, new Date(2016,4,28,9,52,0,750));
-a.addSample(4, new Date(2016,4,28,9,56,2,000));
-a.addSample(1, new Date(2016,4,28,10,55,2,250));
-
-*/
-/*
-date,val,smooth, rms,spk
-2016-01-27 14:26:00.000	2	2.0	2.000000	0
-2016-01-27 14:26:00.250	2	2.0	2.000000	0
-2016-01-27 14:26:00.500	2	2.0	2.000000	0
-2016-01-27 14:26:00.750	2	2.0	2.000000	0
-2016-01-27 14:26:01.000	2	2.0	2.000000	0
-2016-01-27 14:26:01.250	3	2.2	2.034699	1
-2016-01-27 14:26:01.500	2	2.2	2.059126	1
-2016-01-27 14:26:01.750	2	2.2	2.077258	1
-2016-01-27 14:26:02.000	2	2.2	2.091252	1
-2016-01-27 14:26:02.250	2	2.2	2.102380	1
-*/
-/*
-a.addSample(2, new Date(2016,01,27,14,26,0,0));
-a.addSample(2, new Date(2016,01,27,14,26,0,250));
-a.addSample(2, new Date(2016,01,27,14,26,0,500));
-a.addSample(2, new Date(2016,01,27,14,26,0,750));
-a.addSample(2, new Date(2016,01,27,14,26,1,0));
-a.addSample(3, new Date(2016,01,27,14,26,1,250));
-a.addSample(2, new Date(2016,01,27,14,26,1,500));
-a.addSample(2, new Date(2016,01,27,14,26,1,750));
-a.addSample(2, new Date(2016,01,27,14,26,2,0));
-a.addSample(2, new Date(2016,01,27,14,26,2,250));
-samples = a.getSamples();
-b = a.generateTalkIntervals();
-*/
-
-
-window.onload = function() {
-    var fileInput = document.getElementById('fileInput');
-
-    fileInput.addEventListener('change', function(e) {
-        var file = fileInput.files[0];
-        var reader = new FileReader();
-
-        reader.onload = function(e)
-        {
-            console.log("Started!");
-            var csv = event.target.result;
-            var allTextLines = csv.split(/\r\n|\n/);
-            var lines = [];
-            for (var i=0; i<allTextLines.length; i++) {
-                if (allTextLines[i].length > 20) {
-                    dateInParts=allTextLines[i].split(/-| |:|\.|,/);
-                    var d = new Date(dateInParts[0],dateInParts[1],dateInParts[2],dateInParts[3],dateInParts[4],dateInParts[5],dateInParts[6]);
-                    var v = parseInt(dateInParts[7]);
-                    a.addSample(v,d);
-                }
-            }
-            console.log("Done!");
-            samples = a.getSamples();
-            b = a.generateTalkIntervals();
-            console.log("Intervals:");
-            b.forEach(function(x) {
-                console.log(x.startTime,".",x.startTime.getMilliseconds()," ",x.endTime,".",x.endTime.getMilliseconds());
-            });
-        }
-        reader.readAsText(file);
-    });
+function dateToString(d) {
+    var s = d.getFullYear().toString()+"-"+d.getMonth().toString()+"-"+d.getDate().toString();
+    s = s + " "+d.getHours().toString()+":"+d.getMinutes().toString()+":"+d.getSeconds()+"."+d.getMilliseconds().toString();
+    return s;
 }
-
-/*
-dateStr="2016-01-27 14:45:58.500";
-dateInParts=dateStr.split(/-| |:|\./);
-console.log(dateInParts);
-console.log(new Date(dateInParts[0],dateInParts[1],dateInParts[2],dateInParts[3],dateInParts[4],dateInParts[5],dateInParts[6]));
-*/
