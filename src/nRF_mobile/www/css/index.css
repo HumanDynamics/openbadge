@@ -216,13 +216,8 @@ footer {
 }
 
 
-.dialog {
-    position:absolute;
-    top:0;
-    left:0;
-    right:0;
-    bottom:0;
-    background-color:white;
-    z-index: 999999;
-    overflow:hidden;
+.debug-chart {
+    width:90%;
+    margin:30px auto;
+    height:200px;
 }

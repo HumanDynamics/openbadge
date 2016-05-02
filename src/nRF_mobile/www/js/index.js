@@ -8,6 +8,10 @@ var WATCHDOG_INACTIVITY_TIMEOUT = 3000; // kill after 2 ms of no activity
 var WATCHDOG_RECONNECT_WAIT = 2000; // Reconnect after X ms
 var WATCHDOG_SLEEP = 500; // Check status every X ms
 
+var LOG_SYNC_INTERVAL = 10 * 1000;
+var CHART_UPDATE_INTERVAL = 5 * 1000;
+var DEBUG_CHART_MAX_DATA_POINTS = 500;
+var SHOW_DEBUG_CHART = true;
 
 /***********************************************************************
  * Model Declarations
@@ -33,10 +37,10 @@ function Meeting(group, members, type, moderator, description) {
     this.members = members;
     this.group = group;
     this.type = type;
-    this.startTime = new Date().getTime();
+    this.startTime = new Date();
     this.moderator = moderator;
     this.description = description;
-    this.uuid = group.key + "_" + this.startTime;
+    this.uuid = group.key + "_" + this.startTime.getTime();
 
     $.each(this.members, function(index, member) {
         member.badge = new Badge.Badge(member.badgeId);
@@ -69,17 +73,7 @@ function Meeting(group, members, type, moderator, description) {
     });
 
 
-    this.writeLog("Meeting started: " + this.uuid);
-    this.writeLog("Group: " + this.group.key);
-    this.writeLog("Members: " + JSON.stringify(memberIds));
-    this.writeLog("Start Time: " + this.startTime);
-    this.writeLog("Moderator: " + this.moderator);
-    this.writeLog("Type: " + this.type);
-    this.writeLog("Description: " + this.description);
-
-    // this.printLogFile();
-
-    this.syncLogFile = function() {
+    this.syncLogFile = function(isComplete) {
         var fileTransfer = new FileTransfer();
         var uri = encodeURI(BASE_URL + "log_data/");
 
@@ -93,7 +87,14 @@ function Meeting(group, members, type, moderator, description) {
 
         options.params = {
             uuid:this.uuid,
-            moderator:this.moderator
+            moderator:this.moderator,
+            members:JSON.stringify(memberIds),
+            group:this.group.key,
+            startTime:this.startTime.toJSON(),
+            endTime:new Date().toJSON(),
+            type:this.type,
+            description:this.description,
+            isComplete:!!isComplete
         };
 
         function win() {
@@ -107,6 +108,14 @@ function Meeting(group, members, type, moderator, description) {
         fileTransfer.upload(fileURL, uri, win, fail, options);
 
     }.bind(this);
+
+    this.writeLog("Meeting started: " + this.uuid);
+    this.writeLog("Group: " + this.group.key);
+    this.writeLog("Members: " + JSON.stringify(memberIds));
+    this.writeLog("Start Time: " + this.startTime.toJSON());
+    this.writeLog("Moderator: " + this.moderator);
+    this.writeLog("Type: " + this.type);
+    this.writeLog("Description: " + this.description);
 
 }
 
@@ -283,17 +292,83 @@ meetingPage = new Page("meeting",
         app.watchdogStart();
         this.syncTimeout = setInterval(function() {
             app.meeting.syncLogFile();
-        }, 2000);
+        }, LOG_SYNC_INTERVAL);
+
+        if (SHOW_DEBUG_CHART) {
+            this.initDebugChart();
+        } else {
+            $("debug-chart").remove();
+        }
+
     },
     function onHide() {
         clearInterval(this.syncTimeout);
+        clearInterval(this.chartTimeout);
         window.plugins.insomnia.allowSleepAgain();
         app.watchdogEnd();
-        app.meeting.syncLogFile();
+        app.meeting.syncLogFile(true);
     },
     {
+        initDebugChart: function() {
+            this.chartTimeout = setInterval(function() {
+                meetingPage.displayDebugChart();
+            }, CHART_UPDATE_INTERVAL);
+
+            var data = {
+                series: [
+                    []
+                ]
+            };
+            var chartOptions = {
+                // Options for X-Axis
+                axisX: {
+                    showLabel: false,
+                    showGrid: false
+                },
+                axisY: {
+                    showLabel: false,
+                    showGrid: false
+                },
+                showPoint: false,
+                fullWidth: true,
+                low: 0,
+                high: 255
+            };
+
+            this.chart = new Chartist.Line('.debug-chart', {
+                labels: [],
+                series: [
+                ]
+            }, chartOptions);
+        },
         onMeetingComplete: function() {
             app.showPage(mainPage);
+        },
+        displayDebugChart: function() {
+
+            var datasets = [];
+
+            $.each(app.meeting.members, function(index, member) {
+                var series = [];
+                var chunks = member.badge.badgeDialogue.chunks.slice();
+                if (member.badge.badgeDialogue.workingChunk) {
+                    chunks.push(member.badge.badgeDialogue.workingChunk);
+                }
+
+                for (var i = chunks.length - 1; i >= 0 && series.length < DEBUG_CHART_MAX_DATA_POINTS; i--) {
+                    var chunk = chunks[i];
+                    series = chunk.samples.concat(series);
+                }
+                series = series.slice(Math.max(series.length - DEBUG_CHART_MAX_DATA_POINTS, 1));
+                series = Array.apply(null, Array(DEBUG_CHART_MAX_DATA_POINTS - series.length)).map(function(){return 0}).concat(series);
+                datasets.push(series);
+
+            }.bind(this));
+
+            this.chart.data.datasets = datasets;
+            this.chart.update({
+                series: datasets
+            });
         }
     }
 );

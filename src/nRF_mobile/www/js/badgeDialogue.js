@@ -192,14 +192,14 @@ function BadgeDialogue(address, send, log) {
             this.log("Invalid status enum");
             this.status = this.StatusEnum.STATUS;
         }
-    };
+    }.bind(this);
 
     /**
     *Asks the badge for its status
     */
     this.checkStatus = function() {
         this.send('s');
-    };
+    }.bind(this);
 
     /**
     *Internal to class
@@ -213,14 +213,14 @@ function BadgeDialogue(address, send, log) {
 
         var timeString = struct.Pack('<L',[seconds]);
         this.send(timeString);
-    };
+    }.bind(this);
 
     /**
     *@returns the array of chunk objects that this badge has extracted
     */
     this.getChunks = function () {
         return this.chunks;
-    };
+    }.bind(this);
     
 }
 
