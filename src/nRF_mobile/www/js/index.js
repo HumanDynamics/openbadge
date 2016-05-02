@@ -3,8 +3,6 @@ var qbluetoothle = require('./qbluetoothle');
 var Badge = require('./badge');
 
 var LOCALSTORAGE_GROUP_KEY = "groupkey";
-var APP_KEY = "$*)J#(KD#()#Fj80qf80jq4f*)JFQ$";
-var BASE_URL = "http://18.111.23.176:8000/";
 
 var WATCHDOG_INACTIVITY_TIMEOUT = 3000; // kill after 2 ms of no activity
 var WATCHDOG_RECONNECT_WAIT = 2000; // Reconnect after X ms
@@ -42,54 +40,44 @@ function Meeting(group, members, type, moderator, description) {
 
     $.each(this.members, function(index, member) {
         member.badge = new Badge.Badge(member.badgeId);
-    });
-
-    window.resolveLocalFileSystemURL(cordova.file.dataDirectory, function(dir) {
-        dir.getFile(this.uuid + ".txt", {create:true}, function(file) {
-            this.logFile = file;
-
-            var memberIds = [];
-            $.each(this.members, function(index, member) {
-                memberIds.push(member.key);
-            });
-
-            this.writeLog("Meeting started: " + this.uuid);
-            this.writeLog("Group: " + this.group.key);
-            this.writeLog("Members: " + JSON.stringify(memberIds));
-            this.writeLog("Start Time: " + this.startTime);
-            this.writeLog("Moderator: " + this.moderator.key);
-            this.writeLog("Type: " + this.type);
-            this.writeLog("Description: " + this.description);
-
-            this.printLogFile();
-        }.bind(this));
+        member.badge.badgeDialogue.onNewChunk = function(chunk) {
+            var chunkData = chunk.toDict();
+            chunkData.badge = member.badgeId;
+            chunkData.member = member.key;
+            this.writeLog(JSON.stringify(chunkData));
+        }.bind(this);
     }.bind(this));
 
+    this.getLogName = function() {
+        return this.uuid + ".txt";
+    }.bind(this);
+
     this.writeLog = function(str) {
-        if(! this.logFile) return;
-
-        this.logFile.createWriter(function(fileWriter) {
-
-            fileWriter.seek(fileWriter.length);
-
-            var blob = new Blob([str], {type:'text/plain'});
-            fileWriter.write(blob);
-        }, null);
+        window.fileStorage.save(this.getLogName(),str + "\n");
     }.bind(this);
 
 
     this.printLogFile = function() {
-        this.logFile.file(function(file) {
-            var reader = new FileReader();
-
-            reader.onloadend = function(e) {
-                console.log(this.result);
-            };
-
-            reader.readAsText(file);
-        }, fail);
-
+        window.fileStorage.load(this.getLogName(), function (data) {
+            console.log(data);
+        });
     }.bind(this);
+
+    var memberIds = [];
+    $.each(this.members, function(index, member) {
+        memberIds.push(member.key);
+    });
+
+
+    this.writeLog("Meeting started: " + this.uuid);
+    this.writeLog("Group: " + this.group.key);
+    this.writeLog("Members: " + JSON.stringify(memberIds));
+    this.writeLog("Start Time: " + this.startTime);
+    this.writeLog("Moderator: " + this.moderator);
+    this.writeLog("Type: " + this.type);
+    this.writeLog("Description: " + this.description);
+
+    // this.printLogFile();
 
 }
 
@@ -189,7 +177,6 @@ mainPage = new Page("main",
 
     }
 );
-
 
 /**
  * Settings Page that lets you save settings
@@ -524,24 +511,95 @@ document.addEventListener('deviceready', function() {app.initialize() }, false);
 
 
 
-writeFile = function (filename, data) {
+window.fileStorage = {
+    locked:false,
+    save: function (name, data) {
+        if (window.fileStorage.locked) {
+            setTimeout(function() {window.fileStorage.save(name, data)}, 100);
+            return;
+        }
+        window.fileStorage.locked = true;
+        var deferred = $.Deferred();
 
-    myfile.createWriter(function(fileWriter) {
-
-        fileWriter.onwriteend = function(e) {
-            console.log('Write completed.');
+        var fail = function (error) {
+            window.fileStorage.locked = false;
+            deferred.reject(error);
         };
 
-        fileWriter.onerror = function(e) {
-            console.log('Write failed: ' + e.toString());
+        var gotFileSystem = function (fileSystem) {
+            fileSystem.getFile(name, {create: true, exclusive: false}, gotFileEntry, fail);
         };
 
-        // Create a new Blob and write it to log.txt.
-        fileWriter.seek(fileWriter.length);
+        var gotFileEntry = function (fileEntry) {
+            fileEntry.createWriter(gotFileWriter, fail);
+        };
 
-        fileWriter.write(data);
+        var gotFileWriter = function (writer) {
+            writer.onwrite = function () {
+                window.fileStorage.locked = false;
+                deferred.resolve();
+            };
+            writer.onerror = fail;
+            writer.seek(writer.length)
+            writer.write(data);
+        }
 
-    }, errorHandler);
+        window.resolveLocalFileSystemURL(cordova.file.externalDataDirectory, gotFileSystem, fail);
+        return deferred.promise();
+    },
 
+    load: function (name, callback) {
+        if (window.fileStorage.locked) {
+            setTimeout(function() {window.fileStorage.load(name, callback)}, 100);
+            return;
+        }
+        window.fileStorage.locked = true;
+        var deferred = $.Deferred();
 
+        var fail = function (error) {
+            window.fileStorage.locked = false;
+            deferred.reject(error);
+        };
+
+        var gotFileSystem = function (fileSystem) {
+            fileSystem.getFile(name, { create: false, exclusive: false }, gotFileEntry, fail);
+        };
+
+        var gotFileEntry = function (fileEntry) {
+            fileEntry.file(gotFile, fail);
+        };
+
+        var gotFile = function (file) {
+            reader = new FileReader();
+            reader.onloadend = function (evt) {
+                data = evt.target.result;
+                window.fileStorage.locked = false;
+                deferred.resolve(data);
+            };
+
+            reader.readAsText(file);
+        }
+
+        window.resolveLocalFileSystemURL(cordova.file.externalDataDirectory, gotFileSystem, fail);
+        return deferred.promise().done(callback);
+    },
+
+    delete: function (name) {
+        var deferred = $.Deferred();
+
+        var fail = function (error) {
+            deferred.reject(error);
+        };
+
+        var gotFileSystem = function (fileSystem) {
+            fileSystem.getFile(name, { create: false, exclusive: false }, gotFileEntry, fail);
+        };
+
+        var gotFileEntry = function (fileEntry) {
+            fileEntry.remove();
+        };
+
+        window.resolveLocalFileSystemURI(cordova.file.externalDataDirectory, gotFileSystem, fail);
+        return deferred.promise();
+    }
 };

@@ -18,35 +18,35 @@ function Chunk() {
         this.voltage = voltage;
         this.ts = ts;
         this.sampleDelay = sampleDelay;
-    };
+    }.bind(this);
 
     /*
     *@return the voltage of the chunk
     */
     this.getVoltage = function() {
         return this.voltage;                                                                                
-    };
+    }.bind(this);
 
     /*
     *@return the timestamp of the chunk
     */
     this.getTimeStamp = function () {
         return this.ts;
-    };
+    }.bind(this);
 
     /*
     *@return the sampleDelay of the chunk
     */
     this.getSampleDelay = function () {
         return this.sampleDelay;
-    };
+    }.bind(this);
 
     /*
     *@return the samples of this chunk
     */
     this.getSamples = function(){
         return this.samples;
-    }
+    }.bind(this);
 
     /*
     *@param newData the byte array that represents more samples
@@ -57,7 +57,7 @@ function Chunk() {
         this.samples = this.samples.concat(newData);
         var sampleLength = this.samples.length;
 
-    }
+    }.bind(this);
 
     /*
     *resets a chunk to defaults settngs
@@ -67,14 +67,23 @@ function Chunk() {
         this.ts = -1;
         this.sampleDelay = -1;
         this.samples = [];
-    };
+    }.bind(this);
 
     /*
     *@return whether or not the chunk is full
     */
     this.completed = function() {
         return (this.samples.length >= maxSamples);
-    }
+    }.bind(this);
+
+    this.toDict = function () {
+        return {
+            voltage:this.voltage,
+            timestamp:this.ts,
+            sampleDelay:this.sampleDelay,
+            samples:this.samples
+        };
+    }.bind(this);
 }
 
 
@@ -172,6 +181,9 @@ function BadgeDialogue(address, send, log) {
                 //we finished a chunk
                 this.status = this.StatusEnum.HEADER; // expecting a header next
                 this.chunks.push(this.workingChunk);
+                if (this.onNewChunk) {
+                    this.onNewChunk(this.workingChunk);
+                }
                 this.log("Added another chunk, storing " + this.chunks.length + " chunks");
 
             }

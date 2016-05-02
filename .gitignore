@@ -18,3 +18,5 @@ rssi_scan.txt
 .idea
 .env
 env/
+localsettings.js
+
