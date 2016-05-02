@@ -58,7 +58,7 @@ function Meeting(group, members, type, moderator, description) {
 
 
     this.printLogFile = function() {
-        window.fileStorage.load(this.getLogName(), function (data) {
+        window.fileStorage.load(this.getLogName()).done(function (data) {
             console.log(data);
         });
     }.bind(this);
@@ -77,7 +77,7 @@ function Meeting(group, members, type, moderator, description) {
     this.writeLog("Type: " + this.type);
     this.writeLog("Description: " + this.description);
 
-    // this.printLogFile();
+    this.printLogFile();
 
 }
 
@@ -513,13 +513,13 @@ document.addEventListener('deviceready', function() {app.initialize() }, false);
 
 window.fileStorage = {
     locked:false,
-    save: function (name, data) {
+    save: function (name, data, deferred) {
+        var deferred = deferred || $.Deferred();
         if (window.fileStorage.locked) {
-            setTimeout(function() {window.fileStorage.save(name, data)}, 100);
-            return;
+            setTimeout(function() {window.fileStorage.save(name, data, deferred)}, 100);
+            return deferred.promise();
         }
         window.fileStorage.locked = true;
-        var deferred = $.Deferred();
 
         var fail = function (error) {
             window.fileStorage.locked = false;
@@ -548,13 +548,13 @@ window.fileStorage = {
         return deferred.promise();
     },
 
-    load: function (name, callback) {
+    load: function (name, deferred) {
+        var deferred = deferred || $.Deferred();
         if (window.fileStorage.locked) {
-            setTimeout(function() {window.fileStorage.load(name, callback)}, 100);
-            return;
+            setTimeout(function() {window.fileStorage.load(name, deferred)}, 100);
+            return deferred.promise();
         }
         window.fileStorage.locked = true;
-        var deferred = $.Deferred();
 
         var fail = function (error) {
             window.fileStorage.locked = false;
@@ -572,7 +572,7 @@ window.fileStorage = {
         var gotFile = function (file) {
             reader = new FileReader();
             reader.onloadend = function (evt) {
-                data = evt.target.result;
+                var data = evt.target.result;
                 window.fileStorage.locked = false;
                 deferred.resolve(data);
             };
@@ -581,7 +581,7 @@ window.fileStorage = {
         }
 
         window.resolveLocalFileSystemURL(cordova.file.externalDataDirectory, gotFileSystem, fail);
-        return deferred.promise().done(callback);
+        return deferred.promise();
     },
 
     delete: function (name) {
