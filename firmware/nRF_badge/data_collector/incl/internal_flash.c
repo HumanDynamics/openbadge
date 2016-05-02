@@ -208,6 +208,7 @@ bool initSendingFromChunk(int chunk)
     send.chunk = chunk;
     send.sentHeader = false;
     send.loc = 0;
+    send.flagSendEnd = false;
     return true;
 }
 
@@ -225,7 +226,29 @@ bool updateSending()
 {
     if (send.enabled)  
     {
-        if (send.sentHeader == false)  
+        if (send.flagSendEnd == true)
+        {
+            // send "empty" header
+            unsigned char header[10];
+            memset(header, 0, sizeof(header));
+            
+            if (BLEwrite(header, sizeof(header)))  //try to send header
+            {
+                //debug_log("OK.\r\n");
+                debug_log("Sent empty header.\r\n");
+
+                //if we've sent all ready chunks, stop sending.
+                send.flagSendEnd = false;
+                disableSending();  
+
+            }
+            else  //BLE was busy
+            {
+                //debug_log("busy.\r\n"); 
+                send.flagSendEnd = true;
+            }
+        }
+        else if (send.sentHeader == false)  
         {  //try to send header
             //debug_log("Send header...");  //Spams UART if not immediately able to send
             uint32_t* toSendAddr = ADDRESS_OF_CHUNK(send.chunk);
@@ -283,7 +306,8 @@ bool updateSending()
                 }
                 else  
                 {
-                    disableSending();  //if we've sent all ready chunks, stop sending.
+                    // signal that we are ready to send end of transmission
+                    send.flagSendEnd = true;
                 }
             }
         } //end of else "if send.sentHeader==true"
