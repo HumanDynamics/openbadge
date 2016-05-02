@@ -1,33 +1,37 @@
+// if at least this amount of time happens between a null signal
+// and a talk signal, they are considered to have started talking.
+var MIN_TALK_LENGTH = 300;
+// If we get no signal for this amount of time, consider them no
+// longer talking.
+var TALK_TIMEOUT = 1000;
+// Time length used for taking talking intervals in ms
+var BUFFER_LENGTH = 1000 * 60 * 5; // 5 minutes
+// Time length used for RMS threshold in ms
+var RMS_BUFFER_LENGTH = 1000 * 30 * 1; // 30 seconds
+
 /*
 This class stores samples for a badge and convert them into talking intervals
 It uses a moving RMS to determine a threshold. Since multiplication is 
 easier than a root operation, we calculate MS and not RMS.
 */
-
 function DataAnalyzer(sampleFreq) {
     this.sampleFreq= sampleFreq;
-
-    // if at least this amount of time happens between a null signal
-    // and a talk signal, they are considered to have started talking.
-    var MIN_TALK_LENGTH = 300;
-    // If we get no signal for this amount of time, consider them no
-    // longer talking.
-    var TALK_TIMEOUT = 1000;
-    // Time length used for taking talking intervals in ms
-    var BUFFER_LENGTH = 1000 * 60 * 200; // 5 minutes
-
     var samples = []; // array of samples : timestamp, volume
     var smoother = new SmoothArray(); // array object used for caluclating smooth value
     var rmsThreshold = new RMSThreshold();
+
+    this.purgeSamples = function(timestamp) {
+        while (samples.length > 0  &&(timestamp - samples[0].timestamp > BUFFER_LENGTH)) {
+            //console.log("Removing from samples:",samples[0]);
+            samples.shift();
+        }
+    }
 
     // Adds a sample. Code assumes that the timestamp is monotonically increasing
     // Timestamp is a Date object
     this.addSample = function(vol,timestamp) {
         // remove old objects samples array
-        while (samples.length > 0  &&(timestamp - samples[0].timestamp > BUFFER_LENGTH)) {
-            //console.log("Removing from samples:",samples[0]);
-            samples.shift();
-        }
+        this.purgeSamples(timestamp);
 
         // Calc smoothened volume
         var sv = smoother.push(vol);
@@ -93,18 +97,17 @@ function DataAnalyzer(sampleFreq) {
     };
 }
 
-// Class for handling the threshold
+/*
+Class for handling the threshold
+ */
 function RMSThreshold() {
     var samples = []; // samples used for thresholding
     var meanSquaredThreshold = 0; // (R)MS threshold. It's a sum of squared volumes
     var meanSquaredThresholdCount = 0; // number of elements in the sum. required for calcualting the mean
 
-    // Time length used for RMS threshold in ms
-    var BUFFER_LENGTH = 1000 * 30 * 1; // 30 seconds
-
     this.addSample = function(v,timestamp) {
         // remove old objects samples array and update MS
-        while (samples.length > 0  &&(timestamp - samples[0].timestamp > BUFFER_LENGTH)) {
+        while (samples.length > 0  &&(timestamp - samples[0].timestamp > RMS_BUFFER_LENGTH)) {
             var toDel = samples.shift();
             meanSquaredThreshold = meanSquaredThreshold - (toDel.v * toDel.v);
             meanSquaredThresholdCount--;
@@ -125,7 +128,9 @@ function RMSThreshold() {
 
 }
 
-// Class for smoothening the volume signal
+/*
+Class for smoothening the volume signal
+*/
 function SmoothArray() {
     // Number of samples that will be used for smoothing the samples
     var SAMPLES_SMOOTHING = 5;
