@@ -138,12 +138,15 @@ def dialogue(addr=""):
 			bdg.NrfReadWrite.write("d")  # ask for data
 			wait_count = 0;
 			while True:
+				if bdg.dlg.gotEndOfData == True:
+					break
 				if bdg.waitForNotifications(1.0):
 					# if got data, don't inrease the wait counter
 					continue
 				logger.info("Waiting for more data...")
 				wait_count = wait_count+1
 				if wait_count >= PULL_WAIT: break
+				
 			logger.info("finished reading data")
 
 	except BTLEException, e:
@@ -154,9 +157,9 @@ def dialogue(addr=""):
 	except TimeoutError, te:
 		retcode=-1
 		logger.error("TimeoutError: "+te.message)
-	except:
-		retcode=-1
-		e = sys.exc_info()[0]
+	except Exception as e:
+		#retcode=-1
+		#e = sys.exc_info()[0]
 		logger.error("unexpected failure, {}".format(e))
 	finally:
 		if bdg:
