@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>DataAnalyzer</title>
+
+    </head>
+    <body>
+        <h1>DataAnalyzer</h1>
+        <div id="output">
+        </div>
+
+        <div id="page-wrapper">
+            <div>
+                <input type="file" id="fileInput">
+            </div>
+            <pre id="fileDisplayArea"></pre>
+        </div>
+
+        <script type="text/javascript" src="../www/js/DataAnalyzer.js"></script>
+        <script type="text/javascript">
+            a = new DataAnalyzer(250);
+
+            window.onload = function() {
+                var fileInput = document.getElementById('fileInput');
+
+                fileInput.addEventListener('change', function(e) {
+                    var file = fileInput.files[0];
+                    var reader = new FileReader();
+
+                    reader.onload = function(e)
+                    {
+                        console.log("Started!");
+                        var csv = event.target.result;
+                        var allTextLines = csv.split(/\r\n|\n/);
+                        var lines = [];
+                        for (var i=0; i<allTextLines.length; i++) {
+                            if (allTextLines[i].length > 20) {
+                                dateInParts=allTextLines[i].split(/-| |:|\.|,/);
+                                var d = new Date(dateInParts[0],dateInParts[1],dateInParts[2],dateInParts[3],dateInParts[4],dateInParts[5],dateInParts[6]);
+                                var v = parseInt(dateInParts[7]);
+                                a.addSample(v,d);
+                            }
+                        }
+                        console.log("Done!");
+                        var samples = a.getSamples();
+                        var periodStartDate = new Date(samples[samples.length-1].timestamp - 1000 * 60 * 5);
+                        var periodEndDate = samples[samples.length-1].timestamp;
+                        console.log("Time period:",periodStartDate,periodEndDate);
+                        b = a.generateTalkIntervals(periodStartDate,periodEndDate);
+                        console.log("# of intervals: ",a.length)
+                        console.log("Intervals:");
+                        b.forEach(function(x) {
+                            console.log(dateToString(x.startTime),dateToString(x.endTime));
+                        });
+                        //console.log("Samples:");
+                        //samples.forEach(function(x) {
+                        //    console.log(x.timestamp,dateToString(x.timestamp),x.vol,x.sv,Math.sqrt(x.meanSquare),x.isSpeak);
+                        //});
+                    }
+                    reader.readAsText(file);
+                });
+            }
+
+        </script>
+    </body>
+</html>
