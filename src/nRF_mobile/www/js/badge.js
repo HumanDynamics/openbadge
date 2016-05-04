@@ -22,16 +22,35 @@ function Badge(address) {
 		qbluetoothle.writeToDevice(address, stringValue).then(
 			function(obj) { // success
 				console.log(obj.address + "|Data sent! " + obj.status + "|Value: " + stringValue + "|Keys: " + Object.keys(obj));
-				badge.touchLastDisconnect();
+
+				badge.touchLastActivity();
 			},
 			function(obj) { // failure
 				console.log(obj.address + "|Error sending data: " + obj.error + "|" + obj.message + "|" + " Keys: " + Object.keys(obj));
-				badge.touchLastDisconnect();
+				badge.touchLastActivity();
 			}
 		);
 	}.bind(this);
 
-	this.badgeDialogue = new BadgeDialogue(address, this.sendString, function(str){console.log(address + "|dialogue: " + str)});
+    this.sendStringAndClose = function(stringValue) {
+        var address = this.address;
+        var badge = this;
+        qbluetoothle.writeToDevice(address, stringValue).then(
+            function(obj) { // success
+                console.log(obj.address + "|Data sent! " + obj.status + "|Value: " + stringValue + "|Keys: " + Object.keys(obj));
+                badge.touchLastActivity();
+                badge.close();
+            },
+            function(obj) { // failure
+                console.log(obj.address + "|Error sending data: " + obj.error + "|" + obj.message + "|" + " Keys: " + Object.keys(obj));
+                badge.touchLastActivity();
+                badge.close();
+            }
+        );
+    }.bind(this);
+
+
+    this.badgeDialogue = new BadgeDialogue(this);
 
 	// Connects to a badge, run discovery, subscribe, etc
 	this.connectDialog = function() {

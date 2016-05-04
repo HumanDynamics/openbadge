@@ -90,11 +90,9 @@ function Chunk() {
 
 /**
 *Represents a badge dialogue for extracting structs
-*@param ID the id of the badge
-*@param send a function that the class can call to send strings to the badge
-*@param log a function the class can call for debug info
+*@param badge badge object
 */
-function BadgeDialogue(address, send, log) {
+function BadgeDialogue(badge) {
     
     this.StatusEnum = {
         STATUS: 1,
@@ -103,15 +101,16 @@ function BadgeDialogue(address, send, log) {
     };
 
     var struct = require('./struct.js').struct;
-    this.send = send;
-    this.log = log;
-    this.address = address;
+    this.badge = badge;
     this.status = this.StatusEnum.STATUS; //at first we expect a status update
     this.dataPackets = 0;
 
     this.workingChunk; //chunk we are currently building
     this.chunks = []; //will store chunks once Received
 
+    this.log = function(str) {
+        console.log(badge.address + "|dialogue: " + str)
+    }
 
     /**
     * This function must be called whenever data was sent from the badge
@@ -136,10 +135,11 @@ function BadgeDialogue(address, send, log) {
                 this.log("Data available, extracting: ");
                 //data ready
                 this.status = this.StatusEnum.HEADER; // expecting a header next
-                this.send('d'); //request data
+                this.badge.sendString('d'); //request data
             } else if (data == 's') {
-                this.log("Badge Synced but no new data");
+                this.log("Badge Synced but no new data. Disconnecting.");
                 //no new data, do nothing for now
+                badge.close();
             } else {
                 this.log("Unknown status: " + data);
             }
@@ -158,6 +158,9 @@ function BadgeDialogue(address, send, log) {
 
                 this.workingChunk = new Chunk();
                 this.workingChunk.setHeader(header[1], header[0], header[2]);
+            } else if (header[1] == 0) {
+                this.log("End of data received, disconnecting");
+                badge.close();
             } else {
                 this.log("invalid header");                
             }
@@ -198,7 +201,7 @@ function BadgeDialogue(address, send, log) {
     *Asks the badge for its status
     */
     this.checkStatus = function() {
-        this.send('s');
+        this.badge.sendString('s');
     }.bind(this);
 
     /**
@@ -212,7 +215,7 @@ function BadgeDialogue(address, send, log) {
         this.log('Updating with epoch_seconds: ' + seconds);
 
         var timeString = struct.Pack('<L',[seconds]);
-        this.send(timeString);
+        this.badge.sendStringAndClose(timeString);
     }.bind(this);
 
     /**
