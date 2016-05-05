@@ -142,7 +142,7 @@ function startScan() {
         matchMode: bluetoothle.MATCH_MODE_STICKY,
         matchNum: bluetoothle.MATCH_NUM_ONE_ADVERTISEMENT,
         //callbackType: bluetoothle.CALLBACK_TYPE_FIRST_MATCH,
-        scanTimeout: 2000, // 2 seconds
+        scanTimeout: 10000, // milliseconds
     };
 
     // setup timeout if requested

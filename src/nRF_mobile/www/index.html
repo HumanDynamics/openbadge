@@ -108,7 +108,9 @@
                     <div class="clock-title">Meeting Duration</div>
                     <div class="clock" id="clock"></div>
                 </div>
-                <div id="visualization"></div>
+                <div id="visualization" class="visualization-wrapper">
+                    <div id="meeting-mediator" class="meeting-mediator"></div>
+                </div>
                 <div class="hidden">
                     <div id="debug-charts" class="debug-charts"></div>
                 </div>
@@ -131,9 +133,11 @@
         <script type="text/javascript" src="js/libs/underscore-min.js"></script>
         <script type="text/javascript" src="js/libs/toastr.min.js"></script>
         <script type="text/javascript" src="js/libs/featherlight.js"></script>
+        <script type="text/javascript" src="js/libs/d3.v3.min.js"></script>
         <script type="text/javascript" src="cordova.js"></script>
         <script type="text/javascript" src="js/localsettings.js"></script>
         <script type="text/javascript" src="js/DataAnalyzer.js"></script>
+        <script type="text/javascript" src="js/mm.js"></script>
         <script type="text/javascript" src="js/bundle.js"></script>
     </body>
 </html>

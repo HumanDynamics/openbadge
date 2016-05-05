@@ -263,3 +263,11 @@ footer {
     text-align: center;
     margin-bottom: 40px;
 }
+
+.visualization-wrapper {
+}
+.meeting-mediator {
+    width:300px;
+    height:300px;
+    margin:0 auto;
+}

@@ -1,6 +1,8 @@
 cd www/js
 npm install
 cd ../../
+npm install -g coffee-script
+
 cordova platform add android
 cordova plugin add cordova-plugin-dialogs
 cordova plugin add cordova-plugin-bluetoothle

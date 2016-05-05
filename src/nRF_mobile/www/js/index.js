@@ -77,9 +77,13 @@ function Meeting(group, members, type, moderator, description) {
     }.bind(this);
 
     var memberIds = [];
+    var memberInitials = [];
     $.each(this.members, function(index, member) {
         memberIds.push(member.key);
+        memberInitials.push(getInitials(member.name));
     });
+    this.memberKeys = memberIds;
+    this.memberInitials = memberInitials;
 
 
     this.syncLogFile = function(isComplete) {
@@ -338,12 +342,26 @@ meetingPage = new Page("meeting",
                 meetingPage.updateCharts();
             }, CHART_UPDATE_INTERVAL);
 
+            var $mmVis = $("#meeting-mediator");
+            $mmVis.empty();
+            this.mm = new MM({participants: app.meeting.memberKeys,
+                    names: app.meeting.memberInitials,
+                    transitions: 0,
+                    turns: []},
+                app.meeting.moderator,
+                $mmVis.width(),
+                $mmVis.height());
+            this.mm.render('#meeting-mediator');
+
 
         },
         onMeetingComplete: function() {
             app.showPage(mainPage);
         },
         updateCharts: function() {
+
+            var turns = [];
+            var totalIntervals = 0;
 
             $.each(app.meeting.members, function(index, member) {
 
@@ -358,7 +376,21 @@ meetingPage = new Page("meeting",
 
                 member.chart.render(data.data, data.intervals, start, end);
 
+                turns.push({participant:member.key, turns:data.intervals.length});
+                totalIntervals += data.intervals.length;
+
             }.bind(this));
+
+            $.each(turns, function(index, turn) {
+                turn.turns = turn.turns / totalIntervals;
+            });
+
+            this.mm.updateData({
+                participants: app.meeting.memberKeys,
+                names: app.meeting.memberInitials,
+                transitions: 0,
+                turns: turns
+            });
         }
     }
 );
@@ -660,9 +692,6 @@ $.ajaxSetup({
 document.addEventListener('deviceready', function() {app.initialize() }, false);
 
 
-
-
-
 window.fileStorage = {
     locked:false,
     save: function (name, data, deferred) {
@@ -760,6 +789,10 @@ function pad(n, width, z) {
     z = z || '0';
     n = n + '';
     return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+}
+
+function getInitials(str) {
+    return str.replace(/\W*(\w)\w*/g, '$1').toUpperCase();
 }
 
 jQuery.fn.extend({
