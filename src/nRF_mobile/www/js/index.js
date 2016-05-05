@@ -12,6 +12,7 @@ var LOG_SYNC_INTERVAL = 10 * 1000;
 var CHART_UPDATE_INTERVAL = 5 * 1000;
 var DEBUG_CHART_MAX_DATA_POINTS = 500;
 var SHOW_DEBUG_CHART = true;
+var DEBUG_CHART_WINDOW = 1000 * 60;
 
 /***********************************************************************
  * Model Declarations
@@ -44,12 +45,20 @@ function Meeting(group, members, type, moderator, description) {
 
     $.each(this.members, function(index, member) {
         member.badge = new Badge.Badge(member.badgeId);
+        member.dataAnalyzer = new DataAnalyzer();
         member.badge.badgeDialogue.onNewChunk = function(chunk) {
             var chunkData = chunk.toDict();
             chunkData.badge = member.badgeId;
             chunkData.member = member.key;
             this.writeLog(JSON.stringify(chunkData));
+            member.dataAnalyzer.addChunk(chunk);
         }.bind(this);
+        member.badge.onDisconnect = function() {
+            if (member.$lastDisconnect) {
+                member.$lastDisconnect.text(member.badge.lastDisconnect.toUTCString());
+            }
+        }
+        
     }.bind(this));
 
     this.getLogName = function() {
@@ -282,23 +291,25 @@ meetingPage = new Page("meeting",
     function onInit() {
         var $this = this;
         $("#endMeetingButton").click(function() {
-            navigator.notification.confirm("Are you sure?", function() {
-                $this.onMeetingComplete();
+            navigator.notification.confirm("Are you sure?", function(result) {
+                if (result == 1) {
+                    $this.onMeetingComplete();
+                }
             });
         });
+        this.$debugCharts = $("#debug-charts");
+        $('#debug-chart-button').featherlight(this.$debugCharts, {persist:true});
+
     },
     function onShow() {
         window.plugins.insomnia.keepAwake();
         app.watchdogStart();
+        $("#clock").clock();
         this.syncTimeout = setInterval(function() {
             app.meeting.syncLogFile();
         }, LOG_SYNC_INTERVAL);
 
-        if (SHOW_DEBUG_CHART) {
-            this.initDebugChart();
-        } else {
-            $("debug-chart").remove();
-        }
+        this.initCharts();
 
     },
     function onHide() {
@@ -309,71 +320,103 @@ meetingPage = new Page("meeting",
         app.meeting.syncLogFile(true);
     },
     {
-        initDebugChart: function() {
+        initCharts: function() {
+
+            var $charts = this.$debugCharts;
+
+            $charts.empty();
+            var template = _.template($("#debug-chart-template").text());
+            $.each(app.meeting.members, function(index, member) {
+                var $infocard = $(template({key:member.key,name:member.name}));
+                $charts.append($infocard);
+                member.chart = new DebugChart($infocard.find("canvas"));
+                member.$lastDisconnect = $infocard.find(".last_update");
+            });
+
+            clearInterval(this.chartTimeout);
             this.chartTimeout = setInterval(function() {
-                meetingPage.displayDebugChart();
+                meetingPage.updateCharts();
             }, CHART_UPDATE_INTERVAL);
 
-            var data = {
-                series: [
-                    []
-                ]
-            };
-            var chartOptions = {
-                // Options for X-Axis
-                axisX: {
-                    showLabel: false,
-                    showGrid: false
-                },
-                axisY: {
-                    showLabel: false,
-                    showGrid: false
-                },
-                showPoint: false,
-                fullWidth: true,
-                low: 0,
-                high: 255
-            };
 
-            this.chart = new Chartist.Line('.debug-chart', {
-                labels: [],
-                series: [
-                ]
-            }, chartOptions);
         },
         onMeetingComplete: function() {
             app.showPage(mainPage);
         },
-        displayDebugChart: function() {
-
-            var datasets = [];
+        updateCharts: function() {
 
             $.each(app.meeting.members, function(index, member) {
-                var series = [];
-                var chunks = member.badge.badgeDialogue.chunks.slice();
-                if (member.badge.badgeDialogue.workingChunk) {
-                    chunks.push(member.badge.badgeDialogue.workingChunk);
+
+                var datapoints = member.dataAnalyzer.getSamples();
+                if (! datapoints || ! datapoints[datapoints.length - 1]) {
+                    return;
                 }
 
-                for (var i = chunks.length - 1; i >= 0 && series.length < DEBUG_CHART_MAX_DATA_POINTS; i--) {
-                    var chunk = chunks[i];
-                    series = chunk.samples.concat(series);
-                }
-                series = series.slice(Math.max(series.length - DEBUG_CHART_MAX_DATA_POINTS, 1));
-                series = Array.apply(null, Array(DEBUG_CHART_MAX_DATA_POINTS - series.length)).map(function(){return 0}).concat(series);
-                datasets.push(series);
+                var end = datapoints[datapoints.length - 1].timestamp;
+                var start = end - DEBUG_CHART_WINDOW;
+                var data = member.dataAnalyzer.generateTalkIntervals(start, end);
+
+                member.chart.render(data.data, data.intervals, start, end);
 
             }.bind(this));
-
-            this.chart.data.datasets = datasets;
-            this.chart.update({
-                series: datasets
-            });
         }
     }
 );
 
 
+function DebugChart($canvas) {
+
+    var canvas = $canvas[0];
+
+    var context = canvas.getContext('2d');
+
+    var magnitude = 100;
+    
+    var margin = 5;
+    var height = canvas.height - margin * 2;
+    var width = canvas.width - margin * 2;
+
+    function calcY(y) {
+        return height - margin - (Math.min(y / magnitude, 1) * height);
+    }
+    function calcX(x, start, end) {
+        return margin + width * ((x - start) / (end - start));
+    }
+
+    this.render = function(series, intervals, start, end) {
+
+        context.clearRect(0, 0, canvas.width, canvas.height);
+
+        context.fillStyle="#B2EBF2";
+        for (var i = 0; i < intervals.length; i++) {
+            var interval = intervals[i];
+            var left = calcX(interval.startTime, start, end);
+            var right = calcX(interval.endTime, start, end);
+            context.fillRect(left, 0, right - left, canvas.height);
+        }
+
+        context.strokeStyle = "#00BFA5";
+        context.lineWidth = 2;
+        context.beginPath();
+        for (var i = 0; i < series.length - 1; i++) {
+            
+            var point = series[i];
+            
+            var y = calcY(point.volume);
+            var x = calcX(point.timestamp, start, end);
+            if (i == 0) {
+                context.moveTo(x, y);
+            } else {
+                context.lineTo(x, y);
+            }
+            x++;
+        }
+        context.stroke();
+
+    }
+
+    return this;
+}
 
 
 /***********************************************************************
@@ -712,3 +755,39 @@ window.fileStorage = {
         return deferred.promise();
     }
 };
+
+function pad(n, width, z) {
+    z = z || '0';
+    n = n + '';
+    return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+}
+
+jQuery.fn.extend({
+    clock: function () {
+        var start = new Date().getTime();
+        $.each(this, function() {
+            var $this = $(this);
+            var clock = this;
+            function setText() {
+                var now = new Date().getTime();
+                var timediff = Math.floor((now - start) / 1000);
+                var hours = Math.floor(timediff / 3600);
+                var minutes = pad(Math.floor(timediff % 3600 / 60), 2);
+                var seconds = pad(Math.floor(timediff % 60), 2);
+                $this.text("{0}:{1}:{2}".format(hours, minutes, seconds));
+            };
+            if (clock.interval) {
+                clearInterval(clock.interval);
+            }
+            clock.interval = setInterval(function() {
+                if (this == null) {
+                    clearInterval(clock.interval);
+                    return;
+                }
+                setText();
+            }.bind(this), 1000);
+            setText();
+        });
+        return this;
+    }
+});

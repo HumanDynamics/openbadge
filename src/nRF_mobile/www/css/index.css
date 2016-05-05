@@ -215,9 +215,51 @@ footer {
     font-size:24px;
 }
 
+.featherlight {
+    padding: 30px !important;
+    height: 100% !important;
+}
+.featherlight .featherlight-content {
+    width:100% !important;
+    height:100% !important;
+    border-radius:3px;
+    margin:0 !important;
+}
+.featherlight .featherlight-close {
+    font-size: 40px;
+    top: 10px;
+    right: 15px;
+    color:#999 !important;
+}
 
-.debug-chart {
-    width:90%;
-    margin:30px auto;
-    height:200px;
+.debug-charts {
+    width:100%;
+    padding-top:20px;
+    padding-bottom:30px;
+    text-align: center;
+}
+.debug-charts .name {
+    padding:10px;
+    font-size:20px;
+}
+.debug-charts .last_update {
+    padding:10px;
+    font-size:12px;
+}
+.debug-charts canvas {
+    width: 100%;
+    padding: 0 20px;
+}
+
+
+.clock-title {
+    font-size: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+    margin-top: 40px;
+}
+.clock {
+    font-size: 40px;
+    text-align: center;
+    margin-bottom: 40px;
 }

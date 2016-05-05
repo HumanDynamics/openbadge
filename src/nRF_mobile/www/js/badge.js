@@ -116,6 +116,10 @@ function Badge(address) {
 		var d = new Date();
 		console.log(address+"|"+"Updating last disconnect: "+d);
 		this.lastDisconnect = d;
+
+		if (this.onDisconnect) {
+			this.onDisconnect();
+		}
 	}.bind(this);
 
 	/******************************************************************
