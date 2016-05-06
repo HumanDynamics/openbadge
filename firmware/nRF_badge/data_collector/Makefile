@@ -20,7 +20,7 @@ include $(TEMPLATE_PATH)/Makefile.posix
 endif
 
 APP_MEMORY_OFFSET = 1c000  ##application memory offset for S130 softdevice
-JLINK_OPTIONS = -device nrf51422_xxac -if swd -speed 0
+JLINK_OPTIONS = -device nrf51422_xxac -if swd -speed 500
 JLINK = JLinkExe $(JLINK_OPTIONS)
 
 MK := mkdir
