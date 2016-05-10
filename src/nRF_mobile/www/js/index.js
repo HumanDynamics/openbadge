@@ -3,10 +3,11 @@ var qbluetoothle = require('./qbluetoothle');
 var Badge = require('./badge');
 
 var LOCALSTORAGE_GROUP_KEY = "groupkey";
+var LOCALSTORAGE_GROUP = "groupjson";
 
 var WATCHDOG_INACTIVITY_TIMEOUT = 3000; // kill after 2 ms of no activity
 var WATCHDOG_RECONNECT_WAIT = 2000; // Reconnect after X ms
-var WATCHDOG_SLEEP = 500; // Check status every X ms
+var WATCHDOG_SLEEP = 5000; // Check status every X ms
 
 var LOG_SYNC_INTERVAL = 10 * 1000;
 var CHART_UPDATE_INTERVAL = 5 * 1000;
@@ -276,6 +277,7 @@ meetingConfigPage = new Page("meetingConfig",
         }
         var names = [];
         $("#mediatorField").empty();
+        $("#mediatorField").append($("<option data-key='none'>None</option>"));
         for (var i = 0; i < this.meetingMembers.length; i++) {
             var member = this.meetingMembers[i];
             names.push(member.name);
@@ -313,6 +315,8 @@ meetingPage = new Page("meeting",
             app.meeting.syncLogFile();
         }, LOG_SYNC_INTERVAL);
 
+        cordova.plugins.backgroundMode.enable();
+
         this.initCharts();
 
     },
@@ -322,6 +326,8 @@ meetingPage = new Page("meeting",
         window.plugins.insomnia.allowSleepAgain();
         app.watchdogEnd();
         app.meeting.syncLogFile(true);
+
+        cordova.plugins.backgroundMode.disable();
     },
     {
         initCharts: function() {
@@ -462,12 +468,14 @@ app = {
     initialize: function() {
         this.initBluetooth();
 
-        document.addEventListener("backbutton", function(e) {
-            e.preventDefault();
+        cordova.plugins.backgroundMode.setDefaults({title:'OpenBadge Meeting', text:'OpenBadge Meeting in Progress'});
 
-            if (mainPage.active) {
+        document.addEventListener("backbutton", function(e) {
+
+            if (app.activePage == mainPage) {
                 navigator.app.exitApp();
             } else {
+                e.preventDefault();
                 app.showPage(mainPage);
             }
         }, false);
@@ -480,8 +488,27 @@ app = {
             PAGES[i].onInit();
         }
 
-        this.refreshGroupData();
-        this.showPage(mainPage);
+        // load the group from localstorage, if it's saved there.
+        // this means users will have to save settings to refresh their group.
+        var groupJSON = localStorage.getItem(LOCALSTORAGE_GROUP);
+        if (groupJSON) {
+            try {
+                app.group = new Group(JSON.parse(groupJSON));
+                app.onrefreshGroupDataComplete();
+            } catch (e) {
+                app.group = null;
+            }
+        }
+        if (! app.group) {
+            this.refreshGroupData();
+        }
+
+        var groupId = localStorage.getItem(LOCALSTORAGE_GROUP_KEY);
+        if (! groupId) {
+            this.showPage(settingsPage);
+        } else {
+            this.showPage(mainPage);
+        }
     },
     initBluetooth: function() {
 
@@ -521,6 +548,7 @@ app = {
             success: function(result) {
                 if (result.success) {
                     app.group = new Group(result.group);
+                    localStorage.setItem(LOCALSTORAGE_GROUP, JSON.stringify(result.group));
                 } else {
                     app.group = null;
                 }
@@ -561,6 +589,7 @@ app = {
                     app.onScanComplete(activeBadges);
                 }, function(obj) { // progress
                     activeBadges.push(obj.address);
+                    app.onScanUpdate(obj.address);
                 });
         });
     },
@@ -574,6 +603,19 @@ app = {
             member.active = !!~activeBadges.indexOf(member.badgeId);
         }
         mainPage.displayActiveBadges();
+    },
+    onScanUpdate: function(activeBadge) {
+        if (! app.group) {
+            return;
+        }
+        for (var i = 0; i < app.group.members.length; i++) {
+            var member = app.group.members[i];
+            if (activeBadge == member.badgeId) {
+                member.active = true;
+                mainPage.displayActiveBadges();
+                return;
+            }
+        }
     },
 
 
@@ -591,17 +633,14 @@ app = {
     },
 
 
-    /**
-     * Legacy
-     */
     watchdogStart: function() {
         // console.log("Starting watchdog");
-        app.watchdogTimer = setTimeout(function(){ app.watchdog() }, WATCHDOG_SLEEP);
+        app.watchdogTimer = setInterval(function(){ app.watchdog() }, WATCHDOG_SLEEP);
     },
     watchdogEnd: function() {
         // console.log("Ending watchdog");
         if (app.watchdogTimer) {
-            clearTimeout(app.watchdogTimer);
+            clearInterval(app.watchdogTimer);
         }
     },
     watchdog: function() {
@@ -613,44 +652,8 @@ app = {
         // Iterate over badges
         for (var i = 0; i < app.meeting.members.length; ++i) {
             var badge = app.meeting.members[i].badge;
-            var activityDatetime = badge.lastActivity;
-            var disconnectDatetime = badge.lastDisconnect;
-            //console.log(badge.address+"|lastActivity: "+activityDatetime+"|lastDisconnect: "+disconnectDatetime);
-
-            var nowDatetimeMs = Date.now();
-            var activityDatetimeMs = activityDatetime.getTime();
-            var disconnectDatetimeMs = disconnectDatetime.getTime();
-
-            // kill if connecting for too long and/or if no activity (can update when data recieved)
-            // call close() just in case
-            // next watchdog call should perform connection
-            if (nowDatetimeMs - activityDatetimeMs > WATCHDOG_INACTIVITY_TIMEOUT) {
-                console.log(badge.address+"|Should timeout");
-
-                // touch activity and disconnect date to make sure we don't keep calling this
-                // and that we are not calling the next function while there's a disconnect hapenning already
-                badge.touchLastActivity();
-                badge.touchLastDisconnect();
-
-                // close
-                badge.close();
-
-            } else if (nowDatetimeMs - disconnectDatetimeMs > WATCHDOG_RECONNECT_WAIT && disconnectDatetimeMs >= activityDatetimeMs) {
-                    // if more than XX seconds since last disconnect 
-                    // and disconnect occurred AFTER connect (meaning that there isn't an open session)
-                    // call connect
-                console.log(badge.address+"|Last disconnected XX seconds ago. Should try to connect again");
-
-                // touch activity date so we know not to try and connect again
-                // badge.touchLastActivity();
-
-                // connect
-                badge.connectDialog();
-            } else {
-                //console.log(badge.address+"|Watchdog, Do nothing");
-            }
+            badge.connectDialog();
         }
-        app.watchdogStart(); // Re-set watchdog timer
     },
 };
 

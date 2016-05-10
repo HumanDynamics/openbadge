@@ -227,7 +227,7 @@
     # "graph group" to keep the user's node at the top.
     constantRotationAngle: () =>
       mod = (a, n) -> a - Math.floor(a/n) * n
-      angle = @angle @localParticipant
+      angle = @angle(@localParticipant) || 0
       targetAngle = -90
       a = targetAngle - angle
       a = (a + 180) % 360 - 180
