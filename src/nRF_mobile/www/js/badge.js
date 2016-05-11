@@ -131,6 +131,11 @@ function Badge(address) {
 
 	}.bind(this);
 
+    /**
+     * This timeout should only be hit in the rarest of circumstances.
+     * If a badge has low battery, it may fail to connect and not report it
+     * This timeout kills all out locks in the cast that happens. It should never interrupt an actual connection.
+     */
     this.refreshTimeout = function() {
         clearTimeout(this.connectionTimeout);
         this.connectionTimeout = setTimeout(function() {
@@ -141,9 +146,13 @@ function Badge(address) {
                 this.disconnectThenClose();
                 return;
             }*/
+            this.isConnecting = false;
+            if (window.aBadgeIsConnecting == this) {
+                window.aBadgeIsConnecting = null;
+            }
             this.close();
 
-        }.bind(this), 3000);
+        }.bind(this), 20000);
     }.bind(this);
 
     this.disconnectThenClose = function() {
