@@ -350,6 +350,12 @@ meetingPage = new Page("meeting",
             app.meeting.syncLogFile();
         }, LOG_SYNC_INTERVAL);
 
+        this.bluetoothCheckTimeout = setInterval(function() {
+            app.ensureBluetoothEnabled();
+        }, CHECK_BLUETOOTH_STATUS_INTERVAL);
+
+
+
         cordova.plugins.backgroundMode.enable();
 
         this.initCharts();
@@ -358,6 +364,7 @@ meetingPage = new Page("meeting",
     function onHide() {
         clearInterval(this.syncTimeout);
         clearInterval(this.chartTimeout);
+        clearInterval(this.bluetoothCheckTimeout);
         window.plugins.insomnia.allowSleepAgain();
         app.watchdogEnd();
         app.meeting.syncLogFile(true);
@@ -585,7 +592,22 @@ app = {
                     console.log('permissions err');
                 }
             );
+            if (app.activePage == meetingPage) {
+                app.watchdogStart();
+            }
         }
+    },
+    ensureBluetoothEnabled: function(isDisabledCallback, onEnableCallback) {
+        bluetoothle.isEnabled(function(status) {
+            if (! status.isEnabled) {
+                app.watchdogEnd();
+                bluetoothle.enable(function success() {
+                    // not used!
+                }, function error() {
+                    toastr.error("Could not enable Bluetooth! Please enable it manually.");
+                });
+            }
+        });
     },
 
 
