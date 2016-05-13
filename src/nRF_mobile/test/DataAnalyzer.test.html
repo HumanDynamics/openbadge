@@ -63,7 +63,7 @@
                         */
                         console.log("Samples:");
                         samples.forEach(function(x) {
-                            console.log(x.timestamp,dateToString(x.timestamp),x.vol,x.volClipped,x.cutoff,x.speakThreashold);
+                            console.log(x.timestamp,dateToString(x.timestamp),x.vol,x.volClipped,x.cutoff,x.speakThreashold,x.isSpeak);
                         });
                     }
                     reader.readAsText(file);

@@ -15,8 +15,6 @@ PRIOR_WEIGHT = 0.9;
 
 /*
  This class stores samples for a badge and convert them into talking intervals
- It uses a moving RMS to determine a threshold. Since multiplication is
- easier than a root operation, we calculate MS and not RMS.
  */
 function DataAnalyzer(sampleFreq) {
     this.sampleFreq= sampleFreq;
@@ -88,8 +86,8 @@ function DataAnalyzer(sampleFreq) {
         }
 
         var m = meanAndStd(samples,function(sample) {return sample.vol});
-        cutoff = (CUTOFF_PROIOR*PRIOR_WEIGHT) + (m.mean + 2*m.std)*(1-PRIOR_WEIGHT);
-        console.log("Cutoff prior,value,mean and std:",CUTOFF_PROIOR,cutoff,m.mean,m.std);// calc adjusted cutoff (using samples and prior)
+        cutoff = (CUTOFF_PROIOR*PRIOR_WEIGHT) - (m.mean + 2*m.std)*(1-PRIOR_WEIGHT);
+        //console.log("Cutoff prior,value,mean and std:",CUTOFF_PROIOR,cutoff,m.mean,m.std);// calc adjusted cutoff (using samples and prior)
     }
 
     // updates the threshold
@@ -100,7 +98,7 @@ function DataAnalyzer(sampleFreq) {
 
         var m = meanAndStd(samples,function(sample) {return sample.volClippedSmooth});
         speakThreashold = (SPEAK_THRESHOLD_PRIOR*PRIOR_WEIGHT) + (m.mean + 2*m.std)*(1-PRIOR_WEIGHT);
-        console.log("Speak priotr,threashold, mean and std:",SPEAK_THRESHOLD_PRIOR,speakThreashold,m.mean,m.std);
+        //console.log("Speak priotr,threashold, mean and std:",SPEAK_THRESHOLD_PRIOR,speakThreashold,m.mean,m.std);
     }
 
     /*******************************************************
