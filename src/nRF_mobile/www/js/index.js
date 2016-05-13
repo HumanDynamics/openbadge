@@ -2,14 +2,25 @@ var Q = require('q');
 var qbluetoothle = require('./qbluetoothle');
 var Badge = require('./badge');
 
-var LOCALSTORAGE_GROUP_KEY = "groupkey";
-var LOCALSTORAGE_GROUP = "groupjson";
+window.LOCALSTORAGE_GROUP_KEY = "groupkey";
+window.LOCALSTORAGE_GROUP = "groupjson";
 
-var WATCHDOG_SLEEP = 5000; // Check status every X ms
+window.BADGE_SCAN_INTERVAL = 8000;
+window.BADGE_SCAN_DURATION = 7000;
 
-var LOG_SYNC_INTERVAL = 10 * 1000;
-var CHART_UPDATE_INTERVAL = 5 * 1000;
-var DEBUG_CHART_WINDOW = 1000 * 60;
+window.WATCHDOG_SLEEP = 5000;
+
+window.LOG_SYNC_INTERVAL = 30 * 1000;
+window.CHART_UPDATE_INTERVAL = 5 * 1000;
+window.DEBUG_CHART_WINDOW = 1000 * 60 * 2;
+
+window.CHECK_BLUETOOTH_STATUS_INTERVAL = 5 * 60 * 1000;
+window.CHECK_MEETING_LENGTH_INTERVAL =  2 * 60 * 60 * 1000;
+window.CHECK_MEETING_LENGTH_REACTION_TIME = 1 * 60 * 1000;
+
+window.SHOW_BADGE_CONSOLE = false;
+
+
 
 /***********************************************************************
  * Model Declarations
@@ -195,7 +206,7 @@ mainPage = new Page("main",
         this.loadGroupData();
         app.badgeScanIntervalID = setInterval(function() {
             app.scanForBadges();
-        }, 5000);
+        }, BADGE_SCAN_INTERVAL);
         app.scanForBadges();
     },
     function onHide() {
@@ -342,7 +353,7 @@ meetingPage = new Page("meeting",
         cordova.plugins.backgroundMode.enable();
 
         this.initCharts();
-
+        this.setMeetingTimeout();
     },
     function onHide() {
         clearInterval(this.syncTimeout);
@@ -352,8 +363,35 @@ meetingPage = new Page("meeting",
         app.meeting.syncLogFile(true);
 
         cordova.plugins.backgroundMode.disable();
+
+        this.clearMeetingTimeout();
     },
     {
+        setMeetingTimeout: function() {
+
+            this.clearMeetingTimeout();
+
+            this.meetingTimeout = setTimeout(function() {
+                navigator.vibrate([500,500,500,500,500,500,500,500,500,500,500,100,500,100,500,100,500,100,500,100]);
+
+                navigator.notification.alert("Please press the button to indicate the meeting is still going, or we'll end it automatically in one minute", function(result) {
+                    navigator.vibrate([]);
+                    this.setMeetingTimeout();
+                }.bind(this), "Are you still there?", "Continue Meeting");
+
+                this.closeTimeout = setTimeout(function() {
+                    navigator.notification.dismiss();
+                    this.clearMeetingTimeout();
+                    app.showMainPage();
+                }.bind(this), CHECK_MEETING_LENGTH_REACTION_TIME);
+
+
+            }.bind(this), CHECK_MEETING_LENGTH_INTERVAL);
+        },
+        clearMeetingTimeout: function() {
+            clearTimeout(this.closeTimeout);
+            clearTimeout(this.meetingTimeout);
+        },
         initCharts: function() {
 
             var $charts = this.$debugCharts;
@@ -652,6 +690,9 @@ app = {
         page.onShow();
     },
 
+    showMainPage: function() {
+        this.showPage(mainPage);
+    },
 
     watchdogStart: function() {
         // console.log("Starting watchdog");
