@@ -4,21 +4,24 @@ var MIN_TALK_LENGTH = 300;
 // If we get no signal for this amount of time, consider them no
 // longer talking.
 var TALK_TIMEOUT = 1000;
-// Time length used for taking talking intervals in ms
-var BUFFER_LENGTH = 1000 * 60 * 5; // 5 minutes
-// Time length used for RMS threshold in ms
-var RMS_BUFFER_LENGTH = 1000 * 30 * 1; // 30 seconds
+// Time length used for storing samples (in ms
+var BUFFER_LENGTH = 1000 * 60 * 5; // 5 minutes)
+// Prior for cutoff (max loudness that we expect)
+var CUTOFF_PROIOR = 6;
+// Prior for threshold (speaking threshold, based on our tests)
+var THRESHOLD_PRIOR = 20;
+//
+PRIOR_WEIGHT = 0.9;
 
 /*
 This class stores samples for a badge and convert them into talking intervals
-It uses a moving RMS to determine a threshold. Since multiplication is 
+It uses a moving RMS to determine a threshold. Since multiplication is
 easier than a root operation, we calculate MS and not RMS.
 */
 function DataAnalyzer(sampleFreq) {
     this.sampleFreq= sampleFreq;
     var samples = []; // array of samples : timestamp, volume
     var smoother = new SmoothArray(); // array object used for caluclating smooth value
-    var rmsThreshold = new RMSThreshold();
 
     this.purgeSamples = function(timestamp) {
         while (samples.length > 0  &&(timestamp - samples[0].timestamp > BUFFER_LENGTH)) {
@@ -39,10 +42,26 @@ function DataAnalyzer(sampleFreq) {
     }.bind(this);
 
     // Adds a sample. Code assumes that the timestamp is monotonically increasing
+    // Code will only add samples newer than the last timestamp
     this.addSample = function(vol, timestamp, duration) {
+        // is it a new sample?
+        if (samples.length > 0) {
+            var lastTimestamp = samples[samples.length - 1].timestamp;
+            if (timestamp <= lastTimestamp) {
+                console.log("Skipping existing sample:",dateToString((timestamp)));
+                return false;
+            }
+        }
+
         // remove old objects samples array
         this.purgeSamples(timestamp);
 
+        // add sample to array
+        samples.push({'vol': vol,
+            'timestamp': timestamp,
+            'duration':duration});
+
+        /*
         // Calc smoothened volume
         var sv = smoother.push(vol);
 
@@ -60,8 +79,25 @@ function DataAnalyzer(sampleFreq) {
                       'isSpeak' : isSpeak,
                       'timestamp': timestamp,
                       'duration':duration});
+        */
+        return true;
     }.bind(this);
 
+    // Calculates cutiff using data from a CUTOFF_BUFFER_LENGTH ms period
+    // before the given periodEndTime. Uses the raw data (before clipping)
+    this.calcCutoff = function(periodEndTime) {
+        if (samples.length == 0) {
+            return CUTOFF_PROIOR;
+        }
+
+        meanAndStd = meanAndStd(samples,function(sample) {return sample.vol});
+        console.log("Cutoff mean and std:",meanAndStd.mean,meanAndStd.std);// cacl adjusted cutoff (using samples and prior)
+        return (CUTOFF_PROIOR*PRIOR_WEIGHT) + (meanAndStd.mean + 2*meanAndStd.std)*(1-PRIOR_WEIGHT);
+    }
+
+    /*******************************************************
+    Speaking inerval generation
+     *******************************************************/
     // Returns true if the two samples are "close" enough together
     this.isWithinTalkTimeout = function (curr, next) {
         var diffInMs = next - curr;
@@ -117,37 +153,6 @@ function DataAnalyzer(sampleFreq) {
 }
 
 /*
-Class for handling the threshold
- */
-function RMSThreshold() {
-    var samples = []; // samples used for thresholding
-    var meanSquaredThreshold = 0; // (R)MS threshold. It's a sum of squared volumes
-    var meanSquaredThresholdCount = 0; // number of elements in the sum. required for calcualting the mean
-
-    this.addSample = function(v,timestamp) {
-        // remove old objects samples array and update MS
-        while (samples.length > 0  &&(timestamp - samples[0].timestamp > RMS_BUFFER_LENGTH)) {
-            var toDel = samples.shift();
-            meanSquaredThreshold = meanSquaredThreshold - (toDel.v * toDel.v);
-            meanSquaredThresholdCount--;
-        }
-
-        // adding sample and updating the threshold
-        samples.push({'v': v, 'timestamp': timestamp});
-        meanSquaredThreshold = meanSquaredThreshold + (v*v);
-        meanSquaredThresholdCount++;
-    };
-    this.getThreshold = function() {
-        return meanSquaredThreshold/meanSquaredThresholdCount;
-    };
-
-    this.compareToThreshold = function(v) {
-        return v*v > meanSquaredThreshold/meanSquaredThresholdCount ? 1 : 0;
-    }
-
-}
-
-/*
 Class for smoothening the volume signal
 */
 function SmoothArray() {
@@ -176,4 +181,40 @@ function dateToString(d) {
     var s = d.getFullYear().toString()+"-"+(d.getMonth()+1).toString()+"-"+d.getDate().toString();
     s = s + " "+d.getHours().toString()+":"+d.getMinutes().toString()+":"+d.getSeconds()+"."+d.getMilliseconds().toString();
     return s;
+}
+
+// Calculates an average
+function average(data,getValue){
+    var sum = data.reduce(function(sum, cell){
+        var value = getValue(cell);
+        return sum + value;
+    }, 0);
+
+    var avg = sum / data.length;
+    return avg;
+}
+
+function meanAndStd(data,getValue) {
+    // calc mean
+    var mean = average(data,getValue);
+
+    // calc std
+    var diffs = data.map(function(cell){
+        var diff = getValue(cell) - mean;
+        return diff;
+    });
+
+    var squareDiffs = data.map(function(cell){
+        var diff = getValue(cell) - mean;
+        var sqr = diff * diff;
+        return sqr;
+    });
+
+    var avgSquareDiff = average(squareDiffs,function(v) {return v});
+    var stdDev = Math.sqrt(avgSquareDiff);
+
+    return {
+        mean: mean,
+        std: stdDev
+    };
 }
