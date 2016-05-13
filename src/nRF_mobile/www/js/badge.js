@@ -57,6 +57,13 @@ function Badge(address) {
 	// Connects to a badge, run discovery, subscribe, etc
 	this.connectDialog = function() {
 
+        console.log(this.address + "|Attempting to connect");
+
+        if (this.lastDisconnect && this.lastDisconnect.getTime() > new Date().getTime() - 500) {
+            console.log(this.address + "|Badge was disconnected too recently. Not connecting.");
+            return;
+        }
+
         if (window.aBadgeIsConnecting) {
             if (window.aBadgeIsConnecting != this) {
                 setTimeout(function() {
@@ -88,19 +95,23 @@ function Badge(address) {
 			.then(qbluetoothle.discoverDevice)
 			.then(qbluetoothle.subscribeToDevice)
 			.then(
-				function(obj) { // success (of chain). Shouldn't really be called
+				function success(obj) { // success (of chain). Shouldn't really be called
 					console.log(obj.address + "|Success:" + obj.status + "| Keys: " + Object.keys(obj));
                     console.log(obj);
 				},
-				function(obj) { // failure
+				function fail(obj) { // failure
 					console.log(obj.address + "|General error: " + obj.error + " - " + obj.message + " Keys: " + Object.keys(obj));
                     badge.isConnecting = false;
                     if (window.aBadgeIsConnecting == badge) {
                         window.aBadgeIsConnecting = null;
                     }
                     console.log(obj);
+                    if (obj.message && ~obj.message.indexOf("reconnect or close")) {
+                        badge._close();
+                    }
+                    badge.isConnected = false;
 				},
-				function(obj) { // notification
+				function notify(obj) { // notification
 					if (obj.status == "subscribedResult") {
                         badge.isConnecting = false;
                         if (window.aBadgeIsConnecting == badge) {
@@ -125,8 +136,7 @@ function Badge(address) {
 				}
 			)
 			.fin(function() {
-            })
-			.done(); // wrap things up. notifications will stop here
+            });
 
 
 	}.bind(this);
@@ -150,9 +160,12 @@ function Badge(address) {
             if (window.aBadgeIsConnecting == this) {
                 window.aBadgeIsConnecting = null;
             }
-            this.close();
+            this.isConnecting = false;
+            this.isConnected = true;
+            this.sendingData = false;
+            this._close();
 
-        }.bind(this), 20000);
+        }.bind(this), 10000);
     }.bind(this);
 
     this.disconnectThenClose = function() {
@@ -162,7 +175,9 @@ function Badge(address) {
         bluetoothle.disconnect(function success() {
                 setTimeout(function() {
                     badge.isConnecting = false;
-                    badge.close();
+                    badge.isConnected = true;
+                    badge.sendingData = false;
+                    badge._close();
                 }, 10);
             },
             function failure() {
@@ -179,16 +194,47 @@ function Badge(address) {
 		this.sendString(s);
 	}.bind(this);
 
-	this.close = function() {
-        if (this.sendingData || this.isConnecting) {
+    this.close = function() {
+
+        console.log(this.address + "|Calling close");
+
+        var badge = this;
+
+        bluetoothle.isConnected(function success(status) {
+            if (status.isConnected) {
+                console.log(address + "|Found that badge is still connected");
+                badge._close();
+            }
+
+        }, function failure() {
+
+        }, {address:badge.address});
+
+    }.bind(this);
+
+	this._close = function() {
+        var address = this.address;
+
+        if (this.isConnecting) {
+            console.log(address + "|Badge is connecting");
             this.refreshTimeout();
             return;
         }
-        if (! this.isConnected || this.isDisconnecting) {
+        if (this.sendingData) {
+            console.log(address + "|Badge is sending data");
+            this.refreshTimeout();
             return;
         }
-		var address = this.address;
-		console.log(address + "|Calling close");
+        if (this.isDisconnecting) {
+            console.log(address + "|Disconnect already in progress!");
+            return;
+        }
+        if (! this.isConnected) {
+            console.log(address + "|Badge isn't connected. Canceling disconnect.");
+            return;
+        }
+
+		console.log(address + "|Looks like close really should be called");
 
 		var badge = this;
 

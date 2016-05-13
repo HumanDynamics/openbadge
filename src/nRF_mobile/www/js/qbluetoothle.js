@@ -32,7 +32,7 @@ function connectDevice(params) {
             if (obj.status == "connected") {
                 d.resolve(obj);
             } else {
-                console.log(obj.address + "|Unexpected disconnected. Not handled at this point");
+                console.log(obj.address + "|Connect failed!");
                 d.reject(obj); //sould this work? it might be a delayed error
             }
         },
