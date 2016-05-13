@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='utf-8'?>
 <widget id="edu.mit.media.openbadge" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-    <name>OpenBadge</name>
+    <name>RoundTable</name>
     <description>
-        An app to communicate with Rhythm OpenBadges
+        An app to enable roundtable discussions
     </description>
     <author email="orenled@mit.edu" href="http://rhythm.mit.edu">
         Rhythm
@@ -27,4 +27,14 @@
         <allow-intent href="itms:*" />
         <allow-intent href="itms-apps:*" />
     </platform>
+
+    <icon src="icons/icon.png" />
+    <!--
+        Default icon should work, but cordova don't overwrite
+        the default on all densities
+    -->
+    <icon src="icons/icon.png" platform="android" density="ldpi" />
+    <icon src="icons/icon.png" platform="android" density="mdpi" />
+    <icon src="icons/icon.png" platform="android" density="hdpi" />
+    <icon src="icons/icon.png" platform="android" density="xhdpi" />
 </widget>
