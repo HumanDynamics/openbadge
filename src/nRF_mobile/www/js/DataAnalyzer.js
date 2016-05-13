@@ -7,21 +7,23 @@ var TALK_TIMEOUT = 1000;
 // Time length used for storing samples (in ms
 var BUFFER_LENGTH = 1000 * 60 * 5; // 5 minutes)
 // Prior for cutoff (max loudness that we expect)
-var CUTOFF_PROIOR = 6;
+var CUTOFF_PROIOR = 20;
 // Prior for threshold (speaking threshold, based on our tests)
-var THRESHOLD_PRIOR = 20;
+var SPEAK_THRESHOLD_PRIOR = 6;
 //
 PRIOR_WEIGHT = 0.9;
 
 /*
-This class stores samples for a badge and convert them into talking intervals
-It uses a moving RMS to determine a threshold. Since multiplication is
-easier than a root operation, we calculate MS and not RMS.
-*/
+ This class stores samples for a badge and convert them into talking intervals
+ It uses a moving RMS to determine a threshold. Since multiplication is
+ easier than a root operation, we calculate MS and not RMS.
+ */
 function DataAnalyzer(sampleFreq) {
     this.sampleFreq= sampleFreq;
     var samples = []; // array of samples : timestamp, volume
     var smoother = new SmoothArray(); // array object used for caluclating smooth value
+    var cutoff = CUTOFF_PROIOR;
+    var speakThreashold = SPEAK_THRESHOLD_PRIOR ;
 
     this.purgeSamples = function(timestamp) {
         while (samples.length > 0  &&(timestamp - samples[0].timestamp > BUFFER_LENGTH)) {
@@ -56,47 +58,53 @@ function DataAnalyzer(sampleFreq) {
         // remove old objects samples array
         this.purgeSamples(timestamp);
 
+        // clip the sample
+        var volClipped = vol > cutoff ? cutoff : vol;
+
+        // smooth it
+        var volClippedSmooth = smoother.push(volClipped);
+
+        // and check if it's above the threshold
+        var isSpeak = volClippedSmooth > speakThreashold ? 1 : 0;
+
         // add sample to array
-        samples.push({'vol': vol,
+        samples.push({
+            'vol': vol,
+            'volClipped' : volClipped,
+            'volClippedSmooth' : volClippedSmooth,
+            'cutoff' : cutoff,
+            'speakThreashold' : speakThreashold,
+            'isSpeak' : isSpeak,
             'timestamp': timestamp,
             'duration':duration});
 
-        /*
-        // Calc smoothened volume
-        var sv = smoother.push(vol);
-
-        // update RMS with new sample
-        rmsThreshold.addSample(sv,timestamp);
-        var meanSquare = rmsThreshold.getThreshold();
-
-        // speaking indicator is 1 if smoothened volume is above the threshold
-        var isSpeak = rmsThreshold.compareToThreshold(sv);
-
-        // add sample to array
-        samples.push({'volume': vol,
-                      'sv' : sv,
-                      'meanSquare' : meanSquare ,
-                      'isSpeak' : isSpeak,
-                      'timestamp': timestamp,
-                      'duration':duration});
-        */
         return true;
     }.bind(this);
 
-    // Calculates cutiff using data from a CUTOFF_BUFFER_LENGTH ms period
-    // before the given periodEndTime. Uses the raw data (before clipping)
-    this.calcCutoff = function(periodEndTime) {
+    // updates the cutoff
+    this.updateCutoff = function() {
         if (samples.length == 0) {
             return CUTOFF_PROIOR;
         }
 
-        meanAndStd = meanAndStd(samples,function(sample) {return sample.vol});
-        console.log("Cutoff mean and std:",meanAndStd.mean,meanAndStd.std);// cacl adjusted cutoff (using samples and prior)
-        return (CUTOFF_PROIOR*PRIOR_WEIGHT) + (meanAndStd.mean + 2*meanAndStd.std)*(1-PRIOR_WEIGHT);
+        var m = meanAndStd(samples,function(sample) {return sample.vol});
+        cutoff = (CUTOFF_PROIOR*PRIOR_WEIGHT) + (m.mean + 2*m.std)*(1-PRIOR_WEIGHT);
+        console.log("Cutoff prior,value,mean and std:",CUTOFF_PROIOR,cutoff,m.mean,m.std);// calc adjusted cutoff (using samples and prior)
+    }
+
+    // updates the threshold
+    this.updateSpeakThreshold = function() {
+        if (samples.length == 0) {
+            return SPEAK_THRESHOLD_PRIOR;
+        }
+
+        var m = meanAndStd(samples,function(sample) {return sample.volClippedSmooth});
+        speakThreashold = (SPEAK_THRESHOLD_PRIOR*PRIOR_WEIGHT) + (m.mean + 2*m.std)*(1-PRIOR_WEIGHT);
+        console.log("Speak priotr,threashold, mean and std:",SPEAK_THRESHOLD_PRIOR,speakThreashold,m.mean,m.std);
     }
 
     /*******************************************************
-    Speaking inerval generation
+     Speaking inerval generation
      *******************************************************/
     // Returns true if the two samples are "close" enough together
     this.isWithinTalkTimeout = function (curr, next) {
@@ -153,8 +161,8 @@ function DataAnalyzer(sampleFreq) {
 }
 
 /*
-Class for smoothening the volume signal
-*/
+ Class for smoothening the volume signal
+ */
 function SmoothArray() {
     // Number of samples that will be used for smoothing the samples
     var SAMPLES_SMOOTHING = 5;
