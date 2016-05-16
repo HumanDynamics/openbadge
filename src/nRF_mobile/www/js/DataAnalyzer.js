@@ -3,7 +3,7 @@
 var MIN_TALK_LENGTH = 300;
 // If we get no signal for this amount of time, consider them no
 // longer talking.
-var TALK_TIMEOUT = 1000;
+var TALK_TIMEOUT = 1500;
 // Time length used for storing samples (in ms
 var BUFFER_LENGTH = 1000 * 60 * 5; // 5 minutes)
 // Prior for cutoff (max loudness that we expect)
