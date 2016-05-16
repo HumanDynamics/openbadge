@@ -376,7 +376,8 @@ meetingPage = new Page("meeting",
                     return;
                 }
 
-                var end = datapoints[datapoints.length - 1].timestamp;
+                //var end = datapoints[datapoints.length - 1].timestamp;
+                var end = new Date().getTime();
                 var start = end - DEBUG_CHART_WINDOW;
                 var data = member.dataAnalyzer.generateTalkIntervals(start, end);
 
@@ -440,7 +441,7 @@ function DebugChart($canvas) {
             
             var point = series[i];
             
-            var y = calcY(point.volume);
+            var y = calcY(point.vol);
             var x = calcX(point.timestamp, start, end);
             if (i == 0) {
                 context.moveTo(x, y);
