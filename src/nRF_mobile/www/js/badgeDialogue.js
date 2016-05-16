@@ -109,8 +109,8 @@ function BadgeDialogue(badge) {
     this.chunks = []; //will store chunks once Received
 
     this.log = function(str) {
-        console.log(badge.address + "|dialogue: " + str)
-    }
+        this.badge.log(str);
+    }.bind(this);
 
     /**
     * This function must be called whenever data was sent from the badge

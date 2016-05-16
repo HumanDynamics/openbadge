@@ -21,25 +21,25 @@
         <link rel="stylesheet" type="text/css" href="css/libs/toastr.min.css" />
         <link rel="stylesheet" type="text/css" href="css/libs/featherlight.css" />
         <link rel="stylesheet" type="text/css" href="css/index.css" />
-        <title>CordovaBadge</title>
+        <title>RoundTable</title>
     </head>
     <body>
         <div id="main" class="page active">
             <div class="bar bar-header bar-light">
-                <h1 class="title">OpenBadge</h1>
+                <h1 class="title">RoundTable</h1>
                 <a id="settings-button" class="button button-icon icon button-clear ion-android-settings"></a>
             </div>
             <div>
-                <div id="devicelistLoader" class="loader-area">
+                <div id="devicelistLoader" class="loader-area devicelistMode">
                     <div class="loader"></div>
                 </div>
-                <div class="list hidden" id="devicelistContainer">
+                <div class="list hidden devicelistMode" id="devicelistContainer">
                     <div class="item item-divider">
                         Group Members
                     </div>
                     <ul id="devicelist" class="devicelist"></ul>
                 </div>
-                <div id="devicelistError" class="error-message hidden">
+                <div id="devicelistError" class="error-message hidden devicelistMode">
                     <div class="icon"><i class="icon ion-alert-circled"></i></div>
                     <div class="message">Couldn't find your group. Please check your group ID and ensure you're online.</div>
                     <a id="retryDeviceList" class="error-retry">Retry</a>
@@ -81,9 +81,29 @@
                         <span class="input-label">Mediator</span>
                         <select id="mediatorField"></select>
                     </label>
-                    <label class="item item-input">
+                    <label class="item item-input item-select">
                         <span class="input-label">Meeting Type</span>
-                        <input type="text" id="meetingTypeField">
+                        <select id="meetingTypeField">
+                            <option value="brainstorming">Brainstorming</option>
+                            <option value="homework">Homework</option>
+                            <option value="social">Social</option>
+                            <option value="studying">Studying</option>
+                            <option value="project">Project</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </label>
+                    <label class="item item-input item-select">
+                        <span class="input-label">Location</span>
+                        <select id="meetingLocationField">
+                            <option value="outdoors">Outdoors</option>
+                            <option value="meetingroom">Meeting Room</option>
+                            <option value="bar">Bar/Restaurant</option>
+                            <option value="atrium">Atrium</option>
+                            <option value="hallway">Hallway</option>
+                            <option value="classroom">Classroom</option>
+                            <option value="apartment">Apartment/Dorm Room</option>
+                            <option value="other">Other</option>
+                        </select>
                     </label>
                     <label class="item item-input">
                         <span class="input-label">Meeting<br>Description</span>

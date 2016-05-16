@@ -32,7 +32,7 @@ function connectDevice(params) {
             if (obj.status == "connected") {
                 d.resolve(obj);
             } else {
-                console.log(obj.address + "|Unexpected disconnected. Not handled at this point");
+                obj.connectFailed = true;
                 d.reject(obj); //sould this work? it might be a delayed error
             }
         },
@@ -142,7 +142,7 @@ function startScan() {
         matchMode: bluetoothle.MATCH_MODE_STICKY,
         matchNum: bluetoothle.MATCH_NUM_ONE_ADVERTISEMENT,
         //callbackType: bluetoothle.CALLBACK_TYPE_FIRST_MATCH,
-        scanTimeout: 10000, // milliseconds
+        scanTimeout: BADGE_SCAN_DURATION,
     };
 
     // setup timeout if requested
