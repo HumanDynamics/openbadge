@@ -451,6 +451,8 @@ meetingPage = new Page("meeting",
                 //var end = datapoints[datapoints.length - 1].timestamp;
                 var end = new Date().getTime();
                 var start = end - DEBUG_CHART_WINDOW;
+                member.dataAnalyzer.updateCutoff();
+                member.dataAnalyzer.updateSpeakThreshold();
                 var data = member.dataAnalyzer.generateTalkIntervals(start, end);
 
                 member.chart.render(data.data, data.intervals, start, end);

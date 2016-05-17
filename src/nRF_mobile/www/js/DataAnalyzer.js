@@ -48,7 +48,7 @@ function DataAnalyzer(sampleFreq) {
         if (samples.length > 0) {
             var lastTimestamp = samples[samples.length - 1].timestamp;
             if (timestamp <= lastTimestamp) {
-                console.log("Skipping existing sample:",dateToString((timestamp)));
+                console.log("Skipping existing sample:",dateToString(timestamp));
                 return false;
             }
         }
@@ -87,7 +87,7 @@ function DataAnalyzer(sampleFreq) {
 
         var m = meanAndStd(samples,function(sample) {return sample.vol});
         cutoff = (CUTOFF_PROIOR*PRIOR_WEIGHT) - (m.mean + 2*m.std)*(1-PRIOR_WEIGHT);
-        //console.log("Cutoff prior,value,mean and std:",CUTOFF_PROIOR,cutoff,m.mean,m.std);// calc adjusted cutoff (using samples and prior)
+        console.log("Cutoff prior,value,mean and std:",CUTOFF_PROIOR,cutoff,m.mean,m.std);// calc adjusted cutoff (using samples and prior)
     }
 
     // updates the threshold
@@ -98,7 +98,7 @@ function DataAnalyzer(sampleFreq) {
 
         var m = meanAndStd(samples,function(sample) {return sample.volClippedSmooth});
         speakThreashold = (SPEAK_THRESHOLD_PRIOR*PRIOR_WEIGHT) + (m.mean + 2*m.std)*(1-PRIOR_WEIGHT);
-        //console.log("Speak priotr,threashold, mean and std:",SPEAK_THRESHOLD_PRIOR,speakThreashold,m.mean,m.std);
+        console.log("Speak priotr,threashold, mean and std:",SPEAK_THRESHOLD_PRIOR,speakThreashold,m.mean,m.std);
     }
 
     /*******************************************************
