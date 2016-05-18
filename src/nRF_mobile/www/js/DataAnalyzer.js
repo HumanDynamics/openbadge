@@ -10,14 +10,92 @@ var BUFFER_LENGTH = 1000 * 60 * 5; // 5 minutes)
 var CUTOFF_PROIOR = 20;
 // Prior for threshold (speaking threshold, based on our tests)
 var SPEAK_THRESHOLD_PRIOR = 10;
-//
+// Weight for weighted mean of thresholds
 PRIOR_WEIGHT = 0.9;
+// Length of intervals (in ms) for loudness comparison. Since time intervals
+// might not be the same
+var INTERVAL_INCREMENTS = 25;
+
+// do two given time intervals intersect?
+function checkIntersect(startA,endA,startB,endB) {
+    return (startA <= endB) && (endA >= startB);
+}
+
+/*
+This function compares volume data from group members and creates speaking
+intervals. Expects a members object
+ sampleDuration - the time between samples (or, the duration of the sample)
+*/
+function GroupDataAnalyzer(members,periodStartTime,periodEndTime,sampleDuration) {
+    var loudSpeaker = [];
+    var turns = [];
+    var totalIntervals = 0;
+
+    // init pos indexes for all members
+    console.log("Init pos");
+    var membersPos = [];
+    $.each(members, function (index, member) {
+        var pos = -1;
+        if (member.dataAnalyzer.getSamples().length > 0) {
+            pos = 0;
+        }
+        membersPos[index] = pos;
+    });
+
+    // compare volumes
+    for (var d = periodStartTime; d <= periodEndTime ; d.setTime(d.getTime() + INTERVAL_INCREMENTS)) {
+        var dEnd = new Date(d.getTime()+INTERVAL_INCREMENTS);
+
+        var newValue = {'timestamp':d,'memberIndex':-1,'vol':-1};
+        console.log("Looking to match",dateToString(d));
+        // progress pos in all members to point to relevant sample
+        // and check if it's the loudest speaker for this interval
+        $.each(members, function (index, member) {
+            var samples = member.dataAnalyzer.getSamples();
+            var pos = membersPos[index];
+            if (pos == -1) return; // already reached end of array, move to the next member
+
+            // keep going until you find intersection. also, stop if none was found
+            var sampleStart = null;
+            var sampleEnd = null;
+            while (pos < samples.length) {
+                sampleStart = samples[pos].timestamp;
+                sampleEnd = new Date(sampleStart.getTime()+sampleDuration-1);
+
+                if (checkIntersect(d,dEnd,sampleStart,sampleEnd)) {
+                    console.log(index,"Found a match for ",dateToString(d),"Found!",dateToString(sampleStart));
+                    if (samples[pos].volClippedSmooth > newValue.vol) {
+                        newValue.memberIndex = index;
+                        newValue.vol = samples[pos].volClippedSmooth;
+                        console.log(index,"New max volume !",newValue.vol);
+                    }
+                    break;
+                } else if (sampleStart > dEnd) {
+                    // this condition handles gaps in data
+                    console.log(index,"Not found, breaking");
+                    break;
+                } else {
+                    pos++;
+                }
+            }
+            // store for the next iteration
+
+            membersPos[index] = pos;
+        });
+        console.log("Pushing",newValue);
+        loudSpeaker.push(newValue);
+    }
+
+    console.log("List of all time periods:",loudSpeaker.length)
+    //$.each(loudSpeaker, function(d,v) {
+    //    console.log(dateToString(d),v);
+    //});
+}
 
 /*
  This class stores samples for a badge and convert them into talking intervals
  */
-function DataAnalyzer(sampleFreq) {
-    this.sampleFreq= sampleFreq;
+function DataAnalyzer() {
     var samples = []; // array of samples : timestamp, volume
     var smoother = new SmoothArray(); // array object used for caluclating smooth value
     var cutoff = CUTOFF_PROIOR;
@@ -86,7 +164,7 @@ function DataAnalyzer(sampleFreq) {
         }
 
         var m = meanAndStd(samples,function(sample) {return sample.vol});
-        cutoff = (CUTOFF_PROIOR*PRIOR_WEIGHT) - (m.mean + 2*m.std)*(1-PRIOR_WEIGHT);
+        cutoff = (CUTOFF_PROIOR*PRIOR_WEIGHT) + (m.mean - 2*m.std)*(1-PRIOR_WEIGHT);
         console.log("Cutoff prior,value,mean and std:",CUTOFF_PROIOR,cutoff,m.mean,m.std);// calc adjusted cutoff (using samples and prior)
     }
 
@@ -102,7 +180,7 @@ function DataAnalyzer(sampleFreq) {
     }
 
     /*******************************************************
-     Speaking inerval generation
+     Speaking interval generation
      *******************************************************/
     // Returns true if the two samples are "close" enough together
     this.isWithinTalkTimeout = function (curr, next) {
@@ -184,7 +262,7 @@ function SmoothArray() {
 }
 
 function dateToString(d) {
-    var s = d.getFullYear().toString()+"-"+(d.getMonth()+1).toString()+"-"+d.getDate().toString();
+    var s = d.getFullYear().toString()+"-"+(d.getMonth()).toString()+"-"+d.getDate().toString();
     s = s + " "+d.getHours().toString()+":"+d.getMinutes().toString()+":"+d.getSeconds()+"."+d.getMilliseconds().toString();
     return s;
 }
