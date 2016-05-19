@@ -21,14 +21,14 @@ var nrf51UART = {
     */
 function connectDevice(params) {
     var address = params.address;
-    console.log(address + "|Internal call to connect");
+    //console.log(address + "|Internal call to connect");
     var d = Q.defer();
     var paramsObj = {
         "address": address
     };
     bluetoothle.connect(
         function(obj) { // success
-            console.log(address + "|Internal call to connect - success");
+            //console.log(address + "|Internal call to connect - success");
             if (obj.status == "connected") {
                 d.resolve(obj);
             } else {
@@ -64,12 +64,12 @@ function closeDevice(params) {
 
 function discoverDevice(params) {
     var address = params.address;
-    console.log(address + "|Internal call to discover");
+    //console.log(address + "|Internal call to discover");
     var d = Q.defer();
     var paramsObj = {"address":address};
     bluetoothle.discover(
         function(obj) { // success
-            console.log(address + "|Internal call to discover - success");
+            //console.log(address + "|Internal call to discover - success");
             if (obj.status == "discovered") {
                 d.resolve(obj);
             } else {
@@ -77,7 +77,7 @@ function discoverDevice(params) {
             }
         },
         function(obj) { // failure function
-            console.log(address + "|Internal call to discover - failure: " + obj.error + " - " + obj.message + " Keys: " + Object.keys(obj));
+            //console.log(address + "|Internal call to discover - failure: " + obj.error + " - " + obj.message + " Keys: " + Object.keys(obj));
             d.reject(obj);
         },
         paramsObj);
@@ -87,7 +87,7 @@ function discoverDevice(params) {
 
 function subscribeToDevice(params) {
     var address = params.address;
-    console.log(address + "|Internal call to subscribe");    
+    //console.log(address + "|Internal call to subscribe");    
     var d = Q.defer();    
     var paramsObj = {
         "address":address,
@@ -98,12 +98,12 @@ function subscribeToDevice(params) {
 
     bluetoothle.subscribe(
         function(obj) { // success
-            console.log(address + "|Internal call to subscribe - success");
+            //console.log(address + "|Internal call to subscribe - success");
             d.notify(obj); // notify and not resolve, so code can get notifications
             //d.resolve(obj);
         },
         function(obj) { // failure function
-            console.log(address + "|Internal call to subscribe - error: " + obj.error + " - " + obj.message + " Keys: " + Object.keys(obj));
+            //console.log(address + "|Internal call to subscribe - error: " + obj.error + " - " + obj.message + " Keys: " + Object.keys(obj));
             d.reject(obj);
         },
         paramsObj);
