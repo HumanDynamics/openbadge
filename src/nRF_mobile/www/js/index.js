@@ -86,7 +86,7 @@ function Meeting(group, members, type, moderator, description, location) {
     }.bind(this);
 
     this.writeLog = function(str) {
-        window.fileStorage.save(this.getLogName(),str + "\n");
+        return window.fileStorage.save(this.getLogName(),str + "\n");
     }.bind(this);
 
 
@@ -107,52 +107,24 @@ function Meeting(group, members, type, moderator, description, location) {
 
 
     this.syncLogFile = function(isComplete) {
-        var fileTransfer = new FileTransfer();
-        var uri = encodeURI(BASE_URL + "log_data/");
-
-        var fileURL = cordova.file.externalDataDirectory + this.getLogName();
-
-        var options = new FileUploadOptions();
-        options.fileKey = "file";
-        options.fileName = fileURL.substr(fileURL.lastIndexOf('/') + 1);
-        options.mimeType = "text/plain";
-        options.headers = {"X-APPKEY": APP_KEY};
-
-        options.params = {
-            uuid:this.uuid,
-            moderator:this.moderator,
-            members:JSON.stringify(memberIds),
-            group:this.group.key,
-            startTime:this.startTime.toJSON(),
-            endTime:new Date().toJSON(),
-            type:this.type,
-            location:this.location,
-            description:this.description,
-            showVisualization:!!this.showVisualization,
-            isComplete:!!isComplete
-        };
-
-        function win() {
-            console.log("Log backed up successfully!");
-        }
-
-        function fail() {
-
-        }
-
-        fileTransfer.upload(fileURL, uri, win, fail, options);
-
+        app.syncLogFile(this.getLogName(), !!isComplete, new Date().toJSON());
     }.bind(this);
 
-    this.writeLog("Meeting started: " + this.uuid);
-    this.writeLog("Group: " + this.group.key);
-    this.writeLog("Members: " + JSON.stringify(memberIds));
-    this.writeLog("Start Time: " + this.startTime.toJSON());
-    this.writeLog("Moderator: " + this.moderator);
-    this.writeLog("Location: " + this.location);
-    this.writeLog("Type: " + this.type);
-    this.writeLog("Description: " + this.description);
-    this.writeLog("Visualization Shown: " + this.showVisualization);
+    var initialData = {
+        uuid: this.uuid,
+        group: this.group.key,
+        members: memberIds,
+        startTime: this.startTime.toJSON(),
+        moderator: this.moderator,
+        location: this.location,
+        type: this.type,
+        description: this.description.replace(/\s\s+/g, ' '),
+        showVisualization: this.showVisualization
+    };
+
+    this.writeLog(JSON.stringify(initialData)).done(function() {
+        this.syncLogFile(false);
+    }.bind(this));
 
 }
 
@@ -547,6 +519,13 @@ app = {
 
         document.addEventListener("backbutton", function(e) {
 
+            var currentFeatherlight = $.featherlight.current();
+            if (currentFeatherlight) {
+                e.preventDefault();
+                currentFeatherlight.close();
+                return;
+            }
+
             if (app.activePage == mainPage) {
                 navigator.app.exitApp();
             } else {
@@ -559,6 +538,7 @@ app = {
             app.showPage(mainPage);
         });
 
+
         for (var i = 0; i < PAGES.length; i++) {
             PAGES[i].onInit();
         }
@@ -569,6 +549,17 @@ app = {
         } else {
             this.showPage(mainPage);
         }
+
+        document.addEventListener("resume", function onResume() {
+            app.synchronizeIncompleteLogFiles();
+        }, false);
+        app.synchronizeIncompleteLogFiles();
+
+
+        document.addEventListener("pause", function onPause() {
+            qbluetoothle.stopScan()
+            app.scanning = false;
+        }, false);
     },
     initBluetooth: function() {
 
@@ -610,8 +601,77 @@ app = {
         });
     },
 
-
     /**
+     * Log file synchronization functions
+     */
+    getLogFiles: function (callback) {
+        window.fileStorage.list("/").done(function (entries) {
+            callback(entries);
+        });
+    },
+    getCompletedMeetings: function(callback) {
+        $.ajax(BASE_URL + "get_finished_meetings/" + app.group.key + "/", {
+            dataType:"json",
+            success: function(result) {
+                if (result.success) {
+                    callback(result.finished_meetings);
+                }
+            },
+            error: function() {
+            }
+        });
+
+    },
+    synchronizeIncompleteLogFiles: function() {
+        if (! app.group || ! app.group.key) {
+            return;
+        }
+        app.getCompletedMeetings(function(finished_meetings) {
+            var meeting_ids = {};
+            for (var i = 0; i < finished_meetings.length; i++) {
+                meeting_ids[finished_meetings[i]] = true;
+            }
+            app.getLogFiles(function(logfiles) {
+                for (var i = 0; i < logfiles.length; i++) {
+                    var logfilename = logfiles[i].name;
+                    if (! (logfilename.split(".")[0] in meeting_ids)) {
+                        app.syncLogFile(logfilename, true);
+                    }
+                }
+            });
+        })
+    },
+    syncLogFile: function(filename, isComplete, endTime) {
+        var fileTransfer = new FileTransfer();
+        var uri = encodeURI(BASE_URL + "log_data/");
+
+        var fileURL = cordova.file.externalDataDirectory + filename;
+
+        var options = new FileUploadOptions();
+        options.fileKey = "file";
+        options.fileName = fileURL.substr(fileURL.lastIndexOf('/') + 1);
+        options.mimeType = "text/plain";
+        options.headers = {"X-APPKEY": APP_KEY};
+
+        options.params = {
+            isComplete:!!isComplete
+        };
+        if (endTime) {
+            options.params.endTime = endTime;
+        }
+
+
+        fileTransfer.upload(fileURL, uri, function win() {
+            console.log("Log backed up successfully!");
+        }, function fail() {
+
+        }, options);
+
+    },
+
+
+
+/**
      * Functions to refresh the group data from the backend
      */
     refreshGroupData: function(showLoading, callback) {
@@ -848,6 +908,31 @@ window.fileStorage = {
         }
 
         window.resolveLocalFileSystemURL(cordova.file.externalDataDirectory, gotFileSystem, fail);
+        return deferred.promise();
+    },
+
+    list: function (name, deferred) {
+        var deferred = deferred || $.Deferred();
+        if (window.fileStorage.locked) {
+            setTimeout(function() {window.fileStorage.list(name, deferred)}, 100);
+            return deferred.promise();
+        }
+        window.fileStorage.locked = true;
+
+        var fail = function (error) {
+            window.fileStorage.locked = false;
+            deferred.reject(error);
+        };
+
+        var gotFileSystem = function (fileSystem) {
+            var directoryReader = fileSystem.createReader();
+            directoryReader.readEntries(function success(entries) {
+                window.fileStorage.locked = false;
+                deferred.resolve(entries)
+            }, fail);
+        };
+
+        window.resolveLocalFileSystemURL(cordova.file.externalDataDirectory + name, gotFileSystem, fail);
         return deferred.promise();
     },
 

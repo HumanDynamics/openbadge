@@ -12,6 +12,7 @@
     <allow-navigation href="*" />
 
     <preference name="orientation" value="portrait" />
+    <preference name="KeepRunning" value="true"/>
 
     <access origin="*" />
     <allow-intent href="http://*/*" />
