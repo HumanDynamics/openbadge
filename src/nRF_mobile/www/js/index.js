@@ -645,7 +645,7 @@ app = {
             app.getLogFiles(function(logfiles) {
                 for (var i = 0; i < logfiles.length; i++) {
                     var logfilename = logfiles[i].name;
-                    if (! (logfilename.split(".")[0] in meeting_ids)) {
+                    if (logfilename.indexOf(app.group.key) == 0 && ! (logfilename.split(".")[0] in meeting_ids)) {
                         app.syncLogFile(logfilename, true);
                     }
                 }
