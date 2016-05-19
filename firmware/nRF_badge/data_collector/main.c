@@ -572,6 +572,8 @@ void BLEonDisconnect()
 
     // for app development. disable if forgotten in prod. version
     nrf_gpio_pin_write(LED_1,LED_OFF);
+    
+    ble_timeout_cancel();
 }
 
 /** Function for handling incoming data from the BLE UART service

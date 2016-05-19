@@ -37,6 +37,11 @@ void countdown_set(unsigned long ms);
  */
 void ble_timeout_set(unsigned long ms);
 
+/**
+ * cancel the ble timeout counter
+ */
+void ble_timeout_cancel();
+
 
 /**
  * returns 32768Hz ticks of RTC, extended to 43 bits  (from built-in 24 bits)
