@@ -57,8 +57,8 @@
                                 dateInParts=allTextLines[i].split(/-| |:|\.|,/);
                                 var d = new Date(dateInParts[0],dateInParts[1],dateInParts[2],dateInParts[3],dateInParts[4],dateInParts[5],dateInParts[6]);
                                 var v = parseInt(dateInParts[7]);
-                                member1.dataAnalyzer.addSample(v,d);
-                                member2.dataAnalyzer.addSample(v+Math.floor(Math.random()*10)-4,d);
+                                member1.dataAnalyzer.addSample(v+10,d,250);
+                                member2.dataAnalyzer.addSample(v+10+Math.floor(Math.random()*10)-4,d,250);
                             }
                         }
                         console.log("Done!");
@@ -82,7 +82,7 @@
                             console.log(x.timestamp,dateToString(x.timestamp),x.vol,x.volClipped,x.cutoff,x.speakThreashold,x.isSpeak);
                         });
                         */
-                        GroupDataAnalyzer([member1,member2],periodStartDate,periodEndDate,250);
+                        GroupDataAnalyzer([member1,member2],periodStartDate,periodEndDate);
                     }
                     reader.readAsText(file);
                 });

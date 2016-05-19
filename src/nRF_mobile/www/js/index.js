@@ -441,26 +441,27 @@ meetingPage = new Page("meeting",
             var turns = [];
             var totalIntervals = 0;
 
+            var end = new Date().getTime();
+            var start = end - DEBUG_CHART_WINDOW;
+            
+            // calculate intervals 
+            var intervals = GroupDataAnalyzer(app.meeting.members,start,end);
+            
+            // update the chart
             $.each(app.meeting.members, function(index, member) {
-
-                var datapoints = member.dataAnalyzer.getSamples();
-                if (! datapoints || ! datapoints[datapoints.length - 1]) {
-                    return;
-                }
-
-                //var end = datapoints[datapoints.length - 1].timestamp;
-                var end = new Date().getTime();
-                var start = end - DEBUG_CHART_WINDOW;
+                // update cutoff and threshold
                 member.dataAnalyzer.updateCutoff();
                 member.dataAnalyzer.updateSpeakThreshold();
-                var data = member.dataAnalyzer.generateTalkIntervals(start, end);
 
-                member.chart.render(data.data, data.intervals, start, end);
+                var datapoints = filterPeriod(member.dataAnalyzer.getSamples(),start,end);
 
-                turns.push({participant:member.key, turns:data.intervals.length});
-                totalIntervals += data.intervals.length;
+                member.chart.render(data.data, intervals[index], start, end);
+
+                turns.push({participant:member.key, turns:intervals[index].length});
+                totalIntervals += intervals[index].length;
 
             }.bind(this));
+
 
             $.each(turns, function(index, turn) {
                 turn.turns = turn.turns / totalIntervals;
@@ -518,7 +519,7 @@ function DebugChart($canvas) {
             
             var point = series[i];
             
-            var y = calcY(point.vol);
+            var y = calcY(point.volClippedSmooth);
             var x = calcX(point.timestamp, start, end);
             if (i == 0) {
                 context.moveTo(x, y);
