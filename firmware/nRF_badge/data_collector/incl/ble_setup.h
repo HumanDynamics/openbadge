@@ -149,6 +149,11 @@ void BLEdisable();
 void BLEresume();
 
 /**
+ * Disconnect from server forcefully.
+ */
+void BLEforceDisconnect();
+
+/**
  * Functions called on connection or disconnection events
  */
 void BLEonConnect();

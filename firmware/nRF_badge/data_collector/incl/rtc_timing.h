@@ -11,6 +11,7 @@
 #include "debug_log.h"
 
 volatile bool countdownOver;  //set true when the countdown interrupt triggers
+volatile bool ble_timeout;
 
 /**
  * rtc event handler function
@@ -30,6 +31,11 @@ void rtc_config(void);
  * NOTE: Maximum countdown time is 130 seconds.
  */
 void countdown_set(unsigned long ms);
+
+/**
+ * similar to countdown_set, but used to keep track of BLE connection timeout.
+ */
+void ble_timeout_set(unsigned long ms);
 
 
 /**

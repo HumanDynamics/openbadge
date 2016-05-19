@@ -277,6 +277,11 @@ void BLEresume()
     BLEbegin();
 }
 
+void BLEforceDisconnect()
+{
+    sd_ble_gap_disconnect(m_conn_handle,BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+}
+
 
 bool notificationEnabled()  {
     return m_nus.is_notification_enabled;
