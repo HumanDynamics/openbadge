@@ -40,9 +40,14 @@
                     <ul id="devicelist" class="devicelist"></ul>
                 </div>
                 <div id="devicelistError" class="error-message hidden devicelistMode">
+                    <div class="icon"><i class="icon ion-ios-thunderstorm"></i></div>
+                    <div class="message">Couldn't call home. Please ensure you're online.</div>
+                    <a class="error-retry">Retry</a>
+                </div>
+                <div id="devicelistServerError" class="error-message hidden devicelistMode">
                     <div class="icon"><i class="icon ion-alert-circled"></i></div>
-                    <div class="message">Couldn't find your group. Please check your group ID and ensure you're online.</div>
-                    <a id="retryDeviceList" class="error-retry">Retry</a>
+                    <div class="message">Couldn't find your group on the server. Please check your group ID and try again.</div>
+                    <a class="error-retry">Retry</a>
                 </div>
             </div>
             <footer>

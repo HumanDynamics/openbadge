@@ -170,7 +170,7 @@ mainPage = new Page("main",
             }
             app.showPage(meetingConfigPage);
         });
-        $("#retryDeviceList").click(function() {
+        $(".error-retry").click(function() {
             app.refreshGroupData();
         });
     },
@@ -183,6 +183,7 @@ mainPage = new Page("main",
     },
     function onHide() {
         clearInterval(app.badgeScanIntervalID);
+        app.stopScan();
     },
     {
         loadGroupData: function() {
@@ -203,8 +204,13 @@ mainPage = new Page("main",
             $(".devicelistMode").addClass("hidden");
             $("#devicelistLoader").removeClass("hidden");
         },
-        createGroupUserList: function() {
+        createGroupUserList: function(invalidkey) {
             $(".devicelistMode").addClass("hidden");
+
+            if (invalidkey) {
+                $("#devicelistServerError").removeClass("hidden");
+                return;
+            }
 
             if (app.group == null) {
                 $("#devicelistError").removeClass("hidden");
@@ -226,10 +232,12 @@ mainPage = new Page("main",
         },
         displayActiveBadges: function() {
 
+            app.activeMembers = app.activeMembers || {};
+
             $("#devicelist .item").removeClass("active");
             for (var i = 0; i < app.group.members.length; i++) {
                 var member = app.group.members[i];
-                if (member.active) {
+                if (member.badgeId in app.activeMembers) {
                     $("#devicelist .item[data-device='" + member.badgeId + "']").addClass("active");
                 }
             }
@@ -561,8 +569,7 @@ app = {
 
 
         document.addEventListener("pause", function onPause() {
-            qbluetoothle.stopScan()
-            app.scanning = false;
+            app.stopScan();
         }, false);
     },
     initBluetooth: function() {
@@ -680,11 +687,16 @@ app = {
      */
     refreshGroupData: function(showLoading, callback) {
 
+        var groupId = localStorage.getItem(LOCALSTORAGE_GROUP_KEY);
+        if (app.group && groupId && app.group.key.toUpperCase() != groupId.toUpperCase()) {
+            app.group = null;
+            showLoading = true;
+        }
+
         if (showLoading) {
             app.onrefreshGroupDataStart();
         }
 
-        var groupId = localStorage.getItem(LOCALSTORAGE_GROUP_KEY);
 
         $.ajax(BASE_URL + "get_group/" + groupId + "/", {
             dataType:"json",
@@ -692,11 +704,10 @@ app = {
                 if (result.success) {
                     app.group = new Group(result.group);
                     localStorage.setItem(LOCALSTORAGE_GROUP, JSON.stringify(result.group));
-
+                    app.onrefreshGroupDataComplete();
                 } else {
-                    // app.group = null;
+                    app.onrefreshGroupDataComplete(true);
                 }
-                app.onrefreshGroupDataComplete();
                 if (callback) {
                     callback(result);
                 }
@@ -710,8 +721,8 @@ app = {
     onrefreshGroupDataStart: function() {
         mainPage.beginRefreshData();
     },
-    onrefreshGroupDataComplete: function() {
-        mainPage.createGroupUserList();
+    onrefreshGroupDataComplete: function(invalidkey) {
+        mainPage.createGroupUserList(invalidkey);
     },
 
     /**
@@ -742,9 +753,13 @@ app = {
         if (! app.group) {
             return;
         }
+        app.activeMembers = {};
         for (var i = 0; i < app.group.members.length; i++) {
             var member = app.group.members[i];
             member.active = !!~activeBadges.indexOf(member.badgeId);
+            if (member.active) {
+                app.activeMembers[member.badgeId] = true;
+            }
         }
         mainPage.displayActiveBadges();
     },
@@ -752,14 +767,20 @@ app = {
         if (! app.group) {
             return;
         }
+        app.activeMembers = app.activeMembers || {};
         for (var i = 0; i < app.group.members.length; i++) {
             var member = app.group.members[i];
             if (activeBadge == member.badgeId) {
                 member.active = true;
+                app.activeMembers[member.badgeId] = true;
                 mainPage.displayActiveBadges();
                 return;
             }
         }
+    },
+    stopScan: function() {
+        app.scanning = false;
+        qbluetoothle.stopScan();
     },
 
 
