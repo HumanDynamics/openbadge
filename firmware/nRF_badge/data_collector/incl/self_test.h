@@ -1,6 +1,6 @@
 #ifndef TESTER_ENABLE_H
 #define TESTER_ENABLE_H
-#define LED_BLINK_MS      500
+#define LED_BLINK_MS      300
 
 #include "internal_flash.h"
 #include "external_flash.h"
