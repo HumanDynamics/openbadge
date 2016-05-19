@@ -57,15 +57,15 @@
                                 dateInParts=allTextLines[i].split(/-| |:|\.|,/);
                                 var d = new Date(dateInParts[0],dateInParts[1],dateInParts[2],dateInParts[3],dateInParts[4],dateInParts[5],dateInParts[6]);
                                 var v = parseInt(dateInParts[7]);
-                                member1.dataAnalyzer.addSample(v+10,d,250);
-                                member2.dataAnalyzer.addSample(v+10+Math.floor(Math.random()*10)-4,d,250);
+                                member1.dataAnalyzer.addSample(v+10,d.getTime(),250);
+                                member2.dataAnalyzer.addSample(v+10+Math.floor(Math.random()*10)-4,d.getTime(),250);
                             }
                         }
                         console.log("Done!");
                         var samples = member1.dataAnalyzer.getSamples();
-                        var periodStartDate = new Date(samples[samples.length-1].timestamp - 1000 * 60 * 1);
+                        var periodStartDate = samples[samples.length-1].timestamp - 1000 * 60 * 1;
                         var periodEndDate = samples[samples.length-1].timestamp;
-                        periodEndDate = new Date(periodEndDate.getTime()+1000)
+                        periodEndDate = periodEndDate+1000;
                         /*
 
                         console.log("Time period:",periodStartDate,periodEndDate);

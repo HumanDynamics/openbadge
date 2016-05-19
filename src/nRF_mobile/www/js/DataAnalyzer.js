@@ -147,7 +147,7 @@ function generateTalkIntervals(speakSamples) {
         }
 
         // new interval ended. Because each sample is duration millisecond long, we add this to the endTime
-        var newTalkInterval = {'startTime':speakSamples[i].timestamp, 'endTime': new Date(speakSamples[j].timestamp.getTime()+speakSamples[j].duration)};
+        var newTalkInterval = {'startTime':speakSamples[i].timestamp, 'endTime': speakSamples[j].timestamp+speakSamples[j].duration};
         //console.log("start time is: ",newTalkInterval.startTime);
         //console.log("Is it min length?: ",dateToString(newTalkInterval.startTime),dateToString(newTalkInterval.endTime));
         if (this.isMinTalkLength(newTalkInterval)) {
@@ -184,8 +184,9 @@ function SmoothArray() {
 }
 
 function dateToString(d) {
-    var s = d.getFullYear().toString()+"-"+(d.getMonth()).toString()+"-"+d.getDate().toString();
-    s = s + " "+d.getHours().toString()+":"+d.getMinutes().toString()+":"+d.getSeconds()+"."+d.getMilliseconds().toString();
+    var dAsDate = new Date(d);
+    var s = dAsDate.getFullYear().toString()+"-"+(dAsDate.getMonth()).toString()+"-"+dAsDate.getDate().toString();
+    s = s + " "+dAsDate.getHours().toString()+":"+dAsDate.getMinutes().toString()+":"+dAsDate.getSeconds()+"."+dAsDate.getMilliseconds().toString();
     return s;
 }
 
@@ -247,9 +248,9 @@ function GroupDataAnalyzer(members,periodStartTime,periodEndTime) {
     });
 
     // compare volumes
-    for (var d = periodStartTime; d <= periodEndTime ; d.setTime(d.getTime() + INTERVAL_INCREMENTS)) {
-        var dStart = new Date(d.getTime());
-        var dEnd = new Date(dStart.getTime()+INTERVAL_INCREMENTS);
+    for (var d = periodStartTime; d <= periodEndTime ; d = d + INTERVAL_INCREMENTS) {
+        var dStart = d;
+        var dEnd = d + INTERVAL_INCREMENTS;
 
         var newValue = {'timestamp':dStart,'memberIndex':-1,'vol':-1};
         //console.log("Looking to match",dateToString(d));
@@ -264,7 +265,7 @@ function GroupDataAnalyzer(members,periodStartTime,periodEndTime) {
             while (pos < samples.length) {
                 var sample = samples[pos];
                 var sampleStart = sample.timestamp;
-                var sampleEnd = new Date(sampleStart.getTime()+sample.duration-1);
+                var sampleEnd = sample.timestamp+sample.duration-1;
 
                 if (checkIntersect(d,dEnd,sampleStart,sampleEnd)) {
                     //console.log(index,"Found a match for ",dateToString(d),"Found!",dateToString(sampleStart));
@@ -299,7 +300,7 @@ function GroupDataAnalyzer(members,periodStartTime,periodEndTime) {
     // generate speaking intervals
     $.each(members, function (index, member) {
         var v = generateTalkIntervals(wonSamples[index]);
-        //console.log("intervals for ",index,"are",intervals,"had winning samples:",wonSamples[index].length);
+        console.log("intervals for ",index,"are",v,"had winning samples:",wonSamples[index].length);
         intervals[index] = v;
     });
 

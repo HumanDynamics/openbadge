@@ -455,7 +455,7 @@ meetingPage = new Page("meeting",
 
                 var datapoints = filterPeriod(member.dataAnalyzer.getSamples(),start,end);
 
-                member.chart.render(data.data, intervals[index], start, end);
+                member.chart.render(datapoints, intervals[index], start, end);
 
                 turns.push({participant:member.key, turns:intervals[index].length});
                 totalIntervals += intervals[index].length;
