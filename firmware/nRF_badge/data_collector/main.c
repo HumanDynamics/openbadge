@@ -95,7 +95,6 @@ volatile unsigned long dataTimestamp;    // holds the date
 
 volatile bool sleep = false;  //whether we should sleep (so actions like data sending can override sleep)
 
-const unsigned long CONNECTION_TIMEOUT_MS = 5000;
 
 
 //=========================== Global function definitions ==================================

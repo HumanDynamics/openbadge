@@ -13,6 +13,8 @@
 volatile bool countdownOver;  //set true when the countdown interrupt triggers
 volatile bool ble_timeout;
 
+#define CONNECTION_TIMEOUT_MS 5000UL
+
 /**
  * rtc event handler function
  * For extending the 24-bit hardware clock, by incrementing a larger number every time it overflows

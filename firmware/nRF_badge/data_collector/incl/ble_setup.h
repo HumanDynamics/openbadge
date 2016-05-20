@@ -16,6 +16,7 @@
 #include "ble_nus.h"  //Nordic UART service
  
 #include "internal_flash.h"
+#include "rtc_timing.h"
  
 #define IS_SRVC_CHANGED_CHARACT_PRESENT 0                                           /**< Include or not the service_changed characteristic. if not enabled, the server's database cannot be changed for the lifetime of the device*/
 
