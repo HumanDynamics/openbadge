@@ -277,6 +277,11 @@ void BLEresume()
     BLEbegin();
 }
 
+void BLEforceDisconnect()
+{
+    sd_ble_gap_disconnect(m_conn_handle,BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+}
+
 
 bool notificationEnabled()  {
     return m_nus.is_notification_enabled;
@@ -292,6 +297,7 @@ bool BLEwrite(uint8_t* data, uint16_t len)  {
         //Can happen frequently while trying to send a large chunk of data
         return false;
     }
+    ble_timeout_set(CONNECTION_TIMEOUT_MS);
     return true;
 }
 

@@ -20,6 +20,12 @@ void rtc_handler(nrf_drv_rtc_int_type_t int_type)
         //debug_log("Countdown end\r\n");
         countdownOver = true;
     }
+    else if(int_type == NRF_DRV_RTC_INT_COMPARE1)  //countdown timer interrupt
+    {
+        nrf_drv_rtc_cc_disable(&rtc, 1);  //disable the compare channel - timeout
+        //debug_log("BLE connection timeout.\r\n");
+        ble_timeout = true;
+    }
 }
  
 void rtc_config(void)
@@ -53,6 +59,23 @@ void countdown_set(unsigned long ms)
     unsigned long compareTicks = (nrf_drv_rtc_counter_get(&rtc) + (32768UL * ms / 1000UL));  //convert ms to ticks
     compareTicks &= 0xffffff; //clip to 24bits
     nrf_drv_rtc_cc_set(&rtc,0,compareTicks,true);  //set compare channel 0 to interrupt when counter hits compareTicks
+}
+
+void ble_timeout_set(unsigned long ms)
+{
+    if(ms > 130000UL)  {  // 130 seconds.
+        ms = 130000UL;  // avoid overflow in calculation of compareTicks below.
+    }
+    //Set compare value so that an interrupt will occur ms milliseconds from now
+    ble_timeout = false;
+    unsigned long compareTicks = (nrf_drv_rtc_counter_get(&rtc) + (32768UL * ms / 1000UL));  //convert ms to ticks
+    compareTicks &= 0xffffff; //clip to 24bits
+    nrf_drv_rtc_cc_set(&rtc,1,compareTicks,true);  //set compare channel 1 to interrupt when counter hits compareTicks
+}
+
+void ble_timeout_cancel()
+{
+    nrf_drv_rtc_cc_disable(&rtc, 1);  //disable the compare channel - timeout canceled
 }
 
 unsigned long long ticks(void)  {
