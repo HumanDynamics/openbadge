@@ -17,9 +17,19 @@
             <pre id="fileDisplayArea"></pre>
         </div>
 
+        <script type="text/javascript" src="../www/js/libs/jquery-1.12.3.min.js"></script>
         <script type="text/javascript" src="../www/js/DataAnalyzer.js"></script>
         <script type="text/javascript">
-            a = new DataAnalyzer(250);
+            function GroupMember(memberJson) {
+                this.name = memberJson.name;
+                this.key = memberJson.key;
+                this.badgeId = memberJson.badge;
+            }
+
+            var member1 = new GroupMember({name:"Oren Lederman",key : "KAJDJ",badgeId : "AA:BB:CC:DD:EE:FF"});
+            var member2 = new GroupMember({name:"John Doe",key : "HHHHH",badgeId : "BB:BB:BB:BB:BB:BB"});
+            member1.dataAnalyzer = new DataAnalyzer();
+            member2.dataAnalyzer = new DataAnalyzer();
 
             window.onload = function() {
                 var fileInput = document.getElementById('fileInput');
@@ -34,18 +44,30 @@
                         var csv = event.target.result;
                         var allTextLines = csv.split(/\r\n|\n/);
                         var lines = [];
-                        for (var i=0; i<allTextLines.length; i++) {
+                        //skip the first line, it's a header
+                        for (var i=1; i<allTextLines.length; i++) {
+                            if (i % 100 == 0) {
+                                console.log("Updating cutoff and threshold");
+                                member1.dataAnalyzer.updateCutoff();
+                                member1.dataAnalyzer.updateSpeakThreshold();
+                                member2.dataAnalyzer.updateCutoff();
+                                member2.dataAnalyzer.updateSpeakThreshold();
+                            }
                             if (allTextLines[i].length > 20) {
                                 dateInParts=allTextLines[i].split(/-| |:|\.|,/);
                                 var d = new Date(dateInParts[0],dateInParts[1],dateInParts[2],dateInParts[3],dateInParts[4],dateInParts[5],dateInParts[6]);
                                 var v = parseInt(dateInParts[7]);
-                                a.addSample(v,d);
+                                member1.dataAnalyzer.addSample(v+10,d.getTime(),250);
+                                member2.dataAnalyzer.addSample(v+10+Math.floor(Math.random()*10)-4,d.getTime(),250);
                             }
                         }
                         console.log("Done!");
-                        var samples = a.getSamples();
-                        var periodStartDate = new Date(samples[samples.length-1].timestamp - 1000 * 60 * 5);
+                        var samples = member1.dataAnalyzer.getSamples();
+                        var periodStartDate = samples[samples.length-1].timestamp - 1000 * 60 * 1;
                         var periodEndDate = samples[samples.length-1].timestamp;
+                        periodEndDate = periodEndDate+1000;
+                        /*
+
                         console.log("Time period:",periodStartDate,periodEndDate);
                         b = a.generateTalkIntervals(periodStartDate,periodEndDate);
                         console.log("# of intervals: ",a.length)
@@ -53,10 +75,14 @@
                         b.forEach(function(x) {
                             console.log(dateToString(x.startTime),dateToString(x.endTime));
                         });
-                        //console.log("Samples:");
-                        //samples.forEach(function(x) {
-                        //    console.log(x.timestamp,dateToString(x.timestamp),x.vol,x.sv,Math.sqrt(x.meanSquare),x.isSpeak);
-                        //});
+                        */
+                        /*
+                        console.log("Samples:");
+                        samples.forEach(function(x) {
+                            console.log(x.timestamp,dateToString(x.timestamp),x.vol,x.volClipped,x.cutoff,x.speakThreashold,x.isSpeak);
+                        });
+                        */
+                        GroupDataAnalyzer([member1,member2],periodStartDate,periodEndDate);
                     }
                     reader.readAsText(file);
                 });
