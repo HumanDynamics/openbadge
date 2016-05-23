@@ -1,4 +1,4 @@
-var Q = require('q');
+require('q');
 var qbluetoothle = require('./qbluetoothle');
 var Badge = require('./badge');
 
@@ -16,7 +16,7 @@ window.DEBUG_CHART_WINDOW = 1000 * 60 * 2;
 
 window.CHECK_BLUETOOTH_STATUS_INTERVAL = 5 * 60 * 1000;
 window.CHECK_MEETING_LENGTH_INTERVAL =  2 * 60 * 60 * 1000;
-window.CHECK_MEETING_LENGTH_REACTION_TIME = 1 * 60 * 1000;
+window.CHECK_MEETING_LENGTH_REACTION_TIME = 60 * 1000;
 
 window.SHOW_BADGE_CONSOLE = false;
 
@@ -838,8 +838,8 @@ toastr.options = {
     "preventDuplicates": true,
     "showDuration": "200",
     "hideDuration": "500",
-    "timeOut": "1000",
-}
+    "timeOut": "1000"
+};
 
 if (!String.prototype.format) {
     String.prototype.format = function() {
@@ -866,7 +866,7 @@ document.addEventListener('deviceready', function() {app.initialize() }, false);
 window.fileStorage = {
     locked:false,
     save: function (name, data, deferred) {
-        var deferred = deferred || $.Deferred();
+        deferred = deferred || $.Deferred();
         if (window.fileStorage.locked) {
             setTimeout(function() {window.fileStorage.save(name, data, deferred)}, 100);
             return deferred.promise();
@@ -892,7 +892,7 @@ window.fileStorage = {
                 deferred.resolve();
             };
             writer.onerror = fail;
-            writer.seek(writer.length)
+            writer.seek(writer.length);
             writer.write(data);
         }
 
