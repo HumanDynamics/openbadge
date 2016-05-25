@@ -376,5 +376,7 @@ if __name__ == "__main__":
 					dialogue(mac)
 					time.sleep(2)  # requires sleep between devices
 					mac=None
+			
+			time.sleep(6);
 
 exit(0)

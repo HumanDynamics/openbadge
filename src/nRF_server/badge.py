@@ -12,19 +12,19 @@ class Chunk():
     maxSamples = 114
     
     def __init__(self, header, data):
-        self.ts,self.fract,self.voltage,self.sampleDelay = header
+        self.ts,self.fract,self.voltage,self.sampleDelay,self.numSamples = header
         self.samples = data[0:]
     
     def setHeader(self,header):
-        self.ts,self.fract,self.voltage,self.sampleDelay = header
+        self.ts,self.fract,self.voltage,self.sampleDelay,self.numSamples = header
     
     def getHeader(self):
-        return (self.ts,self.fract,self.voltage,self.sampleDelay)
+        return (self.ts,self.fract,self.voltage,self.sampleDelay,self.numSamples)
         
     def addData(self,data):
         self.samples.extend(data)
-        if len(self.samples) > self.maxSamples:
-            logger.error("chunk overflow")
+        if len(self.samples) > self.numSamples:
+            logger.error("too many samples received?")
             #raise UserWarning("Chunk overflow")
     
     def reset(self):
@@ -32,22 +32,24 @@ class Chunk():
         self.fract = None
         self.voltage = None
         self.sampleDelay = None
+        self.numSamples = None
         self.samples = []
         
     def completed(self):
-        return len(self.samples) >= self.maxSamples
+        return len(self.samples) >= self.numSamples
 
 # This class handles incoming data from the badge. It will buffer the
 # data so external processes can read from it more easy. Reset will
 # delete all buffered data
 class BadgeDelegate(DefaultDelegate):
-    tempChunk = Chunk((None,None,None,None),[])
+    tempChunk = Chunk((None,None,None,None,None),[])
     #data is received as chunks, keep the chunk organization
     chunks = []
     #to keep track of the dialogue
     gotStatus = False
     gotDateTime = False
     gotHeader = False
+    numSamples = 0  # expected number of samples from current chunk
     #badge states, reported from badge
     
     clockSet = False  # whether the badge's time had been set
@@ -64,7 +66,7 @@ class BadgeDelegate(DefaultDelegate):
         self.reset()
    
     def reset(self):
-        self.tempChunk = Chunk((None,None,None,None),[])
+        self.tempChunk = Chunk((None,None,None,None,None),[])
         self.chunks = [] 
         self.gotStatus = False
         self.dataReady = False
@@ -77,7 +79,7 @@ class BadgeDelegate(DefaultDelegate):
             self.gotStatus = True
         elif not self.gotHeader:
             self.tempChunk.reset()
-            self.tempChunk.setHeader(struct.unpack('<LHfH',data)) #time, fraction time (ms), voltage, sample delay
+            self.tempChunk.setHeader(struct.unpack('<LHfHB',data)) #time, fraction time (ms), voltage, sample delay
             self.tempChunk.ts = self._longToDatetime(self.tempChunk.ts) #fix time
             self.tempChunk.ts = self.tempChunk.ts + datetime.timedelta(milliseconds=self.tempChunk.fract) # add ms
             self.gotHeader = True
