@@ -21,6 +21,8 @@ void storer_init()
     store.loc = 0;
     store.to = 0;
     
+    storerMode = STORER_IDLE;
+    
     unsigned long lastStoredTime = MODERN_TIME;
     
     for(int c = 0; c <= LAST_CHUNK; c++)
@@ -86,14 +88,18 @@ void storer_init()
 
 bool updateStorer()
 {
+    // This will be the function return value.  if there is no storage actions to be completed, this will be set to false.
+    //   if not, it will return true.
+    bool storerActive = true;
+    
     if(!flashWorking)       // Can't do any flash stuff if there's a pending flash operation already
     {
-        storer_mode_t modeLocal = storerMode;  // local copy, in case interrupt somehow changes it mid-switch
+        storer_mode_t modeLocal = storerMode;  // local copy, in case interrupt somehow changes it in the middle of this switch
         switch(modeLocal)
         {
         
             case STORER_IDLE:
-                if(store.from != collect.chunk)
+                if(store.from != collect.to)
                 {
                     if(micBuffer[store.from].check == micBuffer[store.from].timestamp || micBuffer[store.from].check == CHECK_TRUNC)
                     {
@@ -105,9 +111,13 @@ bool updateStorer()
                         store.from = (store.from < LAST_RAM_CHUNK) ? store.from+1 : 0;   // somehow an invalid RAM chunk - move on
                     }
                 }
-                if(BLEgetStatus() == BLE_INACTIVE)      // if storer is idle, we can advertise.
+                else 
                 {
-                    BLEresume();
+                    if(BLEgetStatus() == BLE_INACTIVE)      // if storer is idle, we can advertise.
+                    {
+                        BLEresume();
+                    }
+                    storerActive = false;
                 }
                 break;
                 
@@ -153,7 +163,8 @@ bool updateStorer()
                 break;
         }   // switch(modeLocal)
     }    // if(!flashWorking)
-    return false;  // if flash is working, storage is done for now
+    
+    return storerActive;  // If flash is working, storer is still active.
 }
 
 
@@ -172,6 +183,7 @@ void storer_on_sys_evt(uint32_t sys_evt)
             {
                 case STORER_STORE:     // just completed a store
                     debug_log("STORER: stored RAM chunk %d to FLASH chunk %d\r\n",store.from,store.to);
+                    micBuffer[store.from].check = CHECK_STORED;  // mark RAM chunk as stored (don't need to keep track of it in RAM)
                     storerMode = STORER_ADVANCE;    // Advance to the next chunk (may require erasing new page)
                     break;
                 case STORER_ADVANCE:   // just completed erasing for advancing to new chunk

@@ -33,8 +33,8 @@
  
 
 // Ideally this would be the first page free after program space.
-//   May be acquirable from linker script.  But the following value is a rough estimated value.
-#define FIRST_PAGE 151
+//   May be acquirable from linker script.  But the following value is a (conservative) estimated value.
+#define FIRST_PAGE 200
 #define LAST_PAGE 251  // last available FLASH page - rest is reserved
  
 #define BYTES_PER_PAGE 1024  //1kB pages in nrf51 flash
@@ -55,8 +55,13 @@
 // this is the last chunk before we enter program memory space
 const int LAST_CHUNK;  // = numberOfPages*8 + 7, defined in flash_handling.c
 
+#define NO_CHUNK 0xffff
 
-#define MODERN_TIME 1434240000UL  // Unix time in the recent past (sometime June 2015), used to check for reasonable times
+
+#define MODERN_TIME 1434240000UL  // Unix time in the recent past (sometime June 2015), used to check for reasonable timestamps
+#define FUTURE_TIME 2524608000UL  // Unix time somewhere around 2050, used to check for reasonable timestamps
+
+#define CHECK_STORED 0x2UL        // Used to mark a RAM chunk once it's been stored to FLASH (to avoid having 2 identical copies)
 
 #include "collector.h"
 #include "sender.h"
@@ -81,6 +86,11 @@ struct
 
 void storer_init();
 
+/*
+ * Called within main loop cycle to manage FLASH storage.
+ *   - Avoids conflicts with BLE
+ * Returns whether the storer has any pending operations.
+ */
 bool updateStorer();
 
 void storer_on_sys_evt(uint32_t sys_evt);

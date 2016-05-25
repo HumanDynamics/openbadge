@@ -62,9 +62,12 @@
 
 
 
-unsigned long cycleStart;       // start of main loop cycle (e.g. sampling cycle)
-int cycleState;     // to keep track of state of main loop
 enum cycleStates {SLEEP, SAMPLE, STORE, SEND};
+unsigned long cycleStart;       // start of main loop cycle (e.g. sampling cycle)
+int cycleState = SLEEP;     // to keep track of state of main loop
+
+// If any module (collecting, storing, sending) has any pending operations, this gets set to true
+bool badgeActive = false;   // Otherwise, the badge is inactive and can enter indefinite sleep.
 
 
 //============================= I/O-related stuff ======================================
@@ -126,6 +129,10 @@ void sampleData()  {
 }*/
 
 void goToSleep(long ms)  {
+    if(ms == 0)
+    {
+        return;  // don't sleep
+    }
     sleep = true;
     if(ms == -1)  
     {
@@ -473,10 +480,11 @@ int main(void)
     
     BLEstartAdvertising();
     
-    setTime(0xdead0000UL);
-    dateReceived = true;
+    //setTime(0xdead0000UL);
+    //dateReceived = true;
     
-    //enableStorage();
+    cycleStart = millis();
+    
     
     // Enter main loop
     for (;;)  {
@@ -511,56 +519,95 @@ int main(void)
             sampleStart = millis();  //if not synced, we still need to set this to sleep properly.
         }*/
         
-        if(dateReceived)  // don't start main cycle unless we have a valid date
+        //if(dateReceived)  // don't start main cycle unless we have a valid date
+        //{
+        
+        
+        switch(cycleState)
         {
-            bool active = false;
-            switch(cycleState)
-            {
-                case SAMPLE:
-                    if(dateReceived)
+            
+            
+            case SAMPLE:
+                //if(dateReceived)
+                //{
+                if(collecting)
+                {
+                    badgeActive |= true;
+                    
+                    if(millis() - cycleStart < SAMPLE_WINDOW)
                     {
-                        if(collecting)
-                        {
-                            if(millis() - cycleStart < SAMPLE_WINDOW)
-                            {
-                                takeMicReading();
-                                //sleep = false;
-                            }
-                            else  {
-                                collectSample();
-                                cycleState = STORE;
-                            }
-                        }
-                        else
-                        {
-                            cycleState = STORE;
-                        }
-                    }
-                    break;
-                case STORE:
-                    updateStorer();
-                    cycleState = SEND;
-                    break;
-                case SEND:
-                    active = updateSender();
-                    if( (!active) || millis() - cycleStart > 200 )   // if sending is finished, or it's time to sleep, SLEEP
-                    {
-                        cycleState = SLEEP;
-                    }
-                    break;
-                case SLEEP:
-                    if(millis() - cycleStart >= SAMPLE_PERIOD)  // should we start sampling again
-                    {
-                        cycleState = SAMPLE;
-                        cycleStart = millis();
+                        takeMicReading();
                         //sleep = false;
-                        //debug_log("startSAMPLE\r\n");
                     }
-                    break;
-                default:
-                    break;
-            }
+                    else  {
+                        collectSample();
+                        cycleState = STORE;
+                    }
+                }
+                else
+                {
+                    cycleState = STORE;
+                }
+                //}
+                break;
+                
+            case STORE:
+                ;// can't put declaration directly after case label.
+                bool storerActive = updateStorer();
+                //if(storerActive) debug_log("stA\r\n");
+                badgeActive |= storerActive;
+                cycleState = SEND;
+                break;
+                
+            case SEND:
+                ;// can't put declaration directly after case label.
+                bool senderActive = updateSender();
+                //if(senderActive) debug_log("seA\r\n");
+                badgeActive |= senderActive;
+                
+                if(millis() - cycleStart > 200 || (!senderActive))  // is it time to sleep, or is sending finished?
+                {
+                    cycleState = SLEEP;
+                }
+                
+                break;
+            case SLEEP:
+                ;// can't put declaration directly after case label.
+                long sleepDuration;
+                
+                // If none of the modules (collector, storer, sender) is active, then we can sleep indefinitely (until BLE activity)
+                if(!badgeActive)
+                {
+                    sleepDuration = -1;  // infinite sleep
+                }
+                
+                // Else we're actively cycling thru main loop, and should sleep for the remainder of the sampling period
+                unsigned long elapsed = millis() - cycleStart;
+                if(elapsed < SAMPLE_PERIOD)
+                {
+                    sleepDuration = SAMPLE_PERIOD - elapsed;
+                }
+                else
+                {
+                    sleepDuration = 0;
+                }
+                
+                // Main loop will halt on the following line as long as the badge is sleeping (i.e. until an interrupt wakes it)
+                goToSleep(sleepDuration);
+                
+                // Exit sleep if we've reached the end of the sampling period.
+                if(millis() - cycleStart >= SAMPLE_PERIOD)  // did we exit sleep by the countdown event
+                {
+                    cycleState = SAMPLE;
+                    cycleStart = millis();
+                    badgeActive = false;
+                }
+                
+                break;
+            default:
+                break;
         }
+        //}
         /*  required?
         else  {
             cycleStart = millis();
@@ -639,6 +686,7 @@ int main(void)
                 goToSleep(sleepDuration);
             }
         }*/
+        /*
         if (!dateReceived)  {
             goToSleep(-1);  //sleep infinitely till interrupt
         }
@@ -652,7 +700,7 @@ int main(void)
                 //unsigned long sleepStart = millis();
                 goToSleep(sleepDuration);
             }
-        }
+        }*/
     }
 }
 
@@ -701,6 +749,8 @@ void BLEonReceive(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)
         pendingCommand = unpackCommand(p_data);
     }
     sleep = false;
+    
+    
     /*debug_log("Received: ");
     if (length > 2)  
     {  //is it long enough to be a timestamp.

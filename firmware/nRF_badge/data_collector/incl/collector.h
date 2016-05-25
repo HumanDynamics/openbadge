@@ -36,7 +36,10 @@
 #define INVALID_SAMPLE 255     // dummy byte reserved for unused/invalid samples in chunk sample array
 
 #define CHECK_INCOMPLETE 0xFFFFFFFFUL  // chunk check value for incomplete chunk
-#define CHECK_TRUNC    0xFFFFFFFEUL  // chunk check value for truncated chunk - collector was stopped before complete chunk
+#define CHECK_TRUNC    0x7FFFFFFFUL  // chunk check value for truncated chunk - collector was stopped before complete chunk
+                                     // Last byte of sample array stores the number of samples in the chunk.
+#define CHECK_SENT 0x0UL               // chunk check value for chunk already sent by REQUNSENT
+#define CHECK_TRUNC_SENT 0x01UL          // chunk check value for truncated chunk already ent by REQUNSENT
 
 
 // --------- Sampling timing parameters ----------
@@ -81,7 +84,7 @@ mic_chunk_t micBuffer[MIC_BUFFER_SIZE]; // RAM buffer for mic data - memory stru
 
 struct
 {
-    int chunk;      // which chunk in RAM buffer we're currently storing to
+    int to;      // which chunk in RAM buffer we're currently storing to
     int loc;        // next index in sample array to be written
 } collect;          // Struct for keeping track of storing mic data to RAM
 
@@ -97,6 +100,11 @@ void takeMicReading();
  * Take average of mic readings, put into mic RAM buffer
  */
 void collectSample();
+
+/**
+ * Start (or restart) collecting.
+ */
+void startCollector();
 
 /**
  * Halt collecting; current chunk is likely incomplete, filled with some INVALID_READING samples.

@@ -255,7 +255,7 @@ static void on_adv_evt(ble_adv_evt_t const adv_evt)
         case BLE_ADV_EVT_FAST_WHITELIST:
         case BLE_ADV_EVT_SLOW_WHITELIST:
             isAdvertising = true;
-            debug_log("ADV: advertising active\r\n");
+            //debug_log("ADV: advertising active\r\n");
             break;
         default:
             break;
@@ -304,6 +304,7 @@ void BLEstartAdvertising()
     if((!isConnected) && (!isAdvertising))
     {
         uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
+        debug_log("ADV: advertising started\r\n");
         BLE_ERROR_CHECK(err_code);
     }
 }

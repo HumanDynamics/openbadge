@@ -27,7 +27,7 @@
 #endif
 
 #define APP_ADV_INTERVAL                320                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 200 ms). */
-#define APP_ADV_TIMEOUT_IN_SECONDS      10                                          
+#define APP_ADV_TIMEOUT_IN_SECONDS      5                                          
 
 #define SEC_PARAM_BOND                  1                                           /**< Perform bonding. */
 #define SEC_PARAM_MITM                  0                                           /**< Man In The Middle protection not required. */
