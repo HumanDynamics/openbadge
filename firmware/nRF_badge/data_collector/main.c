@@ -54,8 +54,8 @@
 #include "ble_setup.h"  //stuff relating to BLE initialization/configuration
 //#include "internal_flash.h"  //for managing storage and sending from internal flash
 #include "external_flash.h"  //for interfacing to external SPI flash
-#include "scanning.h"       //for performing scans and storing scan data
-#include "self_test.h"   // for built-in tests
+//#include "scanning.h"       //for performing scans and storing scan data
+//#include "self_test.h"   // for built-in tests
 #include "collector.h"  // for collecting data from mic
 #include "storer.h"
 #include "sender.h"
@@ -378,6 +378,7 @@ int main(void)
     
     debug_log("\r\n\r\n");*/
     
+    /*
     nrf_gpio_pin_write(LED_2,LED_ON);
     scans_init();
     nrf_gpio_pin_write(LED_2,LED_OFF);
@@ -389,7 +390,7 @@ int main(void)
         {
             printScanResult(i);
         }   
-    }
+    }*/
 
     //setTime(0xdead0000UL);
     

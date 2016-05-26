@@ -95,8 +95,6 @@ incl/rtc_timing.c \
 incl/ble_setup.c \
 incl/debug_log.c \
 incl/external_flash.c \
-incl/scanning.c \
-incl/self_test.c \
 incl/collector.c \
 incl/storer.c \
 incl/sender.c \
@@ -121,6 +119,8 @@ $(SDK_PATH)/components/softdevice/common/softdevice_handler/softdevice_handler.c
 $(SDK_PATH)/components/ble/ble_services/ble_bas/ble_bas.c \
 $(SDK_PATH)/components/ble/ble_services/ble_nus/ble_nus.c \
 #incl/internal_flash.c \
+#incl/scanning.c \
+#incl/self_test.c \
 
 
 #assembly files

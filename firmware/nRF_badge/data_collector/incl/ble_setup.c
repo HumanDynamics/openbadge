@@ -114,15 +114,15 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
             BLEonDisconnect();
             break;
         case BLE_GAP_EVT_ADV_REPORT:  //On receipt of a response to an advertising request (during a scan)
-            BLEonAdvReport(p_ble_evt->evt.gap_evt.params.adv_report.peer_addr.addr,
-                            p_ble_evt->evt.gap_evt.params.adv_report.rssi);
+            //BLEonAdvReport(p_ble_evt->evt.gap_evt.params.adv_report.peer_addr.addr,
+            //                p_ble_evt->evt.gap_evt.params.adv_report.rssi);
             break;
         
         case BLE_GAP_EVT_TIMEOUT:
-            if(p_ble_evt->evt.gap_evt.params.timeout.src == BLE_GAP_TIMEOUT_SRC_SCAN)  {
+            /*if(p_ble_evt->evt.gap_evt.params.timeout.src == BLE_GAP_TIMEOUT_SRC_SCAN)  {
                 BLEonScanTimeout();
                 debug_log("Scan ended\r\n");
-            }
+            }*/
             /*else  {
                 debug_log("Timeout.  src=%d\r\n", p_ble_evt->evt.gap_evt.params.timeout.src);
             }*/
