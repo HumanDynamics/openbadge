@@ -24,8 +24,8 @@ class Chunk():
     def addData(self,data):
         self.samples.extend(data)
         if len(self.samples) > self.numSamples:
-            logger.error("too many samples received?")
-            #raise UserWarning("Chunk overflow")
+            print("too many samples received?")
+            raise UserWarning("Chunk overflow")
     
     def reset(self):
         self.ts = None
@@ -50,7 +50,7 @@ class BadgeDelegate(DefaultDelegate):
     gotDateTime = False
     gotHeader = False
     numSamples = 0  # expected number of samples from current chunk
-    #gotEndOfData = False #flag that indicates no more data will be sent
+    gotEndOfData = False #flag that indicates no more data will be sent
     #badge states, reported from badge
     
     clockSet = False  # whether the badge's time had been set
@@ -70,7 +70,7 @@ class BadgeDelegate(DefaultDelegate):
         self.tempChunk = Chunk((None,None,None,None,None),[])
         self.chunks = [] 
         self.gotStatus = False
-        #self.gotEndOfData = False
+        self.gotEndOfData = False
         self.dataReady = False
         self.gotHeader = False
         
@@ -83,8 +83,7 @@ class BadgeDelegate(DefaultDelegate):
             self.tempChunk.reset()
             self.tempChunk.setHeader(struct.unpack('<LHfHB',data)) #time, fraction time (ms), voltage, sample delay
             if (self.tempChunk.sampleDelay == 0): # got an empty header? done
-                #self.gotEndOfData = True
-                logger.info("Empty header. Done getting data")
+                self.gotEndOfData = True
                 pass
             else:
                 self.tempChunk.ts = self._longToDatetime(self.tempChunk.ts)  # fix time

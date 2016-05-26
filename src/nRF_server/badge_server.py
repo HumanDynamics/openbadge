@@ -160,8 +160,8 @@ def dialogue(addr=""):
 		bdg.sendDataRequest(lastChunkDate) # ask for data
 		wait_count = 0;
 		while True:
-			#if bdg.dlg.gotEndOfData == True:
-			#	break
+			if bdg.dlg.gotEndOfData == True:
+				break
 			if bdg.waitForNotifications(1.0):
 				# if got data, don't inrease the wait counter
 				continue
@@ -378,7 +378,8 @@ if __name__ == "__main__":
 					dialogue(mac)
 					time.sleep(2)  # requires sleep between devices
 					mac=None
-			
+
+			logger.info("Sleeping...")
 			time.sleep(6);
 
 exit(0)
