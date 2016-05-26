@@ -15,3 +15,9 @@ data.db
 *.l#*
 *.brd.lck
 *.sch.lck
+
+.idea
+.env
+env/
+localsettings.js
+

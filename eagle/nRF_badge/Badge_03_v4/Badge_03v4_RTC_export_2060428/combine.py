@@ -16,7 +16,6 @@ with open('badge_03v4_centroid.csv', 'rb') as csvfile:
 		for (row) in (bomreader):
 			#print row[0]
 			bom[row[0]]=row[2]
-		print bom
 
 		centreader = csv.reader(csvfile, delimiter=',', quotechar='|')
 		for row in centreader:

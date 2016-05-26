@@ -18,35 +18,35 @@ function Chunk() {
         this.voltage = voltage;
         this.ts = ts;
         this.sampleDelay = sampleDelay;
-    };
+    }.bind(this);
 
     /*
     *@return the voltage of the chunk
     */
     this.getVoltage = function() {
         return this.voltage;                                                                                
-    };
+    }.bind(this);
 
     /*
     *@return the timestamp of the chunk
     */
     this.getTimeStamp = function () {
         return this.ts;
-    };
+    }.bind(this);
 
     /*
     *@return the sampleDelay of the chunk
     */
     this.getSampleDelay = function () {
         return this.sampleDelay;
-    };
+    }.bind(this);
 
     /*
     *@return the samples of this chunk
     */
     this.getSamples = function(){
         return this.samples;
-    }
+    }.bind(this);
 
     /*
     *@param newData the byte array that represents more samples
@@ -57,7 +57,7 @@ function Chunk() {
         this.samples = this.samples.concat(newData);
         var sampleLength = this.samples.length;
 
-    }
+    }.bind(this);
 
     /*
     *resets a chunk to defaults settngs
@@ -67,25 +67,32 @@ function Chunk() {
         this.ts = -1;
         this.sampleDelay = -1;
         this.samples = [];
-    };
+    }.bind(this);
 
     /*
     *@return whether or not the chunk is full
     */
     this.completed = function() {
         return (this.samples.length >= maxSamples);
-    }
+    }.bind(this);
+
+    this.toDict = function () {
+        return {
+            voltage:this.voltage,
+            timestamp:this.ts,
+            sampleDelay:this.sampleDelay,
+            samples:this.samples
+        };
+    }.bind(this);
 }
 
 
 
 /**
 *Represents a badge dialogue for extracting structs
-*@param ID the id of the badge
-*@param send a function that the class can call to send strings to the badge
-*@param log a function the class can call for debug info
+*@param badge badge object
 */
-function BadgeDialogue(address, send, log) {
+function BadgeDialogue(badge) {
     
     this.StatusEnum = {
         STATUS: 1,
@@ -94,15 +101,16 @@ function BadgeDialogue(address, send, log) {
     };
 
     var struct = require('./struct.js').struct;
-    this.send = send;
-    this.log = log;
-    this.address = address;
+    this.badge = badge;
     this.status = this.StatusEnum.STATUS; //at first we expect a status update
     this.dataPackets = 0;
 
     this.workingChunk; //chunk we are currently building
     this.chunks = []; //will store chunks once Received
 
+    this.log = function(str) {
+        this.badge.log(str);
+    }.bind(this);
 
     /**
     * This function must be called whenever data was sent from the badge
@@ -127,10 +135,11 @@ function BadgeDialogue(address, send, log) {
                 this.log("Data available, extracting: ");
                 //data ready
                 this.status = this.StatusEnum.HEADER; // expecting a header next
-                this.send('d'); //request data
+                this.badge.sendString('d'); //request data
             } else if (data == 's') {
-                this.log("Badge Synced but no new data");
+                this.log("Badge Synced but no new data. Disconnecting.");
                 //no new data, do nothing for now
+                badge.close();
             } else {
                 this.log("Unknown status: " + data);
             }
@@ -149,6 +158,9 @@ function BadgeDialogue(address, send, log) {
 
                 this.workingChunk = new Chunk();
                 this.workingChunk.setHeader(header[1], header[0], header[2]);
+            } else if (header[1] == 0) {
+                this.log("End of data received, disconnecting");
+                badge.close();
             } else {
                 this.log("invalid header");                
             }
@@ -172,6 +184,9 @@ function BadgeDialogue(address, send, log) {
                 //we finished a chunk
                 this.status = this.StatusEnum.HEADER; // expecting a header next
                 this.chunks.push(this.workingChunk);
+                if (this.onNewChunk) {
+                    this.onNewChunk(this.workingChunk);
+                }
                 this.log("Added another chunk, storing " + this.chunks.length + " chunks");
 
             }
@@ -180,14 +195,14 @@ function BadgeDialogue(address, send, log) {
             this.log("Invalid status enum");
             this.status = this.StatusEnum.STATUS;
         }
-    };
+    }.bind(this);
 
     /**
     *Asks the badge for its status
     */
     this.checkStatus = function() {
-        this.send('s');
-    };
+        this.badge.sendString('s');
+    }.bind(this);
 
     /**
     *Internal to class
@@ -200,15 +215,15 @@ function BadgeDialogue(address, send, log) {
         this.log('Updating with epoch_seconds: ' + seconds);
 
         var timeString = struct.Pack('<L',[seconds]);
-        this.send(timeString);
-    };
+        this.badge.sendStringAndClose(timeString);
+    }.bind(this);
 
     /**
     *@returns the array of chunk objects that this badge has extracted
     */
     this.getChunks = function () {
         return this.chunks;
-    };
+    }.bind(this);
     
 }
 

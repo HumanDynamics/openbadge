@@ -160,6 +160,8 @@ def dialogue(addr=""):
 		bdg.sendDataRequest(lastChunkDate) # ask for data
 		wait_count = 0;
 		while True:
+			#if bdg.dlg.gotEndOfData == True:
+			#	break
 			if bdg.waitForNotifications(1.0):
 				# if got data, don't inrease the wait counter
 				continue

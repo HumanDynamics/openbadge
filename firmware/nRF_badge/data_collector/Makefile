@@ -20,7 +20,7 @@ include $(TEMPLATE_PATH)/Makefile.posix
 endif
 
 APP_MEMORY_OFFSET = 1c000  ##application memory offset for S130 softdevice
-JLINK_OPTIONS = -device nrf51422_xxac -if swd -speed 0
+JLINK_OPTIONS = -device nrf51422_xxac -if swd -speed 500
 JLINK = JLinkExe $(JLINK_OPTIONS)
 
 MK := mkdir
@@ -338,7 +338,7 @@ flashUnlock: clean flashUnlock.jlink
 
 #create flash unlocking script for JLinkExe.
 flashUnlock.jlink:
-	printf "w4 4001e504 2\nw4 4001e50c 1\nexit\n" > $(OBJECT_DIRECTORY)/flashUnlock.jlink	
+	printf "w4 4001e504 2\nw4 4001e50c 1\nr\ng\nexit\n" > $(OBJECT_DIRECTORY)/flashUnlock.jlink	
 	
 	
 #build and flash firmware

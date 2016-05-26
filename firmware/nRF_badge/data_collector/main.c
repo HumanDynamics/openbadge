@@ -96,6 +96,7 @@ volatile unsigned long dataTimestamp;    // holds the date
 volatile bool sleep = false;  //whether we should sleep (so actions like data sending can override sleep)
 
 
+
 //=========================== Global function definitions ==================================
 //==========================================================================================
 
@@ -124,14 +125,14 @@ void sampleData()  {
 void goToSleep(long ms)  {
     if(ms == -1)  
     {
-        while(sleep)  {  //infinite sleep until an interrupt cancels it
+        while(sleep && (!ble_timeout))  {  //infinite sleep until an interrupt cancels it
             sd_app_evt_wait();
         }
     }
     else  
     {   
         countdown_set(ms);
-        while((!countdownOver) && sleep)  {
+        while((!countdownOver) && sleep && (!ble_timeout))  {
             sd_app_evt_wait();  //sleep until one of our functions says not to
         }
     }
@@ -457,6 +458,15 @@ int main(void)
         else  {
             sampleStart = millis();  //if not synced, we still need to set this to sleep properly.
         }
+
+        
+        
+        if(ble_timeout)
+        {
+            debug_log("Connection timeout.  Disconnecting...\r\n");
+            BLEforceDisconnect();
+            ble_timeout = false;
+        }
         
         
         if (sendStatus)  //triggered from onReceive 's'
@@ -551,6 +561,8 @@ void BLEonConnect()
 
     // for app development. disable if forgotten in prod. version
     nrf_gpio_pin_write(LED_1,LED_ON);
+    
+    ble_timeout_set(CONNECTION_TIMEOUT_MS);
 }
 
 void BLEonDisconnect()
@@ -566,6 +578,8 @@ void BLEonDisconnect()
 
     // for app development. disable if forgotten in prod. version
     nrf_gpio_pin_write(LED_1,LED_OFF);
+    
+    ble_timeout_cancel();
 }
 
 /** Function for handling incoming data from the BLE UART service
@@ -623,4 +637,6 @@ void BLEonReceive(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)
         debug_log("unknown receive!\r\n");
     }
     sleep = false;  //break from sleep
+    
+    ble_timeout_set(CONNECTION_TIMEOUT_MS);
 }

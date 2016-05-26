@@ -50,6 +50,7 @@ class BadgeDelegate(DefaultDelegate):
     gotDateTime = False
     gotHeader = False
     numSamples = 0  # expected number of samples from current chunk
+    #gotEndOfData = False #flag that indicates no more data will be sent
     #badge states, reported from badge
     
     clockSet = False  # whether the badge's time had been set
@@ -69,6 +70,7 @@ class BadgeDelegate(DefaultDelegate):
         self.tempChunk = Chunk((None,None,None,None,None),[])
         self.chunks = [] 
         self.gotStatus = False
+        #self.gotEndOfData = False
         self.dataReady = False
         self.gotHeader = False
         
@@ -80,9 +82,15 @@ class BadgeDelegate(DefaultDelegate):
         elif not self.gotHeader:
             self.tempChunk.reset()
             self.tempChunk.setHeader(struct.unpack('<LHfHB',data)) #time, fraction time (ms), voltage, sample delay
-            self.tempChunk.ts = self._longToDatetime(self.tempChunk.ts) #fix time
-            self.tempChunk.ts = self.tempChunk.ts + datetime.timedelta(milliseconds=self.tempChunk.fract) # add ms
-            self.gotHeader = True
+            if (self.tempChunk.sampleDelay == 0): # got an empty header? done
+                #self.gotEndOfData = True
+                logger.info("Empty header. Done getting data")
+                pass
+            else:
+                self.tempChunk.ts = self._longToDatetime(self.tempChunk.ts)  # fix time
+                self.tempChunk.ts = self.tempChunk.ts + datetime.timedelta(milliseconds=self.tempChunk.fract)  # add ms
+                self.gotHeader = True
+
         else: # just data
             sample_arr = struct.unpack('<%dB' % len(data),data) # Nrfuino bytes are unsigned bytes
             self.tempChunk.addData(sample_arr)
