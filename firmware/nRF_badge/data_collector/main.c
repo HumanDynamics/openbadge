@@ -523,6 +523,13 @@ int main(void)
         //if(dateReceived)  // don't start main cycle unless we have a valid date
         //{
         
+        if(ble_timeout)
+        {
+            debug_log("Connection timeout.  Disconnecting...\r\n");
+            BLEforceDisconnect();
+            ble_timeout = false;
+        }
+        
         
         switch(cycleState)
         {
@@ -715,6 +722,8 @@ void BLEonConnect()
 
     // for app development. disable if forgotten in prod. version
     nrf_gpio_pin_write(LED_1,LED_ON);
+    
+    ble_timeout_set(CONNECTION_TIMEOUT_MS);
 }
 
 void BLEonDisconnect()
@@ -730,6 +739,8 @@ void BLEonDisconnect()
 
     // for app development. disable if forgotten in prod. version
     nrf_gpio_pin_write(LED_1,LED_OFF);
+    
+    ble_timeout_cancel();
 }
 
 // Convert chars to long (expects little endian)
@@ -750,6 +761,8 @@ void BLEonReceive(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)
         pendingCommand = unpackCommand(p_data);
     }
     sleep = false;
+    
+    ble_timeout_set(CONNECTION_TIMEOUT_MS);
     
     
     /*debug_log("Received: ");

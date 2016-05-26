@@ -333,6 +333,11 @@ void BLEresume()
     BLEstartAdvertising();
 }
 
+void BLEforceDisconnect()
+{
+    sd_ble_gap_disconnect(m_conn_handle,BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+}
+
 
 ble_status_t BLEgetStatus()
 {

@@ -164,6 +164,11 @@ bool BLEpause();
 void BLEresume();
 
 /**
+ * Disconnect from server forcefully.
+ */
+void BLEforceDisconnect();
+
+/**
  * Get BLE status.
  *   See ble_status_t enum above
  */

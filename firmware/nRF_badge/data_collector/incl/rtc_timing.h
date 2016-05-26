@@ -12,6 +12,9 @@
 
 volatile bool countdownOver;  //set true when the countdown interrupt triggers
 
+volatile bool ble_timeout;
+#define CONNECTION_TIMEOUT_MS 6000UL
+
 /**
  * rtc event handler function
  * For extending the 24-bit hardware clock, by incrementing a larger number every time it overflows
@@ -30,6 +33,17 @@ void rtc_config(void);
  * NOTE: Maximum countdown time is 130 seconds.
  */
 void countdown_set(unsigned long ms);
+
+
+/**
+ * similar to countdown_set, but used to keep track of BLE connection timeout.
+ */
+void ble_timeout_set(unsigned long ms);
+
+/**
+ * cancel the ble timeout counter
+ */
+void ble_timeout_cancel();
 
 
 /**
