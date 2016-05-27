@@ -35,7 +35,7 @@
 // Ideally this would be the first page free after program space.
 //   May be acquirable from linker script.  But the following value is a (conservative) estimated value.
 #define FIRST_PAGE 200
-#define LAST_PAGE 251  // last available FLASH page - rest is reserved
+#define LAST_PAGE 250  // last available FLASH page - rest is reserved
  
 #define BYTES_PER_PAGE 1024  //1kB pages in nrf51 flash
 #define WORDS_PER_PAGE 256  //4-byte words, 1024/4
@@ -47,13 +47,14 @@
 
 #define CHUNK_SIZE 128  //8 chunks per 1kB page.
 #define WORDS_PER_CHUNK 32 //4-byte words, 128/4
-#define LAST_CHUNK_ADDRESS 257920 // = last page address + offset of last chunk = 251*1024 + 7*128
+#define LAST_CHUNK_ADDRESS ((LAST_PAGE*1024)+(7*CHUNK_SIZE)) // = last page address + offset of last chunk = 251*1024 + 7*128
 // multiply chunk index by 128, count back from last memory address to get address of chunk
 #define ADDRESS_OF_CHUNK(chnk) ( (uint32_t*)(LAST_CHUNK_ADDRESS - (chnk << 7)) )
 // divide chunk index by 8, count back from last page
 #define PAGE_OF_CHUNK(chnk) ((uint8_t)(LAST_PAGE - (chnk >> 3)))
 // this is the last chunk before we enter program memory space
-const int LAST_CHUNK;  // = numberOfPages*8 + 7, defined in flash_handling.c
+//const int LAST_CHUNK;  // = numberOfPages*8 + 7, defined in flash_handling.c
+#define LAST_FLASH_CHUNK (((LAST_PAGE - FIRST_PAGE) << 3) + 7)  // = numberOfPages*8 + 7
 
 #define NO_CHUNK 0xffff
 
@@ -70,9 +71,10 @@ const int LAST_CHUNK;  // = numberOfPages*8 + 7, defined in flash_handling.c
 
 typedef enum storer_mode_t
 {
-    STORER_IDLE,
-    STORER_STORE,
-    STORER_ADVANCE
+    STORER_IDLE,        // storer inactive; nothing to store
+    STORER_STORE,       // waiting to store data (BLE must be disabled first, then data must be written to flash)
+    STORER_ADVANCE,     // advancing to next from/to chunks, possibly erasing a new page
+    STORER_INIT         // performing various initialization tasks
 } storer_mode_t;
 
 
@@ -102,7 +104,6 @@ void printStorerChunk(int chunk);
 void writeWordToFlash(uint32_t* addr, uint32_t val);
 void writeBlockToFlash(uint32_t* to, uint32_t* from, int numWords);
 void erasePageOfFlash(uint8_t page);
-
 
 
 #endif //#ifndef STORER_H

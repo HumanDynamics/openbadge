@@ -183,7 +183,7 @@ int main(void)
     nrf_gpio_cfg_input(BUTTON_1,NRF_GPIO_PIN_PULLUP);  //button
 
 
-    #if defined(TESTER_ENABLE) // tester mode is enabled
+    /*#if defined(TESTER_ENABLE) // tester mode is enabled
         //////////////////////////////////
         nrf_gpio_pin_write(GREEN_LED,LED_ON);
         nrf_gpio_pin_write(RED_LED,LED_ON);
@@ -283,6 +283,7 @@ int main(void)
         
         while(1) {};
     #endif    // end of self tests
+    */
     
     // Initialize
     sd_power_mode_set(NRF_POWER_MODE_LOWPWR);  //set low power sleep mode
@@ -716,7 +717,7 @@ int main(void)
 
 void BLEonConnect()
 {
-    debug_log("Connected\r\n");
+    debug_log("Connected.\r\n");
     sleep = false;
     //disableStorage();  //don't manipulate flash while BLE is busy
 
@@ -728,7 +729,7 @@ void BLEonConnect()
 
 void BLEonDisconnect()
 {
-    debug_log("Disconnected\r\n");
+    debug_log("Disconnected.\r\n");
     sleep = false;
     //streamSamples = false;
     //sendStatus = false;

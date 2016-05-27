@@ -370,6 +370,9 @@ bool BLEwrite(uint8_t* data, uint16_t len)  {
         //Can happen frequently while trying to send a large chunk of data
         return false;
     }
+    
+    ble_timeout_set(CONNECTION_TIMEOUT_MS);  // refresh connection timeout
+    
     return true;
 }
 

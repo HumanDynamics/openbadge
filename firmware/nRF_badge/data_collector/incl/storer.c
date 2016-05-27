@@ -12,27 +12,33 @@ volatile storer_mode_t storerMode = STORER_IDLE;
 
 
 // this is the last chunk before we enter program memory space
-const int LAST_CHUNK = ((int)(LAST_PAGE - FIRST_PAGE) << 3) + 7;  // = numberOfPages*8 + 7
+// const int LAST_CHUNK = ((int)(LAST_PAGE - FIRST_PAGE) << 3) + 7;  // = numberOfPages*8 + 7
 
 
 void storer_init()
 {
+    
+    storerMode = STORER_INIT;
     store.from = 0;
     store.loc = 0;
     store.to = 0;
     
-    storerMode = STORER_IDLE;
+    debug_log("\r\n[STORER INITIALIZATION]\r\n");
     
     unsigned long lastStoredTime = MODERN_TIME;
     
-    for(int c = 0; c <= LAST_CHUNK; c++)
+    for(int c = 0; c <= LAST_FLASH_CHUNK; c++)
     {
         mic_chunk_t* chunkPtr = (mic_chunk_t*)ADDRESS_OF_CHUNK(c);
 
         unsigned long timestamp = (*chunkPtr).timestamp;
         unsigned long chunkCheck = (*chunkPtr).check;
         
-        //debug_log("time: 0x%lX\r\n", timestamp);
+        /*if(timestamp != 0xffffffffUL)
+        {
+            debug_log("c: %d ts: 0x%lX ch: 0x%lX\r\n", c, timestamp, chunkCheck);
+            nrf_delay_ms(20);
+        }*/
         
         if (timestamp != 0xffffffffUL && timestamp > MODERN_TIME)  //is the timestamp possibly valid?
         { 
@@ -45,23 +51,69 @@ void storer_init()
                 }
             }
         }
-        //nrf_delay_ms(50);
+        
     }
     
     if(lastStoredTime == MODERN_TIME)   // no valid chunk found
     {
-        debug_log("No stored chunks found. Starting from chunk 0\r\n");
-        store.to = 0;
+        debug_log("No stored chunks found. Will start from chunk 0.\r\n");
+        store.to = LAST_FLASH_CHUNK;    // will advance to chunk 0 below.
     }
     else
     {
-        debug_log("Last stored chunk: %d at time: 0x%lX\r\n\r\n", store.to, lastStoredTime);
+        debug_log("Last stored chunk: %d at time: 0x%lX\r\n", store.to, lastStoredTime);
         printStorerChunk(store.to);
-        store.to = (store.to < LAST_CHUNK) ? store.to+1 : 0;  // advance to next chunk
     }
     
     
-    uint32_t* chunkAddr = ADDRESS_OF_CHUNK(store.to);
+    debug_log("Initializing FLASH for storage...\r\n");
+    
+    int newChunk = (store.to < LAST_FLASH_CHUNK) ? store.to+1 : 0;  // next chunk in FLASH (first unused chunk)
+    
+    unsigned char oldPage = PAGE_OF_CHUNK(store.to);
+    unsigned char newPage = PAGE_OF_CHUNK(newChunk);
+    
+    if(oldPage != newPage)      // If new chunk is on a new page, we can just erase the whole page.
+    {
+        debug_log("Erasing new page: %d.\r\n",(int)newPage);
+        nrf_delay_ms(20);
+        erasePageOfFlash(newPage);
+        while(flashWorking);
+    }
+    else                        // If new chunk is on same page as old data, we need to erase while preserving the old data
+    {
+        uint32_t* oldChunkAddr = ADDRESS_OF_CHUNK(store.to);   // address of latest stored data
+        uint32_t* pageAddr = ADDRESS_OF_PAGE(newPage); // address of beginning of current page
+        
+        int bytesToErase = (int)(oldChunkAddr) - (int)(pageAddr); // how many bytes of current page we need to erase
+        int chunksToSave = (BYTES_PER_PAGE - bytesToErase)/CHUNK_SIZE;  // how many old chunks are in this page
+        
+        debug_log("Copying old data to RAM. (%d chunks)\r\n", chunksToSave);
+        uint32_t temp[WORDS_PER_PAGE];                            // temporary buffer for page
+        memcpy(temp, pageAddr, BYTES_PER_PAGE);                   // copy old data to buffer
+        debug_log("Clearing unused data in buffer.  (%d bytes)\r\n", bytesToErase);
+        memset(temp, 0xff, bytesToErase);                         // clear unused portion of page in buffer
+        
+        debug_log("Erasing page %d...\r\n",(int)newPage);
+        nrf_delay_ms(20);
+        erasePageOfFlash(newPage);                              // erase page
+        while(flashWorking);
+        
+        debug_log("Restoring old data to FLASH...\r\n");
+        nrf_delay_ms(10);
+        writeBlockToFlash(pageAddr, temp, WORDS_PER_PAGE);      // replace data from buffer
+        while(flashWorking);
+    }
+    
+    store.to = newChunk;
+    debug_log("Ready to store to chunk %d.\r\n",newChunk); 
+    debug_log("[/end storer initialization]\r\n");
+    
+    storerMode = STORER_IDLE;
+    
+    
+    
+    /*uint32_t* chunkAddr = ADDRESS_OF_CHUNK(store.to);
     unsigned char chunkPage = PAGE_OF_CHUNK(store.to);
     uint32_t* chunkPageAddr = ADDRESS_OF_PAGE(chunkPage);  //start address of _chunk's page
     
@@ -79,7 +131,7 @@ void storer_init()
     else        // If we're trying to write to the beginning of a page, we can just erase the whole page.
     {
         erasePageOfFlash(chunkPage);  //erase page
-    }
+    }*/
     
     // Chunk store.to is now ready to have data stored to it.
     
@@ -128,7 +180,7 @@ bool updateStorer()
                     {
                         debug_log("STORER: writing RAM chunk %d to FLASH chunk %d\r\n",store.from,store.to);
                         //printCollectorChunk(store.from);
-                        writeBlockToFlash(ADDRESS_OF_CHUNK(store.from),micBuffer[store.from].wordBuf,WORDS_PER_CHUNK);
+                        writeBlockToFlash(ADDRESS_OF_CHUNK(store.to),micBuffer[store.from].wordBuf,WORDS_PER_CHUNK);
                     }
                 }
                 break;
@@ -137,7 +189,7 @@ bool updateStorer()
                 ;  // can't have declaration directly after switch case label
                 //printStorerChunk(store.to);
                 unsigned char oldPage = PAGE_OF_CHUNK(store.to);          // get page of just finished chunk
-                int newChunk = (store.to < LAST_CHUNK) ? store.to+1 : 0;     // advance to next chunk
+                int newChunk = (store.to < LAST_FLASH_CHUNK) ? store.to+1 : 0;     // advance to next chunk
                 unsigned char newPage = PAGE_OF_CHUNK(newChunk);          // get page of next chunk
                 if(oldPage != newPage)  // Did we advance to a new page?
                 {
@@ -190,9 +242,12 @@ void storer_on_sys_evt(uint32_t sys_evt)
                     debug_log("STORER: erased page %d\r\n",(int)PAGE_OF_CHUNK(store.to));
                     storerMode = STORER_IDLE;       // Finished erasing new page.  Idle till new chunk ready.
                     break;
-                case STORER_IDLE:
+                case STORER_INIT:
+                    debug_log("  flash operation complete.\r\n");
                     break;
+                case STORER_IDLE:
                 default:
+                    debug_log("ERR: unexpected flash operation success?\r\n");
                     break;
             }
             break;
@@ -204,7 +259,7 @@ void storer_on_sys_evt(uint32_t sys_evt)
 
 void printStorerChunk(int chunk)
 {
-    if(chunk > LAST_CHUNK || chunk < 0)  // invalid chunk
+    if(chunk > LAST_FLASH_CHUNK || chunk < 0)  // invalid chunk
     {
         debug_log("ERR: Invalid storer chunk to print\r\n");
         return;
@@ -212,7 +267,7 @@ void printStorerChunk(int chunk)
     
     mic_chunk_t* chunkPtr = (mic_chunk_t*)ADDRESS_OF_CHUNK(chunk);
     
-    debug_log("FLASH chunk %d:\r\n",chunk);
+    debug_log("-FLASH chunk %d:\r\n",chunk);
     debug_log("ts: 0x%lX - ms: %hd - ba: %d -- ch: 0x%lX",(*chunkPtr).timestamp, (*chunkPtr).msTimestamp,
                                                           (int)((*chunkPtr).battery*1000), (*chunkPtr).check );
     nrf_delay_ms(3);

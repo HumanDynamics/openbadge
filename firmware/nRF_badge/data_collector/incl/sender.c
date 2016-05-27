@@ -61,7 +61,7 @@ void sender_init()
     
     unsigned long earliestUnsentTime = MODERN_TIME;
     
-    for(int c = 0; c <= LAST_CHUNK; c++)
+    for(int c = 0; c <= LAST_FLASH_CHUNK; c++)
     {
         mic_chunk_t* chunkPtr = (mic_chunk_t*)ADDRESS_OF_CHUNK(c);
 
@@ -199,9 +199,9 @@ bool updateSender()
                     int invalid = 0;  // counts how many invalid chunks we see in a row, when we encounter any.
                     
                     // look through FLASH, from latest stored chunk (one chunk before store.to)
-                    int latestFLASHchunk = (store.to > 0) ? store.to-1 : LAST_CHUNK;
+                    int latestFLASHchunk = (store.to > 0) ? store.to-1 : LAST_FLASH_CHUNK;
                     // advance through all FLASH chunks except current storing chunk
-                    for(int c=latestFLASHchunk; c != store.to; c = (c > 0) ? c-1 : LAST_CHUNK)
+                    for(int c=latestFLASHchunk; c != store.to; c = (c > 0) ? c-1 : LAST_FLASH_CHUNK)
                     {
                         mic_chunk_t* chunkPtr = (mic_chunk_t*)ADDRESS_OF_CHUNK(c);
                         unsigned long timestamp = (*chunkPtr).timestamp;
@@ -285,7 +285,7 @@ bool updateSender()
                                             do
                                             {
                                                 // increment to next FLASH chunk
-                                                send.from = (send.from < LAST_CHUNK) ? send.from+1 : 0;
+                                                send.from = (send.from < LAST_FLASH_CHUNK) ? send.from+1 : 0;
                                                 
                                                 mic_chunk_t* chunkPtr = (mic_chunk_t*)ADDRESS_OF_CHUNK(send.from);
                                                 unsigned long timestamp = (*chunkPtr).timestamp;
