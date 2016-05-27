@@ -127,7 +127,7 @@ function BadgeDialogue(badge) {
     Call this function between sessions to reset the state machine
      */
     this.resetState = function () {
-        this.status = this.StatusEnum.STATUS
+        this.status = this.StatusEnum.STATUS;
     }.bind(this);
 
     /**
@@ -145,7 +145,8 @@ function BadgeDialogue(badge) {
 
             //Ask for data
             this.status = this.StatusEnum.HEADER; // expecting a header next
-            this.sendDataRequest(); //request data
+            var requestTs = this.getLastSeenChunkTs();
+            this.sendDataRequest(requestTs.seconds,requestTs.ms); //request data
 
         } else if (this.status == this.StatusEnum.HEADER) {
             this.log("Received a header: ");
@@ -196,25 +197,20 @@ function BadgeDialogue(badge) {
     this.sendStatusRequest = function() {
         //Set current time
         var d = new Date();
-        var seconds = Math.round(d.getTime()/1000);
-        var ms = d.getTime() % 1000;
-        this.log('Sending status request with epoch_seconds: ' + seconds+ ', ms: '+ms);
+        var now = this.nowAsSecAndMs();
+        this.log('Sending status request with epoch_seconds: ' + now.seconds+ ', ms: '+now.ms);
 
-        var timeString = struct.Pack('<cLH',['s',seconds,ms]);
+        var timeString = struct.Pack('<cLH',['s',now.seconds,now.ms]);
         this.badge.sendString(timeString);
     }.bind(this);
 
     /**
     *send request for data since given date
     */
-    this.sendDataRequest = function(ts,ts_ms) {
-        //Set current time
-        var d = new Date();
-        var seconds = Math.round(d.getTime()/1000)-60;
-        var ms = d.getTime() % 1000;
-        this.log('Sending data request since epoch_seconds: ' + seconds+ ', ms: '+ms);
+    this.sendDataRequest = function(ts_seconds,ts_ms) {
+        this.log('Requesting data since epoch_seconds: ' + ts_seconds+ ', ms: '+ts_ms);
 
-        var timeString = struct.Pack('<cLH',['r',seconds,ms]);
+        var timeString = struct.Pack('<cLH',['r',ts_seconds,ts_ms]);
         this.badge.sendString(timeString);
     }.bind(this);
 
@@ -224,7 +220,28 @@ function BadgeDialogue(badge) {
     this.getChunks = function () {
         return this.chunks;
     }.bind(this);
-    
+
+    this.nowAsSecAndMs = function () {
+        var d = new Date();
+        var seconds = Math.floor(d.getTime()/1000);
+        var ms = d.getTime() % 1000;
+        return {'seconds':seconds, 'ms':ms};
+    }
+
+    /*
+    Returns the date of the last seen chunk (or a fake date, if no chunks)
+     */
+    this.getLastSeenChunkTs = function () {
+        if (this.chunks.length > 0) {
+            this.log("Found chunk!");
+            var c = this.chunks[this.chunks.length-1];
+            return {'seconds':c.ts, 'ms':c.ts_ms};
+        } else {
+            this.log("No stored chunks. Using default date.");
+            var now = this.nowAsSecAndMs();
+            return {'seconds':now.seconds - 60, 'ms':now.ms};
+        }
+    }
 }
 
 exports.BadgeDialogue = module.exports = {
