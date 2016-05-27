@@ -56,7 +56,7 @@ function DataAnalyzer() {
         if (samples.length > 0) {
             var lastTimestamp = samples[samples.length - 1].timestamp;
             if (timestamp <= lastTimestamp) {
-                console.log("Skipping existing sample:", dateToString(timestamp));
+                console.log("Skipping existing sample: "+timestamp+" "+dateToString(timestamp));
                 return false;
             }
         }

@@ -145,7 +145,7 @@ function BadgeDialogue(badge) {
 
             //Ask for data
             this.status = this.StatusEnum.HEADER; // expecting a header next
-            this.badge.sendString('d'); //request data
+            this.sendDataRequest(); //request data
 
         } else if (this.status == this.StatusEnum.HEADER) {
             this.log("Received a header: ");
@@ -153,7 +153,7 @@ function BadgeDialogue(badge) {
 
             if (header[2] > 1 && header[2] < 4) {
                 //valid header?, voltage between 1 and 4
-                this.log("&nbsp Timestamp (no ms)" + header[0]);
+                this.log("&nbsp Timestamp " + header[0] + "."+header[1]);
                 this.log("&nbsp Voltage " + header[2]);
 
                 this.status = this.StatusEnum.DATA; // expecting a data buffer next
@@ -201,6 +201,20 @@ function BadgeDialogue(badge) {
         this.log('Sending status request with epoch_seconds: ' + seconds+ ', ms: '+ms);
 
         var timeString = struct.Pack('<cLH',['s',seconds,ms]);
+        this.badge.sendString(timeString);
+    }.bind(this);
+
+    /**
+    *send request for data since given date
+    */
+    this.sendDataRequest = function(ts,ts_ms) {
+        //Set current time
+        var d = new Date();
+        var seconds = Math.round(d.getTime()/1000)-60;
+        var ms = d.getTime() % 1000;
+        this.log('Sending data request since epoch_seconds: ' + seconds+ ', ms: '+ms);
+
+        var timeString = struct.Pack('<cLH',['r',seconds,ms]);
         this.badge.sendString(timeString);
     }.bind(this);
 
