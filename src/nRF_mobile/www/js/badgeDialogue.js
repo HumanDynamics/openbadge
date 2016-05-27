@@ -1,23 +1,28 @@
 function Chunk() {
     //Represents a chunk
-    var maxSamples = 116;
+    var maxSamples = 114;
 
-    this.voltage = -1;
     this.ts = -1;
+    this.ts_ms = 0;
+    this.voltage = -1;
     this.sampleDelay = -1;
+    this.numSamples = -1;
     this.samples = [];
 
     /**
     *Sets the header of the chunk
-    *@param voltage the voltage at the time the chunk was recorded
     *@param the timestamp of the chunk
-    *@param the sampleDelay of the chunl
-    *
+    *@param the fraction (ms) of timestamp
+    *@param voltage the voltage at the time the chunk was recorded
+    *@param the sampleDelay of the chunk
+    *@param the number of samples in this chunk
     */
-    this.setHeader= function(voltage, ts, sampleDelay) {
-        this.voltage = voltage;
+        this.setHeader= function(ts, ts_ms, voltage, sampleDelay, numSamples) {
         this.ts = ts;
+        this.ts_ms = ts_ms;
+        this.voltage = voltage;
         this.sampleDelay = sampleDelay;
+        this.numSamples = numSamples;
     }.bind(this);
 
     /*
@@ -52,10 +57,11 @@ function Chunk() {
     *@param newData the byte array that represents more samples
     */
     this.addSamples = function(newData) {
-
-        //this.samples += newData;
         this.samples = this.samples.concat(newData);
-        var sampleLength = this.samples.length;
+        if (this.samples.length > this.numSamples) {
+            // error
+            console.error("Too many samples in chunk!",sampleLength);
+        }
 
     }.bind(this);
 
@@ -63,24 +69,29 @@ function Chunk() {
     *resets a chunk to defaults settngs
     */
     this.reset = function () {
-        this.voltage = -1;
         this.ts = -1;
+        this.ts_ms = 0;
+        this.voltage = -1;
         this.sampleDelay = -1;
+        this.numSamples = -1;
         this.samples = [];
     }.bind(this);
+
 
     /*
     *@return whether or not the chunk is full
     */
     this.completed = function() {
-        return (this.samples.length >= maxSamples);
+        return (this.samples.length >= this.numSamples);
     }.bind(this);
 
     this.toDict = function () {
         return {
             voltage:this.voltage,
             timestamp:this.ts,
+            timestamp_ms:this.ts_ms,
             sampleDelay:this.sampleDelay,
+            numSamples:this.numSamples,
             samples:this.samples
         };
     }.bind(this);
@@ -112,6 +123,13 @@ function BadgeDialogue(badge) {
         this.badge.log(str);
     }.bind(this);
 
+    /*
+    Call this function between sessions to reset the state machine
+     */
+    this.resetState = function () {
+        this.status = this.StatusEnum.STATUS
+    }.bind(this);
+
     /**
     * This function must be called whenever data was sent from the badge
     * data must be a string
@@ -121,43 +139,28 @@ function BadgeDialogue(badge) {
     * Chunks stored as chunk objects in chunk array, can be accessed later by getChunks()
     */
     this.onData = function (data) {
-        if (data.length == 1) {
-            //if it is length one it must be a status update
-            this.status = this.StatusEnum.STATUS;
-        }
+        if (this.status == this.StatusEnum.STATUS) {
+            var status = struct.Unpack('<BBBLHf',data); //clockSet,dataReady,recording,timestamp_sec,timestamp_ms,voltage
+            this.log("Received a status update. Voltage: "+status[3]+' '+status[4]+' '+status[5]);
 
-        if (this.status == this.StatusEnum.STATUS) { // || data.length() == 1) { //must overide if data is of length 1
-            this.log("Received a status update: "+data);
-            if (data == 'n') {
-                //need date
-                this.syncBadge();
-            } else if (data == 'd') {
-                this.log("Data available, extracting: ");
-                //data ready
-                this.status = this.StatusEnum.HEADER; // expecting a header next
-                this.badge.sendString('d'); //request data
-            } else if (data == 's') {
-                this.log("Badge Synced but no new data. Disconnecting.");
-                //no new data, do nothing for now
-                badge.close();
-            } else {
-                this.log("Unknown status: " + data);
-            }
+            //Ask for data
+            this.status = this.StatusEnum.HEADER; // expecting a header next
+            this.badge.sendString('d'); //request data
 
         } else if (this.status == this.StatusEnum.HEADER) {
             this.log("Received a header: ");
-            var header = struct.Unpack('<Lfh',data);
+            var header = struct.Unpack('<LHfHB',data); //time, fraction time (ms), voltage, sample delay, number of samples
 
-            if (header[1] > 2 && header[1] < 4) {
-                //valid header?, voltage between 2 and 4
-                this.log("&nbsp Timestamp " + header[0]);
-                this.log("&nbsp Voltage " + header[1]);
+            if (header[2] > 1 && header[2] < 4) {
+                //valid header?, voltage between 1 and 4
+                this.log("&nbsp Timestamp (no ms)" + header[0]);
+                this.log("&nbsp Voltage " + header[2]);
 
                 this.status = this.StatusEnum.DATA; // expecting a data buffer next
                 this.dataPackets = 0;
 
                 this.workingChunk = new Chunk();
-                this.workingChunk.setHeader(header[1], header[0], header[2]);
+                this.workingChunk.setHeader(header[0], header[1], header[2], header[3], header[4]);
             } else if (header[1] == 0) {
                 this.log("End of data received, disconnecting");
                 badge.close();
@@ -166,19 +169,9 @@ function BadgeDialogue(badge) {
             }
         } else if (this.status == this.StatusEnum.DATA) {
             this.dataPackets++;
-
-
-            //attempt to parse as a header for debug purposes
-            var header = struct.Unpack('<Lfh',data);
-            if (header[1] > 2 && header[1] < 4) {
-                //valid header?, voltage between 2 and 4
-                this.log("probably missed a header");
-            }
-
             //parse as a datapacket
             var sample_arr = struct.Unpack("<" + data.length + "B", data);
             this.workingChunk.addSamples(sample_arr);
-
 
             if (this.workingChunk.completed()) {
                 //we finished a chunk
@@ -198,24 +191,17 @@ function BadgeDialogue(badge) {
     }.bind(this);
 
     /**
-    *Asks the badge for its status
+    *updates the given badge with correct time and asks for status
     */
-    this.checkStatus = function() {
-        this.badge.sendString('s');
-    }.bind(this);
-
-    /**
-    *Internal to class
-    *updates the given badge with correct time
-    */
-    this.syncBadge = function() {
-        //we must update the badge with the appropriate time
+    this.sendStatusRequest = function() {
+        //Set current time
         var d = new Date();
         var seconds = Math.round(d.getTime()/1000);
-        this.log('Updating with epoch_seconds: ' + seconds);
+        var ms = d.getTime() % 1000;
+        this.log('Sending status request with epoch_seconds: ' + seconds+ ', ms: '+ms);
 
-        var timeString = struct.Pack('<L',[seconds]);
-        this.badge.sendStringAndClose(timeString);
+        var timeString = struct.Pack('<cLH',['s',seconds,ms]);
+        this.badge.sendString(timeString);
     }.bind(this);
 
     /**

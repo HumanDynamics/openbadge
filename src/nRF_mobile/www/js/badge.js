@@ -134,7 +134,8 @@ function Badge(address) {
                         }
 
 						// start the dialog
-						badge.sendStatusRequest();
+                        badge.badgeDialogue.resetState();
+						badge.badgeDialogue.sendStatusRequest();
 					} else {
                         badge.log("Unexpected Subscribe Status");
 					}
@@ -190,14 +191,6 @@ function Badge(address) {
                 badge.disconnectThenClose();
             }, {address: this.address});
     }.bind(this);
-
-    // Sends a request for status from the badge
-	this.sendStatusRequest = function() {
-		var address = this.address;
-        this.log("Requesting status: ");
-		var s = "s"; //status
-		this.sendString(s);
-	}.bind(this);
 
     this.close = function() {
 

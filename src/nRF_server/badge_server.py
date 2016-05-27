@@ -127,7 +127,7 @@ def dialogue(addr=""):
 			#	bdg.NrfReadWrite.write("t")  # ask for time
 			#	bdg.waitForNotifications(1.0)
 
-			logger.info("Badge datetime: {},{}".format(bdg.dlg.timestamp_sec,bdg.dlg.timestamp_ms))
+			logger.info("Badge datetime: {},{}, Voltage: {}".format(bdg.dlg.timestamp_sec,bdg.dlg.timestamp_ms,bdg.dlg.voltage))
 
 		'''
 		# data request using the "d" command
