@@ -52,7 +52,6 @@
 #include "analog.h"     //analog inputs, battery reading
 #include "rtc_timing.h"  //support millis(), micros(), countdown timer interrupts
 #include "ble_setup.h"  //stuff relating to BLE initialization/configuration
-//#include "internal_flash.h"  //for managing storage and sending from internal flash
 #include "external_flash.h"  //for interfacing to external SPI flash
 //#include "scanning.h"       //for performing scans and storing scan data
 //#include "self_test.h"   // for built-in tests
@@ -70,65 +69,14 @@ int cycleState = SLEEP;     // to keep track of state of main loop
 bool badgeActive = false;   // Otherwise, the badge is inactive and can enter indefinite sleep.
 
 
-//============================= I/O-related stuff ======================================
-//======================================================================================
-
-
-// Setup expected "zero" for the mic value.
-// analog ref is mic VCC, mic is 1/2 VCC biased, input is 1/3 scaled, so zero value is approx. (1023/2)/3 ~= 170
-//const int zeroValue = 166;
-
-/*
-//============================ sound-related stuff =====================================
-//======================================================================================
-//const unsigned long SAMPLE_WINDOW = 100; // how long we should sample
-//const unsigned long SAMPLE_PERIOD = 250;   // time between samples - must exceed SAMPLE_WINDOW
-//unsigned int readingsCount = 0;  //number of mic readings taken
-//unsigned long readingsSum = 0;  //sum of mic readings taken      } for computing average
-//unsigned long sampleStart = 0;  //beginning of sample period
-//bool storedSample = false;  //whether we've stored the sample from the current sampling period
-*/
-
-/*
-//============================ BLE/data-related stuff ==================================
-//======================================================================================
-volatile bool BLEconnected = false;  //whether we're currently connected
-volatile bool sendStatus = false;  //flag signaling that the server asked for status
-volatile bool streamSamples = false;  //flag signaling that the server asked for stream of samples
-volatile bool sendTime = false;  //flag signaling that the server asked for time
-*/
-
 //============================ time-related stuff ======================================
 //======================================================================================
-//volatile int dateReceived = false; // signifies whether or not the badge has received a date
 
 volatile bool sleep = false;  //whether we should sleep (so actions like data sending can override sleep)
 
 
 //=========================== Global function definitions ==================================
 //==========================================================================================
-/*
-// Reading mic values
-void addMicReading() {
-  int sample = analogRead(MIC_PIN);
-  readingsSum += abs(sample - zeroValue);
-  readingsCount++;
-}
-
-// read and store data samples
-void sampleData()  {
-  unsigned int micValue = readingsSum / readingsCount;
-  unsigned char reading = micValue <= 255 ? micValue : 255;  //clip reading
-  readingsCount = 0;
-  readingsSum = 0;
-  if (dateReceived)  {
-    storeByte(reading,now());
-  }
-  if (streamSamples) {
-    debug_log("Sending %d\r\n",reading);
-    BLEwriteChar(reading);
-  }
-}*/
 
 void goToSleep(long ms)  {
     if(ms == 0)
@@ -293,51 +241,10 @@ int main(void)
     adc_config();
     rtc_config();
     spi_init();
-
-    
-    /*printStorerChunk(0);
-    printStorerChunk(1);
-    printStorerChunk(2);
-    printStorerChunk(3);*/
     
     collector_init();
     storer_init();
     sender_init();
-    
-
-    
-    /*   ======================== Test functionality of BLE pausing
-    nrf_delay_ms(1000);
-    
-    bool pause = BLEpause();
-    if(pause == false)
-    {
-        debug_log("Advertising on.  pause requested.\r\n");
-    }
-    nrf_delay_ms(500);
-    ble_status_t state = BLEgetStatus();
-    if(state == BLE_ADVERTISING)
-    {
-        debug_log("Advertising still on.\r\n");
-    }
-    while(BLEgetStatus() != BLE_INACTIVE);
-    nrf_delay_ms(4000);
-    pause = BLEpause();
-    state = BLEgetStatus();
-    if(pause == false)
-    {
-        debug_log("Paused advertising.\r\n");
-    }
-    if(state == BLE_ADVERTISING)
-    {
-        debug_log("Advertising still on? ?\r\n");
-    }
-    else
-    {
-        debug_log("cool.  restarting advertising.\r\n");
-        BLEresume();
-    }
-    */
     
     // Blink once on start
     nrf_gpio_pin_write(LED_1,LED_ON);
@@ -349,9 +256,8 @@ int main(void)
      * Reset tracker
      * If the board resets for some reason, an LED will blink.
      * To intentionally reset the board, the button must be held on start.
-     */
      
-    /*if(nrf_gpio_pin_read(BUTTON_1) != 0)
+    if(nrf_gpio_pin_read(BUTTON_1) != 0)
     {
         nrf_gpio_pin_write(LED_1,LED_ON);
         nrf_delay_ms(1000);
@@ -395,136 +301,15 @@ int main(void)
         }   
     }*/
 
-    //setTime(0xdead0000UL);
-    
-    
-    
-
-    
-    
-    
-
-    //send.samplePeriod = SAMPLE_PERIOD;  //kludgey, give Flash access to SAMPLE_PERIOD
-
-    //=========================== Resume after reset ================================
-    /**
-     * We need to find where we left off - what was the last chunk we wrote, and the last sent?
-     *   If a chunk is completed but not sent, the last 4 bytes match the first 4 - the timestamp
-     *   If a chunk has been sent, the last 4 bytes are all 0
-     *   Otherwise, a chunk is not valid (probably reset midway through chunk)
-     */
-    nrf_gpio_pin_write(LED_2,LED_ON);  //red LED says we're intializing flash
-    debug_log("\n\n\nInitializing...\r\n");
-
-    /*
-    // Find the latest stored chunk, to start storing after it
-    unsigned long lastStoredTime = MODERN_TIME;  //ignore obviously false timestamps from way in past
-    int lastStoredChunk = 0;
-    // and the earliest unsent chunk, to start sending from it
-    unsigned long earliestUnsentTime = 0xffffffffUL;  //start at any timestamp found
-    int earliestUnsentChunk = 0;
-
-    // Look through whole flash for those two chunks
-    for (int c = 0; c <= lastChunk; c++)  
-    {
-        uint32_t* addr = ADDRESS_OF_CHUNK(c);  //address of chunk
-        uint32_t timestamp = *addr;  //timestamp of chunk
-        uint32_t chunkCheck = *(addr + WORDS_PER_CHUNK - 1);  //last word of chunk, the check
-
-        if (timestamp != 0xffffffffUL && timestamp > MODERN_TIME)  //is the timestamp possibly valid?
-        { 
-            if (timestamp == chunkCheck || chunkCheck == 0)  //is it a completely stored chunk?
-            { 
-                if (timestamp > lastStoredTime)  //is it later than the latest stored one found so far?
-                { 
-                    lastStoredChunk = c; //keep track of latest stored chunk
-                    lastStoredTime = timestamp;
-                }
-                if (chunkCheck != 0)  //if it's completely stored, is it also unsent?
-                { 
-                    if (timestamp < earliestUnsentTime)  //is it earlier than the earliest unsent one found so far?
-                    {  
-                        earliestUnsentChunk = c; //keep track of earliest unsent chunk
-                        earliestUnsentTime = timestamp;
-                    }
-                }
-            }  //end of if("completetely stored")
-        }  //end of if("timestamp is valid")
-    }  //end of for loop
-    
-    
-    debug_log("Last stored chunk: %d at time: %u\r\n", lastStoredChunk, (unsigned int)lastStoredTime);
-    //Serial.printf("%d:%d:%d %d-%d-%d\n", hour(), minute(), second(), month(), day(), year());
-    
-    nrf_delay_ms(100);
-
-    initStorageFromChunk(lastStoredChunk);  //initialize storage handler
-
-
-    if (earliestUnsentTime == 0xffffffffUL)  
-    { //no completely stored, unsent chunks found
-        debug_log("No complete unsent chunks\r\n");
-        earliestUnsentChunk = lastStoredChunk; //start where we're starting storage
-    }
-    else  
-    {  //toSend is the earliest unsent chunk
-        debug_log("Earliest unsent chunk: %d from time: %u\r\n", earliestUnsentChunk, (unsigned int)earliestUnsentTime);
-        //Serial.printf("%d:%d:%d %d-%d-%d\n", hour(), minute(), second(), month(), day(), year());
-    }
-
-    initSendingFromChunk(earliestUnsentChunk);    
-    */
-
-    nrf_gpio_pin_write(LED_2,LED_OFF);  //done initializing
-
-    //=========================== End of resume after reset handler ====================
-
-
     debug_log("Done with setup().  Entering main loop.\r\n");
     
     BLEstartAdvertising();
     
-    //setTime(0xdead0000UL);
-    //dateReceived = true;
-    
     cycleStart = millis();
-    
     
     // Enter main loop
     for (;;)  {
         //================ Sampling/Sleep handler ================
-        //sleep = true;  //default to sleeping at the end of loop()
-        
-        /*if (dateReceived)  
-        {  //don't start sampling unless we have valid date
-            if (millis() - sampleStart <= SAMPLE_WINDOW)  // are we within the sampling window
-            {  
-                addMicReading();  //add to total, increment count
-                sleep = false;  //don't sleep, we're sampling
-            }
-            else if (millis() - sampleStart >= SAMPLE_PERIOD)  // if not, have we completed the sleep cycle
-            {  
-                sampleStart = millis();  //mark start of sample period, resetting cycle
-                storedSample = false;
-                sleep = false;  //we're done sleeping
-            }
-            else if(storedSample == false)  // are we in sleep period, but haven't yet stored the sample
-            {  
-                sampleData();  //add average of readings to sample array
-                storedSample = true;  //sample has been stored
-                sleep = false;  //don't sleep, store.
-            }
-            else  // otherwise we should be sleeping
-            {  
-                sleep = true;
-            }
-        }
-        else  {
-            sampleStart = millis();  //if not synced, we still need to set this to sleep properly.
-        }*/
-        
-        //if(dateReceived)  // don't start main cycle unless we have a valid date
-        //{
         
         if(ble_timeout)
         {
@@ -533,14 +318,11 @@ int main(void)
             ble_timeout = false;
         }
         
-        
         switch(cycleState)
         {
             
             
             case SAMPLE:
-                //if(dateReceived)
-                //{
                 if(isCollecting)
                 {
                     badgeActive |= true;
@@ -559,7 +341,6 @@ int main(void)
                 {
                     cycleState = STORE;
                 }
-                //}
                 break;
                 
             case STORE:
@@ -618,100 +399,7 @@ int main(void)
             default:
                 break;
         }
-        //}
-        /*  required?
-        else  {
-            cycleStart = millis();
-        }
-        */
-        
-        /*if (sendStatus)  //triggered from onReceive 's'
-        {  
-            unsigned char status = 'n';  //not synced
-            if(dateReceived)
-            {
-                if(unsentChunkReady())  {
-                    status = 'd';  //synced, and data ready to be sent
-                }
-                else  {
-                    status = 's';  //synced, but no data ready yet
-                }
-            }
-            
-            if(BLEwriteChar(status))  //try to send status
-            {
-                debug_log("Sent Status - %c\r\n",status);
-                sendStatus = false;
-            }
-            else  {
-                sleep = false;  //if not able to send status, don't sleep yet.
-            }
-        }
 
-        if (sendTime)  //triggered from onReceive 't'
-        {  
-            unsigned long timestamp = now();
-            char dateAsChars[4];
-            long2Chars(timestamp, dateAsChars);  //get date from flash
-
-            if (BLEwrite((unsigned char*) dateAsChars, sizeof(dateAsChars)))
-            {
-                debug_log("Time sent - %lu\r\n",timestamp);  
-                sendTime = false;
-            }
-            else  {
-                sleep = false;  //if not able to send status, don't sleep yet.
-            }
-        }
-
-
-        //================= Flash storage/sending handler ================
-        
-        //do flash storage stuff (ensure storage buffer gets stored to flash)
-        if (updateStorage())  
-        { 
-            sleep = false;  //don't sleep if there is buffered data to store to flash
-        }
-
-        //do BLE sending stuff (send data if sending enabled)
-        if (updateSending())  
-        { 
-            sleep = false;  //don't sleep if there's data to be sent
-        }
-        
-        updateScanning();
-
-*/
-        //============== Sleep, if we're supposed to =================
-        /*if (!dateReceived)  {
-            goToSleep(-1);  //sleep infinitely till interrupt
-        }
-        else if (sleep)  //if not synced, just sleep.
-        {
-            unsigned long elapsed = millis() - sampleStart;
-            if (elapsed < SAMPLE_PERIOD)  
-            {  //avoid wraparound in delay time calculation
-                //debug_log("Sleeping...\r\n");
-                unsigned long sleepDuration = SAMPLE_PERIOD - elapsed;
-                //unsigned long sleepStart = millis();
-                goToSleep(sleepDuration);
-            }
-        }*/
-        /*
-        if (!dateReceived)  {
-            goToSleep(-1);  //sleep infinitely till interrupt
-        }
-        else if (cycleState == SLEEP)  //if not synced, just sleep.
-        {
-            unsigned long elapsed = millis() - cycleStart;
-            if (elapsed < SAMPLE_PERIOD)  
-            {  //avoid wraparound in delay time calculation
-                //debug_log("Sleeping...\r\n");
-                unsigned long sleepDuration = SAMPLE_PERIOD - elapsed;
-                //unsigned long sleepStart = millis();
-                goToSleep(sleepDuration);
-            }
-        }*/
     }
 }
 
@@ -721,7 +409,6 @@ void BLEonConnect()
 {
     debug_log("Connected.\r\n");
     sleep = false;
-    //disableStorage();  //don't manipulate flash while BLE is busy
 
     // for app development. disable if forgotten in prod. version
     nrf_gpio_pin_write(LED_1,LED_ON);
@@ -733,12 +420,6 @@ void BLEonDisconnect()
 {
     debug_log("Disconnected.\r\n");
     sleep = false;
-    //streamSamples = false;
-    //sendStatus = false;
-    //disableSending();  // stop sending
-    /*if(getScanState() == SCAN_IDLE)  {
-        //enableStorage();  //continue storage operations now that connection is ended, if scans aren't active
-    }*/
 
     // for app development. disable if forgotten in prod. version
     nrf_gpio_pin_write(LED_1,LED_OFF);
@@ -766,46 +447,6 @@ void BLEonReceive(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)
     sleep = false;
     
     ble_timeout_set(CONNECTION_TIMEOUT_MS);
-    
-    
-    /*debug_log("Received: ");
-    if (length > 2)  
-    {  //is it long enough to be a timestamp.
-        debug_log("sync timestamp.\r\n");
-        unsigned long f = readLong(p_data);
-        setTime(f);
-        //Serial.printf("%d:%d:%d %d-%d-%d\n", hour(), minute(), second(), month(), day(), year());
-        //disableSending();
-        dateReceived = true;
-    }
-    else if (p_data[0] == 's')  
-    {
-        debug_log("status request.\r\n");
-        sendStatus = true;
-    }
-    else if (p_data[0] == 't')  
-    {
-        debug_log("time request.\r\n");
-        sendTime = true;
-    }
-    else if (p_data[0] == 'd')  
-    {
-        debug_log("data request.\r\n");
-        //if (dateReceived && unsentChunkReady())  
-        //{
-        //    enableSending();
-        //}
-    }
-    else if (p_data[0] == 'f')  
-    {
-        debug_log("samples stream request.\r\n");
-        streamSamples = true;
-    }
-    else  
-    {
-        debug_log("unknown receive!\r\n");
-    }
-    sleep = false;  //break from sleep*/
 }
 
 
