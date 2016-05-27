@@ -28,7 +28,7 @@ void collector_init()
     sampleStart = 0;
     sampleStartms = 0;
     
-    collecting = false;
+    isCollecting = false;
 }
 
 
@@ -94,32 +94,41 @@ void collectSample()  {
 
 void startCollector()
 {   
-    collecting = true;
-    debug_log("Collector started\r\n");
+    if(!isCollecting)
+    {
+        isCollecting = true;
+        debug_log("Collector started\r\n");
+    }
 }
 
 void stopCollector()
 {
-    // Reset internal collector variables
-    takingReadings = false;
-    readingsSum = 0;
-    readingsCount = 0;
+    if(isCollecting)
+    {
+        // Reset internal collector variables
+        takingReadings = false;
+        readingsSum = 0;
+        readingsCount = 0;
 
-    // Current chunk may be incomplete, but if collecting restarts, it should resume from a new chunk in RAM buffer.
-    micBuffer[collect.to].check = CHECK_TRUNC;          // mark chunk as truncated; it's not full, but we're done writing in it
-    micBuffer[collect.to].samples[SAMPLES_PER_CHUNK-1] = collect.loc;   // store the number of samples in this chunk
+        // Current chunk may be incomplete, but if collecting restarts, it should resume from a new chunk in RAM buffer.
+
+        micBuffer[collect.to].check = CHECK_TRUNC;          // mark chunk as truncated; it's not full, but we're done writing in it
+        micBuffer[collect.to].samples[SAMPLES_PER_CHUNK-1] = collect.loc;   // store the number of samples in this chunk
     
-    // Advance to next chunk in buffer (will resume collecting from a new chunk)
-    collect.to = (collect.to < LAST_RAM_CHUNK) ? collect.to+1 : 0;
-    collect.loc = 0;
+        debug_log("Collector stopped.  Truncated RAM chunk %d.\r\n",collect.to);
     
-    collecting = false;   // Disable collector
+        // Advance to next chunk in buffer (will resume collecting from a new chunk)
+        collect.to = (collect.to < LAST_RAM_CHUNK) ? collect.to+1 : 0;
+        collect.loc = 0;
+    
+        isCollecting = false;   // Disable collector
+    }
 }
 
 
 float getBatteryVoltage()
 {
-    if(0)  // COLLECTING
+    if(isCollecting)  // if collector is active, just return the battery level of current chunk (no reason to do another reading)
     {
         return micBuffer[collect.to].battery;
     }

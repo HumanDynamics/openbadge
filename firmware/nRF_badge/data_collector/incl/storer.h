@@ -34,8 +34,8 @@
 
 // Ideally this would be the first page free after program space.
 //   May be acquirable from linker script.  But the following value is a (conservative) estimated value.
-#define FIRST_PAGE 200
-#define LAST_PAGE 250  // last available FLASH page - rest is reserved
+#define FIRST_PAGE 150
+#define LAST_PAGE 251  // last available FLASH page - rest is reserved
  
 #define BYTES_PER_PAGE 1024  //1kB pages in nrf51 flash
 #define WORDS_PER_PAGE 256  //4-byte words, 1024/4

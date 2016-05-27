@@ -76,9 +76,9 @@ bool badgeActive = false;   // Otherwise, the badge is inactive and can enter in
 
 // Setup expected "zero" for the mic value.
 // analog ref is mic VCC, mic is 1/2 VCC biased, input is 1/3 scaled, so zero value is approx. (1023/2)/3 ~= 170
-const int zeroValue = 166;
+//const int zeroValue = 166;
 
-
+/*
 //============================ sound-related stuff =====================================
 //======================================================================================
 //const unsigned long SAMPLE_WINDOW = 100; // how long we should sample
@@ -87,14 +87,16 @@ const int zeroValue = 166;
 //unsigned long readingsSum = 0;  //sum of mic readings taken      } for computing average
 //unsigned long sampleStart = 0;  //beginning of sample period
 //bool storedSample = false;  //whether we've stored the sample from the current sampling period
+*/
 
-
+/*
 //============================ BLE/data-related stuff ==================================
 //======================================================================================
 volatile bool BLEconnected = false;  //whether we're currently connected
 volatile bool sendStatus = false;  //flag signaling that the server asked for status
 volatile bool streamSamples = false;  //flag signaling that the server asked for stream of samples
 volatile bool sendTime = false;  //flag signaling that the server asked for time
+*/
 
 //============================ time-related stuff ======================================
 //======================================================================================
@@ -182,7 +184,7 @@ int main(void)
     // Button
     nrf_gpio_cfg_input(BUTTON_1,NRF_GPIO_PIN_PULLUP);  //button
 
-
+    // Self-test code (incompatible with new code structure)
     /*#if defined(TESTER_ENABLE) // tester mode is enabled
         //////////////////////////////////
         nrf_gpio_pin_write(GREEN_LED,LED_ON);
@@ -539,7 +541,7 @@ int main(void)
             case SAMPLE:
                 //if(dateReceived)
                 //{
-                if(collecting)
+                if(isCollecting)
                 {
                     badgeActive |= true;
                     

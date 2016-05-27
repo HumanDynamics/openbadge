@@ -50,7 +50,7 @@ unsigned long samplePeriod;   // time between samples - must exceed SAMPLE_WINDO
 #define SAMPLE_PERIOD 250UL
 
 
-bool collecting;
+bool isCollecting;
 
 bool takingReadings;  // whether we're currently taking readings for a sample
 unsigned long sampleStart;    // timestamp of first reading for current sample

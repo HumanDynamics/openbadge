@@ -11,7 +11,10 @@
 
 server_command_params_t unpackCommand(uint8_t* pkt)
 {
+        
     server_command_params_t command;
+    command.receiptTime = millis();
+    
     command.cmd = pkt[0];
     
     switch(command.cmd)
@@ -49,6 +52,7 @@ server_command_params_t unpackCommand(uint8_t* pkt)
     }
     return command;
 }
+
 
 void sender_init()
 {
@@ -91,19 +95,22 @@ void sender_init()
 
 bool updateSender()
 {
+    
     // This will be the function return value.  if there is any sending operations in-progress, this will be set to true.
     //   if not, it will return false, so that the main loop knows it can go to sleep early.
     bool senderActive = false;
     
+    
     if(pendingCommand.cmd != CMD_NONE)
     {
         senderActive = true;  
+        lastReceipt = millis();
         
         server_command_params_t command;
         command = pendingCommand;       // local copy, in case interrupt changes it.
         
-        // ---------------------------------------------------------------
-        // ====== Status request - send back packet of status info. ======
+        // ===================================================================
+        // ======== Status request - send back packet of status info. ========
         if(command.cmd == CMD_STATUS)
         {
             // If the packet is already prepared, try sending it.
@@ -112,6 +119,20 @@ bool updateSender()
                 if(BLEwrite(send.buf,send.bufSize))   // try sending packet
                 {
                     send.bufContents = SENDBUF_EMPTY;   // buffer has been sent
+                    
+                    // Set badge internal timestamp
+                    //   There might be a delay between command receipt and command handling, so account for that.
+                    unsigned long msCorrection = millis() - command.receiptTime;
+                    unsigned long sCorrection = 0;
+                    while(msCorrection >= 1000UL)
+                    {
+                        msCorrection -= 1000;
+                        sCorrection++;
+                    }
+                    debug_log("Setting time to %lX, %lums.\r\n",command.timestamp+sCorrection,command.ms+msCorrection);
+                    setTimeFractional(command.timestamp+sCorrection,command.ms+msCorrection);
+                    dateReceived = true;
+                    
                     pendingCommand.cmd = CMD_NONE;      // we're done with that pending command
                     debug_log("SENDER: Sent status.\r\n");
                 }
@@ -120,7 +141,7 @@ bool updateSender()
             {
                 send.buf[0] = (dateReceived) ? 1 : 0;
                 send.buf[1] = 1;  // UNSENT DATA READY
-                send.buf[2] = (collecting) ? 1 : 0;  // COLLECTING DATA
+                send.buf[2] = (isCollecting) ? 1 : 0;  // COLLECTING DATA
                 
                 // Reply with onboard timestamp (0 if none set)
                 unsigned long timestamp = 0;
@@ -139,21 +160,19 @@ bool updateSender()
                 send.bufContents = SENDBUF_STATUS;
                 send.bufSize = SENDBUF_STATUS_SIZE;
                 
-                setTimeFractional(command.timestamp,command.ms);
-                dateReceived = true;
-                
-                if(!collecting)
+                /*if(!collecting)
                 {
                     startCollector();  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TEMPORARY UNTIL CMD_STARTREC IS IMPLEMENTED
-                }
+                }*/
             }
         }
         
-        // --------------------------------------
-        // ======  Data-sending commands.  ======
+        // ==========================================
+        // ========  Data-sending commands.  ========
         else if(command.cmd == CMD_REQUNSENT || command.cmd == CMD_REQSINCE)
         {
-            // ---- INITIALIZING SENDING ----
+            // --------------------------------
+            // ----- initializing sending -----
             // If send.from isn't set, then we just got the request, and we need to find where to start sending from
             if(send.from == NO_CHUNK)
             {
@@ -242,7 +261,7 @@ bool updateSender()
                     pendingCommand.cmd = CMD_NONE;
                 }
                 
-                debug_log("sending since: s:%c c:%d\r\n",
+                debug_log("SENDER: sending since: s:%c c:%d\r\n",
                                             (send.source==SRC_FLASH) ? 'F' : ((send.source==SRC_RAM)?'R':'C'),
                                             send.from);
                 
@@ -250,12 +269,12 @@ bool updateSender()
                 
             }   // if(send.from == NO_CHUNK)
             
-            
-            // ---- EXECUTING SENDING ----
+            // -----------------------------
+            // ----- executing sending -----
             // If send.from is set, then we're actually sending data.
             else
             {
-                // -- PACKET ALREADY PREPARED
+                // -- packet already prepared
                 // If a data packet is already prepared, try sending it.  Following actions depend on what was sent.
                 if(send.bufContents == SENDBUF_HEADER || send.bufContents == SENDBUF_SAMPLES || send.bufContents == SENDBUF_END)
                 {
@@ -265,9 +284,6 @@ bool updateSender()
                         {
                             case SENDBUF_HEADER:
                                 // If we finished sending a chunk header, we can start sending the chunk data.
-                                debug_log("Sent: H s:%c c:%d n:%d\r\n",
-                                            (send.source==SRC_FLASH) ? 'F' : ((send.source==SRC_RAM)?'R':'C'),
-                                            send.from, send.numSamples);
                                 send.loc = 0;  // start sending data from beginning of chunk
                                 break;
                             case SENDBUF_SAMPLES:
@@ -277,6 +293,10 @@ bool updateSender()
                                 // If we reached the end of the chunk, we need to advance to the next chunk (if there is one ready)
                                 if(send.loc >= send.numSamples)
                                 {
+                                    debug_log("SENDER: sent s:%c c:%d n:%d\r\n",
+                                            (send.source==SRC_FLASH) ? 'F' : ((send.source==SRC_RAM)?'R':'C'),
+                                            send.from, send.numSamples);
+                                            
                                     // advance to next chunk
                                     switch(send.source)
                                     {
@@ -367,6 +387,7 @@ bool updateSender()
                                 // Else we need to send another data packet in this chunk
                                 break;
                             case SENDBUF_END:
+                                debug_log("SENDER: sent null header.  Sending complete.\r\n");
                                 pendingCommand.cmd = CMD_NONE;  // if we sent the terminating null header, we're done sending data
                                 senderActive = false;   // all done with sending, updateSender will return this (false)
                                 break;
@@ -380,7 +401,7 @@ bool updateSender()
                     
                 }   // if(data packet was already prepared)
                 
-                // -- NEED TO PREPARE PACKET 
+                // -- else need to prepare packet 
                 // If the send packet buffer is empty, we need to fill it.
                 else
                 {
@@ -473,13 +494,62 @@ bool updateSender()
         
         else if(command.cmd == CMD_STARTREC)
         {
-            debug_log("ERR: CMD_STARTREC unimplemented.\r\n");
-            pendingCommand.cmd = CMD_NONE;
+            // If the packet is already prepared, try sending it.
+            if(send.bufContents == SENDBUF_TIMESTAMP)  // are we currently waiting to send status packet
+            {
+                if(BLEwrite(send.buf,send.bufSize))   // try sending packet
+                {
+                    send.bufContents = SENDBUF_EMPTY;   // buffer has been sent
+                    
+                    
+                    // Set badge internal timestamp
+                    //   There might be a delay between command receipt and command handling, so account for that.
+                    unsigned long msCorrection = millis() - command.receiptTime;
+                    unsigned long sCorrection = 0;
+                    while(msCorrection >= 1000UL)
+                    {
+                        msCorrection -= 1000;
+                        sCorrection++;
+                    }
+                    debug_log("Setting time to %lX, %lums.\r\n",command.timestamp+sCorrection,command.ms+msCorrection);
+                    setTimeFractional(command.timestamp+sCorrection,command.ms+msCorrection);
+                    dateReceived = true;
+
+                    // Timeout value expressed as minutes - convert to ms.
+                    debug_log("SENDER: starting collector, timeout %d minutes.\r\n",(int)command.timeout);
+                    collectorTimeout = ((unsigned long)command.timeout) * 60UL * 1000UL;
+                    startCollector();
+                    pendingCommand.cmd = CMD_NONE;
+                }
+            }
+            else    // otherwise prepare timestamp packet
+            {
+                unsigned long timestamp = 0;
+                unsigned short ms = 0;
+                if(dateReceived)
+                {
+                    timestamp = now();
+                    ms = nowFractional();
+                }
+            
+                memcpy(send.buf,&timestamp,sizeof(unsigned long));
+                memcpy(send.buf+4,&ms,sizeof(unsigned short));
+                
+                send.bufContents = SENDBUF_TIMESTAMP;
+                send.bufSize = SENDBUF_TIMESTAMP_SIZE;
+            }
+            
         }
         
         else if(command.cmd == CMD_ENDREC)
         {
-            debug_log("ERR: CMD_ENDREC unimplemented.\r\n");
+            debug_log("SENDER: stopping collector.\r\n");
+            stopCollector();
+            pendingCommand.cmd = CMD_NONE;
+        }
+        
+        else if(command.cmd == CMD_INVALID)
+        {
             pendingCommand.cmd = CMD_NONE;
         }
         
@@ -487,6 +557,20 @@ bool updateSender()
         
         
     }   //if(pendingCommand.cmd != CMD_NONE)
+    
+    
+    // Collector timeout.  Stop collector if server is unseen for a long time
+    if(collectorTimeout > 0)  // 0 means timeout disabled
+    {
+        if(isCollecting && (millis() - lastReceipt >= collectorTimeout))
+        {
+            debug_log("SENDER: collector timeout.  Stopping collector...\r\n");
+            stopCollector();
+        }
+    }
+    
+    
+    
     return senderActive;
 }
 
