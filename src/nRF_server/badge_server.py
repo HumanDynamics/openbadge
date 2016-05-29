@@ -155,6 +155,7 @@ def dialogue(addr=""):
 		wait_count = 0;
 		while True:
 			if bdg.dlg.gotEndOfData == True:
+				logger.info("End of data")
 				break
 			if bdg.waitForNotifications(1.0):
 				# if got data, don't inrease the wait counter
