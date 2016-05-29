@@ -26,6 +26,8 @@ scans_file_name = 'rssi_scan.txt'
 
 PULL_WAIT = 3
 SCAN_DURATION = 5 # seconds
+RECORDING_TIMEOUT = 0 # unlimited minutes
+
 # create logger with 'badge_server'
 logger = logging.getLogger('badge_server')
 logger.setLevel(logging.DEBUG)
@@ -127,23 +129,15 @@ def dialogue(addr=""):
 			#	bdg.NrfReadWrite.write("t")  # ask for time
 			#	bdg.waitForNotifications(1.0)
 
-			logger.info("Badge datetime: {},{}, Voltage: {}".format(bdg.dlg.timestamp_sec,bdg.dlg.timestamp_ms,bdg.dlg.voltage))
+			logger.info("Badge datetime: {},{}, Voltage: {}, Recording? {}".format(bdg.dlg.timestamp_sec,bdg.dlg.timestamp_ms,bdg.dlg.voltage,bdg.dlg.recording))
 
-		'''
-		# data request using the "d" command
-		if bdg.dlg.dataReady:
-			logger.info("Requesting data...")
-			bdg.NrfReadWrite.write("d")  # ask for data
-			wait_count = 0;
-			while True:
-				if bdg.waitForNotifications(1.0):
-					# if got data, don't inrease the wait counter
-					continue
-				logger.info("Waiting for more data...")
-				wait_count = wait_count+1
-				if wait_count >= PULL_WAIT: break
-			logger.info("finished reading data")
-		'''
+
+		with timeout(seconds=5, error_message="Dialogue timeout (wrong firmware version?)"):
+			while not bdg.dlg.sentStartRec:
+				bdg.sendStartRecRequest(RECORDING_TIMEOUT)  # ask to start recoding
+				bdg.waitForNotifications(1.0)  # waiting for status report
+
+			logger.info("Got Ack for start recording")
 
 		# data request using the "r" command - data since time X
 		logger.info("Requesting data...")

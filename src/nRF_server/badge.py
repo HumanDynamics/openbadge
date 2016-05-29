@@ -52,6 +52,7 @@ class BadgeDelegate(DefaultDelegate):
     numSamples = 0  # expected number of samples from current chunk
     gotEndOfData = False #flag that indicates no more data will be sent
     #badge states, reported from badge
+    sentStartRec = False
     
     clockSet = False  # whether the badge's time had been set
     dataReady = False # whether there's unsent data in FLASH
@@ -73,12 +74,15 @@ class BadgeDelegate(DefaultDelegate):
         self.gotEndOfData = False
         self.dataReady = False
         self.gotHeader = False
+        self.sentStartRec = False
         
 
     def handleNotification(self, cHandle, data):
         if not self.gotStatus:  # whether date has been set
             self.clockSet,self.dataReady,self.recording,self.timestamp_sec,self.timestamp_ms,self.voltage = struct.unpack('<BBBLHf',data)
             self.gotStatus = True
+        elif not self.sentStartRec:
+            self.sentStartRec = True
         elif not self.gotHeader:
             self.tempChunk.reset()
             self.tempChunk.setHeader(struct.unpack('<LHfHB',data)) #time, fraction time (ms), voltage, sample delay
@@ -129,6 +133,13 @@ class Badge(Nrf):
         n = datetime.datetime.utcnow()
         long_epoch_seconds, ts_fract = self._datetimeToEpoch(n)
         return self.write('<cLH',"s",long_epoch_seconds,ts_fract)
+
+    # sends start rec request with UTC time to the badge
+    def sendStartRecRequest(self,timeoutMinutes):
+        n = datetime.datetime.utcnow()
+        long_epoch_seconds, ts_fract = self._datetimeToEpoch(n)
+        return self.write('<cLHH',"1",long_epoch_seconds,ts_fract,timeoutMinutes)
+
 
     # send request for data since given date
     # Note - given date should be in local timezone. It will
