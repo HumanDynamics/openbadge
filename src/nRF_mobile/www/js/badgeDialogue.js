@@ -104,11 +104,13 @@ function Chunk() {
 *@param badge badge object
 */
 function BadgeDialogue(badge) {
-    
+    this.recordingTimeoutMinutes = 5;
+
     this.StatusEnum = {
         STATUS: 1,
-        HEADER: 2,
-        DATA: 3,
+        START_REC: 2,
+        HEADER: 3,
+        DATA: 4
     };
 
     var struct = require('./struct.js').struct;
@@ -141,7 +143,14 @@ function BadgeDialogue(badge) {
     this.onData = function (data) {
         if (this.status == this.StatusEnum.STATUS) {
             var status = struct.Unpack('<BBBLHf',data); //clockSet,dataReady,recording,timestamp_sec,timestamp_ms,voltage
-            this.log("Received a status update. Voltage: "+status[3]+' '+status[4]+' '+status[5]);
+            this.log("Received a status update. Timestamp,ms,Voltage,recStatus: "+status[3]+' '+status[4]+' '+status[5]+' '+status[2]);
+
+            // ask to start recording
+            this.status = this.StatusEnum.START_REC;
+            this.sendStartRecRequest(this.recordingTimeoutMinutes)
+
+        } else if (this.status == this.StatusEnum.START_REC) {
+            this.log("Received recording ack");
 
             //Ask for data
             this.status = this.StatusEnum.HEADER; // expecting a header next
@@ -201,6 +210,19 @@ function BadgeDialogue(badge) {
         this.log('Sending status request with epoch_seconds: ' + now.seconds+ ', ms: '+now.ms);
 
         var timeString = struct.Pack('<cLH',['s',now.seconds,now.ms]);
+        this.badge.sendString(timeString);
+    }.bind(this);
+
+    /**
+    *sends a start recording request
+    */
+    this.sendStartRecRequest = function(timeoutMinutes) {
+        //Set current time
+        var d = new Date();
+        var now = this.nowAsSecAndMs();
+        this.log('Requesting badge to start recording. Epoch_seconds: ' + now.seconds+ ', ms: '+now.ms+", Timeout: "+timeoutMinutes);
+
+        var timeString = struct.Pack('<cLHH',['1',now.seconds,now.ms,timeoutMinutes]);
         this.badge.sendString(timeString);
     }.bind(this);
 

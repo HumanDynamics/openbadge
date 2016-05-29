@@ -135,6 +135,7 @@ def dialogue(addr=""):
 		with timeout(seconds=5, error_message="Dialogue timeout (wrong firmware version?)"):
 			while not bdg.dlg.sentStartRec:
 				bdg.sendStartRecRequest(RECORDING_TIMEOUT)  # ask to start recoding
+				#bdg.sendStatusRequest()  # ask for status instead
 				bdg.waitForNotifications(1.0)  # waiting for status report
 
 			logger.info("Got Ack for start recording")
