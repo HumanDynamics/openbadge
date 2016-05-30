@@ -15,6 +15,8 @@
 
 #include "nrf_soc.h"
 
+#include "nrf_gpio.h"
+
 #include "ble_setup.h"
 #include "collector.h"
 #include "storer.h"

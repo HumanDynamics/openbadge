@@ -46,8 +46,9 @@
 unsigned long sampleWindow;  // how long we should sample
 unsigned long samplePeriod;   // time between samples - must exceed SAMPLE_WINDOW
 // vvv Default values
-#define SAMPLE_WINDOW 100UL
 #define SAMPLE_PERIOD 250UL
+#define SAMPLE_WINDOW 100UL
+
 
 
 bool isCollecting;

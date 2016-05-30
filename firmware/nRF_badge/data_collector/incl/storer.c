@@ -87,6 +87,7 @@ void storer_init()
         
         int bytesToErase = (int)(oldChunkAddr) - (int)(pageAddr); // how many bytes of current page we need to erase
         int chunksToSave = (BYTES_PER_PAGE - bytesToErase)/CHUNK_SIZE;  // how many old chunks are in this page
+        UNUSED_VARIABLE(chunksToSave);
         
         debug_log("Copying old data to RAM. (%d chunks)\r\n", chunksToSave);
         uint32_t temp[WORDS_PER_PAGE];                            // temporary buffer for page

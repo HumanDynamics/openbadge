@@ -346,7 +346,6 @@ int main(void)
             case STORE:
                 ;// can't put declaration directly after case label.
                 bool storerActive = updateStorer();
-                //if(storerActive) debug_log("stA\r\n");
                 badgeActive |= storerActive;
                 cycleState = SEND;
                 break;
@@ -354,10 +353,9 @@ int main(void)
             case SEND:
                 ;// can't put declaration directly after case label.
                 bool senderActive = updateSender();
-                //if(senderActive) debug_log("seA\r\n");
                 badgeActive |= senderActive;
                 
-                if(millis() - cycleStart > 200 || (!senderActive))  // is it time to sleep, or is sending finished?
+                if(millis() - cycleStart > 200UL || (!senderActive))  // is it time to sleep, or is sending finished?
                 {
                     cycleState = SLEEP;
                 }
@@ -366,6 +364,7 @@ int main(void)
             case SLEEP:
                 ;// can't put declaration directly after case label.
                 long sleepDuration;
+                unsigned long elapsed = millis() - cycleStart;
                 
                 // If none of the modules (collector, storer, sender) is active, then we can sleep indefinitely (until BLE activity)
                 if(!badgeActive)
@@ -374,8 +373,7 @@ int main(void)
                 }
                 
                 // Else we're actively cycling thru main loop, and should sleep for the remainder of the sampling period
-                unsigned long elapsed = millis() - cycleStart;
-                if(elapsed < SAMPLE_PERIOD)
+                else if(elapsed < SAMPLE_PERIOD)
                 {
                     sleepDuration = SAMPLE_PERIOD - elapsed;
                 }
