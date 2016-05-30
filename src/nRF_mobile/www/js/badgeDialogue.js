@@ -148,7 +148,6 @@ function BadgeDialogue(badge) {
             // ask to start recording
             this.status = this.StatusEnum.START_REC;
             this.sendStartRecRequest(this.recordingTimeoutMinutes)
-
         } else if (this.status == this.StatusEnum.START_REC) {
             this.log("Received recording ack");
 
@@ -224,6 +223,19 @@ function BadgeDialogue(badge) {
 
         var timeString = struct.Pack('<cLHH',['1',now.seconds,now.ms,timeoutMinutes]);
         this.badge.sendString(timeString);
+    }.bind(this);
+
+        /**
+    *sends an end recording request
+    */
+    this.sendEndRecRequestAndClose = function() {
+        //Set current time
+        var d = new Date();
+        var now = this.nowAsSecAndMs();
+        this.log('Requesting badge to end recording');
+
+        var timeString = struct.Pack('<c',['0']);
+        this.badge.sendStringAndClose(timeString);
     }.bind(this);
 
     /**

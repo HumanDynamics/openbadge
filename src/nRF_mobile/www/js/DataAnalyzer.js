@@ -1,6 +1,6 @@
 // if at least this amount of time happens between a null signal
 // and a talk signal, they are considered to have started talking.
-var MIN_TALK_LENGTH = 501;
+var MIN_TALK_LENGTH = 751;
 // If we get no signal for this amount of time, consider them no
 // longer talking.
 var TALK_TIMEOUT = 1500;
@@ -97,7 +97,7 @@ function DataAnalyzer() {
         var m = meanAndStd(samples, function (sample) {
             return sample.volRaw
         });
-        cutoff = (CUTOFF_PROIOR * PRIOR_WEIGHT) + (m.mean - 2 * m.std) * (1 - PRIOR_WEIGHT);
+        cutoff = (CUTOFF_PROIOR * PRIOR_WEIGHT) + (m.mean + 2 * m.std) * (1 - PRIOR_WEIGHT);
         console.log("Cutoff prior,value,mean and std:", CUTOFF_PROIOR, cutoff, m.mean, m.std);// calc adjusted cutoff (using samples and prior)
     }
 
@@ -110,7 +110,7 @@ function DataAnalyzer() {
         var m = meanAndStd(samples, function (sample) {
             return sample.volClippedSmooth
         });
-        speakThreashold = (SPEAK_THRESHOLD_PRIOR * PRIOR_WEIGHT) + (m.mean + 2 * m.std) * (1 - PRIOR_WEIGHT);
+        speakThreashold = (SPEAK_THRESHOLD_PRIOR * PRIOR_WEIGHT) + (m.mean - 2 * m.std) * (1 - PRIOR_WEIGHT);
         console.log("Speak priotr,threashold, mean and std:", SPEAK_THRESHOLD_PRIOR, speakThreashold, m.mean, m.std);
     }
 
