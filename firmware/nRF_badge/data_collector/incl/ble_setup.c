@@ -169,29 +169,31 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 {
     on_ble_evt(p_ble_evt);
     
-    /*
-    //Intercept an advertising timeout event, so we have infinite advertising.
-    if(p_ble_evt->header.evt_id == BLE_GAP_EVT_TIMEOUT  &&
-        p_ble_evt->evt.gap_evt.params.timeout.src == BLE_GAP_TIMEOUT_SRC_ADVERTISING)
+    // Intercept advertising timeout events to implement infinite advertising, and disconnect events to let radio-conflicting 
+    //   operations to execute after a connection closes
+    if( (p_ble_evt->header.evt_id == BLE_GAP_EVT_TIMEOUT                                        // if timeout event
+            && p_ble_evt->evt.gap_evt.params.timeout.src == BLE_GAP_TIMEOUT_SRC_ADVERTISING)    //   from advertising
+        || p_ble_evt->header.evt_id == BLE_GAP_EVT_DISCONNECTED)                                // OR if disconnect event
     {
         if(pauseRequest)
         {
             isAdvertising = false;
             pauseRequest = false;
+            debug_log("ADV: advertising paused\r\n");
         }
         else
         {
             isAdvertising = true;
-            uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);  //infinite advertising
+            //debug_log("ADV: advertising REstarted\r\n");
+            uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);  // restart advertising
             BLE_ERROR_CHECK(err_code);
         }
     }
     else
     {
-        
-    }*/
+        ble_advertising_on_ble_evt(p_ble_evt);
+    }
     
-    ble_advertising_on_ble_evt(p_ble_evt);
     ble_bas_on_ble_evt(&m_bas, p_ble_evt);
     ble_nus_on_ble_evt(&m_nus, p_ble_evt);
 }
@@ -283,7 +285,7 @@ static void advertising_init(void)
     options.ble_adv_directed_enabled = BLE_ADV_DIRECTED_DISABLED;
     options.ble_adv_whitelist_enabled = BLE_ADV_WHITELIST_DISABLED;
 
-    err_code = ble_advertising_init(&advdata, NULL, &options, on_adv_evt, NULL);
+    err_code = ble_advertising_init(&advdata, NULL, &options, NULL /*on_adv_evt*/, NULL);
     BLE_ERROR_CHECK(err_code);
 }
 
@@ -304,7 +306,12 @@ void BLEstartAdvertising()
     if((!isConnected) && (!isAdvertising))
     {
         uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
-        debug_log("ADV: advertising started\r\n");
+        if(err_code == NRF_SUCCESS)
+        {
+            debug_log("ADV: advertising started\r\n");
+            isAdvertising = true;
+            return;
+        }
         BLE_ERROR_CHECK(err_code);
     }
 }

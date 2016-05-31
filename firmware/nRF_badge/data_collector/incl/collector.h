@@ -117,7 +117,7 @@ void stopCollector();
  * Get battery voltage
  * Returns the current chunk's voltage if collecting is enabled; otherwise, returns an analogRead of VCC
  */
-float getBatteryVoltage();
+//float getBatteryVoltage();
 
 /**
  * Print chunk contents from the RAM buffer to the debug log

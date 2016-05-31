@@ -112,28 +112,6 @@ void storer_init()
     
     storerMode = STORER_IDLE;
     
-    
-    
-    /*uint32_t* chunkAddr = ADDRESS_OF_CHUNK(store.to);
-    unsigned char chunkPage = PAGE_OF_CHUNK(store.to);
-    uint32_t* chunkPageAddr = ADDRESS_OF_PAGE(chunkPage);  //start address of _chunk's page
-    
-    // If the chunk is in the middle of the page, we want to preserve any potentially unsent data.
-
-    if (chunkAddr != chunkPageAddr)  
-    {
-        int spaceToErase = (int)(chunkAddr) - (int)(chunkPageAddr); //how much of page we need to clear
-        uint32_t temp[WORDS_PER_PAGE];  //temporary buffer for page
-        memcpy(temp, chunkPageAddr, BYTES_PER_PAGE); //copy old (possibly unsent) data to buffer
-        memset(temp, 0xff, spaceToErase);  //erase unused portion of buffer (flash bits erase to all 1's)
-        erasePageOfFlash(chunkPage);  //erase page
-        writeBlockToFlash(chunkPageAddr, temp, WORDS_PER_PAGE);  //replace data from buffer
-    }
-    else        // If we're trying to write to the beginning of a page, we can just erase the whole page.
-    {
-        erasePageOfFlash(chunkPage);  //erase page
-    }*/
-    
     // Chunk store.to is now ready to have data stored to it.
     
 }

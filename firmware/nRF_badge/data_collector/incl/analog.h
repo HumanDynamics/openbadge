@@ -10,12 +10,28 @@
 #include "nrf_adc.h"
 
 #include "debug_log.h"
+#include "rtc_timing.h"
 
 // Should be defined in custom board files.  (default values here in case, e.g., programming NRFDK board)
 #if !(defined(MIC_PIN) && defined(MIC_AREF))
     #define MIC_PIN ADC_CONFIG_PSEL_AnalogInput6  //GPIO P05
     #define MIC_AREF NRF_ADC_CONFIG_REF_EXT_REF1  //GPIO P06
 #endif
+
+
+//default: 10bit res, 1/3 prescalar, external VCC_MIC reference
+#define ANALOG_CONFIG_MIC   { NRF_ADC_CONFIG_RES_10BIT,                     \
+                                NRF_ADC_CONFIG_SCALING_INPUT_ONE_THIRD,     \
+                                MIC_AREF }
+                               
+// for measuring supply voltage:
+#define ANALOG_CONFIG_VBAT  {NRF_ADC_CONFIG_RES_10BIT,                      \
+                                NRF_ADC_CONFIG_SCALING_SUPPLY_ONE_THIRD,    \
+                                NRF_ADC_CONFIG_REF_VBG }
+
+float currentBatteryVoltage;
+unsigned long lastBatteryUpdate;
+#define MIN_BATTERY_READ_INTERVAL 100000UL  // minimum time between supply analogReads.  We don't need to do this often.
 
 
 
@@ -29,8 +45,24 @@ void adc_config(void);
 int analogRead(nrf_adc_config_input_t input);
 
 // Read battery voltage
-float readBattery();
+//float readBattery();
 
+/**
+ * Get buffered battery voltage (does not actually perform analogRead)
+ *   updateBatteryVoltage must be called periodically to keep this result current.  (ideally when radio is inactive)
+ */
+float getBatteryVoltage();
+
+/**
+ * If enough time has passed since the last battery voltage read, do another reading.
+ */
+void updateBatteryVoltage();
+
+/**
+ * Get actual battery voltage (performs analogRead)
+ *   Use with caution - may return inaccurate results if performed during a spike in power usage
+ */
+float getBatteryVoltage();
 
 
 

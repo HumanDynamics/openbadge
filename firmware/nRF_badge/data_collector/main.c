@@ -64,6 +64,7 @@
 enum cycleStates {SLEEP, SAMPLE, STORE, SEND};
 unsigned long cycleStart;       // start of main loop cycle (e.g. sampling cycle)
 int cycleState = SLEEP;     // to keep track of state of main loop
+#define MIN_SLEEP 10UL      // ms of sleep, minimum (keep well under SAMPLE_PERIOD - SAMPLE_WINDOW to leave room for sending)
 
 // If any module (collecting, storing, sending) has any pending operations, this gets set to true
 bool badgeActive = false;   // Otherwise, the badge is inactive and can enter indefinite sleep.
@@ -236,8 +237,8 @@ int main(void)
     */
     
     // Initialize
-    sd_power_mode_set(NRF_POWER_MODE_LOWPWR);  //set low power sleep mode
     BLE_init();
+    sd_power_mode_set(NRF_POWER_MODE_LOWPWR);  //set low power sleep mode
     adc_config();
     rtc_config();
     spi_init();
@@ -323,11 +324,16 @@ int main(void)
             
             
             case SAMPLE:
+                if(BLEgetStatus() == BLE_INACTIVE)
+                {
+                    updateBatteryVoltage();
+                }
+                
                 if(isCollecting)
                 {
                     badgeActive |= true;
                     
-                    if(millis() - cycleStart < SAMPLE_WINDOW)
+                    if(millis() - cycleStart < sampleWindow)
                     {
                         takeMicReading();
                         //sleep = false;
@@ -355,7 +361,7 @@ int main(void)
                 bool senderActive = updateSender();
                 badgeActive |= senderActive;
                 
-                if(millis() - cycleStart > 200UL || (!senderActive))  // is it time to sleep, or is sending finished?
+                if(millis() - cycleStart > (samplePeriod - MIN_SLEEP) || (!senderActive))  // is it time to sleep, or done sending?
                 {
                     cycleState = SLEEP;
                 }
@@ -373,9 +379,9 @@ int main(void)
                 }
                 
                 // Else we're actively cycling thru main loop, and should sleep for the remainder of the sampling period
-                else if(elapsed < SAMPLE_PERIOD)
+                else if(elapsed < samplePeriod)
                 {
-                    sleepDuration = SAMPLE_PERIOD - elapsed;
+                    sleepDuration = samplePeriod - elapsed;
                 }
                 else
                 {
@@ -386,7 +392,7 @@ int main(void)
                 goToSleep(sleepDuration);
                 
                 // Exit sleep if we've reached the end of the sampling period.
-                if(millis() - cycleStart >= SAMPLE_PERIOD)  // did we exit sleep by the countdown event
+                if(millis() - cycleStart >= samplePeriod)  // did we exit sleep by the countdown event
                 {
                     cycleState = SAMPLE;
                     cycleStart = millis();
@@ -409,7 +415,9 @@ void BLEonConnect()
     sleep = false;
 
     // for app development. disable if forgotten in prod. version
-    nrf_gpio_pin_write(LED_1,LED_ON);
+    #ifdef DEBUG_LOG_ENABLE
+        nrf_gpio_pin_write(LED_1,LED_ON);
+    #endif
     
     ble_timeout_set(CONNECTION_TIMEOUT_MS);
 }
@@ -420,7 +428,9 @@ void BLEonDisconnect()
     sleep = false;
 
     // for app development. disable if forgotten in prod. version
-    nrf_gpio_pin_write(LED_1,LED_OFF);
+    #ifdef DEBUG_LOG_ENABLE
+        nrf_gpio_pin_write(LED_1,LED_OFF);
+    #endif
     
     ble_timeout_cancel();
 }

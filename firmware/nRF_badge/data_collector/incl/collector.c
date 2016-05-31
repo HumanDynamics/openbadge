@@ -59,7 +59,7 @@ static void setupChunk(int chunk, unsigned long timestamp, unsigned long msTimes
     }
         
     memset(micBuffer[chunk].samples, INVALID_SAMPLE, sizeof(micBuffer[chunk].samples));  // reset sample array
-    micBuffer[chunk].battery = readBattery();
+    micBuffer[chunk].battery = getBatteryVoltage();
     micBuffer[chunk].timestamp = timestamp;     // record timestamp for chunk
     micBuffer[chunk].msTimestamp = msTimestamp;  // record fractional part of timestamp
     micBuffer[chunk].check = CHECK_INCOMPLETE;  // denote that chunk is incomplete
@@ -126,7 +126,7 @@ void stopCollector()
 }
 
 
-float getBatteryVoltage()
+/*float getBatteryVoltage()
 {
     if(isCollecting)  // if collector is active, just return the battery level of current chunk (no reason to do another reading)
     {
@@ -136,7 +136,7 @@ float getBatteryVoltage()
     {
         return readBattery();
     }
-}
+}*/
 
 
 void printCollectorChunk(int chunk)
