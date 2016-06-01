@@ -125,7 +125,6 @@ struct
 {
     bool enabled;       //whether sending is enabled (after request from master)
     bool sentHeader;    //whether the header (timestamp, battery level) for the current chunk has been sent yet
-    bool flagSendEnd;   //whether we next need to send and end-trasmission package (empty header)
     int chunk;          //index of chunk currently being sent
     int loc;            //word offset from beginning of chunk, to keep track of location within chunk
     int samplePeriod;   //the sampling period in ms

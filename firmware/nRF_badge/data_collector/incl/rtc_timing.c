@@ -61,6 +61,7 @@ void countdown_set(unsigned long ms)
     nrf_drv_rtc_cc_set(&rtc,0,compareTicks,true);  //set compare channel 0 to interrupt when counter hits compareTicks
 }
 
+
 void ble_timeout_set(unsigned long ms)
 {
     if(ms > 130000UL)  {  // 130 seconds.
