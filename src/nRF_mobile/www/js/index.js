@@ -5,8 +5,9 @@ var Badge = require('./badge');
 window.LOCALSTORAGE_GROUP_KEY = "groupkey";
 window.LOCALSTORAGE_GROUP = "groupjson";
 
-window.BADGE_SCAN_INTERVAL = 8000;
-window.BADGE_SCAN_DURATION = 7000;
+window.BADGE_SCAN_INTERVAL = 9000;
+window.BADGE_SCAN_DURATION = 8000;
+window.BADGE_STATUS_INTERVAL = 3000;
 
 window.WATCHDOG_SLEEP = 5000;
 
@@ -20,12 +21,19 @@ window.CHECK_MEETING_LENGTH_REACTION_TIME = 60 * 1000;
 
 window.SHOW_BADGE_CONSOLE = false;
 
+BATTERY_YELLOW_THRESHOLD = 2.5;
+BATTERY_RED_THRESHOLD = 2.3;
+
 
 
 /***********************************************************************
  * Model Declarations
  */
 
+/**
+ * Group Model
+ * Holds the data of a group, constructed from json data from the server
+ */
 function Group(groupJson) {
     this.name = groupJson.name;
     this.key = groupJson.key;
@@ -36,12 +44,46 @@ function Group(groupJson) {
     }
 }
 
+/**
+ * Group Member Model
+ * Created by Group, contains a Badge, and has some basic data about the member
+ */
 function GroupMember(memberJson) {
     this.name = memberJson.name;
     this.key = memberJson.key;
     this.badgeId = memberJson.badge;
+
+    this.badge = new Badge.Badge(this.badgeId);
+    this.dataAnalyzer = new DataAnalyzer();
+
+    this.badge.badgeDialogue.onNewChunk = function(chunk) {
+        this.dataAnalyzer.addChunk(chunk);
+    }.bind(this);
+
+    this.badge.badgeDialogue.onChunkCompleted = function(chunk) {
+        if (this.meeting) {
+            this.meeting.logChunk(chunk);
+        }
+    }.bind(this);
+
+
+    this.badge.onDisconnect = function() {
+        if (this.$lastDisconnect) {
+            this.$lastDisconnect.text(this.badge.lastDisconnect.toUTCString());
+        }
+    }.bind(this);
+
+    this.clearData = function() {
+        this.dataAnalyzer.clearData();
+        this.badge.badgeDialogue.clearData();
+    }.bind(this);
 }
 
+/**
+ * Meeting Model
+ * 
+ * This is in charge of logging all data to the log file
+ */
 function Meeting(group, members, type, moderator, description, location) {
     this.members = members;
     this.group = group;
@@ -63,23 +105,23 @@ function Meeting(group, members, type, moderator, description, location) {
         return false;
     }();
 
+    var meeting = this;
+
     $.each(this.members, function(index, member) {
-        member.badge = new Badge.Badge(member.badgeId);
-        member.dataAnalyzer = new DataAnalyzer();
-        member.badge.badgeDialogue.onNewChunk = function(chunk) {
-            var chunkData = chunk.toDict();
-            chunkData.badge = member.badgeId;
-            chunkData.member = member.key;
-            this.writeLog(JSON.stringify(chunkData));
-            member.dataAnalyzer.addChunk(chunk);
-        }.bind(this);
-        member.badge.onDisconnect = function() {
-            if (member.$lastDisconnect) {
-                member.$lastDisconnect.text(member.badge.lastDisconnect.toUTCString());
-            }
-        }
-        
+
+        member.clearData();
+
     }.bind(this));
+
+    this.logChunk = function(chunk) {
+
+        var chunkData = chunk.toDict();
+        chunkData.badge = this.badgeId;
+        chunkData.member = this.key;
+
+        this.writeLog(JSON.stringify(chunkData));
+
+    }.bind(this);
 
     this.getLogName = function() {
         return this.uuid + ".txt";
@@ -101,6 +143,7 @@ function Meeting(group, members, type, moderator, description, location) {
     $.each(this.members, function(index, member) {
         memberIds.push(member.key);
         memberInitials.push(getInitials(member.name));
+        member.meeting = meeting;
     });
     this.memberKeys = memberIds;
     this.memberInitials = memberInitials;
@@ -128,10 +171,16 @@ function Meeting(group, members, type, moderator, description, location) {
 
 }
 
-PAGES = [];
-
+/**
+ * Abstract Model for a Page. These are representations of any .page element that's a direct child of <body>.
+ * Check out the Page Configurations for examples of how to initialize one.
+ */
 function Page(id, onInit, onShow, onHide, extras) {
     PAGES.push(this);
+
+    this.onPause = function() {};
+    this.onResume = function() {};
+
     if (extras) {
         for (var key in extras) {
             this[key] = extras[key];
@@ -147,6 +196,9 @@ function Page(id, onInit, onShow, onHide, extras) {
     this.onHide = onHide.bind(this);
 }
 
+// Global list of pages, used for navigation
+PAGES = [];
+
 
 /***********************************************************************
  * Page Configurations
@@ -155,7 +207,6 @@ function Page(id, onInit, onShow, onHide, extras) {
 
 /**
  * Main Page that displays the list of present users for the group
- * @type {Page}
  */
 mainPage = new Page("main",
     function onInit() {
@@ -175,17 +226,34 @@ mainPage = new Page("main",
         });
     },
     function onShow() {
-        this.loadGroupData();
-        app.badgeScanIntervalID = setInterval(function() {
-            app.scanForBadges();
-        }, BADGE_SCAN_INTERVAL);
-        app.scanForBadges();
+        if (app.bluetoothInitialized) {
+            // after bluetooth is disabled, it's automatically re-enabled.
+            this.beginRefreshData();
+            app.disableBluetooth();
+        }
     },
     function onHide() {
         clearInterval(app.badgeScanIntervalID);
+        clearInterval(app.badgeBatteryIntervalID);
         app.stopScan();
     },
     {
+        onPause: function() {
+            this.onHide();
+        },
+        onResume: function() {
+            this.onShow();
+        },
+        onBluetoothInit: function() {
+            this.loadGroupData();
+            app.badgeScanIntervalID = setInterval(function() {
+                app.scanForBadges();
+            }, BADGE_SCAN_INTERVAL);
+            app.badgeBatteryIntervalID = setInterval(function() {
+                app.getStatusForEachMember();
+            }, BADGE_STATUS_INTERVAL);
+            app.scanForBadges();
+        },
         loadGroupData: function() {
 
             // load the group from localstorage, if it's saved there.
@@ -232,13 +300,23 @@ mainPage = new Page("main",
         },
         displayActiveBadges: function() {
 
-            app.activeMembers = app.activeMembers || {};
-
             $("#devicelist .item").removeClass("active");
+            $("#devicelist .item .battery-icon").removeClass("red yellow green");
             for (var i = 0; i < app.group.members.length; i++) {
                 var member = app.group.members[i];
-                if (member.badgeId in app.activeMembers) {
-                    $("#devicelist .item[data-device='" + member.badgeId + "']").addClass("active");
+                if (member.active) {
+                    var $el = $("#devicelist .item[data-device='" + member.badgeId + "']");
+                    $el.addClass("active");
+
+                    if (member.voltage) {
+                        if (member.voltage >= BATTERY_YELLOW_THRESHOLD) {
+                            $el.find(".battery-icon").addClass("green");
+                        } else if (member.voltage >= BATTERY_RED_THRESHOLD) {
+                            $el.find(".battery-icon").addClass("yellow");
+                        } else {
+                            $el.find(".battery-icon").addClass("red");
+                        }
+                    }
                 }
             }
         },
@@ -324,6 +402,7 @@ meetingPage = new Page("meeting",
     },
     function onShow() {
         window.plugins.insomnia.keepAwake();
+        app.startAllDeviceRecording();
         app.watchdogStart();
         $("#clock").clock();
         this.syncTimeout = setInterval(function() {
@@ -347,6 +426,7 @@ meetingPage = new Page("meeting",
         clearInterval(this.bluetoothCheckTimeout);
         window.plugins.insomnia.allowSleepAgain();
         app.watchdogEnd();
+        app.stopAllDeviceRecording();
         app.meeting.syncLogFile(true);
 
         cordova.plugins.backgroundMode.disable();
@@ -354,6 +434,9 @@ meetingPage = new Page("meeting",
         this.clearMeetingTimeout();
     },
     {
+        onBluetoothInit: function() {
+            app.watchdogStart();
+        },
         setMeetingTimeout: function() {
 
             this.clearMeetingTimeout();
@@ -461,6 +544,9 @@ meetingPage = new Page("meeting",
 );
 
 
+/**
+ * This is a chart that displays raw volume and speaking interval data, for debug purposes
+ */
 function DebugChart($canvas) {
 
     var canvas = $canvas[0];
@@ -520,6 +606,17 @@ function DebugChart($canvas) {
  * App Navigation Behavior Configurations
  */
 
+/**
+ * App is the main brain behind the core functioning of the app.
+ * The app should be the place to do the following operations. Do not have such operations in any other class, 
+ * and do not have any other operations in app. They belong elsewhere!
+ * 
+ * + App and Cordova Initializations
+ * + Page Navigation
+ * + Bluetooth Operations
+ * + Network Operations to talk to the server, including log file syncing
+ * + Watchdog, the loop that runs during a meeting
+ */
 app = {
     /**
      * Initializations
@@ -564,22 +661,29 @@ app = {
 
         document.addEventListener("resume", function onResume() {
             app.synchronizeIncompleteLogFiles();
+            app.activePage.onResume();
         }, false);
         app.synchronizeIncompleteLogFiles();
 
 
         document.addEventListener("pause", function onPause() {
             app.stopScan();
+            app.activePage.onPause();
         }, false);
     },
+
+    /**
+     * Bluetooth Functions
+     */
     initBluetooth: function() {
+        app.bluetoothInitialized = false;
 
         bluetoothle.initialize(
-            app.bluetoothInitializeSuccess,
-            {request: true,statusReceiver: true}
+            app.bluetoothStatusUpdate,
+            {request: false,statusReceiver: true}
         );
     },
-    bluetoothInitializeSuccess: function (obj) {
+    bluetoothStatusUpdate: function (obj) {
         console.log('Success');
 
         // Android v6.0 required requestPermissions. If it's Android < 5.0 there'll
@@ -589,26 +693,42 @@ app = {
             bluetoothle.requestPermission(
                 function(obj) {
                     console.log('permissions ok');
+                    app.ensureBluetoothEnabled();
+                    app.bluetoothInitialized = true;
+                    app.activePage.onBluetoothInit();
                 },
                 function(obj) {
                     console.log('permissions err');
+                    app.ensureBluetoothEnabled();
+                    app.bluetoothInitialized = true;
+                    app.activePage.onBluetoothInit();
                 }
             );
-            if (app.activePage == meetingPage) {
-                app.watchdogStart();
-            }
         }
     },
-    ensureBluetoothEnabled: function(isDisabledCallback, onEnableCallback) {
+    ensureBluetoothEnabled: function() {
         bluetoothle.isEnabled(function(status) {
             if (! status.isEnabled) {
                 app.watchdogEnd();
-                bluetoothle.enable(function success() {
-                    // not used!
-                }, function error() {
-                    toastr.error("Could not enable Bluetooth! Please enable it manually.");
-                });
+                app.enableBluetooth();
             }
+        });
+    },
+    enableBluetooth: function() {
+        console.log("Enabling Bluetooth!");
+        bluetoothle.enable(function success() {
+            // unused
+        }, function error() {
+            toastr.error("Could not enable Bluetooth! Please enable it manually.");
+            console.log("Could not enable bluetooth!");
+        });
+    },
+    disableBluetooth: function() {
+        app.watchdogEnd();
+        app.stopScan();
+        console.log("Disabling Bluetooth!");
+        bluetoothle.disable(function success() {
+        }, function error() {
         });
     },
 
@@ -682,7 +802,7 @@ app = {
 
 
 
-/**
+    /**
      * Functions to refresh the group data from the backend
      */
     refreshGroupData: function(showLoading, callback) {
@@ -726,12 +846,13 @@ app = {
     },
 
     /**
-     * Functions to get which badges are present
+     * Badge Scanning to see which badges are present, and get the status of each badge
      */
     scanForBadges: function() {
         if (app.scanning || ! app.group) {
             return;
         }
+        $("#scanning").removeClass("hidden");
         app.scanning = true;
         var activeBadges = [];
         qbluetoothle.stopScan().then(function() {
@@ -750,16 +871,13 @@ app = {
     },
     onScanComplete: function(activeBadges) {
         app.scanning = false;
+        $("#scanning").addClass("hidden");
         if (! app.group) {
             return;
         }
-        app.activeMembers = {};
         for (var i = 0; i < app.group.members.length; i++) {
             var member = app.group.members[i];
             member.active = !!~activeBadges.indexOf(member.badgeId);
-            if (member.active) {
-                app.activeMembers[member.badgeId] = true;
-            }
         }
         mainPage.displayActiveBadges();
     },
@@ -767,12 +885,11 @@ app = {
         if (! app.group) {
             return;
         }
-        app.activeMembers = app.activeMembers || {};
         for (var i = 0; i < app.group.members.length; i++) {
             var member = app.group.members[i];
             if (activeBadge == member.badgeId) {
                 member.active = true;
-                app.activeMembers[member.badgeId] = true;
+                app.getStatusForMember(member);
                 mainPage.displayActiveBadges();
                 return;
             }
@@ -780,7 +897,50 @@ app = {
     },
     stopScan: function() {
         app.scanning = false;
+        $("#scanning").addClass("hidden");
         qbluetoothle.stopScan();
+    },
+    getStatusForEachMember: function() {
+        if (! app || ! app.group) {
+            return;
+        }
+        $.each(app.group.members, function(index, member) {
+            app.getStatusForMember(member);
+        });
+    },
+    getStatusForMember: function(member) {
+        if (member.active) {
+            member.badge.queryStatus(
+                function callback(data) {
+                    member.voltage = data.voltage;
+                    mainPage.displayActiveBadges();
+                },
+                function failure() {
+                    member.voltage = null;
+                    mainPage.displayActiveBadges();
+                }
+            );
+        }
+    },
+    startAllDeviceRecording: function() {
+        if (! app.meeting) {
+            return;
+        }
+        console.log("Starting recording on all meeting badges!");
+        for (var i = 0; i < app.meeting.members.length; ++i) {
+            var badge = app.meeting.members[i].badge;
+            badge.startRecording();
+        }
+    },
+    stopAllDeviceRecording: function() {
+        if (! app.meeting) {
+            return;
+        }
+        console.log("Stopping recording on all meeting badges!");
+        for (var i = 0; i < app.meeting.members.length; ++i) {
+            var badge = app.meeting.members[i].badge;
+            badge.stopRecording();
+        }
     },
 
 
@@ -796,11 +956,14 @@ app = {
         $("#" + page.id).addClass("active");
         page.onShow();
     },
-
     showMainPage: function() {
         this.showPage(mainPage);
     },
 
+    /**
+     * Watchdog
+     * This is the main loop of the meeting, which checks each of the badges for new data
+     */
     watchdogStart: function() {
         // console.log("Starting watchdog");
         app.watchdogTimer = setInterval(function(){ app.watchdog() }, WATCHDOG_SLEEP);
@@ -820,7 +983,7 @@ app = {
         // Iterate over badges
         for (var i = 0; i < app.meeting.members.length; ++i) {
             var badge = app.meeting.members[i].badge;
-            badge.connectDialog();
+            badge.recordAndQueryData();
         }
     },
 };
@@ -828,40 +991,9 @@ app = {
 
 
 /***********************************************************************
- * Initialization of various libraries and global prototype overloads
+ * File System
+ * This wraps the filesystem in mutexes and flags. Only access files through this object!
  */
-
-
-toastr.options = {
-    "closeButton": false,
-    "positionClass": "toast-bottom-center",
-    "preventDuplicates": true,
-    "showDuration": "200",
-    "hideDuration": "500",
-    "timeOut": "1000"
-};
-
-if (!String.prototype.format) {
-    String.prototype.format = function() {
-        var str = this.toString();
-        if (!arguments.length)
-            return str;
-        var args = typeof arguments[0],
-            args = (("string" == args || "number" == args) ? arguments : arguments[0]);
-        for (arg in args)
-            str = str.replace(RegExp("\\{" + arg + "\\}", "gi"), args[arg]);
-        return str;
-    }
-}
-
-$.ajaxSetup({
-    beforeSend: function(xhr, settings) {
-        xhr.setRequestHeader("X-APPKEY", APP_KEY);
-    }
-});
-
-document.addEventListener('deviceready', function() {app.initialize() }, false);
-
 
 window.fileStorage = {
     locked:false,
@@ -981,6 +1113,11 @@ window.fileStorage = {
     }
 };
 
+
+/********************************
+ * Utility Functions and library initializations
+ */
+
 function pad(n, width, z) {
     z = z || '0';
     n = n + '';
@@ -1020,3 +1157,35 @@ jQuery.fn.extend({
         return this;
     }
 });
+
+
+toastr.options = {
+    "closeButton": false,
+    "positionClass": "toast-bottom-center",
+    "preventDuplicates": true,
+    "showDuration": "200",
+    "hideDuration": "500",
+    "timeOut": "1000",
+}
+
+if (!String.prototype.format) {
+    String.prototype.format = function() {
+        var str = this.toString();
+        if (!arguments.length)
+            return str;
+        var args = typeof arguments[0],
+            args = (("string" == args || "number" == args) ? arguments : arguments[0]);
+        for (arg in args)
+            str = str.replace(RegExp("\\{" + arg + "\\}", "gi"), args[arg]);
+        return str;
+    }
+}
+
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        xhr.setRequestHeader("X-APPKEY", APP_KEY);
+    }
+});
+
+document.addEventListener('deviceready', function() {app.initialize() }, false);
+

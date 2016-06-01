@@ -16,6 +16,9 @@ function Badge(address) {
     this.badgeDialogue = new BadgeDialogue(this);
 
 
+    /**
+     * Sends a string to the device, and refreshes the disconnection timeout
+     */
     this.sendString = function(stringValue) {
 		var address = this.address;
 		var badge = this;
@@ -34,6 +37,9 @@ function Badge(address) {
         badge.refreshTimeout();
 	}.bind(this);
 
+    /**
+     * Sends a string to the device and immediately closes the connection.
+     */
     this.sendStringAndClose = function(stringValue) {
         var address = this.address;
         var badge = this;
@@ -53,27 +59,140 @@ function Badge(address) {
         badge.refreshTimeout();
     }.bind(this);
 
+    /**
+     * Queries status from the badge
+     * Calls the callback with the data received from the dialog.
+     */
+    this.queryStatus = function(successCallback, failureCallback) {
+        this._connect(
+            function onConnect() {
+                this.badgeDialogue.sendStatusRequest();
+            },
+            function onData(data) {
+                // this._close();
+                successCallback(this.badgeDialogue.onStatusReceived(data));
+                this.badgeDialogue.sendEndRecRequestAndClose();
+            },
+            function onFailure() {
+                failureCallback();
+            }
+        );
+    }.bind(this);
 
-	// Connects to a badge, run discovery, subscribe, etc
-	this.connectDialog = function() {
+    /**
+     * Send the signal to the badge to start recording
+     */
+    this.startRecording = function(callback) {
+        this._connect(
+            function onConnect() {
+                this.badgeDialogue.sendStartRecRequest();
+            },
+            function onData(data) {
+                this.badgeDialogue.onRecordingAckReceived(data);
+                if (callback) {
+                    callback(this);
+                }
+            }
+        );
+    }.bind(this);
 
-        this.log("Attempting to connect");
+    /**
+     * Send the signal to the badge to stop recording
+     */
+    this.stopRecording = function() {
+        this._connect(
+            function onConnect() {
+            },
+            function onData(data) {
+            }
+        );
+    }.bind(this);
+
+    /**
+     * Send a signal to the badge to ask for volume data
+     */
+    this.queryData = function(callback) {
+        this._connect(
+            function onConnect() {
+                var requestTs = this.badgeDialogue.getLastSeenChunkTs();
+                this.badgeDialogue.sendDataRequest(requestTs.seconds,requestTs.ms);
+            },
+            function onData(data) {
+                if (this.badgeDialogue.isHeader(data)) {
+                    this.badgeDialogue.onHeaderReceived(data);
+                } else {
+                    this.badgeDialogue.onDataReceived(data);
+                    callback(this);
+                }
+            }
+        );
+    }.bind(this);
+
+    /**
+     * Starts recording and then immediately queries for data upon response.
+     */
+    this.recordAndQueryData = function(callback) {
+        var requestedData = false;
+        this._connect(
+            function onConnect() {
+                this.badgeDialogue.sendStartRecRequest();
+            },
+            function onData(data) {
+                if (requestedData) {
+                    if (this.badgeDialogue.isHeader(data) && this.badgeDialogue.expectingHeader) {
+                        this.badgeDialogue.onHeaderReceived(data);
+                    } else {
+                        this.badgeDialogue.onDataReceived(data);
+                        if (callback) {
+                            callback(this);
+                        }
+                    }
+                } else {
+                    this.badgeDialogue.onRecordingAckReceived(data);
+
+                    var requestTs = this.badgeDialogue.getLastSeenChunkTs();
+                    this.badgeDialogue.sendDataRequest(requestTs.seconds,requestTs.ms);
+
+                    requestedData = true;
+                }
+            }
+        );
+    }.bind(this);
+
+
+    /**
+     * Badge connections.
+     *
+     * WARNING! ACHTUNG!
+     *
+     * This is for internal use only. Do not call this from any other object. Instead, wrap it in a pretty function like the ones above.
+     * This function has a LOT of checks to ensure you don't connect to two badges at once or disconnect from a badge while connecting to it, or any other number of things that can go wrong.
+     * DO NOT mess with them, or you will break everything.
+     */
+	this._connect = function(onConnectCallback, onDataCallback, onFailure) {
+
+        // this.log("Attempting to connect");
 
         if (this.lastDisconnect && this.lastDisconnect.getTime() > new Date().getTime() - 500) {
             this.log("Badge was disconnected too recently. Not connecting.");
             return;
         }
 
+
         if (window.aBadgeIsConnecting) {
-            if (window.aBadgeIsConnecting != this) {
+            if (window.aBadgeIsConnecting != this && ! this.waitingToConnect) {
+                // this.log("Looks like something else is connecting. I'm waiting.");
                 setTimeout(function() {
-                    this.connectDialog();
+                    this.waitingToConnect = false;
+                    this._connect(onConnectCallback, onDataCallback, onFailure);
                 }.bind(this), 1000);
+                this.waitingToConnect = true;
             }
             return;
         }
 
         if (this.isConnected) {
+            this.log("Already connected. Not connecting.");
             return;
         }
 
@@ -91,6 +210,45 @@ function Badge(address) {
 
         this.refreshTimeout();
 
+        function fail(obj) { // failure
+
+            badge.isConnecting = false;
+            if (window.aBadgeIsConnecting == badge) {
+                window.aBadgeIsConnecting = null;
+            }
+
+            if (obj) {
+                if (obj.connectFailed) {
+                    badge.log("Connect failed!");
+                }
+
+                badge.log("General error: " + obj.error + " - " + obj.message + " Keys: " + Object.keys(obj));
+                badge.logObject(obj);
+                if (obj.message) {
+                    if ( ~obj.message.indexOf("reconnect or close") ||  obj.error == "isDisconnected") {
+                        badge.isConnecting = false;
+                        if (window.aBadgeIsConnecting == this) {
+                            window.aBadgeIsConnecting = null;
+                        }
+                        badge.isConnected = true;
+                        badge.sendingData = false;
+                        badge._close();
+                    }
+                    if ( ~obj.message.indexOf("Characteristic") ||  ~obj.message.indexOf("Service")) {
+                        // if we get here, we're super sad because bluetooth has screwed up royally.
+                        // throw caution to the wind and try restarting it!
+                        app.disableBluetooth();
+                    }
+                }
+            }
+
+            badge.isConnected = false;
+
+            if (onFailure && (! obj || ! obj.error == "isDisconnected")) {
+                onFailure.bind(badge)();
+            }
+        }
+
         qbluetoothle.connectDevice(params)
 			.then(qbluetoothle.discoverDevice)
 			.then(qbluetoothle.subscribeToDevice)
@@ -99,23 +257,7 @@ function Badge(address) {
                     badge.log("Success:" + obj.status + "| Keys: " + Object.keys(obj));
                     badge.logObject(obj);
 				},
-				function fail(obj) { // failure
-
-                    if (obj.connectFailed) {
-                        badge.log("Connect failed!");
-                    }
-
-                    badge.log("General error: " + obj.error + " - " + obj.message + " Keys: " + Object.keys(obj));
-                    badge.isConnecting = false;
-                    if (window.aBadgeIsConnecting == badge) {
-                        window.aBadgeIsConnecting = null;
-                    }
-                    badge.logObject(obj);
-                    if (obj.message && ~obj.message.indexOf("reconnect or close")) {
-                        badge._close();
-                    }
-                    badge.isConnected = false;
-				},
+                fail,
 				function notify(obj) { // notification
 					if (obj.status == "subscribedResult") {
                         badge.isConnecting = false;
@@ -125,7 +267,9 @@ function Badge(address) {
 						var bytes = bluetoothle.encodedStringToBytes(obj.value);
 						var str = bluetoothle.bytesToString(bytes);
                         badge.refreshTimeout();
-						badge.badgeDialogue.onData(str);
+
+                        onDataCallback.bind(badge)(str);
+
 					} else if (obj.status == "subscribed") {
 						badge.log("Subscribed: " + obj.status);
                         badge.isConnecting = false;
@@ -133,8 +277,8 @@ function Badge(address) {
                             window.aBadgeIsConnecting = null;
                         }
 
-						// start the dialog
-						badge.sendStatusRequest();
+                        onConnectCallback.bind(badge)();
+
 					} else {
                         badge.log("Unexpected Subscribe Status");
 					}
@@ -165,7 +309,6 @@ function Badge(address) {
             if (window.aBadgeIsConnecting == this) {
                 window.aBadgeIsConnecting = null;
             }
-            this.isConnecting = false;
             this.isConnected = true;
             this.sendingData = false;
             this._close();
@@ -173,6 +316,9 @@ function Badge(address) {
         }.bind(this), 10000);
     }.bind(this);
 
+    /**
+     * This function manually calls disconnect before closing. It should probably never be needed.
+     */
     this.disconnectThenClose = function() {
         var badge = this;
 
@@ -191,14 +337,9 @@ function Badge(address) {
             }, {address: this.address});
     }.bind(this);
 
-    // Sends a request for status from the badge
-	this.sendStatusRequest = function() {
-		var address = this.address;
-        this.log("Requesting status: ");
-		var s = "s"; //status
-		this.sendString(s);
-	}.bind(this);
-
+    /**
+     * Public facing function to close a connection. It will only actually close the connection if a series of checks get passed. If it can't close the connection cleanly it will just fail.
+     */
     this.close = function() {
 
         var badge = this;
@@ -218,6 +359,11 @@ function Badge(address) {
 
     }.bind(this);
 
+    /**
+     * Internal close function. Don't call it unless you absolutely MUST force close a connection. And if you do, you will most likely break everything.
+     *
+     * Instead, use close()
+     */
 	this._close = function() {
         var badge = this;
 
@@ -240,6 +386,10 @@ function Badge(address) {
         if (! this.isConnected) {
             badge.log("Badge isn't connected. Canceling disconnect.");
             return;
+        }
+
+        if (window.aBadgeIsConnecting == badge) {
+            window.aBadgeIsConnecting = null;
         }
 
         badge.log("Looks like close really should be called");
@@ -270,12 +420,18 @@ function Badge(address) {
 	}.bind(this);
 
 
+    /**
+     * Console logging that can be turned off
+     */
     this.log = function(str) {
         if (SHOW_BADGE_CONSOLE) {
             console.log(this.address + " | " + new Date() + " | " + str);
         }
     }.bind(this);
 
+    /**
+     * Used to log an object directly to the console, for debugging purposes
+     */
     this.logObject = function(obj) {
         if (SHOW_BADGE_CONSOLE) {
             console.log(obj);

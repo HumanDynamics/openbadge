@@ -62,6 +62,24 @@ function closeDevice(params) {
     return d.promise;
 }
 
+function disconnectDevice(params) {
+    var address = params.address;
+    var d = Q.defer();
+    var paramsObj = {
+        "address": address
+    };
+    bluetoothle.disconnect(
+        function(obj) { // success
+            d.resolve(obj);
+        },
+        function(obj) { // failure function
+            d.reject(obj);
+        },
+        paramsObj);
+
+    return d.promise;
+}
+
 function discoverDevice(params) {
     var address = params.address;
     //console.log(address + "|Internal call to discover");
@@ -200,6 +218,7 @@ module.exports = {
     startScan: startScan,
     stopScan: stopScan,
     connectDevice: connectDevice,
+    disconnectDevice: disconnectDevice,
     discoverDevice: discoverDevice,
     closeDevice: closeDevice,
     subscribeToDevice: subscribeToDevice,

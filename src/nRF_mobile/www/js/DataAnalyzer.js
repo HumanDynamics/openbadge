@@ -1,6 +1,6 @@
 // if at least this amount of time happens between a null signal
 // and a talk signal, they are considered to have started talking.
-var MIN_TALK_LENGTH = 501;
+var MIN_TALK_LENGTH = 751;
 // If we get no signal for this amount of time, consider them no
 // longer talking.
 var TALK_TIMEOUT = 1500;
@@ -15,6 +15,8 @@ PRIOR_WEIGHT = 0.9;
 // Length of intervals (in ms) for loudness comparison. Since time intervals
 // might not be the same
 var INTERVAL_INCREMENTS = 25;
+
+window.ENABLE_DATA_LOGGING = false;
 
 // do two given time intervals intersect?
 function checkIntersect(startA,endA,startB,endB) {
@@ -32,18 +34,19 @@ function DataAnalyzer() {
 
     this.purgeSamples = function (timestamp) {
         while (samples.length > 0 && (timestamp - samples[0].timestamp > BUFFER_LENGTH)) {
-            //console.log("Removing from samples:",samples[0]);
+            //dataLog("Removing from samples:",samples[0]);
             samples.shift();
         }
     }.bind(this);
 
     this.addChunk = function (chunk) {
         var startTime = chunk.ts;
+        var startTimeMs = chunk.ts_ms; // start time is a combination of timestamp and fractional part (ms)
         var sampleDuration = chunk.sampleDelay;
         var samples = chunk.samples;
         var analyzer = this;
         $.each(samples, function (i, volume) {
-            analyzer.addSample(volume, startTime * 1000 + sampleDuration * i, sampleDuration);
+            analyzer.addSample(volume, startTime * 1000 + startTimeMs + sampleDuration * i, sampleDuration);
         });
 
     }.bind(this);
@@ -55,7 +58,7 @@ function DataAnalyzer() {
         if (samples.length > 0) {
             var lastTimestamp = samples[samples.length - 1].timestamp;
             if (timestamp <= lastTimestamp) {
-                console.log("Skipping existing sample:", dateToString(timestamp));
+                dataLog("Skipping existing sample: "+timestamp+" "+dateToString(timestamp));
                 return false;
             }
         }
@@ -96,9 +99,9 @@ function DataAnalyzer() {
         var m = meanAndStd(samples, function (sample) {
             return sample.volRaw
         });
-        cutoff = (CUTOFF_PROIOR * PRIOR_WEIGHT) + (m.mean - 2 * m.std) * (1 - PRIOR_WEIGHT);
-        console.log("Cutoff prior,value,mean and std:", CUTOFF_PROIOR, cutoff, m.mean, m.std);// calc adjusted cutoff (using samples and prior)
-    }
+        cutoff = (CUTOFF_PROIOR * PRIOR_WEIGHT) + (m.mean + 2 * m.std) * (1 - PRIOR_WEIGHT);
+        dataLog("Cutoff prior,value,mean and std:", CUTOFF_PROIOR, cutoff, m.mean, m.std);// calc adjusted cutoff (using samples and prior)
+    }.bind(this);
 
     // updates the threshold
     this.updateSpeakThreshold = function () {
@@ -109,12 +112,17 @@ function DataAnalyzer() {
         var m = meanAndStd(samples, function (sample) {
             return sample.volClippedSmooth
         });
-        speakThreashold = (SPEAK_THRESHOLD_PRIOR * PRIOR_WEIGHT) + (m.mean + 2 * m.std) * (1 - PRIOR_WEIGHT);
-        console.log("Speak priotr,threashold, mean and std:", SPEAK_THRESHOLD_PRIOR, speakThreashold, m.mean, m.std);
-    }
+        speakThreashold = (SPEAK_THRESHOLD_PRIOR * PRIOR_WEIGHT) + (m.mean - 2 * m.std) * (1 - PRIOR_WEIGHT);
+        dataLog("Speak priotr,threashold, mean and std:", SPEAK_THRESHOLD_PRIOR, speakThreashold, m.mean, m.std);
+    }.bind(this);
 
     this.getSamples = function () {
         return samples;
+    }.bind(this);
+
+    this.clearData = function() {
+        var samples = [];
+        var smoother = new SmoothArray();
     }.bind(this);
 }
 /*******************************************************
@@ -148,10 +156,10 @@ function generateTalkIntervals(speakSamples) {
 
         // new interval ended. Because each sample is duration millisecond long, we add this to the endTime
         var newTalkInterval = {'startTime':speakSamples[i].timestamp, 'endTime': speakSamples[j].timestamp+speakSamples[j].duration};
-        //console.log("start time is: ",newTalkInterval.startTime);
-        //console.log("Is it min length?: ",dateToString(newTalkInterval.startTime),dateToString(newTalkInterval.endTime));
+        //dataLog("start time is: ",newTalkInterval.startTime);
+        //dataLog("Is it min length?: ",dateToString(newTalkInterval.startTime),dateToString(newTalkInterval.endTime));
         if (this.isMinTalkLength(newTalkInterval)) {
-            //console.log("Adding: ",dateToString(newTalkInterval.startTime),dateToString(newTalkInterval.endTime));
+            //dataLog("Adding: ",dateToString(newTalkInterval.startTime),dateToString(newTalkInterval.endTime));
             talkIntervals.push(newTalkInterval);
         }
         // set i to hold the next startTime
@@ -235,7 +243,7 @@ function GroupDataAnalyzer(members,periodStartTime,periodEndTime) {
     var intervals = [];
 
     // init pos indexes for all members
-    console.log("Init pos");
+    dataLog("Init pos");
     var membersPos = [];
     $.each(members, function (index, member) {
         var pos = -1;
@@ -253,7 +261,7 @@ function GroupDataAnalyzer(members,periodStartTime,periodEndTime) {
         var dEnd = d + INTERVAL_INCREMENTS;
 
         var newValue = {'timestamp':dStart,'memberIndex':-1,'vol':-1};
-        //console.log("Looking to match",dateToString(d));
+        //dataLog("Looking to match",dateToString(d));
         // progress pos in all members to point to relevant sample
         // and check if it's the loudest speaker for this interval
         $.each(members, function (index, member) {
@@ -268,19 +276,19 @@ function GroupDataAnalyzer(members,periodStartTime,periodEndTime) {
                 var sampleEnd = sample.timestamp+sample.duration-1;
 
                 if (checkIntersect(d,dEnd,sampleStart,sampleEnd)) {
-                    //console.log(index,"Found a match for ",dateToString(d),"Found!",dateToString(sampleStart));
+                    //dataLog(index,"Found a match for ",dateToString(d),"Found!",dateToString(sampleStart));
                     // Only use samples that are louder than what we got, AND are
                     // louder than the threshold
                     if (sample.isSpeak && sample.volClippedSmooth > newValue.vol) {
                         newValue.memberIndex = index;
                         newValue.vol = sample.volClippedSmooth;
                         newValue.duration = INTERVAL_INCREMENTS;
-                        //console.log(index,"New max volume !",newValue.vol);
+                        //dataLog(index,"New max volume !",newValue.vol);
                     }
                     break;
                 } else if (sampleStart > dEnd) {
                     // this condition handles gaps in data
-                    //console.log(index,"Not found, breaking");
+                    //dataLog(index,"Not found, breaking");
                     break;
                 } else {
                     pos++;
@@ -292,7 +300,7 @@ function GroupDataAnalyzer(members,periodStartTime,periodEndTime) {
 
         // add sample to the "winning" member
         if (newValue.memberIndex > -1) {
-            //console.log("Pushing", newValue);
+            //dataLog("Pushing", newValue);
             wonSamples[newValue.memberIndex].push(newValue);
         }
     }
@@ -300,7 +308,7 @@ function GroupDataAnalyzer(members,periodStartTime,periodEndTime) {
     // generate speaking intervals
     $.each(members, function (index, member) {
         var v = generateTalkIntervals(wonSamples[index]);
-        console.log("intervals for ",index,"are",v,"had winning samples:",wonSamples[index].length);
+        dataLog("intervals for ",index,"are",v,"had winning samples:",wonSamples[index].length);
         intervals[index] = v;
     });
 
@@ -313,4 +321,10 @@ function filterPeriod(samples,start,end) {
     }
 
     return samplesInPeriod = samples.filter(isInPeriod);
+}
+
+function dataLog(str) {
+    if (window.ENABLE_DATA_LOGGING ) {
+        console.log("DataAnalyzer: " + str);
+    }
 }

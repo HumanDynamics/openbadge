@@ -1,5 +1,6 @@
 env/
 data/
+bat_data/
 *scn
 *csv
 .ipynb_checkpoints/*

@@ -2,9 +2,10 @@
 from bluepy import btle
 from bluepy.btle import BTLEException
 from badge import Badge, BadgeDelegate
-
+from badge_db import badgeDB
 from badge_discoverer import BadgeDiscoverer
 
+import datetime
 import struct
 import logging
 import logging.handlers
@@ -25,6 +26,8 @@ scans_file_name = 'rssi_scan.txt'
 
 PULL_WAIT = 3
 SCAN_DURATION = 5 # seconds
+RECORDING_TIMEOUT = 0 # unlimited minutes
+
 # create logger with 'badge_server'
 logger = logging.getLogger('badge_server')
 logger.setLevel(logging.DEBUG)
@@ -62,20 +65,20 @@ logger.addFilter(f)
 # Raises a timeout exception if a function takes too long
 # http://stackoverflow.com/questions/2281850/timeout-function-if-it-takes-too-long-to-finish
 class TimeoutError(Exception):
-    pass
+	pass
 
 # Or, to use with a "with" statement
 class timeout:
-    def __init__(self, seconds=1, error_message='Timeout'):
-        self.seconds = seconds
-        self.error_message = error_message
-    def handle_timeout(self, signum, frame):
-        raise TimeoutError(self.error_message)
-    def __enter__(self):
-        signal.signal(signal.SIGALRM, self.handle_timeout)
-        signal.alarm(self.seconds)
-    def __exit__(self, type, value, traceback):
-        signal.alarm(0)
+	def __init__(self, seconds=1, error_message='Timeout'):
+		self.seconds = seconds
+		self.error_message = error_message
+	def handle_timeout(self, signum, frame):
+		raise TimeoutError(self.error_message)
+	def __enter__(self):
+		signal.signal(signal.SIGALRM, self.handle_timeout)
+		signal.alarm(self.seconds)
+	def __exit__(self, type, value, traceback):
+		signal.alarm(0)
 
 '''
 Returns a list of devices included in device_macs.txt 
@@ -117,37 +120,51 @@ def dialogue(addr=""):
 
 		with timeout(seconds=5, error_message="Dialogue timeout (wrong firmware version?)"):
 			while not bdg.dlg.gotStatus:
-				bdg.NrfReadWrite.write("s")  # ask for status
+				bdg.sendStatusRequest()  # ask for status
 				bdg.waitForNotifications(1.0)  # waiting for status report
 			
 			logger.info("Got status")
-			if bdg.dlg.needDate:
-				bdg.sendDateTime()
-				logger.info("Date sent")
-			else:
-				logger.info("Already synced")
-			
-			while not bdg.dlg.gotDateTime:
-				bdg.NrfReadWrite.write("t")  # ask for time
-				bdg.waitForNotifications(1.0)
+						
+			#while not bdg.dlg.gotDateTime:
+			#	bdg.NrfReadWrite.write("t")  # ask for time
+			#	bdg.waitForNotifications(1.0)
 
-			logger.info("Badge datetime: {},{}".format(bdg.dlg.badge_sec,bdg.dlg.badge_ts))
+			logger.info("Badge datetime: {},{}, Voltage: {}, Recording? {}".format(bdg.dlg.timestamp_sec,bdg.dlg.timestamp_ms,bdg.dlg.voltage,bdg.dlg.recording))
 
-		if bdg.dlg.dataReady:
-			logger.info("Requesting data...")
-			bdg.NrfReadWrite.write("d")  # ask for data
-			wait_count = 0;
-			while True:
-				if bdg.dlg.gotEndOfData == True:
-					break
-				if bdg.waitForNotifications(1.0):
-					# if got data, don't inrease the wait counter
-					continue
-				logger.info("Waiting for more data...")
-				wait_count = wait_count+1
-				if wait_count >= PULL_WAIT: break
-				
-			logger.info("finished reading data")
+
+		with timeout(seconds=5, error_message="Dialogue timeout (wrong firmware version?)"):
+			while not bdg.dlg.sentStartRec:
+				bdg.sendStartRecRequest(RECORDING_TIMEOUT)  # ask to start recoding
+				#bdg.sendStatusRequest()  # ask for status instead
+				bdg.waitForNotifications(1.0)  # waiting for status report
+
+			logger.info("Got Ack for start recording")
+
+		# data request using the "r" command - data since time X
+		logger.info("Requesting data...")
+		lastChunkDate = None
+		with badgeDB() as db:
+			lastChunkDate = db.getLastChunkDate(addr)
+
+		if (lastChunkDate == None):
+			lastChunkDate = datetime.datetime.now()
+			logger.info("Cannot find saved chunks. Setting last chunk date to: {}".format(lastChunkDate))
+		else:
+			logger.info("Last chunk date: {}".format(lastChunkDate))
+
+		bdg.sendDataRequest(lastChunkDate) # ask for data
+		wait_count = 0;
+		while True:
+			if bdg.dlg.gotEndOfData == True:
+				logger.info("End of data")
+				break
+			if bdg.waitForNotifications(1.0):
+				# if got data, don't inrease the wait counter
+				continue
+			logger.info("Waiting for more data...")
+			wait_count = wait_count+1
+			if wait_count >= PULL_WAIT: break
+		logger.info("finished reading data")
 
 	except BTLEException, e:
 		retcode=-1
@@ -174,15 +191,27 @@ def dialogue(addr=""):
 				logger.info("saving chunks to file")
 				outfile = addr.replace(":","_") + ".scn"
 				i = 0
+
+				# store in CSV file
 				fout = open(outfile, "a")
 				for chunk in bdg.dlg.chunks:
-					logger.info("Chunk timestamp: {}, Voltage: {}, Samples in chunk: {}".format(chunk.ts,chunk.voltage,len(chunk.samples)))
+					logger.info("CSV: Chunk timestamp: {}, Voltage: {}, Delay: {}, Samples in chunk: {}".format(chunk.ts,chunk.voltage,chunk.sampleDelay,len(chunk.samples)))
 					fout.write("{},{},{}".format(chunk.ts,chunk.voltage,chunk.sampleDelay))
 					for sample in chunk.samples:
 						fout.write(",{}".format(sample))
 		
 					fout.write("\n")
 				fout.close()
+
+				# store in DB
+				with badgeDB() as db:
+					for chunk in bdg.dlg.chunks:
+						logger.info("DB: Chunk timestamp: {}, Voltage: {}, Delay: {}, Samples in chunk: {}".format(chunk.ts,chunk.voltage,chunk.sampleDelay,len(chunk.samples)))
+						db.insertChunk(addr,chunk.ts,chunk.voltage)
+						db.insertSamples(addr,chunk)
+						#for sample in chunk.samples:
+						#	fout.write(",{}".format(sample))			
+
 				logger.info("done writing")
 
 			else:
@@ -345,5 +374,8 @@ if __name__ == "__main__":
 					dialogue(mac)
 					time.sleep(2)  # requires sleep between devices
 					mac=None
+
+			logger.info("Sleeping...")
+			time.sleep(6);
 
 exit(0)
