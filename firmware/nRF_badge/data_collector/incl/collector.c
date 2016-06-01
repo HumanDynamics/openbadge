@@ -37,6 +37,7 @@ void collector_init()
         calCount++;
     }
     int calVal = calTotal/calCount;
+    UNUSED_VARIABLE(calVal);
     debug_log("cal: %d\r\n",calVal);
     
     isCollecting = false;
