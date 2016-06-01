@@ -1,4 +1,4 @@
-var Q = require('q');
+require('q');
 var qbluetoothle = require('./qbluetoothle');
 var Badge = require('./badge');
 
@@ -17,12 +17,12 @@ window.DEBUG_CHART_WINDOW = 1000 * 60 * 2;
 
 window.CHECK_BLUETOOTH_STATUS_INTERVAL = 5 * 60 * 1000;
 window.CHECK_MEETING_LENGTH_INTERVAL =  2 * 60 * 60 * 1000;
-window.CHECK_MEETING_LENGTH_REACTION_TIME = 1 * 60 * 1000;
+window.CHECK_MEETING_LENGTH_REACTION_TIME = 60 * 1000;
 
 window.SHOW_BADGE_CONSOLE = false;
 
-BATTERY_YELLOW_THRESHOLD = 2.5
-BATTERY_RED_THRESHOLD = 2.3
+BATTERY_YELLOW_THRESHOLD = 2.5;
+BATTERY_RED_THRESHOLD = 2.3;
 
 
 
@@ -995,11 +995,10 @@ app = {
  * This wraps the filesystem in mutexes and flags. Only access files through this object!
  */
 
-
 window.fileStorage = {
     locked:false,
     save: function (name, data, deferred) {
-        var deferred = deferred || $.Deferred();
+        deferred = deferred || $.Deferred();
         if (window.fileStorage.locked) {
             setTimeout(function() {window.fileStorage.save(name, data, deferred)}, 100);
             return deferred.promise();
@@ -1025,7 +1024,7 @@ window.fileStorage = {
                 deferred.resolve();
             };
             writer.onerror = fail;
-            writer.seek(writer.length)
+            writer.seek(writer.length);
             writer.write(data);
         }
 

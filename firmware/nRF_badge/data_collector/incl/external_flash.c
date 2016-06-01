@@ -48,8 +48,8 @@ void spi_init()
         SPIM0_SS_PIN,                         //    // SS, we'll handle that manually
         APP_IRQ_PRIORITY_LOW,       // Interrupt priority LOW.
         SPI_CONFIG_ORDER_MsbFirst,  // Bits order LSB.
-        SPI_CONFIG_CPOL_ActiveHigh, // Serial clock polarity ACTIVEHIGH.
-        SPI_CONFIG_CPHA_Leading,    // Serial clock phase LEADING.
+        SPI_CONFIG_CPOL_ActiveLow, // Serial clock polarity ACTIVELOW.
+        SPI_CONFIG_CPHA_Trailing,    // Serial clock phase TRAILING.
         0                           // Don't disable all IRQs.
     };
 
