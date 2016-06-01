@@ -89,7 +89,9 @@ function Badge(address) {
             },
             function onData(data) {
                 this.badgeDialogue.onRecordingAckReceived(data);
-                callback(this);
+                if (callback) {
+                    callback(this);
+                }
             }
         );
     }.bind(this);
@@ -224,7 +226,18 @@ function Badge(address) {
                 badge.logObject(obj);
                 if (obj.message) {
                     if ( ~obj.message.indexOf("reconnect or close") ||  obj.error == "isDisconnected") {
+                        badge.isConnecting = false;
+                        if (window.aBadgeIsConnecting == this) {
+                            window.aBadgeIsConnecting = null;
+                        }
+                        badge.isConnected = true;
+                        badge.sendingData = false;
                         badge._close();
+                    }
+                    if ( ~obj.message.indexOf("Characteristic") ||  ~obj.message.indexOf("Service")) {
+                        // if we get here, we're super sad because bluetooth has screwed up royally.
+                        // throw caution to the wind and try restarting it!
+                        app.disableBluetooth();
                     }
                 }
             }
@@ -296,7 +309,6 @@ function Badge(address) {
             if (window.aBadgeIsConnecting == this) {
                 window.aBadgeIsConnecting = null;
             }
-            this.isConnecting = false;
             this.isConnected = true;
             this.sendingData = false;
             this._close();

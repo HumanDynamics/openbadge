@@ -74,7 +74,7 @@ footer {
     display:block;
 }
 .hidden {
-    display:none;
+    display:none !important;
 }
 
 .loader-area {
@@ -172,6 +172,36 @@ footer {
     }
 }
 
+@-moz-keyframes spin {
+    from { -moz-transform: rotate(0deg); }
+    to { -moz-transform: rotate(360deg); }
+}
+@-webkit-keyframes spin {
+    from { -webkit-transform: rotate(0deg); }
+    to { -webkit-transform: rotate(360deg); }
+}
+@keyframes spin {
+    from {transform:rotate(0deg);}
+    to {transform:rotate(360deg);}
+}
+
+.scanning {
+    display: inline-block;
+    float: right;
+    color: #999;
+    font-size: 26px;
+    margin-right: -5px;
+    -webkit-animation: spin 1s infinite linear;
+    -moz-animation: spin 1s infinite linear;
+    animation: spin 1s infinite linear;
+
+    height: 25px;
+    width: 26px;
+    text-align: center;
+    line-height: 26px;
+    padding-left: 3px;
+}
+
 
 .settings-options {
 }
@@ -195,6 +225,17 @@ footer {
 .devicelist .item.active i.present-icon {
     color: #3dd928;
 }
+
+.active .battery-icon.green {
+    color: #3dd928;
+}
+.active .battery-icon.yellow {
+    color: #ebe31c;
+}
+.active .battery-icon.red {
+    color: #e7241f;
+}
+
 
 .error-message {
     text-align: center;

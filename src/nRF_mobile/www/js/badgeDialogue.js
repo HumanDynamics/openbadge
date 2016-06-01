@@ -97,7 +97,7 @@ function Chunk() {
     }.bind(this);
     
     this.isFull = function() {
-        return this.samples.length >= 144;
+        return this.samples.length >= 114;
     }.bind(this);
 }
 
@@ -201,17 +201,32 @@ function BadgeDialogue(badge) {
         this.log("Received a header: ");
         var header = struct.Unpack('<LHfHB',data); //time, fraction time (ms), voltage, sample delay, number of samples
 
-        if (header[2] > 1 && header[2] < 4) {
+        var timestamp = header[0];
+        var timestamp_ms = header[1];
+        var voltage = header[2];
+        var sample_delay = header[3];
+        var sample_count = header[4];
+
+        if (voltage > 1 && voltage < 4) {
             //valid header?, voltage between 1 and 4
             this.log("&nbsp Timestamp " + header[0] + "."+header[1]);
             this.log("&nbsp Voltage " + header[2]);
 
+            if (this.workingChunk && this.workingChunk.getTimeStamp() != timestamp) {
+                // looks like the chunk we were working on is complete! Let's save it.
+                this.chunks.push(this.workingChunk);
+                if (this.onChunkCompleted) {
+                    this.onChunkCompleted(this.workingChunk);
+                }
+                this.log("Added another chunk, I now have " + this.chunks.length + " full chunks");
+            }
+
             this.workingChunk = new Chunk();
-            this.workingChunk.setHeader(header[0], header[1], header[2], header[3], header[4]);
+            this.workingChunk.setHeader(timestamp, timestamp_ms, voltage, sample_delay, sample_count);
 
             this.expectingHeader = false;
 
-        } else if (header[1] == 0) {
+        } else if (timestamp_ms == 0) {
             this.log("End of data received, disconnecting");
             badge.close();
         } else {
@@ -232,10 +247,6 @@ function BadgeDialogue(badge) {
             this.expectingHeader = true;
             if (this.onNewChunk) {
                 this.onNewChunk(this.workingChunk);
-            }
-            if (this.workingChunk.isFull()) {
-                this.chunks.push(this.workingChunk);
-                this.log("Added another chunk, I now have " + this.chunks.length + " full chunks");
             }
 
         }
@@ -260,9 +271,9 @@ function BadgeDialogue(badge) {
      * Returns the date of the last seen chunk (or a fake date, if no chunks)
      */
     this.getLastSeenChunkTs = function () {
-        if (this.chunks.length > 0) {
+        if (this.workingChunk) {
             this.log("Found chunk!");
-            var c = this.chunks[this.chunks.length-1];
+            var c = this.workingChunk;
             return {'seconds':c.ts, 'ms':c.ts_ms};
         } else {
             this.log("No stored chunks. Using default date.");

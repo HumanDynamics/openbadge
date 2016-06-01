@@ -19,13 +19,10 @@ window.CHECK_BLUETOOTH_STATUS_INTERVAL = 5 * 60 * 1000;
 window.CHECK_MEETING_LENGTH_INTERVAL =  2 * 60 * 60 * 1000;
 window.CHECK_MEETING_LENGTH_REACTION_TIME = 1 * 60 * 1000;
 
-window.SHOW_BADGE_CONSOLE = true;
+window.SHOW_BADGE_CONSOLE = false;
 
-window.BADGE_CONNECT_TIMEOUT = 1000;
-
-
-yellow = 2.5
-red = 2.3
+BATTERY_YELLOW_THRESHOLD = 2.5
+BATTERY_RED_THRESHOLD = 2.3
 
 
 
@@ -60,15 +57,19 @@ function GroupMember(memberJson) {
     this.dataAnalyzer = new DataAnalyzer();
 
     this.badge.badgeDialogue.onNewChunk = function(chunk) {
-        if (this.meeting) {
-            this.meeting.logChunk(chunk);
-        }
         this.dataAnalyzer.addChunk(chunk);
     }.bind(this);
 
+    this.badge.badgeDialogue.onChunkCompleted = function(chunk) {
+        if (this.meeting) {
+            this.meeting.logChunk(chunk);
+        }
+    }.bind(this);
+
+
     this.badge.onDisconnect = function() {
         if (this.$lastDisconnect) {
-            this.$lastDisconnect.text(member.badge.lastDisconnect.toUTCString());
+            this.$lastDisconnect.text(this.badge.lastDisconnect.toUTCString());
         }
     }.bind(this);
 
@@ -114,15 +115,12 @@ function Meeting(group, members, type, moderator, description, location) {
 
     this.logChunk = function(chunk) {
 
-        if (chunk.isFull()) {
+        var chunkData = chunk.toDict();
+        chunkData.badge = this.badgeId;
+        chunkData.member = this.key;
 
-            var chunkData = chunk.toDict();
-            chunkData.badge = this.badgeId;
-            chunkData.member = this.key;
+        this.writeLog(JSON.stringify(chunkData));
 
-            this.writeLog(JSON.stringify(chunkData));
-
-        }
     }.bind(this);
 
     this.getLogName = function() {
@@ -237,8 +235,15 @@ mainPage = new Page("main",
     function onHide() {
         clearInterval(app.badgeScanIntervalID);
         clearInterval(app.badgeBatteryIntervalID);
+        app.stopScan();
     },
     {
+        onPause: function() {
+            this.onHide();
+        },
+        onResume: function() {
+            this.onShow();
+        },
         onBluetoothInit: function() {
             this.loadGroupData();
             app.badgeScanIntervalID = setInterval(function() {
@@ -296,15 +301,20 @@ mainPage = new Page("main",
         displayActiveBadges: function() {
 
             $("#devicelist .item").removeClass("active");
-            $("#devicelist .item .battery-icon").removeClass("full half empty");
+            $("#devicelist .item .battery-icon").removeClass("red yellow green");
             for (var i = 0; i < app.group.members.length; i++) {
                 var member = app.group.members[i];
                 if (member.active) {
                     var $el = $("#devicelist .item[data-device='" + member.badgeId + "']");
                     $el.addClass("active");
-                    if (member.voltage != null) {
-                        if (member.voltage > 2.7) {
-                            $el.find(".battery-icon").addClass("full");
+
+                    if (member.voltage) {
+                        if (member.voltage >= BATTERY_YELLOW_THRESHOLD) {
+                            $el.find(".battery-icon").addClass("green");
+                        } else if (member.voltage >= BATTERY_RED_THRESHOLD) {
+                            $el.find(".battery-icon").addClass("yellow");
+                        } else {
+                            $el.find(".battery-icon").addClass("red");
                         }
                     }
                 }
@@ -392,6 +402,7 @@ meetingPage = new Page("meeting",
     },
     function onShow() {
         window.plugins.insomnia.keepAwake();
+        app.startAllDeviceRecording();
         app.watchdogStart();
         $("#clock").clock();
         this.syncTimeout = setInterval(function() {
@@ -399,7 +410,7 @@ meetingPage = new Page("meeting",
         }, LOG_SYNC_INTERVAL);
 
         this.bluetoothCheckTimeout = setInterval(function() {
-            app.restartBluetooth();
+            app.ensureBluetoothEnabled();
         }, CHECK_BLUETOOTH_STATUS_INTERVAL);
 
 
@@ -415,6 +426,7 @@ meetingPage = new Page("meeting",
         clearInterval(this.bluetoothCheckTimeout);
         window.plugins.insomnia.allowSleepAgain();
         app.watchdogEnd();
+        app.stopAllDeviceRecording();
         app.meeting.syncLogFile(true);
 
         cordova.plugins.backgroundMode.disable();
@@ -694,7 +706,7 @@ app = {
             );
         }
     },
-    ensureBluetoothEnabled: function(callback) {
+    ensureBluetoothEnabled: function() {
         bluetoothle.isEnabled(function(status) {
             if (! status.isEnabled) {
                 app.watchdogEnd();
@@ -702,19 +714,19 @@ app = {
             }
         });
     },
-    enableBluetooth: function(callback) {
+    enableBluetooth: function() {
+        console.log("Enabling Bluetooth!");
         bluetoothle.enable(function success() {
-            if (callback) {
-                callback();
-            }
+            // unused
         }, function error() {
             toastr.error("Could not enable Bluetooth! Please enable it manually.");
             console.log("Could not enable bluetooth!");
         });
     },
-    disableBluetooth: function(callback) {
+    disableBluetooth: function() {
         app.watchdogEnd();
         app.stopScan();
+        console.log("Disabling Bluetooth!");
         bluetoothle.disable(function success() {
         }, function error() {
         });
@@ -840,6 +852,7 @@ app = {
         if (app.scanning || ! app.group) {
             return;
         }
+        $("#scanning").removeClass("hidden");
         app.scanning = true;
         var activeBadges = [];
         qbluetoothle.stopScan().then(function() {
@@ -858,6 +871,7 @@ app = {
     },
     onScanComplete: function(activeBadges) {
         app.scanning = false;
+        $("#scanning").addClass("hidden");
         if (! app.group) {
             return;
         }
@@ -875,6 +889,7 @@ app = {
             var member = app.group.members[i];
             if (activeBadge == member.badgeId) {
                 member.active = true;
+                app.getStatusForMember(member);
                 mainPage.displayActiveBadges();
                 return;
             }
@@ -882,6 +897,7 @@ app = {
     },
     stopScan: function() {
         app.scanning = false;
+        $("#scanning").addClass("hidden");
         qbluetoothle.stopScan();
     },
     getStatusForEachMember: function() {
@@ -889,19 +905,42 @@ app = {
             return;
         }
         $.each(app.group.members, function(index, member) {
-            if (member.active) {
-                member.badge.queryStatus(
-                    function callback(data) {
-                        member.voltage = data.voltage;
-                        mainPage.displayActiveBadges();
-                    },
-                    function failure() {
-                        member.voltage = null;
-                        mainPage.displayActiveBadges();
-                    }
-                );
-            }
+            app.getStatusForMember(member);
         });
+    },
+    getStatusForMember: function(member) {
+        if (member.active) {
+            member.badge.queryStatus(
+                function callback(data) {
+                    member.voltage = data.voltage;
+                    mainPage.displayActiveBadges();
+                },
+                function failure() {
+                    member.voltage = null;
+                    mainPage.displayActiveBadges();
+                }
+            );
+        }
+    },
+    startAllDeviceRecording: function() {
+        if (! app.meeting) {
+            return;
+        }
+        console.log("Starting recording on all meeting badges!");
+        for (var i = 0; i < app.meeting.members.length; ++i) {
+            var badge = app.meeting.members[i].badge;
+            badge.startRecording();
+        }
+    },
+    stopAllDeviceRecording: function() {
+        if (! app.meeting) {
+            return;
+        }
+        console.log("Stopping recording on all meeting badges!");
+        for (var i = 0; i < app.meeting.members.length; ++i) {
+            var badge = app.meeting.members[i].badge;
+            badge.stopRecording();
+        }
     },
 
 
