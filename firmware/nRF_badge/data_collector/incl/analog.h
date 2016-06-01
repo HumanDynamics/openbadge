@@ -19,9 +19,9 @@
 #endif
 
 
-//default: 10bit res, 1/3 prescalar, external VCC_MIC reference
-#define ANALOG_CONFIG_MIC   { NRF_ADC_CONFIG_RES_10BIT,                     \
-                                NRF_ADC_CONFIG_SCALING_INPUT_ONE_THIRD,     \
+//default: 10bit res, full scale, external VCC_MIC reference
+#define ANALOG_CONFIG_MIC   { NRF_ADC_CONFIG_RES_8BIT,                      \
+                                NRF_ADC_CONFIG_SCALING_INPUT_FULL_SCALE,     \
                                 MIC_AREF }
                                
 // for measuring supply voltage:
@@ -32,6 +32,7 @@
 float currentBatteryVoltage;
 unsigned long lastBatteryUpdate;
 #define MIN_BATTERY_READ_INTERVAL 100000UL  // minimum time between supply analogReads.  We don't need to do this often.
+#define MAX_BATTERY_READ_INTERVAL 200000UL  // time after lastBatteryUpdate to consider currentBatteryVoltage invalid
 
 
 
@@ -48,7 +49,7 @@ int analogRead(nrf_adc_config_input_t input);
 //float readBattery();
 
 /**
- * Get buffered battery voltage (does not actually perform analogRead)
+ * Get buffered battery voltage.  If buffered value is outdated, do an analogRead of battery.
  *   updateBatteryVoltage must be called periodically to keep this result current.  (ideally when radio is inactive)
  */
 float getBatteryVoltage();

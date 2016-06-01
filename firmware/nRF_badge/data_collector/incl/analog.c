@@ -50,7 +50,15 @@ int analogRead(nrf_adc_config_input_t input)
 
 float getBatteryVoltage()
 {
-    return currentBatteryVoltage;
+    if(millis() - lastBatteryUpdate >= MAX_BATTERY_READ_INTERVAL)
+    {
+        debug_log("Forced battery reading.\r\n");
+        return readBattery();
+    }
+    else
+    {
+        return currentBatteryVoltage;
+    }
 }
 
 float getRealBatteryVoltage()

@@ -63,8 +63,8 @@
 
 enum cycleStates {SLEEP, SAMPLE, STORE, SEND};
 unsigned long cycleStart;       // start of main loop cycle (e.g. sampling cycle)
-int cycleState = SLEEP;     // to keep track of state of main loop
-#define MIN_SLEEP 10UL      // ms of sleep, minimum (keep well under SAMPLE_PERIOD - SAMPLE_WINDOW to leave room for sending)
+int cycleState = SAMPLE;     // to keep track of state of main loop
+#define MIN_SLEEP 5UL      // ms of sleep, minimum (keep well under SAMPLE_PERIOD - SAMPLE_WINDOW to leave room for sending)
 
 // If any module (collecting, storing, sending) has any pending operations, this gets set to true
 bool badgeActive = false;   // Otherwise, the badge is inactive and can enter indefinite sleep.
@@ -252,6 +252,10 @@ int main(void)
     nrf_delay_ms(2000);
     nrf_gpio_pin_write(LED_1,LED_OFF);
     
+    
+    //setTime(MODERN_TIME+100);
+    //startCollector();
+    //dateReceived = true;
     
     /**
      * Reset tracker

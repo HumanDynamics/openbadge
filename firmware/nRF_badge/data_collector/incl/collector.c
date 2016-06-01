@@ -28,6 +28,17 @@ void collector_init()
     sampleStart = 0;
     sampleStartms = 0;
     
+    unsigned long startTime = millis();
+    int calCount = 0;
+    unsigned long calTotal = 0;
+    while(millis() - startTime <= 1000UL)
+    {
+        calTotal += analogRead(MIC_PIN);
+        calCount++;
+    }
+    int calVal = calTotal/calCount;
+    debug_log("cal: %d\r\n",calVal);
+    
     isCollecting = false;
 }
 
@@ -66,8 +77,14 @@ static void setupChunk(int chunk, unsigned long timestamp, unsigned long msTimes
 }
 
 void collectSample()  {
-    unsigned int micValue = readingsSum / readingsCount;
+    unsigned int micValue = readingsSum / (readingsCount/2);
     unsigned char reading = micValue <= MAX_MIC_SAMPLE ? micValue : MAX_MIC_SAMPLE;  //clip sample
+    //debug_log("r%d n%d\r\n",(int)reading,(int)readingsCount);
+    if(readingsCount < 10)
+    {
+        debug_log("hold up that's not enough samples man wtf\r\n");
+    }
+    //debug_log("readingsCount: %d\r\n",(int)readingsCount);
     readingsCount = 0;
     readingsSum = 0;
     

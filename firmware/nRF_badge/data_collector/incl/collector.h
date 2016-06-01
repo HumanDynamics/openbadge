@@ -30,7 +30,8 @@
 
 // Setup expected "zero" for the mic value.
 // analog ref is mic VCC, mic is 1/2 VCC biased, input is 1/3 scaled, so zero value is approx. (1023/2)/3 ~= 170
-#define MIC_ZERO 166
+//#define MIC_ZERO 166
+#define MIC_ZERO 125  // for 8bit conversion, full scale
 
 #define MAX_MIC_SAMPLE 254         // mic samples will be clipped to this value
 #define INVALID_SAMPLE 255     // dummy byte reserved for unused/invalid samples in chunk sample array
@@ -46,8 +47,10 @@
 unsigned long sampleWindow;  // how long we should sample
 unsigned long samplePeriod;   // time between samples - must exceed SAMPLE_WINDOW
 // vvv Default values
-#define SAMPLE_PERIOD 250UL
-#define SAMPLE_WINDOW 100UL
+//#define SAMPLE_PERIOD 250UL
+//#define SAMPLE_WINDOW 100UL
+#define SAMPLE_PERIOD 50UL
+#define SAMPLE_WINDOW 20UL
 
 
 
@@ -63,7 +66,7 @@ unsigned long readingsSum;    // sum of all mic readings taken for current sampl
 
 
 #define SAMPLES_PER_CHUNK 114   // 128-(4+2+4+4)  ---  see chunk structure below
-#define MIC_BUFFER_SIZE 4       // number of chunks in mic RAM buffer
+#define MIC_BUFFER_SIZE 8       // number of chunks in mic RAM buffer
 #define LAST_RAM_CHUNK (MIC_BUFFER_SIZE - 1)        // index of last chunk in RAM buffer
 
 typedef union
