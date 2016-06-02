@@ -19,11 +19,15 @@ window.CHECK_BLUETOOTH_STATUS_INTERVAL = 5 * 60 * 1000;
 window.CHECK_MEETING_LENGTH_INTERVAL =  2 * 60 * 60 * 1000;
 window.CHECK_MEETING_LENGTH_REACTION_TIME = 60 * 1000;
 
-window.SHOW_BADGE_CONSOLE = false;
-
 BATTERY_YELLOW_THRESHOLD = 2.5;
 BATTERY_RED_THRESHOLD = 2.3;
 
+BLUETOOTH_OFF_WARNING_TIMEOUT = 5 * 60 * 1000; // if you haven't see bluetooth in this long, send a warning
+BLUETOOTH_OFF_WARNING_INTERVAL = 5 * 1000; // how often to check for bluetooth to give the warning
+NO_BADGE_SEEN_WARNING_TIMEOUT = 5 * 60 * 1000; // if you haven't seen a badge in this long, send a warning
+NO_BADGE_SEEN_WARNING_INTERVAL = 5 * 1000; // how often to check for badges for the warning
+
+window.SHOW_BADGE_CONSOLE = false;
 
 
 /***********************************************************************
@@ -67,15 +71,17 @@ function GroupMember(memberJson) {
     }.bind(this);
 
 
-    this.badge.onDisconnect = function() {
-        if (this.$lastDisconnect) {
-            this.$lastDisconnect.text(this.badge.lastDisconnect.toUTCString());
+    this.badge.onConnect = function() {
+        if (this.$lastConnect) {
+            this.$lastConnect.text(this.badge.lastConnect.toUTCString());
         }
     }.bind(this);
 
     this.clearData = function() {
         this.dataAnalyzer.clearData();
         this.badge.badgeDialogue.clearData();
+        this.badge.lastConnect = new Date();
+        this.seenWarningGiven = false;
     }.bind(this);
 }
 
@@ -149,8 +155,8 @@ function Meeting(group, members, type, moderator, description, location) {
     this.memberInitials = memberInitials;
 
 
-    this.syncLogFile = function(isComplete) {
-        app.syncLogFile(this.getLogName(), !!isComplete, new Date().toJSON());
+    this.syncLogFile = function(isComplete, endingMethod) {
+        app.syncLogFile(this.getLogName(), !!isComplete, endingMethod, new Date().toJSON());
     }.bind(this);
 
     var initialData = {
@@ -210,12 +216,19 @@ PAGES = [];
  */
 mainPage = new Page("main",
     function onInit() {
-        this.presentBadges = [];
         $("#settings-button").click(function() {
             app.showPage(settingsPage);
         });
         $("#startMeetingButton").click(function() {
-            if (false && app.presentBadges.length < 2) {
+
+            var activeMembers = 0;
+            for (var i = 0; i < app.group.members.length; i++) {
+                var member = app.group.members[i];
+                if (member.active) {
+                    activeMembers += 1;
+                }
+            }
+            if (activeMembers < 2) {
                 navigator.notification.alert("Need at least 2 people present to start a meeting.");
                 return;
             }
@@ -246,13 +259,17 @@ mainPage = new Page("main",
         },
         onBluetoothInit: function() {
             this.loadGroupData();
+
+            clearInterval(app.badgeScanIntervalID);
             app.badgeScanIntervalID = setInterval(function() {
                 app.scanForBadges();
             }, BADGE_SCAN_INTERVAL);
+            app.scanForBadges();
+
+            clearInterval(app.badgeBatteryIntervalID);
             app.badgeBatteryIntervalID = setInterval(function() {
                 app.getStatusForEachMember();
             }, BADGE_STATUS_INTERVAL);
-            app.scanForBadges();
         },
         loadGroupData: function() {
 
@@ -388,14 +405,9 @@ meetingConfigPage = new Page("meetingConfig",
  */
 meetingPage = new Page("meeting",
     function onInit() {
-        var $this = this;
         $("#endMeetingButton").click(function() {
-            navigator.notification.confirm("Are you sure?", function(result) {
-                if (result == 1) {
-                    $this.onMeetingComplete();
-                }
-            });
-        });
+            this.confirmBeforeHide();
+        }.bind(this));
         this.$debugCharts = $("#debug-charts");
         $('#debug-chart-button').featherlight(this.$debugCharts, {persist:true});
 
@@ -405,14 +417,23 @@ meetingPage = new Page("meeting",
         app.startAllDeviceRecording();
         app.watchdogStart();
         $("#clock").clock();
+
+        this.timedOut = false;
+
+        clearInterval(this.syncTimeout);
         this.syncTimeout = setInterval(function() {
             app.meeting.syncLogFile();
         }, LOG_SYNC_INTERVAL);
 
+        clearInterval(this.bluetoothCheckTimeout);
         this.bluetoothCheckTimeout = setInterval(function() {
             app.ensureBluetoothEnabled();
         }, CHECK_BLUETOOTH_STATUS_INTERVAL);
 
+        clearInterval(this.memberCheckIntervalID);
+        this.memberCheckIntervalID = setInterval(function() {
+            this.checkPresentMembers();
+        }.bind(this), NO_BADGE_SEEN_WARNING_INTERVAL);
 
 
         cordova.plugins.backgroundMode.enable();
@@ -424,43 +445,67 @@ meetingPage = new Page("meeting",
         clearInterval(this.syncTimeout);
         clearInterval(this.chartTimeout);
         clearInterval(this.bluetoothCheckTimeout);
+        clearInterval(this.memberCheckIntervalID);
         window.plugins.insomnia.allowSleepAgain();
         app.watchdogEnd();
         app.stopAllDeviceRecording();
-        app.meeting.syncLogFile(true);
+        app.meeting.syncLogFile(true, this.timedOut ? "timedout" : "manual");
 
         cordova.plugins.backgroundMode.disable();
 
         this.clearMeetingTimeout();
     },
     {
+        confirmBeforeHide: function() {
+            navigator.notification.confirm("Are you sure?", function(result) {
+                if (result == 1) {
+                    this.onMeetingComplete();
+                }
+            }.bind(this));
+            return true;
+        },
         onBluetoothInit: function() {
             app.watchdogStart();
+        },
+        timeoutMeeting: function() {
+            navigator.vibrate([500,500,500,500,500,500,500,500,500,500,500,100,500,100,500,100,500,100,500,100]);
+
+            navigator.notification.alert("Please press the button to indicate the meeting is still going, or we'll end it automatically in one minute", function(result) {
+                navigator.vibrate([]);
+                this.setMeetingTimeout();
+            }.bind(this), "Are you still there?", "Continue Meeting");
+
+            this.closeTimeout = setTimeout(function() {
+                navigator.notification.dismiss();
+                this.clearMeetingTimeout();
+                this.timedOut = true;
+                app.showMainPage();
+            }.bind(this), CHECK_MEETING_LENGTH_REACTION_TIME);
         },
         setMeetingTimeout: function() {
 
             this.clearMeetingTimeout();
 
             this.meetingTimeout = setTimeout(function() {
-                navigator.vibrate([500,500,500,500,500,500,500,500,500,500,500,100,500,100,500,100,500,100,500,100]);
 
-                navigator.notification.alert("Please press the button to indicate the meeting is still going, or we'll end it automatically in one minute", function(result) {
-                    navigator.vibrate([]);
-                    this.setMeetingTimeout();
-                }.bind(this), "Are you still there?", "Continue Meeting");
-
-                this.closeTimeout = setTimeout(function() {
-                    navigator.notification.dismiss();
-                    this.clearMeetingTimeout();
-                    app.showMainPage();
-                }.bind(this), CHECK_MEETING_LENGTH_REACTION_TIME);
-
+                this.timeoutMeeting();
 
             }.bind(this), CHECK_MEETING_LENGTH_INTERVAL);
         },
         clearMeetingTimeout: function() {
             clearTimeout(this.closeTimeout);
             clearTimeout(this.meetingTimeout);
+        },
+        checkPresentMembers: function() {
+            $.each(app.meeting.members, function(index, member) {
+                if (! member.seenWarningGiven) {
+                    if (new Date().getTime() - member.badge.lastConnect > NO_BADGE_SEEN_WARNING_TIMEOUT) {
+                        navigator.notification.alert("Hmm, it looks like we haven't seen " + member.name + " in a while. Please restart their badge if they're still here.");
+                        member.seenWarningGiven = true;
+                    }
+
+                }
+            });
         },
         initCharts: function() {
 
@@ -472,7 +517,7 @@ meetingPage = new Page("meeting",
                 var $infocard = $(template({key:member.key,name:member.name}));
                 $charts.append($infocard);
                 member.chart = new DebugChart($infocard.find("canvas"));
-                member.$lastDisconnect = $infocard.find(".last_update");
+                member.$lastConnect = $infocard.find(".last_update");
             });
 
             clearInterval(this.chartTimeout);
@@ -639,12 +684,20 @@ app = {
                 navigator.app.exitApp();
             } else {
                 e.preventDefault();
-                app.showPage(mainPage);
+                if (app.activePage.confirmBeforeHide) {
+                    app.activePage.confirmBeforeHide();
+                } else {
+                    app.showPage(mainPage);
+                }
             }
         }, false);
 
         $(".back-button").click(function() {
-            app.showPage(mainPage);
+            if (app.activePage.confirmBeforeHide) {
+                app.activePage.confirmBeforeHide();
+            } else {
+                app.showPage(mainPage);
+            }
         });
 
 
@@ -660,16 +713,26 @@ app = {
         }
 
         document.addEventListener("resume", function onResume() {
-            app.synchronizeIncompleteLogFiles();
+            setTimeout(function() {
+                app.synchronizeIncompleteLogFiles();
+            }, 100);
             app.activePage.onResume();
         }, false);
-        app.synchronizeIncompleteLogFiles();
+        setTimeout(function() {
+            app.synchronizeIncompleteLogFiles();
+        }, 100);
 
 
         document.addEventListener("pause", function onPause() {
             app.stopScan();
             app.activePage.onPause();
         }, false);
+
+        clearInterval(app.checkbluetoothinterval);
+        app.lastSeenBluetooth = new Date();
+        app.checkbluetoothinterval = setInterval(function() {
+            app.checkForBluetoothWarning();
+        }, BLUETOOTH_OFF_WARNING_INTERVAL);
     },
 
     /**
@@ -731,6 +794,19 @@ app = {
         }, function error() {
         });
     },
+    checkForBluetoothWarning: function() {
+        bluetoothle.isEnabled(function(status) {
+            if (status.isEnabled) {
+                app.lastSeenBluetooth = new Date();
+                app.warnedAboutBluetooth = false;
+            } else {
+                if (!app.warnedAboutBluetooth && new Date().getTime() - app.lastSeenBluetooth.getTime() > BLUETOOTH_OFF_WARNING_TIMEOUT) {
+                    navigator.notification.alert("Hmm, it looks like we're unable to turn your Bluetooth on from our app. It may be broken. Please enable it or try to restart your phone. Sorry about this!");
+                    app.warnedAboutBluetooth = true;
+                }
+            }
+        });
+    },
 
     /**
      * Log file synchronization functions
@@ -766,13 +842,13 @@ app = {
                 for (var i = 0; i < logfiles.length; i++) {
                     var logfilename = logfiles[i].name;
                     if (logfilename.indexOf(app.group.key) == 0 && ! (logfilename.split(".")[0] in meeting_ids)) {
-                        app.syncLogFile(logfilename, true);
+                        app.syncLogFile(logfilename, true, "sync");
                     }
                 }
             });
         })
     },
-    syncLogFile: function(filename, isComplete, endTime) {
+    syncLogFile: function(filename, isComplete, endingMethod, endTime) {
         var fileTransfer = new FileTransfer();
         var uri = encodeURI(BASE_URL + "log_data/");
 
@@ -785,10 +861,13 @@ app = {
         options.headers = {"X-APPKEY": APP_KEY};
 
         options.params = {
-            isComplete:!!isComplete
+            isComplete:!!isComplete,
         };
         if (endTime) {
             options.params.endTime = endTime;
+        }
+        if (endingMethod) {
+            options.params.endingMethod = endingMethod;
         }
 
 
@@ -966,6 +1045,7 @@ app = {
      */
     watchdogStart: function() {
         // console.log("Starting watchdog");
+        clearInterval(app.watchdogTimer);
         app.watchdogTimer = setInterval(function(){ app.watchdog() }, WATCHDOG_SLEEP);
     },
     watchdogEnd: function() {
