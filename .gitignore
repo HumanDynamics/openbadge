@@ -14,3 +14,9 @@ rssi_scan.txt
 *.l#*
 *.brd.lck
 *.sch.lck
+
+.idea
+.env
+env/
+localsettings.js
+

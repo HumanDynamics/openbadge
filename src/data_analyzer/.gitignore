@@ -1,2 +1,5 @@
+env/
+data/
 *scn
+*csv
 .ipynb_checkpoints/*
