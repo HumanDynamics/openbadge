@@ -175,15 +175,45 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
             && p_ble_evt->evt.gap_evt.params.timeout.src == BLE_GAP_TIMEOUT_SRC_ADVERTISING)    //   from advertising
         || p_ble_evt->header.evt_id == BLE_GAP_EVT_DISCONNECTED)                                // OR if disconnect event
     {
-        if(pauseRequest)
+        // Count number of pending pause requests
+        int pauseReqSrc = PAUSE_REQ_NONE;
+        for(int src=0; src<PAUSE_REQ_NONE; src++)  // look through all pause request sources
+        {
+            if(pauseRequest[src]) 
+            {
+                pauseReqSrc = src;
+                break;  // check for any pending pause requests
+            }
+        }
+        
+        // If there are any pending pause requests, don't restart advertising yet.
+        if(pauseReqSrc != PAUSE_REQ_NONE)
         {
             isAdvertising = false;
-            pauseRequest = false;
-            debug_log("ADV: advertising paused\r\n");
+            sleep = false;  // wake so that modules waiting for pause can act.
+            debug_log("ADV: advertising paused, src %d.\r\n",pauseReqSrc);
         }
+        
+        // Otherwise restart advertising, for infinite advertising.
         else
         {
             isAdvertising = true;
+            if(needAdvDataUpdate)
+            {
+                ble_advdata_t advdata;
+                constructAdvData(&advdata);
+                uint32_t result = ble_advdata_set(&advdata, NULL);  // set advertising data, don't set scan response data.
+                if(result != NRF_SUCCESS)
+                {
+                    debug_log("ERR: error setting advertising data, #%d.\r\n",(int)result);
+                }
+                else
+                {
+                    debug_log("Updated adv. data.\r\n");
+                }
+                needAdvDataUpdate = false;
+            }
+                
             //debug_log("ADV: advertising REstarted\r\n");
             uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);  // restart advertising
             BLE_ERROR_CHECK(err_code);
@@ -233,7 +263,7 @@ static void ble_stack_init(void)
 
 
 
-static void on_adv_evt(ble_adv_evt_t const adv_evt)
+/*static void on_adv_evt(ble_adv_evt_t const adv_evt)
 {
     switch(adv_evt)
     {
@@ -262,20 +292,24 @@ static void on_adv_evt(ble_adv_evt_t const adv_evt)
         default:
             break;
     }
-}
+}*/
 
-static void advertising_init(void)
+void advertising_init(void)
 {
     uint32_t      err_code;
     
     // Build advertising data struct to pass into @ref ble_advertising_init.
     ble_advdata_t advdata;
+    constructAdvData(&advdata);
+    
+    /*
     memset(&advdata, 0, sizeof(advdata));
     advdata.name_type               = BLE_ADVDATA_FULL_NAME;
     advdata.include_appearance      = false;
     advdata.flags                   = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;
     advdata.uuids_complete.uuid_cnt = sizeof(m_adv_uuids) / sizeof(m_adv_uuids[0]);
     advdata.uuids_complete.p_uuids  = m_adv_uuids;
+    */
 
     ble_adv_modes_config_t options = {0};
     options.ble_adv_fast_enabled  = BLE_ADV_FAST_ENABLED;
@@ -289,6 +323,45 @@ static void advertising_init(void)
     BLE_ERROR_CHECK(err_code);
 }
 
+void updateAdvData()
+{
+    needAdvDataUpdate = true;
+}
+
+void constructAdvData(ble_advdata_t* p_advdata)
+{
+    custom_adv_data_t custom_data_array;
+    custom_data_array.battery = getBatteryVoltage();
+    custom_data_array.synced = dateReceived;
+    custom_data_array.collecting = isCollecting;
+    
+    ble_advdata_manuf_data_t custom_manuf_data;
+    custom_manuf_data.company_identifier = 0xFF00;  // unofficial manufacturer code
+    custom_manuf_data.data.p_data = (uint8_t*)(&custom_data_array);
+    custom_manuf_data.data.size = sizeof(custom_data_array);
+    
+    // Build advertising data struct to pass into @ref ble_advertising_init.
+    memset(p_advdata, 0, sizeof(ble_advdata_t));
+    p_advdata->name_type               = BLE_ADVDATA_FULL_NAME;
+    p_advdata->include_appearance      = false;
+    p_advdata->flags                   = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;
+    p_advdata->uuids_complete.uuid_cnt = sizeof(m_adv_uuids) / sizeof(m_adv_uuids[0]);
+    p_advdata->uuids_complete.p_uuids  = m_adv_uuids;
+    
+    p_advdata->p_manuf_specific_data = &custom_manuf_data;
+    
+    /*uint32_t result = ble_advdata_set(p_advData, NULL);  // set advertising data, don't set scan response data.
+    if(result != NRF_SUCCESS)
+    {
+        debug_log("ERR: error setting advertising data, #%d.\r\n",(int)result);
+    }
+    else
+    {
+        debug_log("Updated adv. data.\r\n");
+    }*/
+    
+}
+
 
 void BLE_init()
 {
@@ -296,7 +369,7 @@ void BLE_init()
     gap_params_init();
     services_init();
     sec_params_init();
-    advertising_init();
+    //advertising_init();
     //uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
     //BLE_ERROR_CHECK(err_code);
 }
@@ -324,19 +397,21 @@ void BLEdisable()
 }
 
 
-bool BLEpause()
+bool BLEpause(ble_pauseReq_src source)
 {
-    if(isConnected)  return false;  // if we're connected, don't try anything.
-    if(isAdvertising)
-    {
-        pauseRequest = true;
-        return false;
-    }
+    pauseRequest[source] = true;
+    if(isConnected || isAdvertising)  return false;  // return false if BLE active.
     else return true;
 }
 
-void BLEresume()
+void BLEresume(ble_pauseReq_src source)
 {
+    pauseRequest[source] = false;
+    for(int src=0; src<PAUSE_REQ_NONE; src++)  // look through all pause request sources
+    {
+        if(pauseRequest[src]) return;  // if any pending pause requests, don't restart advertising
+    }
+    // If no pending pause requests, restart advertising.
     BLEstartAdvertising();
 }
 

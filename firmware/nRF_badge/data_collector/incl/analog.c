@@ -68,11 +68,12 @@ float getRealBatteryVoltage()
 
 void updateBatteryVoltage() 
 {
-    if(millis() - lastBatteryUpdate >= MIN_BATTERY_READ_INTERVAL)
-    {
+    //if(millis() - lastBatteryUpdate >= MIN_BATTERY_READ_INTERVAL)
+    //{
         currentBatteryVoltage = readBattery();
         debug_log("Read battery: %d.\r\n",(int)(1000.0*currentBatteryVoltage));
         lastBatteryUpdate = millis();
-    }
+        updateAdvData();
+    //}
 }
 

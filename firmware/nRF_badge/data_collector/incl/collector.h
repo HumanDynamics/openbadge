@@ -22,7 +22,7 @@
 
 #define PANIC_LED LED_2
 
-#include "ble_setup.h"         // do we need this?
+#include "ble_setup.h"         // uses updateAdvData() when collector started
 #include "rtc_timing.h"        // uses now() to get chunk timestamp
 #include "analog.h"            // uses analogRead() to get mic data; readBattery() to get battery voltage
 //#include "internal_flash.h"    // uses some #defined constants related to memory usage

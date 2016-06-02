@@ -65,6 +65,7 @@ enum cycleStates {SLEEP, SAMPLE, STORE, SEND};
 unsigned long cycleStart;       // start of main loop cycle (e.g. sampling cycle)
 int cycleState = SAMPLE;     // to keep track of state of main loop
 #define MIN_SLEEP 5UL      // ms of sleep, minimum (keep well under SAMPLE_PERIOD - SAMPLE_WINDOW to leave room for sending)
+#define MAX_SLEEP 120000UL // ms of sleep, maximum.  (2mins, so that badge periodically cycles thru main loop, even when idle)
 
 // If any module (collecting, storing, sending) has any pending operations, this gets set to true
 bool badgeActive = false;   // Otherwise, the badge is inactive and can enter indefinite sleep.
@@ -73,13 +74,14 @@ bool badgeActive = false;   // Otherwise, the badge is inactive and can enter in
 //============================ time-related stuff ======================================
 //======================================================================================
 
-volatile bool sleep = false;  //whether we should sleep (so actions like data sending can override sleep)
+
 
 
 //=========================== Global function definitions ==================================
 //==========================================================================================
 
 void goToSleep(long ms)  {
+    unsigned long sleepTime = ms;
     if(ms == 0)
     {
         return;  // don't sleep
@@ -87,16 +89,11 @@ void goToSleep(long ms)  {
     sleep = true;
     if(ms == -1)  
     {
-        while(sleep)  {  //infinite sleep until an interrupt cancels it
-            sd_app_evt_wait();
-        }
+        sleepTime = MAX_SLEEP;
     }
-    else  
-    {   
-        countdown_set(ms);
-        while((!countdownOver) && sleep)  {
-            sd_app_evt_wait();  //sleep until one of our functions says not to
-        }
+    countdown_set(sleepTime);
+    while((!countdownOver) && sleep)  {
+        sd_app_evt_wait();  //sleep until one of our functions says not to
     }
 }
 
@@ -247,6 +244,8 @@ int main(void)
     storer_init();
     sender_init();
     
+    advertising_init();
+    
     // Blink once on start
     nrf_gpio_pin_write(LED_1,LED_ON);
     nrf_delay_ms(2000);
@@ -326,11 +325,16 @@ int main(void)
         switch(cycleState)
         {
             
-            
             case SAMPLE:
-                if(BLEgetStatus() == BLE_INACTIVE)
+                if(millis() - lastBatteryUpdate >= MIN_BATTERY_READ_INTERVAL)
                 {
-                    updateBatteryVoltage();
+                    //badgeActive |= true;
+                    //debug_log("boop\r\n");
+                    if(BLEpause(PAUSE_REQ_COLLECTOR))
+                    {
+                        updateBatteryVoltage();
+                        BLEresume(PAUSE_REQ_COLLECTOR);
+                    }
                 }
                 
                 if(isCollecting)
@@ -395,8 +399,8 @@ int main(void)
                 // Main loop will halt on the following line as long as the badge is sleeping (i.e. until an interrupt wakes it)
                 goToSleep(sleepDuration);
                 
-                // Exit sleep if we've reached the end of the sampling period.
-                if(millis() - cycleStart >= samplePeriod)  // did we exit sleep by the countdown event
+                // Exit sleep if we've reached the end of the sampling period, or if we're in idle mode
+                if(millis() - cycleStart >= samplePeriod || (!badgeActive))  // did we exit sleep by the countdown event
                 {
                     cycleState = SAMPLE;
                     cycleStart = millis();

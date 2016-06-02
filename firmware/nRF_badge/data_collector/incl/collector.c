@@ -115,6 +115,7 @@ void startCollector()
     {
         isCollecting = true;
         debug_log("Collector started\r\n");
+        updateAdvData();
     }
 }
 
@@ -139,6 +140,7 @@ void stopCollector()
         collect.loc = 0;
     
         isCollecting = false;   // Disable collector
+        updateAdvData();
     }
 }
 
