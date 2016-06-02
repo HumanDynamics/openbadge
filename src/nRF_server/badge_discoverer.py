@@ -2,7 +2,7 @@ from __future__ import print_function
 
 import datetime
 import time
-
+import struct
 from bluepy import btle
 
 # Looks for badges and return their state (synced or not), the 
@@ -28,16 +28,26 @@ class BadgeDiscoverer:
 			if device_name == self.DEVICE_NAME:
 				rssi = device.rssi
 				mac = device.addr.upper()
-
+				voltage = self.unpackBroadcastData(device.rawData)
 				is_sync = not(self.CLOCK_STATE_UNSYNC in device.rawData)
 				scan_date = datetime.datetime.now()
 				if not (mac in devices):
-					devices[mac] = {'scan_date':scan_date,'is_sync':is_sync,'rssi':rssi}
+					devices[mac] = {'scan_date':scan_date,'is_sync':is_sync,'rssi':rssi,'voltage':voltage}
 				else:
 					devices[mac]['rssi']=rssi
 					devices[mac]['scan_date'] = scan_date
 
 		return devices
+
+	# Extract badge specific data from the broadcasting message
+	def unpackBroadcastData(self, data):
+		if len(data) >= 26:
+			badgeDataBuffer = data[18:26]
+			badgeInfoArr = struct.unpack('<HfBB', badgeDataBuffer)
+			voltage = badgeInfoArr[1];
+			return {'voltage': voltage}
+		else:
+			return {'voltage': None}
 
 class ScanDummy(btle.DefaultDelegate):
     def handleDiscovery(self, dev, isNewDev, isNewData):
@@ -45,5 +55,16 @@ class ScanDummy(btle.DefaultDelegate):
 
 if __name__ == "__main__":
 	bd = BadgeDiscoverer()
+
 	devices = bd.discover()
 	print(devices)
+
+	'''
+	str = "0609424144474502010605030F1801000BFF00FF19CA0E4000000303"
+	hexData = str.decode("hex")
+	import array
+
+	strAsBytes = array.array('B', hexData)
+	a = bd.unpackBroadcastData(strAsBytes);
+	print(a);
+	'''

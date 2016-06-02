@@ -1,13 +1,13 @@
 require('q');
 var qbluetoothle = require('./qbluetoothle');
 var Badge = require('./badge');
+struct = require('./struct.js').struct;
 
 window.LOCALSTORAGE_GROUP_KEY = "groupkey";
 window.LOCALSTORAGE_GROUP = "groupjson";
 
 window.BADGE_SCAN_INTERVAL = 9000;
 window.BADGE_SCAN_DURATION = 8000;
-window.BADGE_STATUS_INTERVAL = 3000;
 
 window.WATCHDOG_SLEEP = 5000;
 
@@ -247,7 +247,6 @@ mainPage = new Page("main",
     },
     function onHide() {
         clearInterval(app.badgeScanIntervalID);
-        clearInterval(app.badgeBatteryIntervalID);
         app.stopScan();
     },
     {
@@ -265,11 +264,6 @@ mainPage = new Page("main",
                 app.scanForBadges();
             }, BADGE_SCAN_INTERVAL);
             app.scanForBadges();
-
-            clearInterval(app.badgeBatteryIntervalID);
-            app.badgeBatteryIntervalID = setInterval(function() {
-                app.getStatusForEachMember();
-            }, BADGE_STATUS_INTERVAL);
         },
         loadGroupData: function() {
 
@@ -879,8 +873,6 @@ app = {
 
     },
 
-
-
     /**
      * Functions to refresh the group data from the backend
      */
@@ -944,7 +936,22 @@ app = {
                     app.onScanComplete(activeBadges);
                 }, function(obj) { // progress
                     activeBadges.push(obj.address);
-                    app.onScanUpdate(obj.address);
+                    
+                    // extract badge data from advertisement
+                    var voltage = null;
+                    if (obj.name == "BADGE") {
+                        console.log(obj.address+"|Found badge");
+                        var adbytes = bluetoothle.encodedStringToBytes(obj.advertisement);
+                        var adStr = bluetoothle.bytesToString(adbytes);
+
+                        console.log(obj.address+"|Ad data: ", adStr);
+                        var adBadgeData = adStr.substring(18, 26);
+                        console.log(obj.address+"|Badge ad data: ", adBadgeData);
+                        var adBadgeDataArr = struct.Unpack('<HfBB', adBadgeData);
+                        voltage = adBadgeDataArr[1];
+                        console.log(obj.address+"|Badge ad voltage: ",voltage);
+                        app.onScanUpdate(obj.address,voltage);
+                    }
                 });
         });
     },
@@ -960,15 +967,17 @@ app = {
         }
         mainPage.displayActiveBadges();
     },
-    onScanUpdate: function(activeBadge) {
+    onScanUpdate: function(activeBadge,voltage) {
         if (! app.group) {
             return;
         }
+
+        // update members
         for (var i = 0; i < app.group.members.length; i++) {
             var member = app.group.members[i];
             if (activeBadge == member.badgeId) {
                 member.active = true;
-                app.getStatusForMember(member);
+                member.voltage = voltage;
                 mainPage.displayActiveBadges();
                 return;
             }

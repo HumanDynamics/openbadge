@@ -251,10 +251,10 @@ def scan_for_devices(devices_whitelist):
 	scanned_devices = []
 	for addr,device_info in all_devices.iteritems():
 		if addr in devices_whitelist:
-			logger.debug("Found {}, added".format(addr))
+			logger.debug("Found {}, added. Device info: {}".format(addr,device_info))
 			scanned_devices.append({'mac':addr,'device_info':device_info})
 		else:
-			logger.debug("Found {}, but not on whitelist".format(addr))
+			logger.debug("Found {}, but not on whitelist. Device info: {}".format(addr,device_info))
 	return scanned_devices
 
 def reset():
