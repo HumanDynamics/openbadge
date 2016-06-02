@@ -289,6 +289,11 @@ function Badge(address) {
                         if (window.aBadgeIsConnecting == badge) {
                             window.aBadgeIsConnecting = null;
                         }
+                        badge.lastConnect = new Date();
+
+                        if (typeof(badge.onConnect) == "function") {
+                            badge.onConnect();
+                        }
 
                         onConnectCallback.bind(badge)();
 

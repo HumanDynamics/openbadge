@@ -19,11 +19,15 @@ window.CHECK_BLUETOOTH_STATUS_INTERVAL = 5 * 60 * 1000;
 window.CHECK_MEETING_LENGTH_INTERVAL =  2 * 60 * 60 * 1000;
 window.CHECK_MEETING_LENGTH_REACTION_TIME = 60 * 1000;
 
-window.SHOW_BADGE_CONSOLE = false;
-
 BATTERY_YELLOW_THRESHOLD = 2.5;
 BATTERY_RED_THRESHOLD = 2.3;
 
+BLUETOOTH_OFF_WARNING_TIMEOUT = 5 * 60 * 1000; // if you haven't see bluetooth in this long, send a warning
+BLUETOOTH_OFF_WARNING_INTERVAL = 5 * 1000; // how often to check for bluetooth to give the warning
+NO_BADGE_SEEN_WARNING_TIMEOUT = 5 * 60 * 1000; // if you haven't seen a badge in this long, send a warning
+NO_BADGE_SEEN_WARNING_INTERVAL = 5 * 1000; // how often to check for badges for the warning
+
+window.SHOW_BADGE_CONSOLE = false;
 
 
 /***********************************************************************
@@ -67,15 +71,17 @@ function GroupMember(memberJson) {
     }.bind(this);
 
 
-    this.badge.onDisconnect = function() {
-        if (this.$lastDisconnect) {
-            this.$lastDisconnect.text(this.badge.lastDisconnect.toUTCString());
+    this.badge.onConnect = function() {
+        if (this.$lastConnect) {
+            this.$lastConnect.text(this.badge.lastConnect.toUTCString());
         }
     }.bind(this);
 
     this.clearData = function() {
         this.dataAnalyzer.clearData();
         this.badge.badgeDialogue.clearData();
+        this.badge.lastConnect = new Date();
+        this.seenWarningGiven = false;
     }.bind(this);
 }
 
@@ -210,12 +216,19 @@ PAGES = [];
  */
 mainPage = new Page("main",
     function onInit() {
-        this.presentBadges = [];
         $("#settings-button").click(function() {
             app.showPage(settingsPage);
         });
         $("#startMeetingButton").click(function() {
-            if (false && app.presentBadges.length < 2) {
+
+            var activeMembers = 0;
+            for (var i = 0; i < app.group.members.length; i++) {
+                var member = app.group.members[i];
+                if (member.active) {
+                    activeMembers += 1;
+                }
+            }
+            if (activeMembers < 2) {
                 navigator.notification.alert("Need at least 2 people present to start a meeting.");
                 return;
             }
@@ -417,6 +430,10 @@ meetingPage = new Page("meeting",
             app.ensureBluetoothEnabled();
         }, CHECK_BLUETOOTH_STATUS_INTERVAL);
 
+        clearInterval(this.memberCheckIntervalID);
+        this.memberCheckIntervalID = setInterval(function() {
+            this.checkPresentMembers();
+        }.bind(this), NO_BADGE_SEEN_WARNING_INTERVAL);
 
 
         cordova.plugins.backgroundMode.enable();
@@ -428,6 +445,7 @@ meetingPage = new Page("meeting",
         clearInterval(this.syncTimeout);
         clearInterval(this.chartTimeout);
         clearInterval(this.bluetoothCheckTimeout);
+        clearInterval(this.memberCheckIntervalID);
         window.plugins.insomnia.allowSleepAgain();
         app.watchdogEnd();
         app.stopAllDeviceRecording();
@@ -478,6 +496,17 @@ meetingPage = new Page("meeting",
             clearTimeout(this.closeTimeout);
             clearTimeout(this.meetingTimeout);
         },
+        checkPresentMembers: function() {
+            $.each(app.meeting.members, function(index, member) {
+                if (! member.seenWarningGiven) {
+                    if (new Date().getTime() - member.badge.lastConnect > NO_BADGE_SEEN_WARNING_TIMEOUT) {
+                        navigator.notification.alert("Hmm, it looks like we haven't seen " + member.name + " in a while. Please restart their badge if they're still here.");
+                        member.seenWarningGiven = true;
+                    }
+
+                }
+            });
+        },
         initCharts: function() {
 
             var $charts = this.$debugCharts;
@@ -488,7 +517,7 @@ meetingPage = new Page("meeting",
                 var $infocard = $(template({key:member.key,name:member.name}));
                 $charts.append($infocard);
                 member.chart = new DebugChart($infocard.find("canvas"));
-                member.$lastDisconnect = $infocard.find(".last_update");
+                member.$lastConnect = $infocard.find(".last_update");
             });
 
             clearInterval(this.chartTimeout);
@@ -698,6 +727,12 @@ app = {
             app.stopScan();
             app.activePage.onPause();
         }, false);
+
+        clearInterval(app.checkbluetoothinterval);
+        app.lastSeenBluetooth = new Date();
+        app.checkbluetoothinterval = setInterval(function() {
+            app.checkForBluetoothWarning();
+        }, BLUETOOTH_OFF_WARNING_INTERVAL);
     },
 
     /**
@@ -757,6 +792,19 @@ app = {
         console.log("Disabling Bluetooth!");
         bluetoothle.disable(function success() {
         }, function error() {
+        });
+    },
+    checkForBluetoothWarning: function() {
+        bluetoothle.isEnabled(function(status) {
+            if (status.isEnabled) {
+                app.lastSeenBluetooth = new Date();
+                app.warnedAboutBluetooth = false;
+            } else {
+                if (!app.warnedAboutBluetooth && new Date().getTime() - app.lastSeenBluetooth.getTime() > BLUETOOTH_OFF_WARNING_TIMEOUT) {
+                    navigator.notification.alert("Hmm, it looks like we're unable to turn your Bluetooth on from our app. It may be broken. Please enable it or try to restart your phone. Sorry about this!");
+                    app.warnedAboutBluetooth = true;
+                }
+            }
         });
     },
 
