@@ -133,27 +133,40 @@ function Badge(address) {
      */
     this.recordAndQueryData = function(callback) {
         var requestedData = false;
+        var requestedRecording = false;
         this._connect(
             function onConnect() {
-                this.badgeDialogue.sendStartRecRequest();
+                // first, we send a status request to set the remote time
+                this.badgeDialogue.sendStatusRequest();
             },
             function onData(data) {
-                if (requestedData) {
-                    if (this.badgeDialogue.isHeader(data) && this.badgeDialogue.expectingHeader) {
-                        this.badgeDialogue.onHeaderReceived(data);
-                    } else {
-                        this.badgeDialogue.onDataReceived(data);
-                        if (callback) {
-                            callback(this);
-                        }
-                    }
-                } else {
+                if (! requestedRecording) {
+                    this.badgeDialogue.onStatusReceived(data);
+                    // upon our first response, the first thing we want to do is tell the badge to start recording
+                    this.badgeDialogue.sendStartRecRequest();
+
+                    requestedRecording = true;
+                    return;
+                }
+                if (! requestedData) {
+                    // upon our second response, we should tell it to start recording
                     this.badgeDialogue.onRecordingAckReceived(data);
 
                     var requestTs = this.badgeDialogue.getLastSeenChunkTs();
-                    this.badgeDialogue.sendDataRequest(requestTs.seconds,requestTs.ms);
+                    this.badgeDialogue.sendDataRequest(requestTs.seconds, requestTs.ms);
 
                     requestedData = true;
+                    return;
+                }
+
+                // finally, we've requested status and to start recording and to get data. we've received data!
+                if (this.badgeDialogue.isHeader(data) && this.badgeDialogue.expectingHeader) {
+                    this.badgeDialogue.onHeaderReceived(data);
+                } else {
+                    this.badgeDialogue.onDataReceived(data);
+                    if (callback) {
+                        callback(this);
+                    }
                 }
             }
         );

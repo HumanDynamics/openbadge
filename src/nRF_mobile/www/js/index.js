@@ -246,13 +246,17 @@ mainPage = new Page("main",
         },
         onBluetoothInit: function() {
             this.loadGroupData();
+
+            clearInterval(app.badgeScanIntervalID);
             app.badgeScanIntervalID = setInterval(function() {
                 app.scanForBadges();
             }, BADGE_SCAN_INTERVAL);
+            app.scanForBadges();
+
+            clearInterval(app.badgeBatteryIntervalID);
             app.badgeBatteryIntervalID = setInterval(function() {
                 app.getStatusForEachMember();
             }, BADGE_STATUS_INTERVAL);
-            app.scanForBadges();
         },
         loadGroupData: function() {
 
@@ -388,14 +392,9 @@ meetingConfigPage = new Page("meetingConfig",
  */
 meetingPage = new Page("meeting",
     function onInit() {
-        var $this = this;
         $("#endMeetingButton").click(function() {
-            navigator.notification.confirm("Are you sure?", function(result) {
-                if (result == 1) {
-                    $this.onMeetingComplete();
-                }
-            });
-        });
+            this.confirmBeforeHide();
+        }.bind(this));
         this.$debugCharts = $("#debug-charts");
         $('#debug-chart-button').featherlight(this.$debugCharts, {persist:true});
 
@@ -405,10 +404,12 @@ meetingPage = new Page("meeting",
         app.startAllDeviceRecording();
         app.watchdogStart();
         $("#clock").clock();
+        clearInterval(this.syncTimeout);
         this.syncTimeout = setInterval(function() {
             app.meeting.syncLogFile();
         }, LOG_SYNC_INTERVAL);
 
+        clearInterval(this.bluetoothCheckTimeout);
         this.bluetoothCheckTimeout = setInterval(function() {
             app.ensureBluetoothEnabled();
         }, CHECK_BLUETOOTH_STATUS_INTERVAL);
@@ -434,6 +435,14 @@ meetingPage = new Page("meeting",
         this.clearMeetingTimeout();
     },
     {
+        confirmBeforeHide: function() {
+            navigator.notification.confirm("Are you sure?", function(result) {
+                if (result == 1) {
+                    this.onMeetingComplete();
+                }
+            }.bind(this));
+            return true;
+        },
         onBluetoothInit: function() {
             app.watchdogStart();
         },
@@ -639,12 +648,20 @@ app = {
                 navigator.app.exitApp();
             } else {
                 e.preventDefault();
-                app.showPage(mainPage);
+                if (app.activePage.confirmBeforeHide) {
+                    app.activePage.confirmBeforeHide();
+                } else {
+                    app.showPage(mainPage);
+                }
             }
         }, false);
 
         $(".back-button").click(function() {
-            app.showPage(mainPage);
+            if (app.activePage.confirmBeforeHide) {
+                app.activePage.confirmBeforeHide();
+            } else {
+                app.showPage(mainPage);
+            }
         });
 
 
@@ -966,6 +983,7 @@ app = {
      */
     watchdogStart: function() {
         // console.log("Starting watchdog");
+        clearInterval(app.watchdogTimer);
         app.watchdogTimer = setInterval(function(){ app.watchdog() }, WATCHDOG_SLEEP);
     },
     watchdogEnd: function() {
