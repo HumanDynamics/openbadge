@@ -166,11 +166,9 @@ if __name__ == "__main__":
     import time
     import sys
     import argparse
-    import datetime
 
-    print(Badge.localToUTC(datetime.datetime.now()))
-
-    bdg_addr = "E1:C1:21:A2:B2:E0"
+    '''
+    bdg_addr = "E1:C1:21:A2:B2:E0" #"CC:4A:FD:5C:E3:5B"
     bdg = Badge(bdg_addr)
     time.sleep(1.0)
 
@@ -184,8 +182,11 @@ if __name__ == "__main__":
       while not bdg.dlg.gotDateTime:
             bdg.NrfReadWrite.write("t")  # ask for time
             bdg.waitForNotifications(1.0)
-            
+
       print("Got datetime: {},{}".format(bdg.dlg.badge_sec,bdg.dlg.badge_ts))
+
+      #print "Sending date and time"
+      #bdg.sendDateTime()
 
     except:
       retcode=-1
@@ -195,3 +196,4 @@ if __name__ == "__main__":
     finally:
       bdg.disconnect()
       del bdg
+    '''
