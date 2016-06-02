@@ -149,8 +149,8 @@ function Meeting(group, members, type, moderator, description, location) {
     this.memberInitials = memberInitials;
 
 
-    this.syncLogFile = function(isComplete) {
-        app.syncLogFile(this.getLogName(), !!isComplete, new Date().toJSON());
+    this.syncLogFile = function(isComplete, endingMethod) {
+        app.syncLogFile(this.getLogName(), !!isComplete, endingMethod, new Date().toJSON());
     }.bind(this);
 
     var initialData = {
@@ -404,6 +404,9 @@ meetingPage = new Page("meeting",
         app.startAllDeviceRecording();
         app.watchdogStart();
         $("#clock").clock();
+
+        this.timedOut = false;
+
         clearInterval(this.syncTimeout);
         this.syncTimeout = setInterval(function() {
             app.meeting.syncLogFile();
@@ -428,7 +431,7 @@ meetingPage = new Page("meeting",
         window.plugins.insomnia.allowSleepAgain();
         app.watchdogEnd();
         app.stopAllDeviceRecording();
-        app.meeting.syncLogFile(true);
+        app.meeting.syncLogFile(true, this.timedOut ? "timedout" : "manual");
 
         cordova.plugins.backgroundMode.disable();
 
@@ -446,24 +449,28 @@ meetingPage = new Page("meeting",
         onBluetoothInit: function() {
             app.watchdogStart();
         },
+        timeoutMeeting: function() {
+            navigator.vibrate([500,500,500,500,500,500,500,500,500,500,500,100,500,100,500,100,500,100,500,100]);
+
+            navigator.notification.alert("Please press the button to indicate the meeting is still going, or we'll end it automatically in one minute", function(result) {
+                navigator.vibrate([]);
+                this.setMeetingTimeout();
+            }.bind(this), "Are you still there?", "Continue Meeting");
+
+            this.closeTimeout = setTimeout(function() {
+                navigator.notification.dismiss();
+                this.clearMeetingTimeout();
+                this.timedOut = true;
+                app.showMainPage();
+            }.bind(this), CHECK_MEETING_LENGTH_REACTION_TIME);
+        },
         setMeetingTimeout: function() {
 
             this.clearMeetingTimeout();
 
             this.meetingTimeout = setTimeout(function() {
-                navigator.vibrate([500,500,500,500,500,500,500,500,500,500,500,100,500,100,500,100,500,100,500,100]);
 
-                navigator.notification.alert("Please press the button to indicate the meeting is still going, or we'll end it automatically in one minute", function(result) {
-                    navigator.vibrate([]);
-                    this.setMeetingTimeout();
-                }.bind(this), "Are you still there?", "Continue Meeting");
-
-                this.closeTimeout = setTimeout(function() {
-                    navigator.notification.dismiss();
-                    this.clearMeetingTimeout();
-                    app.showMainPage();
-                }.bind(this), CHECK_MEETING_LENGTH_REACTION_TIME);
-
+                this.timeoutMeeting();
 
             }.bind(this), CHECK_MEETING_LENGTH_INTERVAL);
         },
@@ -677,10 +684,14 @@ app = {
         }
 
         document.addEventListener("resume", function onResume() {
-            app.synchronizeIncompleteLogFiles();
+            setTimeout(function() {
+                app.synchronizeIncompleteLogFiles();
+            }, 100);
             app.activePage.onResume();
         }, false);
-        app.synchronizeIncompleteLogFiles();
+        setTimeout(function() {
+            app.synchronizeIncompleteLogFiles();
+        }, 100);
 
 
         document.addEventListener("pause", function onPause() {
@@ -783,13 +794,13 @@ app = {
                 for (var i = 0; i < logfiles.length; i++) {
                     var logfilename = logfiles[i].name;
                     if (logfilename.indexOf(app.group.key) == 0 && ! (logfilename.split(".")[0] in meeting_ids)) {
-                        app.syncLogFile(logfilename, true);
+                        app.syncLogFile(logfilename, true, "sync");
                     }
                 }
             });
         })
     },
-    syncLogFile: function(filename, isComplete, endTime) {
+    syncLogFile: function(filename, isComplete, endingMethod, endTime) {
         var fileTransfer = new FileTransfer();
         var uri = encodeURI(BASE_URL + "log_data/");
 
@@ -802,10 +813,13 @@ app = {
         options.headers = {"X-APPKEY": APP_KEY};
 
         options.params = {
-            isComplete:!!isComplete
+            isComplete:!!isComplete,
         };
         if (endTime) {
             options.params.endTime = endTime;
+        }
+        if (endingMethod) {
+            options.params.endingMethod = endingMethod;
         }
 
 
