@@ -200,7 +200,8 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
             isAdvertising = true;
             if(needAdvDataUpdate)
             {
-                ble_advdata_t advdata;
+                setAdvData();
+                /*ble_advdata_t advdata;
                 constructAdvData(&advdata);
                 uint32_t result = ble_advdata_set(&advdata, NULL);  // set advertising data, don't set scan response data.
                 if(result != NRF_SUCCESS)
@@ -210,7 +211,7 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
                 else
                 {
                     debug_log("Updated adv. data.\r\n");
-                }
+                }*/
                 needAdvDataUpdate = false;
             }
                 
@@ -299,17 +300,13 @@ void advertising_init(void)
     uint32_t      err_code;
     
     // Build advertising data struct to pass into @ref ble_advertising_init.
-    ble_advdata_t advdata;
-    constructAdvData(&advdata);
-    
-    /*
+    ble_advdata_t advdata;    
     memset(&advdata, 0, sizeof(advdata));
     advdata.name_type               = BLE_ADVDATA_FULL_NAME;
     advdata.include_appearance      = false;
     advdata.flags                   = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;
     advdata.uuids_complete.uuid_cnt = sizeof(m_adv_uuids) / sizeof(m_adv_uuids[0]);
     advdata.uuids_complete.p_uuids  = m_adv_uuids;
-    */
 
     ble_adv_modes_config_t options = {0};
     options.ble_adv_fast_enabled  = BLE_ADV_FAST_ENABLED;
@@ -321,6 +318,7 @@ void advertising_init(void)
 
     err_code = ble_advertising_init(&advdata, NULL, &options, NULL /*on_adv_evt*/, NULL);
     BLE_ERROR_CHECK(err_code);
+    setAdvData();
 }
 
 void updateAdvData()
@@ -328,7 +326,7 @@ void updateAdvData()
     needAdvDataUpdate = true;
 }
 
-void constructAdvData(ble_advdata_t* p_advdata)
+void setAdvData()
 {
     custom_adv_data_t custom_data_array;
     custom_data_array.battery = getBatteryVoltage();
@@ -340,17 +338,18 @@ void constructAdvData(ble_advdata_t* p_advdata)
     custom_manuf_data.data.p_data = (uint8_t*)(&custom_data_array);
     custom_manuf_data.data.size = sizeof(custom_data_array);
     
-    // Build advertising data struct to pass into @ref ble_advertising_init.
-    memset(p_advdata, 0, sizeof(ble_advdata_t));
-    p_advdata->name_type               = BLE_ADVDATA_FULL_NAME;
-    p_advdata->include_appearance      = false;
-    p_advdata->flags                   = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;
-    p_advdata->uuids_complete.uuid_cnt = sizeof(m_adv_uuids) / sizeof(m_adv_uuids[0]);
-    p_advdata->uuids_complete.p_uuids  = m_adv_uuids;
+    // Build advertising data struct to pass into @ref ble_advdata_set.
+    ble_advdata_t advdata;
+    memset(&advdata, 0, sizeof(ble_advdata_t));
+    advdata.name_type               = BLE_ADVDATA_FULL_NAME;
+    advdata.include_appearance      = false;
+    advdata.flags                   = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;
+    advdata.uuids_complete.uuid_cnt = sizeof(m_adv_uuids) / sizeof(m_adv_uuids[0]);
+    advdata.uuids_complete.p_uuids  = m_adv_uuids;
     
-    p_advdata->p_manuf_specific_data = &custom_manuf_data;
+    advdata.p_manuf_specific_data = &custom_manuf_data;
     
-    /*uint32_t result = ble_advdata_set(p_advData, NULL);  // set advertising data, don't set scan response data.
+    uint32_t result = ble_advdata_set(&advdata, NULL);  // set advertising data, don't set scan response data.
     if(result != NRF_SUCCESS)
     {
         debug_log("ERR: error setting advertising data, #%d.\r\n",(int)result);
@@ -358,7 +357,7 @@ void constructAdvData(ble_advdata_t* p_advdata)
     else
     {
         debug_log("Updated adv. data.\r\n");
-    }*/
+    }
     
 }
 

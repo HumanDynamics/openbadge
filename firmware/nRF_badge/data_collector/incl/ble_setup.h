@@ -167,10 +167,9 @@ void updateAdvData();
 
 
 /**
- * Input: a pointer to an advdata struct.  
- * Sets data in struct appropriately, so struct can be used in ble_advdata_set or ble_advertising_init
+ * Refreshes advertising data.
  */
-void constructAdvData(ble_advdata_t* p_adv_data);
+void setAdvData();
 
 
 /**
