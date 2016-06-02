@@ -80,7 +80,8 @@ bool badgeActive = false;   // Otherwise, the badge is inactive and can enter in
 //=========================== Global function definitions ==================================
 //==========================================================================================
 
-void goToSleep(long ms)  {
+void goToSleep(long ms)  
+{
     unsigned long sleepTime = ms;
     if(ms == 0)
     {
@@ -92,7 +93,8 @@ void goToSleep(long ms)  {
         sleepTime = MAX_SLEEP;
     }
     countdown_set(sleepTime);
-    while((!countdownOver) && sleep)  {
+    while((!countdownOver) && sleep && (!ble_timeout))  
+    {
         sd_app_evt_wait();  //sleep until one of our functions says not to
     }
 }
@@ -379,6 +381,7 @@ int main(void)
                 ;// can't put declaration directly after case label.
                 long sleepDuration;
                 unsigned long elapsed = millis() - cycleStart;
+                
                 
                 // If none of the modules (collector, storer, sender) is active, then we can sleep indefinitely (until BLE activity)
                 if(!badgeActive)
