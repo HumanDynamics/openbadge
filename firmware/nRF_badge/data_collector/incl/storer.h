@@ -66,6 +66,7 @@
 
 #include "collector.h"
 #include "sender.h"
+#include "analog.h"
 
 
 

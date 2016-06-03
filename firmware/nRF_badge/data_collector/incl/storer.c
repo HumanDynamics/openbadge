@@ -146,7 +146,7 @@ bool updateStorer()
                 {
                     if(BLEgetStatus() == BLE_INACTIVE)      // if storer is idle, we can advertise.
                     {
-                        BLEresume();
+                        BLEresume(PAUSE_REQ_STORER);
                     }
                     storerActive = false;
                 }
@@ -155,7 +155,7 @@ bool updateStorer()
             case STORER_STORE:
                 if(BLEgetStatus() != BLE_CONNECTED)          // no storage if we're in a connection
                 {
-                    if(BLEpause())      // ask for pause advertising
+                    if(BLEpause(PAUSE_REQ_STORER))      // ask for pause advertising
                     {
                         debug_log("STORER: writing RAM chunk %d to FLASH chunk %d\r\n",store.from,store.to);
                         //printCollectorChunk(store.from);
@@ -174,7 +174,7 @@ bool updateStorer()
                 {
                     if(BLEgetStatus() != BLE_CONNECTED)
                     {
-                        if(BLEpause())
+                        if(BLEpause(PAUSE_REQ_STORER))
                         {
                             store.to = newChunk;
                             store.from = (store.from < LAST_RAM_CHUNK) ? store.from+1 : 0;  // advance to next RAM chunk

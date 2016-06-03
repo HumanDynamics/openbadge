@@ -131,7 +131,11 @@ bool updateSender()
                     }
                     debug_log("Setting time to %lX, %lums.\r\n",command.timestamp+sCorrection,command.ms+msCorrection);
                     setTimeFractional(command.timestamp+sCorrection,command.ms+msCorrection);
-                    dateReceived = true;
+                    if(!dateReceived)
+                    {
+                        updateAdvData();
+                        dateReceived = true;
+                    }
                     
                     pendingCommand.cmd = CMD_NONE;      // we're done with that pending command
                     debug_log("SENDER: Sent status.\r\n");
@@ -513,7 +517,12 @@ bool updateSender()
                     }
                     debug_log("Setting time to %lX, %lums.\r\n",command.timestamp+sCorrection,command.ms+msCorrection);
                     setTimeFractional(command.timestamp+sCorrection,command.ms+msCorrection);
-                    dateReceived = true;
+                    
+                    if(!dateReceived)
+                    {
+                        updateAdvData();
+                        dateReceived = true;
+                    }
 
                     // Timeout value expressed as minutes - convert to ms.
                     debug_log("SENDER: starting collector, timeout %d minutes.\r\n",(int)command.timeout);

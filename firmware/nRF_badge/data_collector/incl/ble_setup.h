@@ -15,7 +15,7 @@
 #include "ble_bas.h"  //battery service
 #include "ble_nus.h"  //Nordic UART service
  
-//#include "internal_flash.h"
+ 
 #include "storer.h" 
  
 #define IS_SRVC_CHANGED_CHARACT_PRESENT 0                                           /**< Include or not the service_changed characteristic. if not enabled, the server's database cannot be changed for the lifetime of the device*/
@@ -41,7 +41,16 @@
 
 volatile bool isConnected;
 volatile bool isAdvertising;
-volatile bool pauseRequest;
+
+typedef enum ble_pauseReq_src
+{
+    PAUSE_REQ_FIRST=0,
+    PAUSE_REQ_STORER=0,
+    PAUSE_REQ_COLLECTOR=1,
+    PAUSE_REQ_NONE=2
+} ble_pauseReq_src;
+
+volatile bool pauseRequest[PAUSE_REQ_NONE];
 
 typedef enum ble_status_t
 {
@@ -49,6 +58,16 @@ typedef enum ble_status_t
     BLE_CONNECTED,            // connection active
     BLE_ADVERTISING,          // advertising active
 } ble_status_t;
+
+
+typedef struct
+{
+    float battery;
+    unsigned char synced;
+    unsigned char collecting;
+} custom_adv_data_t;
+
+volatile bool needAdvDataUpdate;
 
 /**
  * Callback function for asserts in the SoftDevice; called in case of SoftDevice assert.
@@ -99,7 +118,7 @@ static void sec_params_init(void);
  *
  * @param[in] ble_adv_evt  Advertising event.
  */
-static void on_adv_evt(ble_adv_evt_t ble_adv_evt);
+//static void on_adv_evt(ble_adv_evt_t ble_adv_evt);
 
 
 /**@brief Function for handling the Application's BLE Stack events.
@@ -137,7 +156,20 @@ static void ble_stack_init(void);
 
 /**@brief Function for initializing the Advertising functionality.
  */
-static void advertising_init(void);
+void advertising_init(void);
+
+
+/**
+ * Function to allow other modules to tell BLE module that advertising data should be updated.
+ *   Will be set after next disconnect/advertising timeout
+ */
+void updateAdvData();
+
+
+/**
+ * Refreshes advertising data.
+ */
+void setAdvData();
 
 
 /**
@@ -155,13 +187,16 @@ void BLEstartAdvertising();
  */
 void BLEdisable();
 
-
-bool BLEpause();
+/**
+ * Request advertising pause.  Must specify source of pause request.
+ *   Returns true if advertising is inactive.
+ */
+bool BLEpause(ble_pauseReq_src source);
 
 /**
- * Resume advertising (after pausing it)
+ * Resume advertising (after pausing it).  Must specify source of resume request.
  */
-void BLEresume();
+void BLEresume(ble_pauseReq_src source);
 
 /**
  * Disconnect from server forcefully.
