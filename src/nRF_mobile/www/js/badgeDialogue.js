@@ -85,15 +85,17 @@ function Chunk() {
         return (this.samples.length >= this.numSamples);
     }.bind(this);
 
-    this.toDict = function () {
+    this.toDict = function (member) {
         return {
             voltage:this.voltage,
             timestamp:this.ts,
             timestamp_ms:this.ts_ms,
             sampleDelay:this.sampleDelay,
             numSamples:this.numSamples,
-            samples:this.samples
-        };
+            samples:this.samples,
+            badge: member.badgeId,
+            member: member.key
+    };
     }.bind(this);
     
     this.isFull = function() {
@@ -108,7 +110,6 @@ function Chunk() {
 *@param badge badge object
 */
 function BadgeDialogue(badge) {
-    this.RECORDING_TIMEOUT_MINUTES = 5;
 
     var struct = require('./struct.js').struct;
     this.badge = badge;
@@ -153,12 +154,12 @@ function BadgeDialogue(badge) {
     /**
      * sends a start recording request
      */
-    this.sendStartRecRequest = function(timeoutMinutes) {
+    this.sendStartRecRequest = function() {
         //Set current time
         var now = this.nowAsSecAndMs();
-        this.log('Requesting badge to start recording. Epoch_seconds: ' + now.seconds+ ', ms: '+now.ms+", Timeout: "+timeoutMinutes);
+        this.log('Requesting badge to start recording. Epoch_seconds: ' + now.seconds+ ', ms: '+now.ms+", Timeout: "+RECORDING_TIMEOUT_MINUTES);
 
-        var timeString = struct.Pack('<cLHH',['1',now.seconds,now.ms,timeoutMinutes]);
+        var timeString = struct.Pack('<cLHH',['1',now.seconds,now.ms, RECORDING_TIMEOUT_MINUTES]);
         this.badge.sendString(timeString);
     }.bind(this);
 

@@ -27,6 +27,8 @@ BLUETOOTH_OFF_WARNING_INTERVAL = 5 * 1000; // how often to check for bluetooth t
 NO_BADGE_SEEN_WARNING_TIMEOUT = 5 * 60 * 1000; // if you haven't seen a badge in this long, send a warning
 NO_BADGE_SEEN_WARNING_INTERVAL = 5 * 1000; // how often to check for badges for the warning
 
+RECORDING_TIMEOUT_MINUTES = 5;
+
 window.SHOW_BADGE_CONSOLE = false;
 
 
@@ -66,7 +68,7 @@ function GroupMember(memberJson) {
 
     this.badge.badgeDialogue.onChunkCompleted = function(chunk) {
         if (this.meeting) {
-            this.meeting.logChunk(chunk);
+            this.meeting.logChunk(chunk, this);
         }
     }.bind(this);
 
@@ -119,11 +121,9 @@ function Meeting(group, members, type, moderator, description, location) {
 
     }.bind(this));
 
-    this.logChunk = function(chunk) {
+    this.logChunk = function(chunk, member) {
 
-        var chunkData = chunk.toDict();
-        chunkData.badge = this.badgeId;
-        chunkData.member = this.key;
+        var chunkData = chunk.toDict(member);
 
         this.writeLog(JSON.stringify(chunkData));
 
