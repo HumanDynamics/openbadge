@@ -9,6 +9,7 @@
 //#include "app_error.h"
 #include "nrf_adc.h"
 
+#include "ble_setup.h"
 #include "debug_log.h"
 #include "rtc_timing.h"
 
@@ -31,8 +32,8 @@
 
 float currentBatteryVoltage;
 unsigned long lastBatteryUpdate;
-#define MIN_BATTERY_READ_INTERVAL 100000UL  // minimum time between supply analogReads.  We don't need to do this often.
-#define MAX_BATTERY_READ_INTERVAL 200000UL  // time after lastBatteryUpdate to consider currentBatteryVoltage invalid
+#define MIN_BATTERY_READ_INTERVAL 180000UL  // minimum time between supply analogReads.  We don't need to do this often.
+#define MAX_BATTERY_READ_INTERVAL 300000UL  // time after lastBatteryUpdate to consider currentBatteryVoltage invalid
 
 
 
@@ -55,7 +56,7 @@ int analogRead(nrf_adc_config_input_t input);
 float getBatteryVoltage();
 
 /**
- * If enough time has passed since the last battery voltage read, do another reading.
+ * Do a reading of the battery, update the buffered voltage value.
  */
 void updateBatteryVoltage();
 
@@ -63,7 +64,7 @@ void updateBatteryVoltage();
  * Get actual battery voltage (performs analogRead)
  *   Use with caution - may return inaccurate results if performed during a spike in power usage
  */
-float getBatteryVoltage();
+//float getBatteryVoltage();
 
 
 

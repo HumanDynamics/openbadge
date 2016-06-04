@@ -11,6 +11,7 @@
 #include "debug_log.h"
 
 volatile bool countdownOver;  //set true when the countdown interrupt triggers
+volatile bool sleep;  //whether we should sleep (so actions like data sending can override sleep)
 
 volatile bool ble_timeout;
 #define CONNECTION_TIMEOUT_MS 6000UL
