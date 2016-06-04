@@ -1,7 +1,0 @@
-env/
-data/
-bat_data/
-app_data/
-*scn
-*csv
-.ipynb_checkpoints/*
