@@ -1,20 +1,27 @@
 // if at least this amount of time happens between a null signal
 // and a talk signal, they are considered to have started talking.
-var MIN_TALK_LENGTH = 751;
+var MIN_TALK_LENGTH = 1001;
 // If we get no signal for this amount of time, consider them no
 // longer talking.
-var TALK_TIMEOUT = 1500;
+var TALK_TIMEOUT = 500;
 // Time length used for storing samples (in ms
 var BUFFER_LENGTH = 1000 * 60 * 5; // 5 minutes)
 // Prior for cutoff (max loudness that we expect)
-var CUTOFF_PROIOR = 20;
+var CUTOFF_PROIOR = 100;
 // Prior for threshold (speaking threshold, based on our tests)
 var SPEAK_THRESHOLD_PRIOR = 10;
 // Weight for weighted mean of thresholds
-PRIOR_WEIGHT = 0.9;
+var PRIOR_WEIGHT = 0.9;
 // Length of intervals (in ms) for loudness comparison. Since time intervals
 // might not be the same
 var INTERVAL_INCREMENTS = 25;
+// number of samples to use for smoothing
+var SAMPLES_SMOOTHING = 1;
+
+// Power threshold
+var POWER_SAMPLES_MEAN = 20*60; // assumes 20 samples per second.
+var NOISE_POWER_SAMPLES = 20;   // how many samples to use for power calc. Set to 1 sec (20 samples)
+var NOISE_POWER_THRESHOLD = 42; // experimental threshold
 
 window.ENABLE_DATA_LOGGING = false;
 
@@ -28,9 +35,11 @@ function checkIntersect(startA,endA,startB,endB) {
  */
 function DataAnalyzer() {
     var samples = []; // array of samples : timestamp, volume
-    var smoother = new SmoothArray(); // array object used for caluclating smooth value
+    var smoother = new SmoothArray(SAMPLES_SMOOTHING); // array object used for caluclating smooth value
     var cutoff = CUTOFF_PROIOR;
     var speakThreashold = SPEAK_THRESHOLD_PRIOR;
+    var slidingPower = new SlidingPower(NOISE_POWER_SAMPLES);
+    var signalMean = new MedianArray(POWER_SAMPLES_MEAN);
 
     this.purgeSamples = function (timestamp) {
         while (samples.length > 0 && (timestamp - samples[0].timestamp > BUFFER_LENGTH)) {
@@ -72,8 +81,13 @@ function DataAnalyzer() {
         // smooth it
         var volClippedSmooth = smoother.push(volClipped);
 
+        // updates the moving mean
+        var mean = signalMean.push(volClipped);
+
+
         // and check if it's above the threshold
-        var isSpeak = volClippedSmooth > speakThreashold ? 1 : 0;
+        var volPower = slidingPower.push(volClipped,mean);
+        var isSpeak = volPower > NOISE_POWER_THRESHOLD ? 1 : 0;
 
         // add sample to array
         samples.push({
@@ -81,7 +95,8 @@ function DataAnalyzer() {
             'volClipped': volClipped,
             'volClippedSmooth': volClippedSmooth,
             'cutoff': cutoff,
-            'speakThreashold': speakThreashold,
+            'volPower': volPower,
+            'mean': mean,
             'isSpeak': isSpeak,
             'timestamp': timestamp,
             'duration': duration
@@ -100,7 +115,7 @@ function DataAnalyzer() {
             return sample.volRaw
         });
         cutoff = (CUTOFF_PROIOR * PRIOR_WEIGHT) + (m.mean + 2 * m.std) * (1 - PRIOR_WEIGHT);
-        dataLog("Cutoff prior,value,mean and std:", CUTOFF_PROIOR, cutoff, m.mean, m.std);// calc adjusted cutoff (using samples and prior)
+        dataLog("Cutoff prior,value,mean and std:"+ CUTOFF_PROIOR+" "+cutoff+" "+m.mean+" "+m.std);// calc adjusted cutoff (using samples and prior)
     }.bind(this);
 
     // updates the threshold
@@ -113,7 +128,7 @@ function DataAnalyzer() {
             return sample.volClippedSmooth
         });
         speakThreashold = (SPEAK_THRESHOLD_PRIOR * PRIOR_WEIGHT) + (m.mean - 2 * m.std) * (1 - PRIOR_WEIGHT);
-        dataLog("Speak priotr,threashold, mean and std:", SPEAK_THRESHOLD_PRIOR, speakThreashold, m.mean, m.std);
+        dataLog("Speak priotr,threashold, mean and std:"+ SPEAK_THRESHOLD_PRIOR +" "+ speakThreashold + " " + m.mean + " "+  m.std);
     }.bind(this);
 
     this.getSamples = function () {
@@ -169,16 +184,16 @@ function generateTalkIntervals(speakSamples) {
 }
 
 //Class for smoothening the volume signal
-function SmoothArray() {
+function SmoothArray(numSamples) {
+    var numSamples = numSamples
     // Number of samples that will be used for smoothing the samples
-    var SAMPLES_SMOOTHING = 5;
     var smoothArray = [];
     var pos = 0;
 
     this.push = function(vol) {
         // adds the sample to the correct location
         smoothArray[pos] = vol;
-        pos = (pos +1) % SAMPLES_SMOOTHING;
+        pos = (pos +1) % numSamples;
 
         // returns smoothened value
         var sum = smoothArray.reduce(function(a, b) { return a + b; });
@@ -188,7 +203,56 @@ function SmoothArray() {
 
     this.getSmoothArray = function() {
         return smoothArray;
-    }
+    }.bind(this);
+}
+
+function MedianArray(numSamples) {
+    var numSamples = numSamples
+    // Number of samples that will be used for smoothing the samples
+    var smoothArray = [];
+    var pos = 0;
+
+    this.push = function(vol) {
+        // adds the sample to the correct location
+        smoothArray[pos] = vol;
+        pos = (pos +1) % numSamples;
+
+        return median(smoothArray);
+    };
+
+    this.getSmoothArray = function() {
+        return smoothArray;
+    }.bind(this);
+}
+
+//Class for calculating power using a sliding window
+// P = 1/N*sum((x-mean)^2)
+function SlidingPower(numSamples) {
+    var numSamples = numSamples
+    // Number of samples that will be used for smoothing the samples
+    var samplesArray = [];
+    var pos = 0;
+
+    this.push = function(vol,mean) {
+        // adds the element to the correct location
+        samplesArray[pos] = (vol - mean)*(vol - mean);
+        pos = (pos +1) % numSamples;
+
+        // return power calc, if there are enough samples
+        if (samplesArray.length == numSamples) {
+            var sum = samplesArray.reduce(function (a, b) {
+                return a + b;
+            });
+            var mean = sum / samplesArray.length;
+            return mean;
+        } else {
+            return 0;
+        }
+    };
+
+    this.getSamplesArray = function() {
+        return samplesArray;
+    }.bind(this);
 }
 
 function dateToString(d) {
@@ -232,6 +296,18 @@ function meanAndStd(data,getValue) {
         mean: mean,
         std: stdDev
     };
+}
+
+function median(values) {
+
+    values.sort( function(a,b) {return a - b;} );
+
+    var half = Math.floor(values.length/2);
+
+    if(values.length % 2)
+        return values[half];
+    else
+        return (values[half-1] + values[half]) / 2.0;
 }
 
 /*
@@ -308,7 +384,7 @@ function GroupDataAnalyzer(members,periodStartTime,periodEndTime) {
     // generate speaking intervals
     $.each(members, function (index, member) {
         var v = generateTalkIntervals(wonSamples[index]);
-        dataLog("intervals for ",index,"are",v,"had winning samples:",wonSamples[index].length);
+        dataLog("intervals for "+index+" are "+v+" had winning samples: "+wonSamples[index].length);
         intervals[index] = v;
     });
 

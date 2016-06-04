@@ -32,6 +32,15 @@
             member2.dataAnalyzer = new DataAnalyzer();
 
             window.onload = function() {
+                console.log("Power calc");
+                var sp = new SlidingPower(5);
+                sp.push(10,5)
+                sp.push(0,5);
+                sp.push(0,5);
+                sp.push(5,5);
+                var v = sp.push(100,5);
+                console.log(v);
+
                 var fileInput = document.getElementById('fileInput');
 
                 fileInput.addEventListener('change', function(e) {

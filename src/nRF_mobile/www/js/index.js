@@ -635,6 +635,24 @@ function DebugChart($canvas) {
         }
         context.stroke();
 
+        context.strokeStyle = "#FF4500";
+        context.lineWidth = 2;
+        context.beginPath();
+        for (var i = 0; i < series.length - 1; i++) {
+
+            var point = series[i];
+
+            var y = calcY(point.mean);
+            var x = calcX(point.timestamp, start, end);
+            if (i == 0) {
+                context.moveTo(x, y);
+            } else {
+                context.lineTo(x, y);
+            }
+            x++;
+        }
+        context.stroke();
+
     }
 
     return this;
