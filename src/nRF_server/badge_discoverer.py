@@ -45,7 +45,9 @@ class BadgeDiscoverer:
 			badgeDataBuffer = data[18:26]
 			badgeInfoArr = struct.unpack('<HfBB', badgeDataBuffer)
 			voltage = badgeInfoArr[1];
-			return {'voltage': voltage}
+			isSync = badgeInfoArr[2];
+			isCollecting = badgeInfoArr[3];
+			return {'voltage': voltage, 'isSync': isSync, 'isCollecting':isCollecting}
 		else:
 			return {'voltage': None}
 

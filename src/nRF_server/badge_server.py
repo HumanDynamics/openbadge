@@ -337,6 +337,7 @@ if __name__ == "__main__":
 					logger.debug("{},{},{:.2f}".format(scan_date,mac,rssi))
 					fout.write("{},{},{:.2f}\n".format(scan_date,mac,rssi))
 			fout.close()
+			time.sleep(5) # give time to Ctrl-C
 		
 	# pull data from all devices
 	if args.mode == "pull":
