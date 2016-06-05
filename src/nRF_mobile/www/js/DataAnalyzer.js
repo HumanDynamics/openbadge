@@ -121,8 +121,7 @@ function DataAnalyzer() {
         var tempMean = median(meanArray.getSamplesArray());
         if (tempMean) {
             mean = median(meanArray.getSamplesArray());
-        }
-        console.log("Latest median - "+mean);
+        } 
     }
 
     // updates the cutoff

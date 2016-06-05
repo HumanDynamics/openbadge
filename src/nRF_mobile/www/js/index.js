@@ -959,16 +959,11 @@ app = {
                     // extract badge data from advertisement
                     var voltage = null;
                     if (obj.name == "BADGE") {
-                        console.log(obj.address+"|Found badge");
                         var adbytes = bluetoothle.encodedStringToBytes(obj.advertisement);
                         var adStr = bluetoothle.bytesToString(adbytes);
-
-                        console.log(obj.address+"|Ad data: ", adStr);
                         var adBadgeData = adStr.substring(18, 26);
-                        console.log(obj.address+"|Badge ad data: ", adBadgeData);
                         var adBadgeDataArr = struct.Unpack('<HfBB', adBadgeData);
                         voltage = adBadgeDataArr[1];
-                        console.log(obj.address+"|Badge ad voltage: ",voltage);
                         app.onScanUpdate(obj.address,voltage);
                     }
                 });
