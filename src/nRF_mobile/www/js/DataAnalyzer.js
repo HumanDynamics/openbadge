@@ -6,13 +6,16 @@ var MIN_TALK_LENGTH = 1001;
 var TALK_TIMEOUT = 500;
 // Time length used for storing samples (in ms
 var BUFFER_LENGTH = 1000 * 60 * 5; // 5 minutes)
-// Prior for cutoff (max loudness that we expect)
 
+// value to use for mean before we calculate it
+var MEAN_INIT_VALUE = 5;
+
+// Prior for cutoff (max loudness that we expect)
 var CUTOFF_PROIOR = 100;
 // Prior for threshold (speaking threshold, based on our tests)
 // var SPEAK_THRESHOLD_PRIOR = 10;
-// Weight for weighted mean of thresholds
 
+// Weight for weighted mean of thresholds
 var PRIOR_WEIGHT = 0.9;
 // Length of intervals (in ms) for loudness comparison. Since time intervals
 // might not be the same
@@ -41,11 +44,13 @@ function checkIntersect(startA,endA,startB,endB) {
  */
 function DataAnalyzer() {
     var samples = []; // array of samples : timestamp, volume
-    var smoother = new SmoothArray(SAMPLES_SMOOTHING); // array object used for caluclating smooth value
+    //var smoother = new SmoothArray(SAMPLES_SMOOTHING); // array object used for caluclating smooth value
     var cutoff = CUTOFF_PROIOR;
     //var speakThreashold = SPEAK_THRESHOLD_PRIOR;
     var slidingPower = new SlidingPower(NOISE_POWER_SAMPLES);
-    var signalMean = new MedianArray(POWER_SAMPLES_MEAN);
+    //var signalMean = new MedianArray(POWER_SAMPLES_MEAN);
+    var meanArray = new FixedLengthArray(POWER_SAMPLES_MEAN);
+    var mean = MEAN_INIT_VALUE;
 
     this.purgeSamples = function (timestamp) {
         while (samples.length > 0 && (timestamp - samples[0].timestamp > BUFFER_LENGTH)) {
@@ -84,12 +89,12 @@ function DataAnalyzer() {
         // clip the sample
         var volClipped = vol > cutoff ? cutoff : vol;
 
+        // update mean/median tracking array
+        meanArray.push(volClipped);
+
         // smooth it
-        var volClippedSmooth = smoother.push(volClipped);
-
-        // updates the moving mean
-        var mean = signalMean.push(volClipped);
-
+        //var volClippedSmooth = smoother.push(volClipped);
+        var volClippedSmooth = volClipped;
 
         // and check if it's above the threshold
         var volPower = slidingPower.push(volClipped,mean);
@@ -110,6 +115,15 @@ function DataAnalyzer() {
 
         return true;
     }.bind(this);
+
+    // updates the mean / median (we don't want to do this for every sample)
+    this.updateMean = function() {
+        var tempMean = median(meanArray.getSamplesArray());
+        if (tempMean) {
+            mean = median(meanArray.getSamplesArray());
+        }
+        console.log("Latest median - "+mean);
+    }
 
     // updates the cutoff
     this.updateCutoff = function () {
@@ -138,7 +152,7 @@ function DataAnalyzer() {
         dataLog("Speak priotr,threashold, mean and std:"+ SPEAK_THRESHOLD_PRIOR +" "+ speakThreashold + " " + m.mean + " "+  m.std);
     }.bind(this);
     */
-    
+
     this.getSamples = function () {
         return samples;
     }.bind(this);
@@ -191,6 +205,25 @@ function generateTalkIntervals(speakSamples) {
     return talkIntervals;
 }
 
+
+function FixedLengthArray(numSamples) {
+    var numSamples = numSamples
+    // Number of samples that will be used for smoothing the samples
+    var samplesArray = [];
+    var pos = 0;
+
+    this.push = function(vol) {
+        // adds the sample to the correct location
+        samplesArray[pos] = vol;
+        pos = (pos +1) % numSamples;
+    }.bind(this);
+
+    this.getSamplesArray = function() {
+        return samplesArray;
+    }.bind(this);
+}
+
+
 //Class for smoothening the volume signal
 function SmoothArray(numSamples) {
     var numSamples = numSamples
@@ -217,15 +250,15 @@ function SmoothArray(numSamples) {
 function MedianArray(numSamples) {
     var numSamples = numSamples
     // Number of samples that will be used for smoothing the samples
-    var smoothArray = [];
+    var samplesArray = [];
     var pos = 0;
 
     this.push = function(vol) {
         // adds the sample to the correct location
-        smoothArray[pos] = vol;
+        samplesArray[pos] = vol;
         pos = (pos +1) % numSamples;
 
-        return median(smoothArray);
+        return median(samplesArray);
     }.bind(this);
 }
 
@@ -318,7 +351,6 @@ function meanAndStd(data,getValue) {
 }
 
 function median(values) {
-
     values.sort( function(a,b) {return a - b;} );
 
     var half = Math.floor(values.length/2);

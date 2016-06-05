@@ -553,6 +553,7 @@ meetingPage = new Page("meeting",
             $.each(app.meeting.members, function(index, member) {
                 // update cutoff and threshold
                 member.dataAnalyzer.updateCutoff();
+                member.dataAnalyzer.updateMean();
                 //member.dataAnalyzer.updateSpeakThreshold();
 
                 var datapoints = filterPeriod(member.dataAnalyzer.getSamples(),start,end);
