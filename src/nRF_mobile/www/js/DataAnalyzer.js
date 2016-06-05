@@ -121,7 +121,7 @@ function DataAnalyzer() {
         var tempMean = median(meanArray.getSamplesArray());
         if (tempMean) {
             mean = median(meanArray.getSamplesArray());
-        } 
+        }
     }
 
     // updates the cutoff
@@ -192,10 +192,10 @@ function generateTalkIntervals(speakSamples) {
 
         // new interval ended. Because each sample is duration millisecond long, we add this to the endTime
         var newTalkInterval = {'startTime':speakSamples[i].timestamp, 'endTime': speakSamples[j].timestamp+speakSamples[j].duration};
-        //dataLog("start time is: ",newTalkInterval.startTime);
-        //dataLog("Is it min length?: ",dateToString(newTalkInterval.startTime),dateToString(newTalkInterval.endTime));
+        dataLog("start time is: "+newTalkInterval.startTime);
+        dataLog("Is it min length?: "+dateToString(newTalkInterval.startTime)+" "+dateToString(newTalkInterval.endTime)+" "+(newTalkInterval.endTime-newTalkInterval.startTime));
         if (this.isMinTalkLength(newTalkInterval)) {
-            //dataLog("Adding: ",dateToString(newTalkInterval.startTime),dateToString(newTalkInterval.endTime));
+            dataLog("Adding: "+dateToString(newTalkInterval.startTime)+ " "+dateToString(newTalkInterval.endTime));
             talkIntervals.push(newTalkInterval);
         }
         // set i to hold the next startTime
