@@ -32,6 +32,10 @@
             member2.dataAnalyzer = new DataAnalyzer();
 
             window.onload = function() {
+                var s = [1,3,6,9,4,3,2,3444,-1]
+                var sMinArray = new MinArray(4);
+                s.forEach(function(x) {b = sMinArray.push(x);console.log("Min:"+b)});
+                console.log(s.min());
                 console.log("Power calc");
                 var sp = new SlidingPower(5);
                 sp.push(10,5)
@@ -75,8 +79,6 @@
                         var periodStartDate = samples[samples.length-1].timestamp - 1000 * 60 * 1;
                         var periodEndDate = samples[samples.length-1].timestamp;
                         periodEndDate = periodEndDate+1000;
-                        /*
-
                         console.log("Time period:",periodStartDate,periodEndDate);
                         b = a.generateTalkIntervals(periodStartDate,periodEndDate);
                         console.log("# of intervals: ",a.length)
@@ -84,7 +86,6 @@
                         b.forEach(function(x) {
                             console.log(dateToString(x.startTime),dateToString(x.endTime));
                         });
-                        */
                         /*
                         console.log("Samples:");
                         samples.forEach(function(x) {

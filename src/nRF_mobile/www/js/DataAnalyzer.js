@@ -7,10 +7,12 @@ var TALK_TIMEOUT = 500;
 // Time length used for storing samples (in ms
 var BUFFER_LENGTH = 1000 * 60 * 5; // 5 minutes)
 // Prior for cutoff (max loudness that we expect)
+
 var CUTOFF_PROIOR = 100;
 // Prior for threshold (speaking threshold, based on our tests)
-var SPEAK_THRESHOLD_PRIOR = 10;
+// var SPEAK_THRESHOLD_PRIOR = 10;
 // Weight for weighted mean of thresholds
+
 var PRIOR_WEIGHT = 0.9;
 // Length of intervals (in ms) for loudness comparison. Since time intervals
 // might not be the same
@@ -19,11 +21,15 @@ var INTERVAL_INCREMENTS = 25;
 var SAMPLES_SMOOTHING = 1;
 
 // Power threshold
-var POWER_SAMPLES_MEAN = 20*60; // assumes 20 samples per second.
+var POWER_SAMPLES_MEAN = 2*60*20; // assumes 20 samples per second, X minutes.
 var NOISE_POWER_SAMPLES = 20;   // how many samples to use for power calc. Set to 1 sec (20 samples)
 var NOISE_POWER_THRESHOLD = 42; // experimental threshold
 
 window.ENABLE_DATA_LOGGING = false;
+
+Array.prototype.min = function() {
+  return Math.min.apply(null, this);
+};
 
 // do two given time intervals intersect?
 function checkIntersect(startA,endA,startB,endB) {
@@ -37,7 +43,7 @@ function DataAnalyzer() {
     var samples = []; // array of samples : timestamp, volume
     var smoother = new SmoothArray(SAMPLES_SMOOTHING); // array object used for caluclating smooth value
     var cutoff = CUTOFF_PROIOR;
-    var speakThreashold = SPEAK_THRESHOLD_PRIOR;
+    //var speakThreashold = SPEAK_THRESHOLD_PRIOR;
     var slidingPower = new SlidingPower(NOISE_POWER_SAMPLES);
     var signalMean = new MedianArray(POWER_SAMPLES_MEAN);
 
@@ -119,6 +125,7 @@ function DataAnalyzer() {
     }.bind(this);
 
     // updates the threshold
+    /*
     this.updateSpeakThreshold = function () {
         if (samples.length == 0) {
             return SPEAK_THRESHOLD_PRIOR;
@@ -130,7 +137,8 @@ function DataAnalyzer() {
         speakThreashold = (SPEAK_THRESHOLD_PRIOR * PRIOR_WEIGHT) + (m.mean - 2 * m.std) * (1 - PRIOR_WEIGHT);
         dataLog("Speak priotr,threashold, mean and std:"+ SPEAK_THRESHOLD_PRIOR +" "+ speakThreashold + " " + m.mean + " "+  m.std);
     }.bind(this);
-
+    */
+    
     this.getSamples = function () {
         return samples;
     }.bind(this);
@@ -199,7 +207,7 @@ function SmoothArray(numSamples) {
         var sum = smoothArray.reduce(function(a, b) { return a + b; });
         var mean = sum / smoothArray.length;
         return mean;
-    };
+    }.bind(this);
 
     this.getSmoothArray = function() {
         return smoothArray;
@@ -218,10 +226,21 @@ function MedianArray(numSamples) {
         pos = (pos +1) % numSamples;
 
         return median(smoothArray);
-    };
+    }.bind(this);
+}
 
-    this.getSmoothArray = function() {
-        return smoothArray;
+function MinArray(numSamples) {
+    var numSamples = numSamples
+    // Number of samples that will be used
+    var samplesArray = [];
+    var pos = 0;
+
+    this.push = function(vol) {
+        // adds the sample to the correct location
+        samplesArray[pos] = vol;
+        pos = (pos +1) % numSamples;
+
+        return samplesArray.min();
     }.bind(this);
 }
 

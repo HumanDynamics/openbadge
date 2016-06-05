@@ -16,11 +16,11 @@ window.CHART_UPDATE_INTERVAL = 5 * 1000;
 window.DEBUG_CHART_WINDOW = 1000 * 60 * 2;
 
 window.CHECK_BLUETOOTH_STATUS_INTERVAL = 5 * 60 * 1000;
-window.CHECK_MEETING_LENGTH_INTERVAL =  2 * 60 * 60 * 1000;
-window.CHECK_MEETING_LENGTH_REACTION_TIME = 60 * 1000;
+window.CHECK_MEETING_LENGTH_INTERVAL =  4 * 60 * 60 * 1000;
+window.CHECK_MEETING_LENGTH_REACTION_TIME = 5 * 60 * 1000;
 
-BATTERY_YELLOW_THRESHOLD = 2.5;
-BATTERY_RED_THRESHOLD = 2.3;
+BATTERY_YELLOW_THRESHOLD = 2.6;
+BATTERY_RED_THRESHOLD = 2.4;
 
 BLUETOOTH_OFF_WARNING_TIMEOUT = 5 * 60 * 1000; // if you haven't see bluetooth in this long, send a warning
 BLUETOOTH_OFF_WARNING_INTERVAL = 5 * 1000; // how often to check for bluetooth to give the warning
@@ -553,7 +553,7 @@ meetingPage = new Page("meeting",
             $.each(app.meeting.members, function(index, member) {
                 // update cutoff and threshold
                 member.dataAnalyzer.updateCutoff();
-                member.dataAnalyzer.updateSpeakThreshold();
+                //member.dataAnalyzer.updateSpeakThreshold();
 
                 var datapoints = filterPeriod(member.dataAnalyzer.getSamples(),start,end);
 
