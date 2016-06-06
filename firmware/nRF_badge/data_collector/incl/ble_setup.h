@@ -23,7 +23,7 @@
 #ifdef BOARD_PCA10028
     #define DEVICE_NAME                     "NRF51DK"
 #else
-    #define DEVICE_NAME                     "BUDGE"                           /**< Name of device. Will be included in the advertising data. */
+    #define DEVICE_NAME                     "BADGE"                           /**< Name of device. Will be included in the advertising data. */
 #endif
 
 #define APP_ADV_INTERVAL                320                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 200 ms). */
