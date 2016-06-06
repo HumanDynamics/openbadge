@@ -11,7 +11,7 @@ var BUFFER_LENGTH = 1000 * 60 * 5; // 5 minutes)
 var MEAN_INIT_VALUE = 5;
 
 // Prior for cutoff (max loudness that we expect)
-var CUTOFF_PROIOR = 100;
+var CUTOFF_PROIOR = 120;
 // Prior for threshold (speaking threshold, based on our tests)
 // var SPEAK_THRESHOLD_PRIOR = 10;
 

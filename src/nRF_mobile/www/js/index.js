@@ -16,7 +16,7 @@ window.CHART_UPDATE_INTERVAL = 5 * 1000;
 window.DEBUG_CHART_WINDOW = 1000 * 60 * 2;
 
 window.CHECK_BLUETOOTH_STATUS_INTERVAL = 5 * 60 * 1000; //how often to just try to enable bluetooth. separate from the warning system.
-window.CHECK_MEETING_LENGTH_INTERVAL =  4 * 60 * 60 * 1000;
+window.CHECK_MEETING_LENGTH_INTERVAL = 3 * 60 * 60 * 1000;
 window.CHECK_MEETING_LENGTH_REACTION_TIME = 5 * 60 * 1000;
 
 BATTERY_YELLOW_THRESHOLD = 2.6;
@@ -462,9 +462,9 @@ meetingPage = new Page("meeting",
             app.watchdogStart();
         },
         timeoutMeeting: function() {
-            navigator.vibrate([500,500,500,500,500,500,500,500,500,500,500,100,500,100,500,100,500,100,500,100]);
+            navigator.vibrate([500,500,500,500,500,500]);//,500,500,500,500,500,100,500,100,500,100,500,100,500,100]);
 
-            navigator.notification.alert("Please press the button to indicate the meeting is still going, or we'll end it automatically in one minute", function(result) {
+            navigator.notification.alert("Please press the button to indicate the meeting is still going, or we'll end it automatically in five minutes", function(result) {
                 navigator.vibrate([]);
                 this.setMeetingTimeout();
             }.bind(this), "Are you still there?", "Continue Meeting");
