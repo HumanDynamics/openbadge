@@ -11,8 +11,9 @@ volatile bool isConnected = false;
 volatile bool isAdvertising = false;
 volatile bool isScanning = false;
 
-ble_uuid_t m_adv_uuids[] = {{BLE_UUID_BATTERY_SERVICE, BLE_UUID_TYPE_BLE},        /**< Universally unique service identifiers. */
-                            {BLE_UUID_NUS_SERVICE,     BLE_UUID_TYPE_BLE}};     
+/*ble_uuid_t m_adv_uuids[] = {{BLE_UUID_BATTERY_SERVICE, BLE_UUID_TYPE_BLE},        // Universally unique service identifiers.
+                            {BLE_UUID_NUS_SERVICE,     BLE_UUID_TYPE_BLE}};  */
+ble_uuid_t m_adv_uuids[] = {{BLE_UUID_NUS_SERVICE,     BLE_UUID_TYPE_BLE}};      
 
 
 
