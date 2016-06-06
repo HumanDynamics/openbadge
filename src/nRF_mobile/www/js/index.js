@@ -15,7 +15,7 @@ window.LOG_SYNC_INTERVAL = 30 * 1000;
 window.CHART_UPDATE_INTERVAL = 5 * 1000;
 window.DEBUG_CHART_WINDOW = 1000 * 60 * 2;
 
-window.CHECK_BLUETOOTH_STATUS_INTERVAL = 5 * 60 * 1000;
+window.CHECK_BLUETOOTH_STATUS_INTERVAL = 5 * 60 * 1000; //how often to just try to enable bluetooth. separate from the warning system.
 window.CHECK_MEETING_LENGTH_INTERVAL =  4 * 60 * 60 * 1000;
 window.CHECK_MEETING_LENGTH_REACTION_TIME = 5 * 60 * 1000;
 
