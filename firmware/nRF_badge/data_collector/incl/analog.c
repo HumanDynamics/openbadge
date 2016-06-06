@@ -33,6 +33,8 @@ void adc_config(void)
     nrf_adc_input_select(NRF_ADC_CONFIG_INPUT_DISABLED);
     
     currentBatteryVoltage = readBattery();
+    debug_log("Battery: %d.\r\n",(int)(1000.0*currentBatteryVoltage));
+    
 }
 
 // read an analog input
