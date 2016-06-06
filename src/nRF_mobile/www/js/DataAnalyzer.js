@@ -1,6 +1,6 @@
 // if at least this amount of time happens between a null signal
 // and a talk signal, they are considered to have started talking.
-var MIN_TALK_LENGTH = 1001;
+var MIN_TALK_LENGTH = 2000;
 // If we get no signal for this amount of time, consider them no
 // longer talking.
 var TALK_TIMEOUT = 500;
@@ -78,7 +78,7 @@ function DataAnalyzer() {
         if (samples.length > 0) {
             var lastTimestamp = samples[samples.length - 1].timestamp;
             if (timestamp <= lastTimestamp) {
-                dataLog("Skipping existing sample: "+timestamp+" "+dateToString(timestamp));
+                //dataLog("Skipping existing sample: "+timestamp+" "+dateToString(timestamp));
                 return false;
             }
         }
@@ -432,9 +432,13 @@ function GroupDataAnalyzer(members,periodStartTime,periodEndTime) {
     }
 
     // generate speaking intervals
+    dataLog("Generating speaking intervals");
     $.each(members, function (index, member) {
         var v = generateTalkIntervals(wonSamples[index]);
-        dataLog("intervals for "+index+" are "+v+" had winning samples: "+wonSamples[index].length);
+        dataLog("intervals for "+index+" are "+v+" . had winning samples: "+wonSamples[index].length);
+        $.each(v, function(index, iv) {
+            dataLog(" -- "+iv.startTime+" "+iv.endTime+ " "+(iv.endTime-iv.startTime));
+        });
         intervals[index] = v;
     });
 
