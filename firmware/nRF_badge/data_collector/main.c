@@ -93,7 +93,7 @@ void goToSleep(long ms)
         sleepTime = MAX_SLEEP;
     }
     countdown_set(sleepTime);
-    while((!countdownOver) && sleep && (!ble_timeout))  
+    while((!countdownOver) && sleep && (!ble_timeout) &&(!led_timeout))  
     {
         sd_app_evt_wait();  //sleep until one of our functions says not to
     }
@@ -242,11 +242,22 @@ int main(void)
     rtc_config();
     spi_init();
     
+    
     collector_init();
     storer_init();
     sender_init();
     
     advertising_init();
+    
+    #ifdef DEBUG_LOG_ENABLE
+        ble_gap_addr_t MAC;
+        sd_ble_gap_address_get(&MAC);
+        debug_log("MAC address: %X:%X:%X:%X:%X:%X\r\n", MAC.addr[5],MAC.addr[4],MAC.addr[3],
+                                                    MAC.addr[2],MAC.addr[1],MAC.addr[0]);
+    
+        //uint32_t* deviceAddrPtr = (uint32_t*)NRF_FICR->DEVICEADDR;
+        //debug_log("MAC address address: 0x%X\r\n",(unsigned int)deviceAddrPtr);
+    #endif
     
     // Blink once on start
     nrf_gpio_pin_write(LED_1,LED_ON);
@@ -313,6 +324,8 @@ int main(void)
     
     cycleStart = millis();
     
+    nrf_delay_ms(2);
+    
     // Enter main loop
     for (;;)  {
         //================ Sampling/Sleep handler ================
@@ -322,6 +335,12 @@ int main(void)
             debug_log("Connection timeout.  Disconnecting...\r\n");
             BLEforceDisconnect();
             ble_timeout = false;
+        }
+        
+        if(led_timeout)
+        {
+            nrf_gpio_pin_write(LED_2,LED_OFF);
+            led_timeout = false;
         }
         
         switch(cycleState)

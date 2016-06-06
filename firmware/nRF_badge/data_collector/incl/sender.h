@@ -58,6 +58,10 @@
  *                                                              Dummy header
  *                                                                all bytes 0xff
  *                    .  .  .  .  .  .  .  .
+ * CMD_IDENTIFY
+ *   Light an LED for               "i"                          none (lights LED)
+ *   specified duration             timeout (ushort) - 0 to turn off LED
+ *                    .  .  .  .  .  .  .  .
  */
 
 enum SERVER_COMMANDS
@@ -68,7 +72,8 @@ enum SERVER_COMMANDS
     CMD_STARTREC = '1',     // server requests start collecting
     CMD_ENDREC = '0',       // server requests stop collecting
     CMD_REQUNSENT = 'd',    // server requests send unsent data from flash
-    CMD_REQSINCE = 'r'     // server requests send all data, flash or ram, since time X 
+    CMD_REQSINCE = 'r',     // server requests send all data, flash or ram, since time X 
+    CMD_IDENTIFY = 'i'     // server requests light an LED for specified time
 };
 
 typedef struct
