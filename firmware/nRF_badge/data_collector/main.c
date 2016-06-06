@@ -249,6 +249,16 @@ int main(void)
     
     advertising_init();
     
+    #ifdef DEBUG_LOG_ENABLE
+        ble_gap_addr_t MAC;
+        sd_ble_gap_address_get(&MAC);
+        debug_log("MAC address: %X:%X:%X:%X:%X:%X\r\n", MAC.addr[5],MAC.addr[4],MAC.addr[3],
+                                                    MAC.addr[2],MAC.addr[1],MAC.addr[0]);
+    
+        //uint32_t* deviceAddrPtr = (uint32_t*)NRF_FICR->DEVICEADDR;
+        //debug_log("MAC address address: 0x%X\r\n",(unsigned int)deviceAddrPtr);
+    #endif
+    
     // Blink once on start
     nrf_gpio_pin_write(LED_1,LED_ON);
     nrf_delay_ms(2000);
