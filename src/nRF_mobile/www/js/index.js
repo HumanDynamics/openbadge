@@ -219,6 +219,9 @@ PAGES = [];
  */
 mainPage = new Page("main",
     function onInit() {
+        $("#clear-scan-button").click(function() {
+            app.clearScannedBadges();
+        });
         $("#settings-button").click(function() {
             app.showPage(settingsPage);
         });
@@ -316,6 +319,7 @@ mainPage = new Page("main",
                 $("#devicelist").append($("<li class=\"item\" data-name='{name}' data-device='{badgeId}' data-key='{key}'><span class='name'>{name}</span><i class='icon ion-battery-full battery-icon' /><i class='icon ion-happy present-icon' /></li>".format(member)));
             }
 
+            app.markActiveUsers();
             this.displayActiveBadges();
         },
         displayActiveBadges: function() {
@@ -967,36 +971,33 @@ app = {
      * Badge Scanning to see which badges are present, and get the status of each badge
      */
     scanForBadges: function() {
+        app.activeBadges = app.activeBadges || []
         if (app.scanning || ! app.group) {
             return;
         }
         $("#scanning").removeClass("hidden");
         app.scanning = true;
-        var activeBadges = [];
         qbluetoothle.stopScan().then(function() {
             qbluetoothle.startScan().then(
                 function(obj){ // success
                     console.log("Scan completed successfully - "+obj.status)
-                    app.onScanComplete(activeBadges);
+                    app.onScanComplete();
                 }, function(obj) { // error
                     console.log("Scan Start error: " + obj.error + " - " + obj.message)
-                    app.onScanComplete(activeBadges);
+                    app.onScanComplete();
                 }, function(obj) { // progress
-                    activeBadges.push(obj.address);
+                    app.activeBadges.push(obj.address);
                     app.onScanUpdate(obj.address);
                 });
         });
     },
-    onScanComplete: function(activeBadges) {
+    onScanComplete: function() {
         app.scanning = false;
         $("#scanning").addClass("hidden");
         if (! app.group) {
             return;
         }
-        for (var i = 0; i < app.group.members.length; i++) {
-            var member = app.group.members[i];
-            member.active = !!~activeBadges.indexOf(member.badgeId);
-        }
+        app.markActiveUsers();
         mainPage.displayActiveBadges();
     },
     onScanUpdate: function(activeBadge) {
@@ -1017,6 +1018,17 @@ app = {
         app.scanning = false;
         $("#scanning").addClass("hidden");
         qbluetoothle.stopScan();
+    },
+    markActiveUsers: function() {
+        for (var i = 0; i < app.group.members.length; i++) {
+            var member = app.group.members[i];
+            member.active = !!~app.activeBadges.indexOf(member.badgeId);
+        }
+    },
+    clearScannedBadges: function() {
+        app.activeBadges = [];
+        app.markActiveUsers();
+        mainPage.displayActiveBadges();
     },
     getStatusForEachMember: function() {
         if (! app || ! app.group) {
