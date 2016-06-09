@@ -212,9 +212,11 @@ footer {
 .devicelist .item.active {
     background-color:transparent;
 }
+.meeting-member-list .item *,
 .devicelist .item * {
     vertical-align: middle;
 }
+.meeting-member-list .item i,
 .devicelist .item i {
     color: #ccc;
     font-size:26px;

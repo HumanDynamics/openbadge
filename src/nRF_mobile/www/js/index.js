@@ -67,6 +67,9 @@ function GroupMember(memberJson) {
     }.bind(this);
 
     this.badge.badgeDialogue.onChunkCompleted = function(chunk) {
+        if (chunk.voltage) {
+            this.voltage = chunk.voltage;
+        }
         if (this.meeting) {
             this.meeting.logChunk(chunk, this);
         }
@@ -413,6 +416,8 @@ meetingPage = new Page("meeting",
 
     },
     function onShow() {
+        this.createMemberUserList();
+
         window.plugins.insomnia.keepAwake();
         app.startAllDeviceRecording();
         app.watchdogStart();
@@ -529,6 +534,8 @@ meetingPage = new Page("meeting",
             $mmVis.empty();
             this.mm = null;
             if (app.meeting.showVisualization) {
+                $("#visualization").removeClass("hidden");
+                $("#meetingmemberlist").addClass("hidden");
                 this.mm = new MM({participants: app.meeting.memberKeys,
                         names: app.meeting.memberInitials,
                         transitions: 0,
@@ -537,6 +544,9 @@ meetingPage = new Page("meeting",
                     $mmVis.width(),
                     $mmVis.height());
                 this.mm.render('#meeting-mediator');
+            } else {
+                $("#meetingmemberlist").removeClass("hidden");
+                $("#visualization").addClass("hidden");
             }
 
 
@@ -545,6 +555,8 @@ meetingPage = new Page("meeting",
             app.showPage(mainPage);
         },
         updateCharts: function() {
+
+            this.displayVoltageLevels();
 
             var turns = [];
             var totalIntervals = 0;
@@ -584,7 +596,34 @@ meetingPage = new Page("meeting",
                 });
             }
 
-        }
+        },
+        createMemberUserList: function() {
+            $("#meetingmemberlist-content").empty();
+            for (var i = 0; i < app.meeting.members.length; i++) {
+                var member = app.meeting.members[i];
+                $("#meetingmemberlist-content").append($("<li class=\"item\" data-name='{name}' data-device='{badgeId}' data-key='{key}'><span class='name'>{name}</span><i class='icon ion-battery-full battery-icon' /></li>".format(member)));
+            }
+
+            this.displayVoltageLevels();
+        },
+        displayVoltageLevels: function() {
+
+            $("#meetingmemberlist-content .item .battery-icon").removeClass("red yellow green");
+            for (var i = 0; i < app.meeting.members.length; i++) {
+                var member = app.meeting.members[i];
+                var $el = $("#meetingmemberlist-content .item[data-device='" + member.badgeId + "']");
+                if (member.voltage) {
+                    if (member.voltage >= BATTERY_YELLOW_THRESHOLD) {
+                        $el.find(".battery-icon").addClass("green");
+                    } else if (member.voltage >= BATTERY_RED_THRESHOLD) {
+                        $el.find(".battery-icon").addClass("yellow");
+                    } else {
+                        $el.find(".battery-icon").addClass("red");
+                    }
+                }
+            }
+        },
+
     }
 );
 
