@@ -1,0 +1,9 @@
+w4 4001e504 2
+w4 4001e50c 1
+erase
+loadbin /Users/beefinator/Desktop/nRF51_SDK_8.1.0_b6ed55f/components/softdevice/s130/hex/s130_softdevice.hex 0
+loadbin nrf51422_xxac_s130.hex 1c000
+r
+g
+mem8 0x100000A4 6
+exit

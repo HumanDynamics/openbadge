@@ -33,6 +33,8 @@ void adc_config(void)
     nrf_adc_input_select(NRF_ADC_CONFIG_INPUT_DISABLED);
     
     currentBatteryVoltage = readBattery();
+    debug_log("Battery: %d.\r\n",(int)(1000.0*currentBatteryVoltage));
+    
 }
 
 // read an analog input
@@ -68,11 +70,12 @@ float getRealBatteryVoltage()
 
 void updateBatteryVoltage() 
 {
-    if(millis() - lastBatteryUpdate >= MIN_BATTERY_READ_INTERVAL)
-    {
+    //if(millis() - lastBatteryUpdate >= MIN_BATTERY_READ_INTERVAL)
+    //{
         currentBatteryVoltage = readBattery();
         debug_log("Read battery: %d.\r\n",(int)(1000.0*currentBatteryVoltage));
         lastBatteryUpdate = millis();
-    }
+        updateAdvData();
+    //}
 }
 

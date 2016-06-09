@@ -1,0 +1,9 @@
+{
+print $0
+split($8,highByte,"")
+sub("[048]","C",highByte[1])
+sub("[159]","D",highByte[1])
+sub("[26Aa]","E",highByte[1])
+sub("[37Bb]","F",highByte[1])
+print highByte[1]  highByte[2] ":" $7 ":" $6 ":" $5 ":" $4 ":" $3
+}

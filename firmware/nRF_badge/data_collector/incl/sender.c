@@ -45,6 +45,10 @@ server_command_params_t unpackCommand(uint8_t* pkt)
             send.bufContents = SENDBUF_EMPTY;
             send.loc = SEND_LOC_HEADER;
             break;
+        case CMD_IDENTIFY:
+            debug_log("SENDER: Got IDENTIFY request.\r\n");
+            memcpy(&command.timeout,pkt+1,sizeof(unsigned short));
+            break;
         default:
             debug_log("SENDER: Got INVALID request.\r\n");
             command.cmd = CMD_INVALID;
@@ -131,7 +135,11 @@ bool updateSender()
                     }
                     debug_log("Setting time to %lX, %lums.\r\n",command.timestamp+sCorrection,command.ms+msCorrection);
                     setTimeFractional(command.timestamp+sCorrection,command.ms+msCorrection);
-                    dateReceived = true;
+                    if(!dateReceived)
+                    {
+                        updateAdvData();
+                        dateReceived = true;
+                    }
                     
                     pendingCommand.cmd = CMD_NONE;      // we're done with that pending command
                     debug_log("SENDER: Sent status.\r\n");
@@ -513,7 +521,12 @@ bool updateSender()
                     }
                     debug_log("Setting time to %lX, %lums.\r\n",command.timestamp+sCorrection,command.ms+msCorrection);
                     setTimeFractional(command.timestamp+sCorrection,command.ms+msCorrection);
-                    dateReceived = true;
+                    
+                    if(!dateReceived)
+                    {
+                        updateAdvData();
+                        dateReceived = true;
+                    }
 
                     // Timeout value expressed as minutes - convert to ms.
                     debug_log("SENDER: starting collector, timeout %d minutes.\r\n",(int)command.timeout);
@@ -545,6 +558,26 @@ bool updateSender()
         {
             debug_log("SENDER: stopping collector.\r\n");
             stopCollector();
+            pendingCommand.cmd = CMD_NONE;
+        }
+        
+        else if(command.cmd == CMD_IDENTIFY)
+        {
+            if(command.timeout == 0)
+            {
+                led_timeout_cancel();
+                nrf_gpio_pin_write(LED_2,0);   // clunky - sender.c doesn't see LED_OFF define
+                debug_log("SENDER: LED off.\r\n");
+            }
+        
+            else 
+            {
+                if(command.timeout > 30) command.timeout = 30;  // clip to 30seconds
+                unsigned long timeout_ms = ((unsigned long)command.timeout) * 1000UL;
+                led_timeout_set(timeout_ms);
+                nrf_gpio_pin_write(LED_2,1); // clunky - sender.c doesn't see LED_ON define
+                debug_log("SENDER: LED on for %ds.\r\n",command.timeout);
+            }
             pendingCommand.cmd = CMD_NONE;
         }
         

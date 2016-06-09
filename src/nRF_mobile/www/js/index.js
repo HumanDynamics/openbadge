@@ -1,13 +1,13 @@
 require('q');
 var qbluetoothle = require('./qbluetoothle');
 var Badge = require('./badge');
+struct = require('./struct.js').struct;
 
 window.LOCALSTORAGE_GROUP_KEY = "groupkey";
 window.LOCALSTORAGE_GROUP = "groupjson";
 
 window.BADGE_SCAN_INTERVAL = 9000;
 window.BADGE_SCAN_DURATION = 8000;
-window.BADGE_STATUS_INTERVAL = 3000;
 
 window.WATCHDOG_SLEEP = 5000;
 
@@ -15,12 +15,12 @@ window.LOG_SYNC_INTERVAL = 30 * 1000;
 window.CHART_UPDATE_INTERVAL = 5 * 1000;
 window.DEBUG_CHART_WINDOW = 1000 * 60 * 2;
 
-window.CHECK_BLUETOOTH_STATUS_INTERVAL = 5 * 60 * 1000;
-window.CHECK_MEETING_LENGTH_INTERVAL =  2 * 60 * 60 * 1000;
-window.CHECK_MEETING_LENGTH_REACTION_TIME = 60 * 1000;
+window.CHECK_BLUETOOTH_STATUS_INTERVAL = 5 * 60 * 1000; //how often to just try to enable bluetooth. separate from the warning system.
+window.CHECK_MEETING_LENGTH_INTERVAL = 3 * 60 * 60 * 1000;
+window.CHECK_MEETING_LENGTH_REACTION_TIME = 5 * 60 * 1000;
 
-BATTERY_YELLOW_THRESHOLD = 2.5;
-BATTERY_RED_THRESHOLD = 2.3;
+BATTERY_YELLOW_THRESHOLD = 2.6;
+BATTERY_RED_THRESHOLD = 2.4;
 
 BLUETOOTH_OFF_WARNING_TIMEOUT = 5 * 60 * 1000; // if you haven't see bluetooth in this long, send a warning
 BLUETOOTH_OFF_WARNING_INTERVAL = 5 * 1000; // how often to check for bluetooth to give the warning
@@ -253,7 +253,6 @@ mainPage = new Page("main",
     },
     function onHide() {
         clearInterval(app.badgeScanIntervalID);
-        clearInterval(app.badgeBatteryIntervalID);
         app.stopScan();
     },
     {
@@ -271,11 +270,6 @@ mainPage = new Page("main",
                 app.scanForBadges();
             }, BADGE_SCAN_INTERVAL);
             app.scanForBadges();
-
-            clearInterval(app.badgeBatteryIntervalID);
-            app.badgeBatteryIntervalID = setInterval(function() {
-                app.getStatusForEachMember();
-            }, BADGE_STATUS_INTERVAL);
         },
         loadGroupData: function() {
 
@@ -477,9 +471,9 @@ meetingPage = new Page("meeting",
             app.watchdogStart();
         },
         timeoutMeeting: function() {
-            navigator.vibrate([500,500,500,500,500,500,500,500,500,500,500,100,500,100,500,100,500,100,500,100]);
+            navigator.vibrate([500,500,500,500,500,500]);//,500,500,500,500,500,100,500,100,500,100,500,100,500,100]);
 
-            navigator.notification.alert("Please press the button to indicate the meeting is still going, or we'll end it automatically in one minute", function(result) {
+            navigator.notification.alert("Please press the button to indicate the meeting is still going, or we'll end it automatically in five minutes", function(result) {
                 navigator.vibrate([]);
                 this.setMeetingTimeout();
             }.bind(this), "Are you still there?", "Continue Meeting");
@@ -575,7 +569,8 @@ meetingPage = new Page("meeting",
             $.each(app.meeting.members, function(index, member) {
                 // update cutoff and threshold
                 member.dataAnalyzer.updateCutoff();
-                member.dataAnalyzer.updateSpeakThreshold();
+                member.dataAnalyzer.updateMean();
+                //member.dataAnalyzer.updateSpeakThreshold();
 
                 var datapoints = filterPeriod(member.dataAnalyzer.getSamples(),start,end);
 
@@ -674,6 +669,24 @@ function DebugChart($canvas) {
             var point = series[i];
             
             var y = calcY(point.volClippedSmooth);
+            var x = calcX(point.timestamp, start, end);
+            if (i == 0) {
+                context.moveTo(x, y);
+            } else {
+                context.lineTo(x, y);
+            }
+            x++;
+        }
+        context.stroke();
+
+        context.strokeStyle = "#FF4500";
+        context.lineWidth = 2;
+        context.beginPath();
+        for (var i = 0; i < series.length - 1; i++) {
+
+            var point = series[i];
+
+            var y = calcY(point.mean);
             var x = calcX(point.timestamp, start, end);
             if (i == 0) {
                 context.moveTo(x, y);
@@ -922,8 +935,6 @@ app = {
 
     },
 
-
-
     /**
      * Functions to refresh the group data from the backend
      */
@@ -986,8 +997,20 @@ app = {
                     console.log("Scan Start error: " + obj.error + " - " + obj.message)
                     app.onScanComplete();
                 }, function(obj) { // progress
+
                     app.activeBadges.push(obj.address);
-                    app.onScanUpdate(obj.address);
+
+                    // extract badge data from advertisement
+                    var voltage = null;
+                    if (obj.name == "BADGE") {
+                        var adbytes = bluetoothle.encodedStringToBytes(obj.advertisement);
+                        var adStr = bluetoothle.bytesToString(adbytes);
+                        var adBadgeData = adStr.substring(18, 26);
+                        var adBadgeDataArr = struct.Unpack('<HfBB', adBadgeData);
+                        voltage = adBadgeDataArr[1];
+                        app.onScanUpdate(obj.address,voltage);
+                    }
+
                 });
         });
     },
@@ -1000,15 +1023,17 @@ app = {
         app.markActiveUsers();
         mainPage.displayActiveBadges();
     },
-    onScanUpdate: function(activeBadge) {
+    onScanUpdate: function(activeBadge,voltage) {
         if (! app.group) {
             return;
         }
+
+        // update members
         for (var i = 0; i < app.group.members.length; i++) {
             var member = app.group.members[i];
             if (activeBadge == member.badgeId) {
                 member.active = true;
-                app.getStatusForMember(member);
+                member.voltage = voltage;
                 mainPage.displayActiveBadges();
                 return;
             }

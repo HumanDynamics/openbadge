@@ -22,7 +22,7 @@
 
 #define PANIC_LED LED_2
 
-#include "ble_setup.h"         // do we need this?
+#include "ble_setup.h"         // uses updateAdvData() when collector started
 #include "rtc_timing.h"        // uses now() to get chunk timestamp
 #include "analog.h"            // uses analogRead() to get mic data; readBattery() to get battery voltage
 //#include "internal_flash.h"    // uses some #defined constants related to memory usage
@@ -66,7 +66,7 @@ unsigned long readingsSum;    // sum of all mic readings taken for current sampl
 
 
 #define SAMPLES_PER_CHUNK 114   // 128-(4+2+4+4)  ---  see chunk structure below
-#define MIC_BUFFER_SIZE 8       // number of chunks in mic RAM buffer
+#define MIC_BUFFER_SIZE 20       // number of chunks in mic RAM buffer
 #define LAST_RAM_CHUNK (MIC_BUFFER_SIZE - 1)        // index of last chunk in RAM buffer
 
 typedef union
