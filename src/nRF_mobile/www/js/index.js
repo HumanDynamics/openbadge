@@ -221,6 +221,7 @@ mainPage = new Page("main",
     function onInit() {
         $("#clear-scan-button").click(function() {
             app.clearScannedBadges();
+            mainPage.displayActiveBadges();
         });
         $("#settings-button").click(function() {
             app.showPage(settingsPage);
@@ -245,6 +246,7 @@ mainPage = new Page("main",
         });
     },
     function onShow() {
+        app.clearScannedBadges();
         if (app.bluetoothInitialized) {
             // after bluetooth is disabled, it's automatically re-enabled.
             this.beginRefreshData();
@@ -1045,6 +1047,9 @@ app = {
         qbluetoothle.stopScan();
     },
     markActiveUsers: function() {
+        if (! app || ! app.group) {
+            return;
+        }
         for (var i = 0; i < app.group.members.length; i++) {
             var member = app.group.members[i];
             member.active = !!~app.activeBadges.indexOf(member.badgeId);
@@ -1053,7 +1058,6 @@ app = {
     clearScannedBadges: function() {
         app.activeBadges = [];
         app.markActiveUsers();
-        mainPage.displayActiveBadges();
     },
     getStatusForEachMember: function() {
         if (! app || ! app.group) {
