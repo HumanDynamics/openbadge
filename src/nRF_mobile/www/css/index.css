@@ -234,6 +234,16 @@ footer {
 .devicelist .item.active i.present-icon {
     color: #3dd928;
 }
+.meeting-member-list {
+    z-index:0;
+}
+.meeting-member-list .item {
+    height: 42px;
+    padding-top: 5px;
+}
+.meeting-member-list .item .battery-icon {
+    display:none;
+}
 
 .active .battery-icon.green {
     color: #3dd928;
