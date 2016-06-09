@@ -188,7 +188,7 @@ footer {
 .scanning {
     display: inline-block;
     float: right;
-    color: #999;
+    color: #aaaaaa;
     font-size: 26px;
     margin-right: -5px;
     -webkit-animation: spin 1s infinite linear;
@@ -201,7 +201,14 @@ footer {
     line-height: 26px;
     padding-left: 3px;
 }
-
+.clear-scan {
+    float: right;
+    margin-left: 20px;
+    vertical-align: middle;
+    padding-left: 10px;
+    padding-right: 10px;
+    margin-right: -5px;
+}
 
 .settings-options {
 }
@@ -212,9 +219,11 @@ footer {
 .devicelist .item.active {
     background-color:transparent;
 }
+.meeting-member-list .item *,
 .devicelist .item * {
     vertical-align: middle;
 }
+.meeting-member-list .item i,
 .devicelist .item i {
     color: #ccc;
     font-size:26px;
@@ -224,6 +233,16 @@ footer {
 }
 .devicelist .item.active i.present-icon {
     color: #3dd928;
+}
+.meeting-member-list {
+    z-index:0;
+}
+.meeting-member-list .item {
+    height: 42px;
+    padding-top: 5px;
+}
+.meeting-member-list .item .battery-icon {
+    display:none;
 }
 
 .active .battery-icon.green {
