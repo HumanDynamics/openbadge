@@ -206,6 +206,8 @@ uint32_t ext_flash_block_erase(uint32_t address);
  //uint32_t ext_flash_page_erase(uint8_t page);
 
 
+// Tests external flash. Returns true on success
+bool testExternalFlash(void);
 
 
 

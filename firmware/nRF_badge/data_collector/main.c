@@ -54,7 +54,7 @@
 #include "ble_setup.h"  //stuff relating to BLE initialization/configuration
 #include "external_flash.h"  //for interfacing to external SPI flash
 //#include "scanning.h"       //for performing scans and storing scan data
-//#include "self_test.h"   // for built-in tests
+#include "self_test.h"   // for built-in tests
 #include "collector.h"  // for collecting data from mic
 #include "storer.h"
 #include "sender.h"
@@ -241,6 +241,11 @@ int main(void)
     adc_config();
     rtc_config();
     spi_init();
+    
+    #if defined(TESTER_ENABLE) // tester mode is enabled
+        runSelfTests();
+        while(1);
+    #endif    // end of self tests
     
     
     collector_init();

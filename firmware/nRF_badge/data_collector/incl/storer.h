@@ -89,6 +89,8 @@ struct
 
 void storer_init();
 
+bool storer_test();
+
 /*
  * Called within main loop cycle to manage FLASH storage.
  *   - Avoids conflicts with BLE
