@@ -98,6 +98,7 @@ incl/external_flash.c \
 incl/collector.c \
 incl/storer.c \
 incl/sender.c \
+incl/self_test.c \
 $(SDK_PATH)/components/libraries/util/app_error.c \
 $(SDK_PATH)/components/libraries/util/nrf_assert.c \
 $(SDK_PATH)/components/libraries/uart/retarget.c \
@@ -120,7 +121,6 @@ $(SDK_PATH)/components/ble/ble_services/ble_bas/ble_bas.c \
 $(SDK_PATH)/components/ble/ble_services/ble_nus/ble_nus.c \
 #incl/internal_flash.c \
 #incl/scanning.c \
-#incl/self_test.c \
 
 
 #assembly files

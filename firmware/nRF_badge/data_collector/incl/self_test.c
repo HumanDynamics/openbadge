@@ -1,8 +1,7 @@
 #include "self_test.h"
 
-bool testInternalFlash(void)
+/*bool testInternalFlash(void)
 {
-    /*
     // Erase all pages. Check values of all pages
 	// read entire flash
 	for (int c = FIRST_PAGE; c <= LAST_PAGE; c++)  
@@ -11,7 +10,7 @@ bool testInternalFlash(void)
         debug_log("%d\r\n",sizeof(*addr));
 
     }
-    */
+    
 
     // erase a page
     erasePageOfFlash(FIRST_PAGE);
@@ -22,50 +21,7 @@ bool testInternalFlash(void)
     ble_flash_word_write( addr, (uint32_t)1);
     addr = ADDRESS_OF_PAGE((FIRST_PAGE));
     return (*addr == 1);
-}
-
-bool testExternalFlash(void)
-{
-    
-    // unlock flash
-    uint32_t stat = ext_flash_global_unprotect();
-    if (stat != EXT_FLASH_SUCCESS) {
-        return false;
-    }
-    ext_flash_wait(); // wait for unlock to finish
-
-    // erase the first data block
-    stat = ext_flash_block_erase(0);
-    if (stat != EXT_FLASH_SUCCESS) {
-        return false;
-    }
-
-    ext_flash_wait(); // wait for erase to finish
-
-    // write to the first block and test the result  
-    unsigned char value[8] = {0,0,0,0,1,2,3,4};  // includes padding bytes
-    stat = ext_flash_write(0,value,sizeof(value));
-    if (stat != EXT_FLASH_SUCCESS) {
-        return false;
-    }
-
-    ext_flash_wait(); // wait for write to finish
-
-    /* not getting what I expected */
-    unsigned char buf[8];  // includes padding bytes
-    stat = ext_flash_read(0,buf,sizeof(buf));               
-    if (stat != EXT_FLASH_SUCCESS) {
-        return false;
-    }
-
-    if (buf[4] != 1) {
-        debug_log("Error - got : %d\r\n", buf[0]);
-        return false;
-    }
-    
-    
-    return true;
-}
+}*/
 
 void testMicAddSample() {
     unsigned int readingsCount = 0;  //number of mic readings taken
@@ -108,4 +64,85 @@ bool testMicAboveThreshold() {
     uint8_t lastSample = threshold_buffer.bytes[threshold_buffer.pos];
     //debug_log("avg %d, avg with SD %f, sample %d\r\n", avg, avg_with_sd, lastSample);   
     return lastSample > avg_with_sd;
+}
+
+
+
+void runSelfTests()
+{
+    debug_log("Running self-tests.\r\n");
+    
+    // Blink both LEDs
+    nrf_gpio_pin_write(GREEN_LED,LED_ON);
+    nrf_gpio_pin_write(RED_LED,LED_ON);
+    nrf_delay_ms(LED_BLINK_MS);
+    nrf_gpio_pin_write(GREEN_LED,LED_OFF);
+    nrf_gpio_pin_write(RED_LED,LED_OFF);
+    nrf_delay_ms(LED_BLINK_MS);
+    
+    // ====== test internal flash ======
+    debug_log("Testing internal flash\r\n");
+    nrf_gpio_pin_write(GREEN_LED,LED_ON);
+    if (storer_test()) 
+    {
+        debug_log("  Success\r\n");
+    }
+    else
+    {
+        debug_log("  Failed\r\n");
+        while(1) {};
+    }
+    nrf_delay_ms(LED_BLINK_MS);
+    nrf_gpio_pin_write(GREEN_LED,LED_OFF);
+    nrf_delay_ms(LED_BLINK_MS);
+    
+    // ====== test external flash ======
+    debug_log("Testing external flash\r\n");
+    nrf_gpio_pin_write(GREEN_LED,LED_ON);
+    
+    // read/write
+    if (testExternalFlash()) {
+        debug_log("  Success\r\n");
+    }
+    else{
+        debug_log("  Failed\r\n");
+        while(1) {};
+    }
+
+    nrf_delay_ms(LED_BLINK_MS);
+    nrf_gpio_pin_write(GREEN_LED,LED_OFF);
+    nrf_delay_ms(LED_BLINK_MS);
+
+    // ====== test button and mic ======
+    debug_log("Push button to test button and mic.\r\n");
+    while(nrf_gpio_pin_read(BUTTON_1) != 0);
+    
+    testMicInit(MIC_ZERO);
+    while(1) // stay in infinite loop, spit out mic values
+    {
+        // update reading
+        testMicAddSample();
+        
+        if (testMicAboveThreshold()) {
+            nrf_gpio_pin_write(RED_LED,LED_ON);
+            nrf_delay_ms(100);                  
+        }
+        else {
+            nrf_gpio_pin_write(RED_LED,LED_OFF);   
+        }
+        
+        // turn on green light if button is pressed
+        if(nrf_gpio_pin_read(BUTTON_1) == 0)
+        {
+            nrf_gpio_pin_write(GREEN_LED,LED_ON);
+        }
+        else {
+            nrf_gpio_pin_write(GREEN_LED,LED_OFF);   
+        }
+
+        nrf_delay_ms(10);
+    }
+    
+    while(1) {};
+    
 }

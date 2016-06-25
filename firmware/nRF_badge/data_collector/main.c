@@ -54,7 +54,7 @@
 #include "ble_setup.h"  //stuff relating to BLE initialization/configuration
 #include "external_flash.h"  //for interfacing to external SPI flash
 //#include "scanning.h"       //for performing scans and storing scan data
-//#include "self_test.h"   // for built-in tests
+#include "self_test.h"   // for built-in tests
 #include "collector.h"  // for collecting data from mic
 #include "storer.h"
 #include "sender.h"
@@ -131,109 +131,6 @@ int main(void)
 
     // Button
     nrf_gpio_cfg_input(BUTTON_1,NRF_GPIO_PIN_PULLUP);  //button
-
-    // Self-test code (incompatible with new code structure)
-    /*#if defined(TESTER_ENABLE) // tester mode is enabled
-        //////////////////////////////////
-        nrf_gpio_pin_write(GREEN_LED,LED_ON);
-        nrf_gpio_pin_write(RED_LED,LED_ON);
-        nrf_delay_ms(LED_BLINK_MS);
-        nrf_gpio_pin_write(GREEN_LED,LED_OFF);
-        nrf_gpio_pin_write(RED_LED,LED_OFF);
-        nrf_delay_ms(LED_BLINK_MS);
-
-        // BLE start
-        debug_log("Starting BLE\r\n");
-        nrf_gpio_pin_write(GREEN_LED,LED_ON);
-        
-        BLE_init();
-        
-        nrf_delay_ms(LED_BLINK_MS);
-        nrf_gpio_pin_write(GREEN_LED,LED_OFF);
-        nrf_delay_ms(LED_BLINK_MS);
-        //////////////////////////////////
-        // other init
-        debug_log("Init misc.\r\n");
-        nrf_gpio_pin_write(GREEN_LED,LED_ON);
-
-        sd_power_mode_set(NRF_POWER_MODE_LOWPWR);  //set low power sleep mode        
-        adc_config();
-        rtc_config();
-        
-        nrf_delay_ms(LED_BLINK_MS);
-        nrf_gpio_pin_write(GREEN_LED,LED_OFF);
-        nrf_delay_ms(LED_BLINK_MS);
-
-        //////////////////////////////////
-        // test internal flash
-        debug_log("Testing internal flash\r\n");
-        nrf_gpio_pin_write(GREEN_LED,LED_ON);
-        
-        if (testInternalFlash()) {
-            debug_log("Success\r\n");
-        }
-        else{
-            debug_log("Failed\r\n");
-            while(1) {};
-        }
-
-        nrf_delay_ms(LED_BLINK_MS);
-        nrf_gpio_pin_write(GREEN_LED,LED_OFF);
-        nrf_delay_ms(LED_BLINK_MS);
-
-        //////////////////////////////////
-        // test external flash
-        debug_log("Testing external flash\r\n");
-        nrf_gpio_pin_write(GREEN_LED,LED_ON);
-        
-        // init
-        spi_init();
-        // read/write
-        if (testExternalFlash()) {
-            debug_log("Success\r\n");
-        }
-        else{
-            debug_log("Failed\r\n");
-            while(1) {};
-        }
-
-        nrf_delay_ms(LED_BLINK_MS);
-        nrf_gpio_pin_write(GREEN_LED,LED_OFF);
-        nrf_delay_ms(LED_BLINK_MS);
-
-        //////////////////////////////////
-        // test button and mic
-        debug_log("Testing button and mic\r\n");
-
-        testMicInit(zeroValue);
-        while(1) // stay in infinite loop, spit out mic values
-        {
-            // update reading
-            testMicAddSample();
-            
-            if (testMicAboveThreshold()) {
-                nrf_gpio_pin_write(RED_LED,LED_ON);
-                nrf_delay_ms(100);                  
-            }
-            else {
-                nrf_gpio_pin_write(RED_LED,LED_OFF);   
-            }
-            
-            // turn on green light if button is pressed
-            if(nrf_gpio_pin_read(BUTTON_1) == 0)
-            {
-                nrf_gpio_pin_write(GREEN_LED,LED_ON);
-            }
-            else {
-                nrf_gpio_pin_write(GREEN_LED,LED_OFF);   
-            }
-
-            nrf_delay_ms(10);
-        }
-        
-        while(1) {};
-    #endif    // end of self tests
-    */
     
     // Initialize
     BLE_init();
@@ -241,6 +138,11 @@ int main(void)
     adc_config();
     rtc_config();
     spi_init();
+    
+    #if defined(TESTER_ENABLE) // tester mode is enabled
+        runSelfTests();
+        while(1);
+    #endif    // end of self tests
     
     
     collector_init();

@@ -116,6 +116,36 @@ void storer_init()
     
 }
 
+bool storer_test()
+{    
+    storerMode = STORER_INIT;
+    debug_log("Erasing first page...\r\n");
+    erasePageOfFlash(FIRST_PAGE);
+    while(flashWorking);
+    
+    debug_log("Writing a value to flash...\r\n");
+    uint32_t* addr = ADDRESS_OF_PAGE(FIRST_PAGE);
+    uint32_t value = 0x42;
+    writeBlockToFlash(addr, &value, 1);  // write one word to FLASH
+    while(flashWorking);
+    
+    uint32_t readVal1 = *addr;
+    uint32_t readVal2 = *(addr+1);
+    
+    if(readVal1 != value)
+    {
+        debug_log("***Read wrong value?  Wrote 0x%X, read 0x%X.\r\n",(unsigned int)value,(unsigned int)readVal1);
+        return false;
+    }
+    if(readVal2 != 0xffffffffUL)
+    {
+        debug_log("***Not erased?  Read 0x%X from erased memory.\r\n",(unsigned int)readVal2);
+        return false;
+    }
+    return true;
+}
+    
+
 
 bool updateStorer()
 {
