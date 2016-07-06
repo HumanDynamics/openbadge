@@ -3,8 +3,8 @@
  */
 
 
-#ifndef SCANNING_H
-#define SCANNING_H
+#ifndef SCANNER_H
+#define SCANNER_H
 
 
 #include <stdint.h>
@@ -27,7 +27,7 @@
 #include "ble_setup.h"          // BLE operations
 #include "debug_log.h"          // UART debugging logger
                         // requires app_fifo, app_uart_fifo.c and retarget.c for printf to work properly
-#include "internal_flash.h"     // Relating to internal flash operation
+//#include "internal_flash.h"     // Relating to internal flash operation
                                 //   relevant here because we cannot do BLE operations while manipulating
                                 //   internal flash
 #include "external_flash.h"     // External flash manipulation
@@ -37,35 +37,12 @@
 
 
 
-//===========================  Device List Manipulation ====================================
-//==========================================================================================
-
-/**
- * The badge acquires a full list of devices from the server, where each device is identified by a MAC address
- *   and an ID, 0-255.  The purpose of the ID is to allow for greatly reduced memory usage to store the
- *   results of a BLE scan: the 1byte ID is stored instead of the full 6byte MAC address.
- * This device list from the server does not need to be ordered in any particular way.
- *   I.e. the MAC addresses don't need to be sorted, and the indices do not need to be sequential.
- *   Internally, the badge sorts this device list based on the MAC address so that the device ID can 
- *   efficiently be retrieved for a given MAC address (by simple binary search).
- * The manner in which the list is sorted is perhaps not the most intuitive order for us; this is irrelevant,
- *   because the sorted list is used only internally, to facilitate faster mapping of MAC addresses to indices.
- *   The scan results that the badge returns to the server use the pre-established device indices.
- */
-
-/** 
- * Parameters for during a scan.  To use less power, scanning is only active for scan_interval ms
- *   every scan_window ms, until scan_timeout seconds passes.
- * This constitutes one "scan".  All devices seen at least once during this scan are recorded,
- *   with signal strengths, in one scan chunk
- * When scanning is enabled, a scan happens every SCAN_PERIOD ms
- */
  
 // Default scan timings
-#define SCAN_INTERVAL 300
+/*#define SCAN_INTERVAL 300
 #define SCAN_WINDOW 100
 #define SCAN_TIMEOUT 3
-#define SCAN_PERIOD 30000UL
+#define SCAN_PERIOD 30000UL*/
 
 struct {
     int interval;
@@ -85,18 +62,6 @@ typedef struct
 } device_t;
 
 
-// Total number of devices.
-#define NUM_DEVICES 13
-
-#define UNKNOWN_DEVICE -1
-
-// List (in internal flash, not necessarily ordered in any way) of all known devices
-//   Potentially replaced by a list stored in external flash, acquired from server
-const device_t masterDeviceList[NUM_DEVICES];
-
-// Working list of devices, in RAM for fast access/manipulation
-device_t deviceList[NUM_DEVICES];
-
 
 
 /**
@@ -104,48 +69,6 @@ device_t deviceList[NUM_DEVICES];
  *   No CR/LF - requires a debug_log("\r\n") or similar afterwards.
  */
 void printMac(unsigned char mac[6]);
-
-/**
- * Print the MAC addresses and device indices of all devices in a list, via debug_log
- */
-void printDeviceList(device_t devices[],int numDevices);
-
-/**
- * Convert mac address char array to single 64-bit word (long long, LL) for comparing and such.
- *   e.g. passing {0x6f,0x5f,0x4f,0x3f,0x2f,0x1f} returns 0x00001f2f3f4f5f6f
- */
-uint64_t macLL(unsigned char mac[6]);
-
-/**
- * Print a 64-bit word, e.g. from macLL(), (not particularly useful) 
- */
-void printMacLL(uint64_t mac64);
-
-/**
- * Simple in-place quicksort, by increasing value of the macLL() results for each device MAC address
- */
-void quicksortDevices(device_t devices[], int leftIndex, int rightIndex);
-
-/**
- * Wrapper for quicksortDevices, for convenience and readability
- */
-void sortDeviceList(device_t devices[], int numDevices);
-
-
-/**
- * Given a MAC address, do a simple binary search to find the index of that device in
- *   a list (that has been sorted with sortDeviceList).  Returns the corresponding device's
- *   index in that list.
- */
-int findDeviceInList(unsigned char mac[6], device_t devices[], int numDevices);
-
-/**
- * Find the device ID of a device with a given MAC address.  Uses findDeviceInList to locate
- *   the device in the list, and returns that device's ID number
- */
-int getIDfromMac(unsigned char mac[6], device_t devices[], int numDevices);
-
-
 
 
 
@@ -283,13 +206,25 @@ volatile scan_state_t scan_state;
 
 
 
+#define MAX_SCAN_RESULTS 50     // maximum number of devices that will be reported in a scan
+#define MAX_SCAN_COUNT 127      // maximum number of RSSI readings for one device reported in a scan
+
+volatile struct
+{
+    int numResults;
+    unsigned short IDs[MAX_SCAN_RESULTS];
+    signed short RSSIsum[MAX_SCAN_RESULTS];
+    signed char counts[MAX_SCAN_RESULTS];
+} scanResults;
+
 // Table for temporarily storing results of a scan, during the scan itself.
 // When a device is seen with a strong enough RSSI, the RSSI is stored in this table,
 //   in the same position in the table as in the deviceList.  (i.e. scanResults[n] is the 
 //   detected signal strength of the device deviceList[n] )
-volatile signed char scanResults[NUM_DEVICES];
+//volatile signed char scanResults[NUM_DEVICES];
 
-signed char MINIMUM_RSSI;   // device seen on scan must reach this RSSI threshold to be acknowledged
+#define MINIMUM_RSSI (-120)
+signed char minimumRSSI;   // device seen on scan must reach this RSSI threshold to be acknowledged
 
 
 // Keep track of storage of scan data.
@@ -314,7 +249,8 @@ void scans_init();
  * Initiate BLE scan
  *   Scanning will occur for window_ms every interval_ms, and will stop after timeout_s
  */
-void startScan(int interval_ms, int window_ms, int timeout_s);
+//void startScan(int interval_ms, int window_ms, int timeout_s);
+uint32_t startScan();
 
 
 /**
@@ -342,4 +278,4 @@ void printScanResult(int chunk);
 
 
 
-#endif //#ifndef SCANNING_H
+#endif //#ifndef SCANNER_H

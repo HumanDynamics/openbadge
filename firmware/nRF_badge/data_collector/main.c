@@ -53,7 +53,7 @@
 #include "rtc_timing.h"  //support millis(), micros(), countdown timer interrupts
 #include "ble_setup.h"  //stuff relating to BLE initialization/configuration
 #include "external_flash.h"  //for interfacing to external SPI flash
-//#include "scanning.h"       //for performing scans and storing scan data
+#include "scanner.h"       //for performing scans and storing scan data
 #include "self_test.h"   // for built-in tests
 #include "collector.h"  // for collecting data from mic
 #include "storer.h"
@@ -101,6 +101,24 @@ void goToSleep(long ms)
 
 
 
+// *************************************************
+// --- Scan timing parameters ---
+#define SCAN_WINDOW 100     // Milliseconds of active scanning
+#define SCAN_INTERVAL 300   // Millisecond interval at which a scan window is performed  
+// ---
+
+
+#define SCAN_TIMEOUT 30  // Scan timeout, seconds.  Irrelevant, right now scans immediately restart on timeout (infinite scanning)
+
+ble_gap_scan_params_t scan_params;
+volatile bool isScanning = false;
+
+uint32_t startScan()
+{
+    return sd_ble_gap_scan_start(&scan_params);
+}
+
+
  
 /**
  * ============================================== MAIN ====================================================
@@ -121,6 +139,7 @@ int main(void)
     
     debug_log_init();
     debug_log("\r\n\r\n\r\n\r\nUART trace initialized.\r\n\r\n");
+    debug_log("Name: %.5s\r\n",DEVICE_NAME);
 
 
     // Define and set LEDs
@@ -151,7 +170,7 @@ int main(void)
     
     advertising_init();
     
-    #ifdef DEBUG_LOG_ENABLE
+    /*#ifdef DEBUG_LOG_ENABLE
         ble_gap_addr_t MAC;
         sd_ble_gap_address_get(&MAC);
         debug_log("MAC address: %X:%X:%X:%X:%X:%X\r\n", MAC.addr[5],MAC.addr[4],MAC.addr[3],
@@ -159,7 +178,7 @@ int main(void)
     
         //uint32_t* deviceAddrPtr = (uint32_t*)NRF_FICR->DEVICEADDR;
         //debug_log("MAC address address: 0x%X\r\n",(unsigned int)deviceAddrPtr);
-    #endif
+    #endif*/
     
     // Blink once on start
     nrf_gpio_pin_write(LED_1,LED_ON);
@@ -227,6 +246,53 @@ int main(void)
     cycleStart = millis();
     
     nrf_delay_ms(2);
+    
+    
+    scan_params.active = 0;  //passive scanning, only looking for advertising packets
+    scan_params.selective = 0;  //non-selective, don't use whitelist
+    scan_params.p_whitelist = NULL;  //no whitelist
+    scan_params.interval = (SCAN_INTERVAL * 1000) / 625;   //scan_params uses interval in units of 0.625ms
+    scan_params.window = (SCAN_WINDOW * 1000) / 625;       //window also in units of 0.625ms
+    scan_params.timeout = SCAN_TIMEOUT;                    //timeout is in s
+    
+    debug_log("\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n");
+    debug_log("====================================================\r\n");
+    debug_log("===== DEVELOPMENT BADGE.  PERFORMS SCANS ONLY. =====\r\n");
+    debug_log("  Press button to toggle scanning.\r\n\r\n");
+    
+    while(1)
+    {
+        uint32_t result;
+        
+        // wait till button pressed
+        while(nrf_gpio_pin_read(BUTTON_1) == 0);
+        nrf_delay_ms(200);
+        while(nrf_gpio_pin_read(BUTTON_1) != 0);
+        nrf_delay_ms(200);
+        
+        debug_log("Starting scans...");
+        result = startScan();
+        if(result == NRF_SUCCESS)
+        {
+            debug_log(" Scan started.\r\n");
+        }
+        else
+        {
+            debug_log(" Error starting scan.\r\n");
+            while(1);
+        }
+        
+        // wait till button pressed
+        while(nrf_gpio_pin_read(BUTTON_1) == 0);
+        nrf_delay_ms(200);
+        while(nrf_gpio_pin_read(BUTTON_1) != 0);
+        nrf_delay_ms(200);
+        
+        debug_log("Stopping scans.\r\n");
+        sd_ble_gap_scan_stop();
+    }
+    
+    
     
     // Enter main loop
     for (;;)  {

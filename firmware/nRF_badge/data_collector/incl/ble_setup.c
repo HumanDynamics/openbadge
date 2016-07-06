@@ -9,12 +9,13 @@ static ble_nus_t                        m_nus;      //Struct for Nordic UART Ser
 
 volatile bool isConnected = false;
 volatile bool isAdvertising = false;
-volatile bool isScanning = false;
+//volatile bool isScanning = false;
 
-ble_uuid_t m_adv_uuids[] = {{BLE_UUID_BATTERY_SERVICE, BLE_UUID_TYPE_BLE},        // Universally unique service identifiers.
-                            {BLE_UUID_NUS_SERVICE,     BLE_UUID_TYPE_BLE}};  
-//ble_uuid_t m_adv_uuids[] = {{BLE_UUID_NUS_SERVICE,     BLE_UUID_TYPE_BLE}};      
-
+//ble_uuid_t m_adv_uuids[] = {{BLE_UUID_BATTERY_SERVICE, BLE_UUID_TYPE_BLE},        // Universally unique service identifiers.
+//                            {BLE_UUID_NUS_SERVICE,     BLE_UUID_TYPE_BLE}};  
+ble_uuid_t m_adv_uuids[] = {{BLE_UUID_NUS_SERVICE,     BLE_UUID_TYPE_BLE}};      
+// ^^^ With both service UUIDs, ID, and group #, adv payload is too big.  Quick fix above to make it fit.
+//    may also be fixable by specifying size of custom data manually, instead of sizeof (which includes padding)
 
 
 void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
@@ -115,8 +116,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
             BLEonDisconnect();
             break;
         case BLE_GAP_EVT_ADV_REPORT:  //On receipt of a response to an advertising request (during a scan)
-            //BLEonAdvReport(p_ble_evt->evt.gap_evt.params.adv_report.peer_addr.addr,
-            //                p_ble_evt->evt.gap_evt.params.adv_report.rssi);
+            BLEonAdvReport(&(p_ble_evt->evt.gap_evt.params.adv_report));
             break;
         
         case BLE_GAP_EVT_TIMEOUT:
@@ -333,11 +333,16 @@ void setAdvData()
     custom_data_array.battery = getBatteryVoltage();
     custom_data_array.synced = dateReceived;
     custom_data_array.collecting = isCollecting;
+    custom_data_array.group = badgeGroup;
+    custom_data_array.ID = badgeID;
+    
+    //debug_log("custom data size: %d\r\n",sizeof(custom_data_array));
     
     ble_advdata_manuf_data_t custom_manuf_data;
     custom_manuf_data.company_identifier = 0xFF00;  // unofficial manufacturer code
     custom_manuf_data.data.p_data = (uint8_t*)(&custom_data_array);
-    custom_manuf_data.data.size = sizeof(custom_data_array);
+    //custom_manuf_data.data.size = sizeof(custom_data_array);
+    custom_manuf_data.data.size = CUSTOM_DATA_LEN;   // sizeof returns padded struct size, more than actual data bytes.
     
     // Build advertising data struct to pass into @ref ble_advdata_set.
     ble_advdata_t advdata;
@@ -369,6 +374,16 @@ void BLE_init()
     gap_params_init();
     services_init();
     sec_params_init();
+    
+    ble_gap_addr_t MAC;
+    sd_ble_gap_address_get(&MAC);
+    debug_log("MAC address: %.2X:%.2X:%.2X:%.2X:%.2X:%.2X\r\n", MAC.addr[5],MAC.addr[4],MAC.addr[3],
+                                                                MAC.addr[2],MAC.addr[1],MAC.addr[0]);
+    
+    badgeID = crc16_compute(MAC.addr,6,NULL);  // compute default badge ID from MAC address
+    debug_log("Default ID:  %hX\r\n",badgeID);
+    badgeGroup = NO_GROUP;
+    
     //advertising_init();
     //uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
     //BLE_ERROR_CHECK(err_code);

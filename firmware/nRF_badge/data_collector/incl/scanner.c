@@ -1,26 +1,7 @@
-#include "scanning.h"
+#include "scanner.h"
 
 
-//===========================  Device List Manipulation ====================================
-//==========================================================================================
 
-//Note that a MAC address written as 6f:5f:4f:3f:2f:1f is stored in memory as {0x1f,0x2f,0x3f,0x4f,0x5f,0x6f}
-const device_t masterDeviceList[NUM_DEVICES] = 
-{
-    { .mac={0x66,0x55,0x44,0x33,0x22,0x11}, .ID=0},
-    { .mac={0x67,0x55,0x44,0x33,0x22,0x11}, .ID=1},
-    { .mac={0x66,0x56,0x44,0x33,0x22,0x11}, .ID=2},
-    { .mac={0x66,0x55,0x45,0x33,0x22,0x11}, .ID=3},
-    { .mac={0x66,0x55,0x44,0x34,0x22,0x11}, .ID=4},
-    { .mac={0x66,0x55,0x44,0x33,0x23,0x11}, .ID=5},
-    { .mac={0x66,0x55,0x44,0x33,0x22,0x12}, .ID=6},
-    { .mac={0x68,0x55,0x44,0x33,0x22,0x11}, .ID=7},
-    { .mac={0x66,0x57,0x44,0x33,0x22,0x11}, .ID=8},
-    { .mac={0x66,0x55,0x46,0x33,0x22,0x11}, .ID=9},
-    { .mac={0x1D,0xAB,0x9E,0xCB,0xA3,0xD2}, .ID=42},  //square blue badge with headers on back
-    { .mac={0x10,0xD6,0x32,0xA5,0x4D,0x59}, .ID=43},  //random MAC picked up on scan
-    { .mac={0xCA,0xD3,0x5E,0xCa,0x61,0xEE}, .ID=44}   //another random MAC
-};
 
 
 
@@ -31,120 +12,12 @@ void printMac(unsigned char mac[6])
                                               (int)mac[1],(int)mac[0]);
 }
 
-void printDeviceList(device_t devices[],int numDevices)
-{
-    debug_log("\r\n%d known devices:\r\n",numDevices);
-    for(int i = 0; i < numDevices; i++)
-    {
-        debug_log("  ");
-        printMac(devices[i].mac);
-        debug_log(", ID %d\r\n",(int)devices[i].ID);
-        nrf_delay_ms(1);  //let UART buffer finish transmitting
-    }
-    debug_log("------\r\n\r\n");
-    nrf_delay_ms(10);  //let UART buffer finish transmitting
-}
-
-uint64_t macLL(unsigned char mac[6])
-{
-    uint64_t wholeMac = 0;
-    memcpy(&wholeMac,mac,6);
-    return wholeMac;
-}
-
-void printMacLL(uint64_t mac64)  {
-    debug_log("mac: %lX%lX\r\n",(long)(mac64>>32),(long)(mac64&0xffffffffUL));
-    nrf_delay_ms(1);  //finish printing
-}
-
-
-void quicksortDevices(device_t devices[], int leftIndex, int rightIndex)
-{
-    if(leftIndex < rightIndex)
-    {
-        // -----Partition: divide list into 2 halves, whether items are greater or less than the pivot value
-        
-        int pivotIndex = (leftIndex+rightIndex)/2;  //middle of list
-        int newPivotIndex = leftIndex;  //will eventually be the pivot location in the partitioned list
-        // Swap pivot and right devices
-        device_t pivotDevice = devices[pivotIndex];
-        uint64_t pivotMac = macLL(pivotDevice.mac);
-        devices[pivotIndex] = devices[rightIndex];
-        // Check each other device against pivot device
-        for(int i=leftIndex; i<rightIndex; i++)
-        {
-            device_t temp = devices[i];
-            uint64_t testMac = macLL(temp.mac);
-            if(testMac <= pivotMac)
-            {
-                // Device belongs to left of pivot.  Swap with newPivotIndex device, move newPivotIndex right
-                devices[i] = devices[newPivotIndex];
-                devices[newPivotIndex] = temp;
-                newPivotIndex++;
-            }
-        }
-        // Replace pivot value in its new location
-        devices[rightIndex] = devices[newPivotIndex];
-        devices[newPivotIndex] = pivotDevice;
-        
-        // -----Sort: sort each half of the partitioned list
-        quicksortDevices(devices,leftIndex,newPivotIndex-1);
-        quicksortDevices(devices,newPivotIndex+1,rightIndex);
-    }
-    /**
-     * NOTE:
-     * List is now sorted, but perhaps not in an intuitive way.  The list is sorted by ascending
-     *   values of the macLL() result for each device.  Due to the endian-ness of the CPU,
-     *   this is not necessarily the way we might intuitively arrange the MAC addresses themselves
-     *   in "ascending" order.
-     * However, this is beneficial for searching the list for a device; we can do a simple binary
-     *   search, if we always compare devices by their macLL() results.
-     */
-}
-
-void sortDeviceList(device_t devices[], int numDevices)
-{
-    quicksortDevices(deviceList,0,numDevices-1);  // sortDeviceList is a bit more readable than this quicksort call
-}
-
-
-
-int findDeviceInList(unsigned char mac[6], device_t devices[], int numDevices)
-{
-    uint64_t searchMac = macLL(mac);  // what we'll be comparing to
-    int left = 0;   // left bound index of possible devices
-    int right = numDevices - 1;  // right bound index
-    int searchIndex;
-    while(left <= right)
-    {
-        searchIndex = (left+right)/2;  //Check middle device
-        uint64_t testMac = macLL(devices[searchIndex].mac);
-        if(searchMac == testMac)  {
-            return searchIndex;  // found it, return location of device in sorted deviceList
-        }
-        else if(searchMac < testMac)  {
-            right = searchIndex-1;  // less, refine search to lower half of remaining candidates
-        }
-        else if(searchMac > testMac)  {
-            left = searchIndex+1;   // more, refine search to upper half of remaining candidates
-        }
-    }
-    return UNKNOWN_DEVICE;  //no device found
-}
-
-int getIndexFromMac(unsigned char mac[6], device_t devices[], int numDevices)
-{
-    int location = findDeviceInList(mac,devices,numDevices);   // get sorted list index of device
-    return (location != UNKNOWN_DEVICE) ? devices[location].ID : UNKNOWN_DEVICE;  // return corresponding ID
-}
-
-
 
 
 //================================ Scanning + scan result storage ===============================
 //===============================================================================================
 
-void scans_init()
+/*void scans_init()
 {
     // We need to find the most recent stored chunk, to start storing after it
     
@@ -160,11 +33,11 @@ void scans_init()
         ext_flash_read(addr+EXT_CHUNK_SIZE-4,tail.buf,sizeof(tail.buf));  // End of the chunk
         
         // Print all written chunks
-        /*if(header.timestamp != 0xFFFFFFFFUL)
+        / *if(header.timestamp != 0xFFFFFFFFUL)
         {
             debug_log("CH: %d,TS: %X\r\n",i,(int)header.timestamp);
             nrf_delay_ms(2);
-        }*/
+        } * /
         
         // is it a completely stored scan result chunk?
         if(header.timestamp != 0xFFFFFFFFUL && header.timestamp == tail.check)
@@ -189,10 +62,10 @@ void scans_init()
         debug_log("Last stored scan in chunk %d, timestamp %X.\r\n",(int)scanStore.chunk,(int)lastStoredTimestamp);
     }
     
-    /**
+    / **
      * scanStore.chunk is now the most recent completely stored scan chunk in external flash
      *   startScan will begin storing to the next chunk
-     */
+     * /
      
     while(ext_flash_global_unprotect() != EXT_FLASH_SUCCESS);  //enable writing to external flash
     
@@ -206,10 +79,10 @@ void scans_init()
     scan_enable = false;  //default to no scanning
     scan_state = SCAN_IDLE;
     
-}
+}*/
 
 
-void startScan(int interval_ms, int window_ms, int timeout_s)
+/*void startScan(int interval_ms, int window_ms, int timeout_s)
 {
     sd_ble_gap_scan_stop();  // stop any in-progress scans
     
@@ -252,22 +125,69 @@ void startScan(int interval_ms, int window_ms, int timeout_s)
     
     scan_state = SCAN_SCANNING;
     //debug_log("Scan started\r\n");
-}
+}*/
     
 
-void BLEonAdvReport(uint8_t addr[6], int8_t rssi)
+void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
 {
+    signed char rssi = advReport->rssi;
+    
     if(rssi >= MINIMUM_RSSI)  // ignore signals that are too weak
     {
-        int index = findDeviceInList(addr,deviceList,NUM_DEVICES);  // Get device's index within sorted list
-        if(index != UNKNOWN_DEVICE)  // is it a known device
+        unsigned char dataLength = advReport->dlen;
+        unsigned char* data = (unsigned char*)advReport->data;
+        unsigned char index = 0;
+        unsigned char* name = NULL;
+        bool gotPayload = false;
+        custom_adv_data_t payload;
+        int payloadLen = 0;
+        
+        // step through data until we find both the name and custom data, or have reached the end of the data
+        while((gotPayload == false || name == NULL) && index < dataLength)  
         {
-            if(scanResults[index] == 0)  // have we not seen this device yet
+            unsigned char fieldLen = data[index];
+            index++;
+            unsigned char fieldType = data[index];
+            if(fieldType == BLE_GAP_AD_TYPE_SHORT_LOCAL_NAME
+                || fieldType == BLE_GAP_AD_TYPE_COMPLETE_LOCAL_NAME)
             {
-                scanStore.numTotal++;   // if it's a new device, increment the total number of seen devices
+                /*if(memcmp(&data[index],(const uint8_t *)DEVICE_NAME,strlen(DEVICE_NAME)) == 0)
+                {
+                    isBadge = true;
+                    //name = &data[index];
+                    break;  // don't need any more adv data for now.
+                }*/
+                name = &data[index+1];
             }
-            scanResults[index] = rssi;
+            else if(fieldType == BLE_GAP_AD_TYPE_MANUFACTURER_SPECIFIC_DATA)
+            {
+                payloadLen = fieldLen - 3;  // length of field minus field type byte and manuf ID word
+                if(payloadLen == CUSTOM_DATA_LEN)
+                {
+                    // Need to copy payload data so it is properly aligned.
+                    memcpy(&payload,&data[index+3],CUSTOM_DATA_LEN);  // skip past field type byte, manuf ID word
+                    gotPayload = true;
+                }
+            }
+            index += fieldLen;
         }
+        
+        if(name != NULL && memcmp(name,(const uint8_t *)DEVICE_NAME,strlen(DEVICE_NAME)) == 0)  // is it a badge?
+        {
+            if(gotPayload)     // is there custom data, and the correct amount?
+            {
+                debug_log("Badge seen: group %d, ID %hX, rssi %d.\r\n",(int)payload.group,payload.ID,(int)rssi);
+            }
+            else
+            {
+                debug_log("Badge seen, rssi %d, but wrong/missing adv data, len %d?\r\n",(int)rssi,payloadLen);
+            }
+        }
+        else
+        {
+            debug_log("Unknown device seen, name %.5s, rssi %d.\r\n",name,(int)rssi);
+        }
+
         /*
         debug_log("found: ");
         printMac(addr);
@@ -277,7 +197,7 @@ void BLEonAdvReport(uint8_t addr[6], int8_t rssi)
     }
 }
 
-void BLEonScanTimeout()
+/*void BLEonScanTimeout()
 {
     #ifdef DEBUG_LOG_ENABLED
     debug_log("Scan results:\r\n");
@@ -297,10 +217,10 @@ void BLEonScanTimeout()
     scan_state = SCAN_STORING;
     
     enableStorage();   // enableStorage will check whether a BLE connection is active, to avoid conflicts
-}
+}*/
 
 
-void updateScanning()
+/*void updateScanning()
 {
     switch(scan_state)
     {
@@ -319,6 +239,11 @@ void updateScanning()
             // Scan timeout is interrupt-driven; we don't need to manually stop it here.
             break;
         case SCAN_STORING:     // we need to store scan results
+            debug_log("Scan storing not yet implemented.\r\n");
+            
+            break;
+            
+            
             //debug_log("scan storing\r\n");
             ;  //can't put a declaration directly after switch label
             ext_flash_status_t flashStatus = ext_flash_get_status();
@@ -399,7 +324,7 @@ void updateScanning()
             break;
     }  // switch(scan_state)
     
-}
+}*/
 
 
 scan_state_t getScanState()  {

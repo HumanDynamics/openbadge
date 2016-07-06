@@ -8,6 +8,8 @@
 #include "ble_advertising.h"
 #include "softdevice_handler.h"
 
+#include "crc16.h"
+
 #include "nrf_drv_config.h"
 
 #include "debug_log.h"          //UART debugging logger
@@ -38,6 +40,10 @@
 
 #define DEAD_BEEF                       0xDEADBEEF                                  /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
+#define NO_GROUP 0
+
+volatile unsigned char badgeGroup;
+volatile unsigned short badgeID;
 
 volatile bool isConnected;
 volatile bool isAdvertising;
@@ -60,11 +66,17 @@ typedef enum ble_status_t
 } ble_status_t;
 
 
+
+#define CUSTOM_DATA_LEN 9   // bytes in custom data struct to be sent in advertising payload.
+                            //   Note that this differs from sizeof(custom_adv_data_t), which includes padding at end of struct
+ 
 typedef struct
 {
     float battery;
     unsigned char synced;
     unsigned char collecting;
+    unsigned short ID;
+    unsigned char group;
 } custom_adv_data_t;
 
 volatile bool needAdvDataUpdate;
@@ -222,9 +234,9 @@ void BLEonReceive(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length);
 
 /**
  * Function for handling BLE advertising reports (from scan)
- * Parameters are 6-byte array of BLE address, and RSSI signal strength
+ * XXXXXXXXXXXXXXXXXXXXXXXXXParameters are 6-byte array of BLE address, and RSSI signal strength
  */
-void BLEonAdvReport(uint8_t addr[6], int8_t rssi);
+void BLEonAdvReport(ble_gap_evt_adv_report_t* advReportPtr);
 
 /**
  * Function called on timeout of scan, to finalize and store scan results
