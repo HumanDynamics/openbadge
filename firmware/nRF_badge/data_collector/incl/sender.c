@@ -532,6 +532,12 @@ bool updateSender()
                     debug_log("SENDER: starting collector, timeout %d minutes.\r\n",(int)command.timeout);
                     collectorTimeout = ((unsigned long)command.timeout) * 60UL * 1000UL;
                     startCollector();
+                    
+                    // *********************************************************
+                    // TEMPORARY, FOR SCANNER TESTING
+                    scanner_enable = true;
+                    // *********************************************************
+                    
                     pendingCommand.cmd = CMD_NONE;
                 }
             }
@@ -558,6 +564,12 @@ bool updateSender()
         {
             debug_log("SENDER: stopping collector.\r\n");
             stopCollector();
+            
+            // *********************************************************
+            // TEMPORARY, FOR SCANNER TESTING
+            scanner_enable = false;
+            // *********************************************************
+                    
             pendingCommand.cmd = CMD_NONE;
         }
         

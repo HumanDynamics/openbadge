@@ -17,8 +17,9 @@ void printMac(unsigned char mac[6])
 //================================ Scanning + scan result storage ===============================
 //===============================================================================================
 
-/*void scans_init()
+void scanner_init()
 {
+    /*
     // We need to find the most recent stored chunk, to start storing after it
     
     scan_header_t header;
@@ -69,24 +70,31 @@ void printMac(unsigned char mac[6])
      
     while(ext_flash_global_unprotect() != EXT_FLASH_SUCCESS);  //enable writing to external flash
     
-    lastScanTime = 0;
-    MINIMUM_RSSI = -120;  
-    scanTiming.interval = SCAN_INTERVAL;
-    scanTiming.window = SCAN_WINDOW;
-    scanTiming.timeout = SCAN_TIMEOUT;
-    scanTiming.period = SCAN_PERIOD;
+    */
     
-    scan_enable = false;  //default to no scanning
-    scan_state = SCAN_IDLE;
     
-}*/
+    scan_params.active = 0;  //passive scanning, only looking for advertising packets
+    scan_params.selective = 0;  //non-selective, don't use whitelist
+    scan_params.p_whitelist = NULL;  //no whitelist
+    scan_params.interval = (SCAN_INTERVAL * 1000) / 625;   //scan_params uses interval in units of 0.625ms
+    scan_params.window = (SCAN_WINDOW * 1000) / 625;       //window also in units of 0.625ms
+    scan_params.timeout = SCAN_TIMEOUT;                     //timeout is in s
+    
+    //scan_state = SCAN_IDLE;
+    
+}
 
 
-/*void startScan(int interval_ms, int window_ms, int timeout_s)
+uint32_t startScan()
 {
     sd_ble_gap_scan_stop();  // stop any in-progress scans
     
-    memset((char*)scanResults,0,sizeof(scanResults));  //clear previous scan results
+    scanResults.num = 0;
+    
+    return sd_ble_gap_scan_start(&scan_params);
+    
+    
+    /*memset((char*)scanResults,0,sizeof(scanResults));  //clear previous scan results
     scanStore.resultLoc = 0;
     scanStore.numTotal = 0;
     scanStore.numStored = 0;
@@ -123,9 +131,9 @@ void printMac(unsigned char mac[6])
     lastScanTime = millis();
     sd_ble_gap_scan_start(&scan_params);
     
-    scan_state = SCAN_SCANNING;
+    scan_state = SCAN_SCANNING;*/
     //debug_log("Scan started\r\n");
-}*/
+}
     
 
 void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
@@ -176,16 +184,37 @@ void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
         {
             if(gotPayload)     // is there custom data, and the correct amount?
             {
-                debug_log("Badge seen: group %d, ID %hX, rssi %d.\r\n",(int)payload.group,payload.ID,(int)rssi);
+                //debug_log("Badge seen: group %d, ID %hX, rssi %d.\r\n",(int)payload.group,payload.ID,(int)rssi);
+                if(payload.group == badgeGroup)
+                {
+                    bool prevSeen = false;
+                    for(int i=0; i<scanResults.num; i++)        // check through list of already seen badges
+                    {
+                        if(payload.ID == scanResults.IDs[i])
+                        {
+                            scanResults.RSSIsum[i] += rssi;
+                            scanResults.counts[i]++;
+                            prevSeen = true;
+                            break;
+                        }
+                    }
+                    if(!prevSeen)                               // is it a new badge
+                    {
+                        scanResults.IDs[scanResults.num] = payload.ID;
+                        scanResults.RSSIsum[scanResults.num] = rssi;
+                        scanResults.counts[scanResults.num] = 1;
+                        scanResults.num++;
+                    }
+                }
             }
             else
             {
-                debug_log("Badge seen, rssi %d, but wrong/missing adv data, len %d?\r\n",(int)rssi,payloadLen);
+                //debug_log("Badge seen, rssi %d, but wrong/missing adv data, len %d?\r\n",(int)rssi,payloadLen);
             }
         }
         else
         {
-            debug_log("Unknown device seen, name %.5s, rssi %d.\r\n",name,(int)rssi);
+            //debug_log("Unknown device seen, name %.5s, rssi %d.\r\n",name,(int)rssi);
         }
 
         /*
@@ -197,9 +226,25 @@ void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
     }
 }
 
-/*void BLEonScanTimeout()
+void BLEonScanTimeout()
 {
-    #ifdef DEBUG_LOG_ENABLED
+    // Perhaps move this code to updateScans eventually?
+    for(int i=0; i<scanResults.num; i++)
+    {
+        scanResults.RSSIsum[i] /= scanResults.counts[i];
+        scanResults.counts[i] = 1;
+    }
+    
+    debug_log("SCANNER: Scan results:\r\n");
+    for(int i=0; i<scanResults.num; i++)
+    {
+        debug_log("  saw %.4hX, rssi %hd\r\n",scanResults.IDs[i],(short int)scanResults.RSSIsum[i]);
+    }
+    debug_log("  ---\r\n");
+    
+    scan_state = SCANNER_STORING;
+
+    /*#ifdef DEBUG_LOG_ENABLED
     debug_log("Scan results:\r\n");
     for(int i = 0; i < NUM_DEVICES; i++)
     {
@@ -214,35 +259,56 @@ void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
     debug_log("------\r\n");
     #endif //DEBUG_LOG_ENABLED
     
-    scan_state = SCAN_STORING;
     
-    enableStorage();   // enableStorage will check whether a BLE connection is active, to avoid conflicts
-}*/
+    enableStorage();   // enableStorage will check whether a BLE connection is active, to avoid conflicts*/
+}
 
 
-/*void updateScanning()
+bool updateScanner()
 {
+    bool scannerActive = true;
+
     switch(scan_state)
     {
-        case SCAN_IDLE:   // nothing to do, but check whether it's time to scan again.
-            //debug_log("scan idle\r\n");
-            if(scan_enable)  // don't re-start scans if scanning is disabled
+        case SCANNER_IDLE:   // nothing to do, but check whether it's time to scan again.
+            if(scanner_enable)  // don't re-start scans if scanning is disabled
             {
-                if(millis() - lastScanTime >= scanTiming.period)  // start scanning if it's time to scan
+                
+                if(millis() - lastScanTime >= SCAN_PERIOD)  // start scanning if it's time to scan
                 {
-                    startScan(scanTiming.interval,scanTiming.window,scanTiming.timeout);
+                    // don't start scans if BLE is connected, paused, or waiting to pause
+                    if(BLEgetStatus() == BLE_ADVERTISING && BLEpauseReqPending() == false)
+                    {
+                        uint32_t result = startScan();
+                        if(result == NRF_SUCCESS)
+                        {
+                            scan_state = SCANNER_SCANNING;
+                            debug_log("SCANNER: Started scan.\r\n");
+                        }
+                        else
+                        {
+                            debug_log("ERR: error starting scan, #%u\r\n",(unsigned int)result);
+                        }
+                        lastScanTime = millis();
+                    }
                 }
             }
+            else
+            {
+                scannerActive = false;
+            }
             break;
-        case SCAN_SCANNING:    // nothing to do, timeout callback will stop scans when it's time
+        case SCANNER_SCANNING:    // nothing to do, timeout callback will stop scans when it's time
             //debug_log("scan scanning\r\n");
             // Scan timeout is interrupt-driven; we don't need to manually stop it here.
             break;
-        case SCAN_STORING:     // we need to store scan results
-            debug_log("Scan storing not yet implemented.\r\n");
+        case SCANNER_STORING:     // we need to store scan results
+            debug_log("SCANNER: Scan storing not yet implemented.\r\n");
+            scan_state = SCANNER_IDLE;
             
             break;
             
+            /*
             
             //debug_log("scan storing\r\n");
             ;  //can't put a declaration directly after switch label
@@ -255,7 +321,7 @@ void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
             else if(scanStore.numStored == scanStore.numTotal)
             {
                 // If we've stored all the scan data to flash, we're done.
-                scan_state = SCAN_IDLE;
+                scan_state = SCANNER_IDLE;
                 break;
             }
             
@@ -320,11 +386,14 @@ void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
             ext_flash_write(EXT_ADDRESS_OF_CHUNK(scanStore.chunk),chunk.buf,sizeof(chunk.buf));
             
             break;  // case: SCAN_STORING
+            */
         default:
             break;
     }  // switch(scan_state)
     
-}*/
+    return scannerActive;
+    
+}
 
 
 scan_state_t getScanState()  {

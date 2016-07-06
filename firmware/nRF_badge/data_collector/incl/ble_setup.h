@@ -19,6 +19,7 @@
  
  
 #include "storer.h" 
+#include "scanner.h"
  
 #define IS_SRVC_CHANGED_CHARACT_PRESENT 0                                           /**< Include or not the service_changed characteristic. if not enabled, the server's database cannot be changed for the lifetime of the device*/
 
@@ -80,6 +81,8 @@ typedef struct
 } custom_adv_data_t;
 
 volatile bool needAdvDataUpdate;
+
+
 
 /**
  * Callback function for asserts in the SoftDevice; called in case of SoftDevice assert.
@@ -220,6 +223,8 @@ void BLEforceDisconnect();
  *   See ble_status_t enum above
  */
 ble_status_t BLEgetStatus();
+
+bool BLEpauseReqPending();
 
 /**
  * Functions called on connection or disconnection events

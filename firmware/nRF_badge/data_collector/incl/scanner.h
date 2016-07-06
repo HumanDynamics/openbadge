@@ -39,27 +39,28 @@
 
  
 // Default scan timings
-/*#define SCAN_INTERVAL 300
-#define SCAN_WINDOW 100
-#define SCAN_TIMEOUT 3
-#define SCAN_PERIOD 30000UL*/
+#define SCAN_WINDOW 100     // Milliseconds of active scanning
+#define SCAN_INTERVAL 300   // Millisecond interval at which a scan window is performed  
+#define SCAN_TIMEOUT 10  // Scan timeout, seconds.  Irrelevant, right now scans immediately restart on timeout (infinite scanning)
 
-struct {
+#define SCAN_PERIOD 30000UL // Scan period, ms.  A scan is started at this interval.
+
+/*struct {
     int interval;
     int window;
     int timeout;
     int period;
-} scanTiming;
+} scanTiming;*/
 
 unsigned long lastScanTime;  // millis() time of last scan
 
 
 // Struct for representing a device, with a MAC address and associated device ID
-typedef struct
+/*typedef struct
 {
     unsigned char mac[6];
     unsigned char ID;
-} device_t;
+} device_t;*/
 
 
 
@@ -192,17 +193,22 @@ typedef union
  
 
 
-volatile bool scan_enable;
+volatile bool scanner_enable;
 
 // For keeping track of current state of scanning
 typedef enum scan_state_t
 {
-    SCAN_IDLE = 0,             //no scan-related activity occurring
-    SCAN_SCANNING,              //scan in process
-    SCAN_STORING,               //busy storing scan data
+    SCANNER_IDLE = 0,             //no scan-related activity occurring
+    SCANNER_SCANNING,              //scan in process
+    SCANNER_STORING,               //busy storing scan data
 } scan_state_t;
 
 volatile scan_state_t scan_state;
+
+
+
+
+ble_gap_scan_params_t scan_params;
 
 
 
@@ -211,7 +217,7 @@ volatile scan_state_t scan_state;
 
 volatile struct
 {
-    int numResults;
+    int num;
     unsigned short IDs[MAX_SCAN_RESULTS];
     signed short RSSIsum[MAX_SCAN_RESULTS];
     signed char counts[MAX_SCAN_RESULTS];
@@ -242,7 +248,7 @@ struct
  * Initialize scanning module
  *   Finds where in external flash scan data should be stored (after most recent past data)
  */
-void scans_init();
+void scanner_init();
 
 
 /**
@@ -267,7 +273,7 @@ uint32_t startScan();
 //Declared in ble_setup.h:  BLEonScanTimeout();
 
 // Must be called repeatedly to ensure scans are performed, and that scan results are stored.
-void updateScanning();
+bool updateScanner();
 
 // Returns scan_state, the current status of scanning.
 scan_state_t getScanState();

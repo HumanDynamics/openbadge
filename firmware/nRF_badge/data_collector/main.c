@@ -61,7 +61,7 @@
 
 
 
-enum cycleStates {SLEEP, SAMPLE, STORE, SEND};
+enum cycleStates {SLEEP, SAMPLE, SCAN, STORE, SEND};
 unsigned long cycleStart;       // start of main loop cycle (e.g. sampling cycle)
 int cycleState = SAMPLE;     // to keep track of state of main loop
 #define MIN_SLEEP 5UL      // ms of sleep, minimum (keep well under SAMPLE_PERIOD - SAMPLE_WINDOW to leave room for sending)
@@ -100,23 +100,6 @@ void goToSleep(long ms)
 }
 
 
-
-// *************************************************
-// --- Scan timing parameters ---
-#define SCAN_WINDOW 100     // Milliseconds of active scanning
-#define SCAN_INTERVAL 300   // Millisecond interval at which a scan window is performed  
-// ---
-
-
-#define SCAN_TIMEOUT 30  // Scan timeout, seconds.  Irrelevant, right now scans immediately restart on timeout (infinite scanning)
-
-ble_gap_scan_params_t scan_params;
-volatile bool isScanning = false;
-
-uint32_t startScan()
-{
-    return sd_ble_gap_scan_start(&scan_params);
-}
 
 
  
@@ -167,6 +150,7 @@ int main(void)
     collector_init();
     storer_init();
     sender_init();
+    scanner_init();
     
     advertising_init();
     
@@ -248,7 +232,7 @@ int main(void)
     nrf_delay_ms(2);
     
     
-    scan_params.active = 0;  //passive scanning, only looking for advertising packets
+    /*scan_params.active = 0;  //passive scanning, only looking for advertising packets
     scan_params.selective = 0;  //non-selective, don't use whitelist
     scan_params.p_whitelist = NULL;  //no whitelist
     scan_params.interval = (SCAN_INTERVAL * 1000) / 625;   //scan_params uses interval in units of 0.625ms
@@ -258,7 +242,7 @@ int main(void)
     debug_log("\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n");
     debug_log("====================================================\r\n");
     debug_log("===== DEVELOPMENT BADGE.  PERFORMS SCANS ONLY. =====\r\n");
-    debug_log("  Press button to toggle scanning.\r\n\r\n");
+    debug_log("  Press button to start scanning.\r\n\r\n");
     
     while(1)
     {
@@ -281,16 +265,7 @@ int main(void)
             debug_log(" Error starting scan.\r\n");
             while(1);
         }
-        
-        // wait till button pressed
-        while(nrf_gpio_pin_read(BUTTON_1) == 0);
-        nrf_delay_ms(200);
-        while(nrf_gpio_pin_read(BUTTON_1) != 0);
-        nrf_delay_ms(200);
-        
-        debug_log("Stopping scans.\r\n");
-        sd_ble_gap_scan_stop();
-    }
+    }*/
     
     
     
@@ -318,7 +293,6 @@ int main(void)
                 if(millis() - lastBatteryUpdate >= MIN_BATTERY_READ_INTERVAL)
                 {
                     //badgeActive |= true;
-                    //debug_log("boop\r\n");
                     if(BLEpause(PAUSE_REQ_COLLECTOR))
                     {
                         updateBatteryVoltage();
@@ -337,13 +311,20 @@ int main(void)
                     }
                     else  {
                         collectSample();
-                        cycleState = STORE;
+                        cycleState = SCAN;
                     }
                 }
                 else
                 {
-                    cycleState = STORE;
+                    cycleState = SCAN;
                 }
+                break;
+            
+            case SCAN:
+                ;
+                bool scannerActive = updateScanner();
+                badgeActive |= scannerActive;
+                cycleState = STORE;
                 break;
                 
             case STORE:

@@ -20,6 +20,7 @@
 #include "ble_setup.h"
 #include "collector.h"
 #include "storer.h"
+#include "scanner.h"
 
 
 /*
