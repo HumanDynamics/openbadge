@@ -141,6 +141,32 @@ int main(void)
     rtc_config();
     spi_init();
     
+    /*scan_chunk_t scanChunk;
+    for(int i = EXT_FIRST_DATA_CHUNK; i < 64; i++)
+    {
+        uint32_t result = ext_flash_read(EXT_ADDRESS_OF_CHUNK(i), scanChunk.buf, sizeof(scanChunk.buf));
+        if(result != NRF_SUCCESS)
+        {
+            debug_log("ERR: err reading ext flash.\r\n");
+            while(1);
+        }
+        ext_flash_wait();
+        unsigned long ts = scanChunk.timestamp;
+        if(ts == scanChunk.check && ts > MODERN_TIME && ts < FUTURE_TIME)  // not looking at trunc/continue chunks yet.
+        {
+            debug_log("Ext chunk %d, time 0x%lX num %d\r\n",i,scanChunk.timestamp,scanChunk.num);
+            for(int j=0; j<scanChunk.num; j++)
+            {
+                debug_log("  bdg ID#%.4hX, rssi %d, count %d\r\n", scanChunk.devices[j].ID,
+                                                                   (int)scanChunk.devices[j].rssi,
+                                                                   (int)scanChunk.devices[j].count );
+                nrf_delay_ms(5);
+            }
+        }
+        nrf_delay_ms(10);
+    }
+    while(1);*/
+    
     #if defined(TESTER_ENABLE) // tester mode is enabled
         runSelfTests();
         while(1);
@@ -266,6 +292,7 @@ int main(void)
             while(1);
         }
     }*/
+        
     
     
     
@@ -328,14 +355,14 @@ int main(void)
                 break;
                 
             case STORE:
-                ;// can't put declaration directly after case label.
+                ;
                 bool storerActive = updateStorer();
                 badgeActive |= storerActive;
                 cycleState = SEND;
                 break;
                 
             case SEND:
-                ;// can't put declaration directly after case label.
+                ;
                 bool senderActive = updateSender();
                 badgeActive |= senderActive;
                 

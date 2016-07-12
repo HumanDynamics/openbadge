@@ -168,10 +168,6 @@ bool updateSender()
                 send.bufContents = SENDBUF_STATUS;
                 send.bufSize = SENDBUF_STATUS_SIZE;
                 
-                /*if(!collecting)
-                {
-                    startCollector();  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TEMPORARY UNTIL CMD_STARTREC IS IMPLEMENTED
-                }*/
             }
         }
         

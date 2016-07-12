@@ -89,7 +89,8 @@ uint32_t startScan()
 {
     sd_ble_gap_scan_stop();  // stop any in-progress scans
     
-    scanResults.num = 0;
+    scan.num = 0;
+    scan.timestamp = now();
     
     return sd_ble_gap_scan_start(&scan_params);
     
@@ -188,22 +189,22 @@ void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
                 if(payload.group == badgeGroup)
                 {
                     bool prevSeen = false;
-                    for(int i=0; i<scanResults.num; i++)        // check through list of already seen badges
+                    for(int i=0; i<scan.num; i++)        // check through list of already seen badges
                     {
-                        if(payload.ID == scanResults.IDs[i])
+                        if(payload.ID == scan.IDs[i])
                         {
-                            scanResults.RSSIsum[i] += rssi;
-                            scanResults.counts[i]++;
+                            scan.rssiSums[i] += rssi;
+                            scan.counts[i]++;
                             prevSeen = true;
                             break;
                         }
                     }
                     if(!prevSeen)                               // is it a new badge
                     {
-                        scanResults.IDs[scanResults.num] = payload.ID;
-                        scanResults.RSSIsum[scanResults.num] = rssi;
-                        scanResults.counts[scanResults.num] = 1;
-                        scanResults.num++;
+                        scan.IDs[scan.num] = payload.ID;
+                        scan.rssiSums[scan.num] = rssi;
+                        scan.counts[scan.num] = 1;
+                        scan.num++;
                     }
                 }
             }
@@ -229,20 +230,21 @@ void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
 void BLEonScanTimeout()
 {
     // Perhaps move this code to updateScans eventually?
-    for(int i=0; i<scanResults.num; i++)
+    /*for(int i=0; i<scan.num; i++)
     {
-        scanResults.RSSIsum[i] /= scanResults.counts[i];
-        scanResults.counts[i] = 1;
+        scan.RSSIsum[i] /= scan.counts[i];
+        //scan.counts[i] = 1;
     }
     
     debug_log("SCANNER: Scan results:\r\n");
-    for(int i=0; i<scanResults.num; i++)
+    for(int i=0; i<scan.num; i++)
     {
-        debug_log("  saw %.4hX, rssi %hd\r\n",scanResults.IDs[i],(short int)scanResults.RSSIsum[i]);
+        debug_log("  saw %.4hX, rssi %hd, %d times\r\n",scan.IDs[i],(short int)scan.RSSIsum[i],
+                                                        scan.counts[i]);
     }
-    debug_log("  ---\r\n");
+    debug_log("  ---\r\n");*/
     
-    scan_state = SCANNER_STORING;
+    scan_state = SCANNER_SAVE;
 
     /*#ifdef DEBUG_LOG_ENABLED
     debug_log("Scan results:\r\n");
@@ -302,8 +304,62 @@ bool updateScanner()
             //debug_log("scan scanning\r\n");
             // Scan timeout is interrupt-driven; we don't need to manually stop it here.
             break;
-        case SCANNER_STORING:     // we need to store scan results
-            debug_log("SCANNER: Scan storing not yet implemented.\r\n");
+        case SCANNER_SAVE:     // we need to store scan results
+            //debug_log("SCANNER: Scan storing not yet implemented.\r\n");
+            //scan_state = SCANNER_IDLE;
+            
+            // ************* MUST VERIFY NUM = 0 CASE
+            
+            debug_log("SCANNER: Saving scan results. %d devices seen\r\n",scan.num);
+            
+            int numSaved = 0;
+            int chunksUsed = 0;
+            
+            while(numSaved < scan.num)
+            {
+                // Fill chunk header
+                scanBuffer[scan.to].timestamp = scan.timestamp;
+                scanBuffer[scan.to].num = scan.num;
+                
+                debug_log("  C:%d\r\n",scan.to);
+            
+                // Fill chunk with results
+                int numLeft = scan.num - numSaved;
+                int numThisChunk = (numLeft <= SCAN_DEVICES_PER_CHUNK) ? numLeft : SCAN_DEVICES_PER_CHUNK;
+                for(int i = 0; i < numThisChunk; i++)
+                {
+                    scanBuffer[scan.to].devices[i].ID = scan.IDs[numSaved + i];
+                    scanBuffer[scan.to].devices[i].rssi = scan.rssiSums[numSaved + i] / scan.counts[numSaved + i];
+                    scanBuffer[scan.to].devices[i].count = scan.counts[numSaved + i];
+                    debug_log("    bdg ID#%.4hX, rssi %d, count %d\r\n", scanBuffer[scan.to].devices[i].ID,
+                                                                    (int)scanBuffer[scan.to].devices[i].rssi,
+                                                                    (int)scanBuffer[scan.to].devices[i].count );
+                }
+                numSaved += numThisChunk;  
+                
+                // Terminate chunk
+                if(chunksUsed == 0)     // first chunk of saved results
+                {
+                    if(numSaved >= scan.num)    // did all the results fit in the first chunk
+                    {
+                        scanBuffer[scan.to].check = scanBuffer[scan.to].timestamp;  // mark as complete
+                    }
+                    else
+                    {
+                        scanBuffer[scan.to].check = CHECK_TRUNC;
+                    }
+                }
+                else    // else we're continuing results from a previous chunk
+                {
+                    scanBuffer[scan.to].check = CHECK_CONTINUE;
+                }
+                
+                chunksUsed++;
+                scan.to = (scan.to < LAST_SCAN_CHUNK) ? scan.to+1 : 0;
+            }
+            
+            debug_log("SCANNER: Done saving results.  used %d chunks.\r\n",chunksUsed);
+            
             scan_state = SCANNER_IDLE;
             
             break;
@@ -401,7 +457,7 @@ scan_state_t getScanState()  {
 }
 
 
-void printScanResult(int chunk)
+/*void printScanResult(int chunk)
 {
     scan_chunk_t readChunk;
     ext_flash_read(EXT_ADDRESS_OF_CHUNK(chunk),readChunk.buf,sizeof(readChunk.buf));
@@ -426,4 +482,4 @@ void printScanResult(int chunk)
         //}
         nrf_delay_ms(1);
     }
-}
+}*/

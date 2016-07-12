@@ -170,7 +170,7 @@ uint32_t ext_flash_read_OTP(unsigned int address, uint8_t* rx, unsigned int numB
 /*
  *  Read from flash
  *  Parameters: initial address, receiving buffer, number of bytes to read
- ** NOTE: tx buffer should contain 4 dummy bytes at beginning, for transmitting opcode, address
+ ** NOTE: rx buffer should contain 4 dummy bytes at beginning, for transmitting opcode, address
  *  Returns EXT_FLASH_ERR_BUSY if there's currently another pending external flash operation
  */
 uint32_t ext_flash_read(unsigned int address, uint8_t* rx, unsigned int numBytes);

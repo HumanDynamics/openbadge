@@ -67,6 +67,7 @@
 #include "collector.h"
 #include "sender.h"
 #include "analog.h"
+#include "scanner.h"
 
 
 
@@ -75,16 +76,23 @@ typedef enum storer_mode_t
     STORER_IDLE,        // storer inactive; nothing to store
     STORER_STORE,       // waiting to store data (BLE must be disabled first, then data must be written to flash)
     STORER_ADVANCE,     // advancing to next from/to chunks, possibly erasing a new page
+    STORER_STORE_EXT,
+    STORER_STORE_EXT_WAIT,
+    STORER_ADVANCE_EXT,
+    STORER_ADVANCE_EXT_WAIT,
     STORER_INIT         // performing various initialization tasks
 } storer_mode_t;
 
 
+// Struct for keeping track of storing mic data to RAM
 struct
 {
     int from;      // which chunk in RAM buffer we're currently storing from
     int to;        // which chunk in flash we're currently storing to
-    int loc;        // next word index in chunk word buffer to be transferred to flash
-} store;          // Struct for keeping track of storing mic data to RAM
+    
+    int extFrom;   // which chunk in scanner RAM buffer we're currently storing from
+    int extTo;     // which chunk in external FLASH/EEPROM we're currently storing to
+} store;          
 
 
 void storer_init();

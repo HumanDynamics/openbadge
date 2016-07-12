@@ -117,6 +117,7 @@ uint32_t ext_flash_global_unprotect()
     uint8_t txBuf[2] = {WRITESREG_OPCODE,   0x00};          //Write to status register
     extFlashState = EXT_FLASH_COMMAND;
     spi_master_send_recv(SPI_MASTER_0,txBuf,sizeof(txBuf),dummyRxBuf,0);
+    while(spi_busy());
     return EXT_FLASH_SUCCESS;
 }
 
