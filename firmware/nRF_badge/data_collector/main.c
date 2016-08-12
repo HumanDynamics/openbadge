@@ -52,7 +52,7 @@
 #include "analog.h"     //analog inputs, battery reading
 #include "rtc_timing.h"  //support millis(), micros(), countdown timer interrupts
 #include "ble_setup.h"  //stuff relating to BLE initialization/configuration
-#include "external_flash.h"  //for interfacing to external SPI flash
+//#include "external_flash.h"  //for interfacing to external SPI flash
 #include "scanner.h"       //for performing scans and storing scan data
 #include "self_test.h"   // for built-in tests
 #include "collector.h"  // for collecting data from mic
@@ -456,7 +456,7 @@ void BLEonReceive(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)
 {
     if(length > 0)
     {
-        pendingCommand = unpackCommand(p_data);
+        pendingCommand = unpackCommand(p_data, length);
     }
     sleep = false;
     

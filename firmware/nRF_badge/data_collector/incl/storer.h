@@ -15,6 +15,8 @@
 
 #include "nrf_soc.h"
 
+#include "ext_eeprom.h"
+
 
 
 
@@ -60,14 +62,14 @@
 
 
 #define MODERN_TIME 1434240000UL  // Unix time in the recent past (sometime June 2015), used to check for reasonable timestamps
-#define FUTURE_TIME 2524608000UL  // Unix time somewhere around 2050, used to check for reasonable timestamps
+#define FUTURE_TIME 1893456000UL  // Unix time somewhere around 2030, used to check for reasonable timestamps
 
 #define CHECK_STORED 0x2UL        // Used to mark a RAM chunk once it's been stored to FLASH (to avoid having 2 identical copies)
 
 #include "collector.h"
-#include "sender.h"
 #include "analog.h"
 #include "scanner.h"
+#include "sender.h"
 
 
 
@@ -79,7 +81,7 @@ typedef enum storer_mode_t
     STORER_STORE_EXT,
     STORER_STORE_EXT_WAIT,
     STORER_ADVANCE_EXT,
-    STORER_ADVANCE_EXT_WAIT,
+    //STORER_ADVANCE_EXT_WAIT,
     STORER_INIT         // performing various initialization tasks
 } storer_mode_t;
 

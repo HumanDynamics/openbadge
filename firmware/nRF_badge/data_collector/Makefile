@@ -94,7 +94,7 @@ incl/analog.c \
 incl/rtc_timing.c \
 incl/ble_setup.c \
 incl/debug_log.c \
-incl/external_flash.c \
+incl/ext_eeprom.c \
 incl/collector.c \
 incl/storer.c \
 incl/sender.c \

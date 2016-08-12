@@ -4,7 +4,7 @@
 static ble_gap_sec_params_t             m_sec_params;                               /**< Security requirements for this application. */
 static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;    /**< Handle of the current connection. */
 
-static ble_bas_t                        m_bas;      //Struct for Battery Service module
+//static ble_bas_t                        m_bas;      //Struct for Battery Service module
 static ble_nus_t                        m_nus;      //Struct for Nordic UART Service module
 
 volatile bool isConnected = false;
@@ -61,6 +61,7 @@ static void services_init(void)
     BLE_ERROR_CHECK(err_code);
     
     
+    /*
     ble_bas_init_t bas_init;           //Battery service  (part of BLE standard)
     memset(&bas_init,0,sizeof(bas_init));
 
@@ -71,6 +72,7 @@ static void services_init(void)
 
     err_code = ble_bas_init(&m_bas, &bas_init);
     BLE_ERROR_CHECK(err_code);
+    */
     
 }
 
@@ -226,7 +228,7 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
         ble_advertising_on_ble_evt(p_ble_evt);
     }
     
-    ble_bas_on_ble_evt(&m_bas, p_ble_evt);
+    //ble_bas_on_ble_evt(&m_bas, p_ble_evt);
     ble_nus_on_ble_evt(&m_nus, p_ble_evt);
 }
 
@@ -329,20 +331,23 @@ void updateAdvData()
 
 void setAdvData()
 {
-    custom_adv_data_t custom_data_array;
-    custom_data_array.battery = getBatteryVoltage();
-    custom_data_array.synced = dateReceived;
-    custom_data_array.collecting = isCollecting;
-    custom_data_array.group = badgeGroup;
-    custom_data_array.ID = badgeID;
+
+    int scaledBatteryLevel = (int)(100.0*getBatteryVoltage()) - 100;
+    customAdvData.battery = (scaledBatteryLevel <= 255) ? scaledBatteryLevel : 255;  // clip scaled level
+    customAdvData.statusFlags = 0;
+    customAdvData.statusFlags |= (dateReceived) ? 0x01 : 0x00;  // set sync status bit
+    customAdvData.statusFlags |= (isCollecting) ? 0x02 : 0x00;  // set collector status bit
+    customAdvData.statusFlags |= (scanner_enable) ? 0x04 : 0x00;  // set collector status bit
+    customAdvData.group = badgeGroup;
+    customAdvData.ID = badgeID;
+    // customAdvData.MAC is already set
     
     //debug_log("custom data size: %d\r\n",sizeof(custom_data_array));
     
     ble_advdata_manuf_data_t custom_manuf_data;
     custom_manuf_data.company_identifier = 0xFF00;  // unofficial manufacturer code
-    custom_manuf_data.data.p_data = (uint8_t*)(&custom_data_array);
-    //custom_manuf_data.data.size = sizeof(custom_data_array);
-    custom_manuf_data.data.size = CUSTOM_DATA_LEN;   // sizeof returns padded struct size, more than actual data bytes.
+    custom_manuf_data.data.p_data = (uint8_t*)(&customAdvData);
+    custom_manuf_data.data.size = CUSTOM_DATA_LEN;
     
     // Build advertising data struct to pass into @ref ble_advdata_set.
     ble_advdata_t advdata;
@@ -383,6 +388,12 @@ void BLE_init()
     badgeID = crc16_compute(MAC.addr,6,NULL);  // compute default badge ID from MAC address
     debug_log("Default ID:  %hX\r\n",badgeID);
     badgeGroup = NO_GROUP;
+    
+    // Copy MAC address into custom advertising data struct.
+    for(int i = 0; i <= 5; i++)
+    { 
+        customAdvData.MAC[i] = MAC.addr[i];
+    }
     
     //advertising_init();
     //uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);

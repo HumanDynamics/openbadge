@@ -3,8 +3,8 @@
  */
 
 
-#ifndef EXTERNAL_FLASH_H
-#define EXTERNAL_FLASH_H
+#ifndef EXT_EEPROM_H
+#define EXT_EEPROM_H
 
 
 #include <stdint.h>
@@ -36,7 +36,7 @@
 #define READ_OPCODE       0x03          // read from main memory
 
 // The following opcodes are exclusive to the ATXE flash - the M95 EEPROM will ignore them
-#define BLOCKERASE_OPCODE 0x20          // erase 4kByte block of memory
+//#define BLOCKERASE_OPCODE 0x20          // erase 4kByte block of memory
 #define READMFID_OPCODE   0x9f          // read manufacturer ID
 #define READOTP_OPCODE    0x77          // read one-time-programmable memory (includes some ID data)
 
@@ -61,6 +61,7 @@ typedef enum
     EXT_FLASH_COMMAND,              // sending a one-off command over SPI, e.g. write enable
     EXT_FLASH_READ,                 // sending a read command over SPI
     EXT_FLASH_WRITE,                // sending a write command over SPI
+    EXT_FLASH_PENDING,              // IC may be busy with a write operation
     // The following are only used in returns from ext_flash_get_state()
     //   because they require polling the state of the flash IC, which isn't done continuously
     EXT_FLASH_IC_BUSY,              // SPI is not active, but flash IC is still busy
@@ -195,7 +196,7 @@ uint32_t ext_flash_write(unsigned int address, uint8_t* tx, unsigned int numByte
 //uint32_t ext_flash_write_blocking(unsigned int address, uint8_t* tx, unsigned int numBytes);
 
 
-uint32_t ext_flash_block_erase(uint32_t address);
+//uint32_t ext_flash_block_erase(uint32_t address);
 
 /*
  *  NOT USEFUL - CAN ONLY ERASE WITHIN FIRST 64kB of MEMORY

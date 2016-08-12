@@ -107,19 +107,18 @@ void storer_init()
     
     store.to = newChunk;
     debug_log("Ready to store to chunk %d.\r\n",newChunk); 
-    debug_log("[/end storer initialization]\r\n");
     
     
-    
-    
-    /*store.extFrom = 0;
+    store.extFrom = 0;
     
     // We need to find the most recent stored chunk, to start storing after it
     
     scan_header_t header;
     scan_tail_t tail;
     
-    scanStore.chunk = EXT_FIRST_DATA_CHUNK;
+    ext_flash_wait();
+    
+    store.extTo = EXT_FIRST_DATA_CHUNK;
     unsigned long lastStoredTimestamp = 0;
     for(int i = EXT_FIRST_DATA_CHUNK; i <= EXT_LAST_CHUNK; i++)
     {
@@ -130,25 +129,24 @@ void storer_init()
         ext_flash_wait();
         
         // Print all written chunks
-        / *if(header.timestamp != 0xFFFFFFFFUL)
+        /*if(header.timestamp != 0xFFFFFFFFUL)
         {
             debug_log("CH: %d,TS: %X\r\n",i,(int)header.timestamp);
             nrf_delay_ms(2);
-        } * /
+        } */
         
         // is it a completely stored scan result chunk?
-        if(header.timestamp < FUTURE_TIME && header.timestamp > MODERN_TIME)
+        if(header.timestamp > MODERN_TIME && header.timestamp < FUTURE_TIME)
         {
-            if(header.timestamp == tail.check || tail.check == CHECK_TRUNC || tail
-            // is it the first of a multi-chunk scan result?
-            if(header.type == EXT_COMPLETE_CHUNK || header.type == EXT_INCOMPLETE_CHUNK)
+            if(tail.check == header.timestamp || tail.check == CHECK_TRUNC || tail.check == CHECK_CONTINUE)
             {
-                if(header.timestamp >= lastStoredTimestamp)  // is it the most recent one found yet?
+            // is it the first of a multi-chunk scan result?
+                if(header.timestamp >= lastStoredTimestamp && tail.check != CHECK_CONTINUE)  // is it the most recent one found yet?
                 {
                     lastStoredTimestamp = header.timestamp;
                 }
             }
-            store.extTo = i;  // even if it's a continued chunk, we want to store after it.
+            store.extTo = i;  // even if it's a continue chunk, we want to store after it.
         }
     }
     
@@ -157,26 +155,25 @@ void storer_init()
         debug_log("No stored scans found.\r\n");
     }
     else  {
-        debug_log("Last stored scan in chunk %d, timestamp %X.\r\n",(int)scanStore.chunk,(int)lastStoredTimestamp);
+        debug_log("Last stored scan in chunk %d, timestamp %X.\r\n",(int)store.extTo,(int)lastStoredTimestamp);
     }
     
-    / **
-     * scanStore.chunk is now the most recent completely stored scan chunk in external flash
-     *   startScan will begin storing to the next chunk
-     * /
-    */
+    store.extTo = (store.extTo < EXT_LAST_CHUNK) ? store.extTo+1 : EXT_FIRST_DATA_CHUNK;
     
-    store.extFrom = 0;
-    store.extTo = EXT_FIRST_DATA_CHUNK;
+    
+    
+    //store.extFrom = 0;
+    //store.extTo = EXT_FIRST_DATA_CHUNK;
     ext_flash_global_unprotect();
-    ext_flash_block_erase(EXT_ADDRESS_OF_CHUNK(EXT_FIRST_DATA_CHUNK));
+    //ext_flash_block_erase(EXT_ADDRESS_OF_CHUNK(EXT_FIRST_DATA_CHUNK));
     ext_flash_wait();
     
     
     
     storerMode = STORER_IDLE;
     
-    // Chunk store.to is now ready to have data stored to it.
+    
+    debug_log("[/end storer initialization]\r\n");
     
 }
 
@@ -304,7 +301,7 @@ bool updateStorer()
                     if(BLEpause(PAUSE_REQ_STORER))      // ask for pause advertising
                     {
                         debug_log("STORER: writing SCAN chunk %d to EXT chunk %d\r\n",store.extFrom,store.extTo);
-                        //printCollectorChunk(store.from);
+                        //printScanResult(&scanBuffer[store.extFrom]);
                         ext_flash_write(EXT_ADDRESS_OF_CHUNK(store.extTo),scanBuffer[store.extFrom].buf,
                                                                           sizeof(scanBuffer[store.extFrom].buf));
                         storerMode = STORER_STORE_EXT_WAIT;
@@ -315,13 +312,23 @@ bool updateStorer()
             case STORER_STORE_EXT_WAIT:
                 if(ext_flash_get_status() == EXT_FLASH_ALL_IDLE)
                 {
+                    /*scan_chunk_t readChunk;
+                    ext_flash_read(EXT_ADDRESS_OF_CHUNK(store.extTo),readChunk.buf,sizeof(readChunk.buf));
+                    while(spi_busy());
+                    printScanResult(&readChunk);*/
+                    scanBuffer[store.extFrom].check = CHECK_STORED;
                     storerMode = STORER_ADVANCE_EXT;
                 }
                 break;
                 
             case STORER_ADVANCE_EXT:
                 ;
-                unsigned char oldBlock = EXT_BLOCK_OF_CHUNK(store.extTo);          // get page of just finished chunk
+                store.extTo = (store.extTo < EXT_LAST_CHUNK) ? store.extTo+1 : EXT_FIRST_DATA_CHUNK;
+                store.extFrom = (store.extFrom < LAST_SCAN_CHUNK) ? store.extFrom+1 : 0;  // advance to next RAM chunk
+                storerMode = STORER_IDLE;
+                
+                // Unneccessary below - eeprom does not need to be erased before write
+                /*unsigned char oldBlock = EXT_BLOCK_OF_CHUNK(store.extTo);          // get page of just finished chunk
                 int newExtChunk = (store.extTo < EXT_LAST_CHUNK) ? store.extTo+1 : EXT_FIRST_DATA_CHUNK;     // advance to next chunk
                 unsigned char newBlock = EXT_BLOCK_OF_CHUNK(newExtChunk);          // get page of next chunk
                 if(oldBlock != newBlock)  // Did we advance to a new page?
@@ -343,16 +350,17 @@ bool updateStorer()
                     store.extTo = newExtChunk;
                     store.extFrom = (store.extFrom < LAST_SCAN_CHUNK) ? store.extFrom+1 : 0;  // advance to next RAM chunk
                     storerMode = STORER_IDLE;         // If we don't need to erase, we can just go straight to idle mode
-                }
+                }*/
             
                 break;
             
+            /*
             case STORER_ADVANCE_EXT_WAIT:
                 if(ext_flash_get_status() == EXT_FLASH_ALL_IDLE)
                 {
                     storerMode = STORER_IDLE;
                 }
-                break;
+                break;*/
                 
             default:
                 break;

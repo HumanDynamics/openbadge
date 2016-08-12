@@ -1,4 +1,4 @@
-#include "external_flash.h"
+#include "ext_eeprom.h"
 
 
 
@@ -220,7 +220,7 @@ uint32_t ext_flash_write(unsigned int address, uint8_t* txRaw, unsigned int numB
 }
 
 
-uint32_t ext_flash_block_erase(uint32_t address)
+/*uint32_t ext_flash_block_erase(uint32_t address)
 {
     if(extFlashState != EXT_FLASH_SPI_IDLE)  {
         return EXT_FLASH_ERR_BUSY;
@@ -232,7 +232,7 @@ uint32_t ext_flash_block_erase(uint32_t address)
     extFlashState = EXT_FLASH_COMMAND;
     spi_master_send_recv(SPI_MASTER_0,txBuf,sizeof(txBuf),dummyRxBuf,0);
     return EXT_FLASH_SUCCESS;
-}
+}*/
 
 
 bool testExternalFlash(void)
@@ -245,13 +245,14 @@ bool testExternalFlash(void)
     }
     ext_flash_wait(); // wait for unlock to finish
 
+/*
     // erase the first data block
     stat = ext_flash_block_erase(0);
     if (stat != EXT_FLASH_SUCCESS) {
         return false;
     }
 
-    ext_flash_wait(); // wait for erase to finish
+    ext_flash_wait(); // wait for erase to finish*/
 
     // write to the first block and test the result  
     unsigned char value[8] = {0,0,0,0,1,2,3,4};  // includes padding bytes

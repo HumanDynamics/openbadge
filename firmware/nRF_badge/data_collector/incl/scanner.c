@@ -73,12 +73,15 @@ void scanner_init()
     */
     
     
+    
     scan_params.active = 0;  //passive scanning, only looking for advertising packets
     scan_params.selective = 0;  //non-selective, don't use whitelist
     scan_params.p_whitelist = NULL;  //no whitelist
     scan_params.interval = (SCAN_INTERVAL * 1000) / 625;   //scan_params uses interval in units of 0.625ms
     scan_params.window = (SCAN_WINDOW * 1000) / 625;       //window also in units of 0.625ms
     scan_params.timeout = SCAN_TIMEOUT;                     //timeout is in s
+    
+    scanPeriod_ms = 1000UL * SCAN_PERIOD;
     
     //scan_state = SCAN_IDLE;
     
@@ -276,10 +279,10 @@ bool updateScanner()
             if(scanner_enable)  // don't re-start scans if scanning is disabled
             {
                 
-                if(millis() - lastScanTime >= SCAN_PERIOD)  // start scanning if it's time to scan
+                if(millis() - lastScanTime >= scanPeriod_ms)  // start scanning if it's time to scan
                 {
-                    // don't start scans if BLE is connected, paused, or waiting to pause
-                    if(BLEgetStatus() == BLE_ADVERTISING && BLEpauseReqPending() == false)
+                    // don't start scans if BLE is inactive (paused)
+                    if(BLEgetStatus() != BLE_INACTIVE)
                     {
                         uint32_t result = startScan();
                         if(result == NRF_SUCCESS)
@@ -315,7 +318,7 @@ bool updateScanner()
             int numSaved = 0;
             int chunksUsed = 0;
             
-            while(numSaved < scan.num)
+            do
             {
                 // Fill chunk header
                 scanBuffer[scan.to].timestamp = scan.timestamp;
@@ -353,10 +356,11 @@ bool updateScanner()
                 {
                     scanBuffer[scan.to].check = CHECK_CONTINUE;
                 }
+                debug_log("--num: %d\r\n",scanBuffer[scan.to].num);
                 
                 chunksUsed++;
                 scan.to = (scan.to < LAST_SCAN_CHUNK) ? scan.to+1 : 0;
-            }
+            } while(numSaved < scan.num);
             
             debug_log("SCANNER: Done saving results.  used %d chunks.\r\n",chunksUsed);
             
@@ -452,28 +456,71 @@ bool updateScanner()
 }
 
 
+void startScanner(unsigned short window_ms,unsigned short interval_ms,unsigned short duration_s,unsigned short period_s)
+{
+    scan_params.interval = (interval_ms * 1000UL) / 625;   //scan_params uses interval in units of 0.625ms
+    scan_params.window = (window_ms * 1000UL) / 625;       //window also in units of 0.625ms
+    scan_params.timeout = duration_s;                     //timeout is in s
+    
+    scanPeriod_ms = 1000UL * period_s;
+    
+    scanner_enable = true;
+}
+
+void stopScanner()
+{
+    scanner_enable = false;
+}
+
+
 scan_state_t getScanState()  {
     return scan_state;
 }
 
 
-/*void printScanResult(int chunk)
+unsigned long getScanTimestamp(int chunk)
 {
-    scan_chunk_t readChunk;
-    ext_flash_read(EXT_ADDRESS_OF_CHUNK(chunk),readChunk.buf,sizeof(readChunk.buf));
+    ext_flash_wait();
+    scan_header_t header;
+    ext_flash_read(EXT_ADDRESS_OF_CHUNK(chunk),header.buf,sizeof(header.buf));
+    while(spi_busy());
+    return header.timestamp;
+}
+
+unsigned long getScanCheck(int chunk)
+{
+    ext_flash_wait();
+    scan_tail_t tail;
+    ext_flash_read(EXT_ADDRESS_OF_CHUNK_CHECK(chunk),tail.buf,sizeof(tail.buf));
+    while(spi_busy());
+    return tail.check;
+}
+
+void getScanChunk(scan_chunk_t* destPtr,int chunk)
+{
+    ext_flash_wait();
+    ext_flash_read(EXT_ADDRESS_OF_CHUNK(chunk),destPtr->buf,sizeof(destPtr->buf));
+    while(spi_busy());
+}
+
+
+void printScanResult(scan_chunk_t* srcPtr)
+{
+    //scan_chunk_t readChunk;
+    //ext_flash_read(EXT_ADDRESS_OF_CHUNK(chunk),readChunk.buf,sizeof(readChunk.buf));
     
-    debug_log("Read: TS 0x%X, T 0x%X, N %d, TC 0x%X\r\n", (unsigned int)readChunk.timestamp,
-                                                            (int)readChunk.type,
-                                                            (int)readChunk.num,
-                                                            (unsigned int)readChunk.timestamp_check 
+    debug_log("Read: TS 0x%X, N %d, C 0x%X\r\n", (unsigned int)srcPtr->timestamp,
+                                                            (int)srcPtr->num,
+                                                            (unsigned int)srcPtr->check 
                                                             );
                                                             
-    for(int i = 0; i < EXT_DEVICES_PER_CHUNK; i++)
+    for(int i = 0; i < SCAN_DEVICES_PER_CHUNK; i++)
     {
         // Print all seen devices
-        if(i < readChunk.num)
+        if(i < srcPtr->num)
         {
-            debug_log("  #%d, RSSI: %d\r\n",(int)readChunk.devices[i].ID,(signed int)readChunk.devices[i].rssi);
+            debug_log("  #%X, R: %d, c: %d\r\n",(int)srcPtr->devices[i].ID,(signed int)srcPtr->devices[i].rssi
+                                                    ,(int)srcPtr->devices[i].count);
         }
         // Prints the remaining contents of the chunk (not real data)
         //else  
@@ -482,4 +529,4 @@ scan_state_t getScanState()  {
         //}
         nrf_delay_ms(1);
     }
-}*/
+}

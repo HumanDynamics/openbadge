@@ -14,12 +14,13 @@
 
 #include "debug_log.h"          //UART debugging logger
 
-#include "ble_bas.h"  //battery service
+//#include "ble_bas.h"  //battery service
 #include "ble_nus.h"  //Nordic UART service
  
  
-#include "storer.h" 
 #include "scanner.h"
+#include "storer.h" 
+
  
 #define IS_SRVC_CHANGED_CHARACT_PRESENT 0                                           /**< Include or not the service_changed characteristic. if not enabled, the server's database cannot be changed for the lifetime of the device*/
 
@@ -68,17 +69,19 @@ typedef enum ble_status_t
 
 
 
-#define CUSTOM_DATA_LEN 9   // bytes in custom data struct to be sent in advertising payload.
+#define CUSTOM_DATA_LEN 11   // bytes in custom data struct to be sent in advertising payload.
                             //   Note that this differs from sizeof(custom_adv_data_t), which includes padding at end of struct
  
 typedef struct
 {
-    float battery;
-    unsigned char synced;
-    unsigned char collecting;
+    unsigned char battery;   // scaled so that voltage = 1 + 0.01 * battery
+    unsigned char statusFlags;
     unsigned short ID;
     unsigned char group;
+    unsigned char MAC[6];
 } custom_adv_data_t;
+
+volatile custom_adv_data_t customAdvData;
 
 volatile bool needAdvDataUpdate;
 

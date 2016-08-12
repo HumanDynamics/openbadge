@@ -19,6 +19,10 @@ static float readBattery()
     nrf_adc_configure( (nrf_adc_config_t *)&nrf_adc_config_mic);
 
     return reading * (3.6 / 1023.0); // convert value to voltage
+    
+    // Rescale reading so that voltage = 1 + 0.01 * reading
+    //reading = (reading * 100 / 284);  // ((reading * 3.6 / 1023) - 1) * 100
+    //return (unsigned char)((reading <= 255) ? reading : 255);  // clip reading to unsigned char
 }
 
 
@@ -73,7 +77,7 @@ void updateBatteryVoltage()
     //if(millis() - lastBatteryUpdate >= MIN_BATTERY_READ_INTERVAL)
     //{
         currentBatteryVoltage = readBattery();
-        debug_log("Read battery: %d.\r\n",(int)(1000.0*currentBatteryVoltage));
+        debug_log("Read battery: %dmV.\r\n",(int)(1000.0*currentBatteryVoltage));
         lastBatteryUpdate = millis();
         updateAdvData();
     //}

@@ -30,7 +30,7 @@
 //#include "internal_flash.h"     // Relating to internal flash operation
                                 //   relevant here because we cannot do BLE operations while manipulating
                                 //   internal flash
-#include "external_flash.h"     // External flash manipulation
+#include "ext_eeprom.h"     // External flash manipulation
 
 
 
@@ -41,19 +41,20 @@
 // Default scan timings
 #define SCAN_WINDOW 100     // Milliseconds of active scanning
 #define SCAN_INTERVAL 300   // Millisecond interval at which a scan window is performed  
-#define SCAN_TIMEOUT 10  // Scan duration, seconds.
+#define SCAN_TIMEOUT 5  // Scan duration, seconds.
 
-#define SCAN_PERIOD 30000UL // Scan period, ms.  A scan is started at this interval.
+#define SCAN_PERIOD 10 // Scan period, s.  A scan is started at this interval.
 
 
 /*struct {
-    int interval;
+    int interval;   // See above
     int window;
     int timeout;
     int period;
 } scanTiming;*/
 
 unsigned long lastScanTime;  // millis() time of last scan
+unsigned long scanPeriod_ms;  // scan period in ms
 
 
 // Struct for representing a device, with a MAC address and associated device ID
@@ -116,6 +117,7 @@ void printMac(unsigned char mac[6]);
 
 #define EXT_CHUNK_SIZE 128
 #define EXT_ADDRESS_OF_CHUNK(chnk) ( (uint32_t)(chnk * 128) )
+#define EXT_ADDRESS_OF_CHUNK_CHECK(chnk) ( EXT_ADDRESS_OF_CHUNK(chnk) + 124 )
 #define EXT_FIRST_CHUNK 0
 #define EXT_FIRST_DATA_CHUNK 8     // earlier chunks are for persistent device list, configuration, etc
 #define EXT_LAST_CHUNK 2047  // 524288 / 128  =  2^18 / EXT_CHUNK_SIZE = 2048 chunks total
@@ -228,7 +230,8 @@ volatile scan_state_t scan_state;
 ble_gap_scan_params_t scan_params;
 
 
-#define MAX_SCAN_RESULTS 50     // maximum number of devices that will be reported in a scan
+#define MAX_SCAN_RESULTS 28     // maximum number of devices that will be reported in a scan
+                                // ^^ temporarily capped to never be more than one chunk's worth
 #define MAX_SCAN_COUNT 127      // maximum number of RSSI readings for one device reported in a scan
 
 /*volatile struct
@@ -271,7 +274,7 @@ struct
 } scan;
 
 
-#define SCAN_BUFFER_SIZE 4
+#define SCAN_BUFFER_SIZE 10
 #define LAST_SCAN_CHUNK (SCAN_BUFFER_SIZE - 1)
 
 scan_chunk_t scanBuffer[SCAN_BUFFER_SIZE];
@@ -292,6 +295,14 @@ void scanner_init();
 uint32_t startScan();
 
 
+void startScanner(unsigned short window_ms,unsigned short interval_ms,unsigned short duration_s,unsigned short period_s);
+void stopScanner();
+
+
+unsigned long getScanTimestamp(int chunk);
+unsigned long getScanCheck(int chunk);
+void getScanChunk(scan_chunk_t* destPtr,int chunk);
+
 /**
  * Scan callback - called when another device's advertising packet is detected.
  *   Updates the scanResults array with the new RSSI reading
@@ -311,8 +322,8 @@ bool updateScanner();
 // Returns scan_state, the current status of scanning.
 scan_state_t getScanState();
 
-// Read a scan chunk from flash, and print to debug log
-void printScanResult(int chunk);
+// Print a scan chunk to debug log
+void printScanResult(scan_chunk_t* sourceChunk);
 
 
 
