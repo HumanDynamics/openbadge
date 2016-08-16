@@ -7,26 +7,24 @@ import struct
 import datetime
 import time
 
-#This class is the contents of one chunk of data
+class Expect:
+    none,status,timestamp,header,samples,scanHeader,scanDevices = range(7)
+
+#This class is the contents of one chunk of mic data
 class Chunk():
-    maxSamples = 114
-    
+    #maxSamples = 114
     def __init__(self, header, data):
         self.ts,self.fract,self.voltage,self.sampleDelay,self.numSamples = header
         self.samples = data[0:]
-    
     def setHeader(self,header):
         self.ts,self.fract,self.voltage,self.sampleDelay,self.numSamples = header
-    
     def getHeader(self):
         return (self.ts,self.fract,self.voltage,self.sampleDelay,self.numSamples)
-        
     def addData(self,data):
         self.samples.extend(data)
         if len(self.samples) > self.numSamples:
             print("too many samples received?")
             raise UserWarning("Chunk overflow")
-    
     def reset(self):
         self.ts = None
         self.fract = None
@@ -34,9 +32,36 @@ class Chunk():
         self.sampleDelay = None
         self.numSamples = None
         self.samples = []
-        
     def completed(self):
         return len(self.samples) >= self.numSamples
+
+
+class SeenDevice():
+    def __init__(self,(ID,rssi,count)):
+        self.ID = ID
+        self.rssi = rssi
+        self.count = count
+
+class Scan():
+    def __init__(self, header, devices):
+        self.ts,self.numDevices = header
+        self.devices = devices[0:]
+    def setHeader(self,header):
+        self.ts,self.numDevices = header
+    def getHeader(self):
+        return (self.ts,self.numDevices)  
+    def addDevices(self,devices):
+        self.devices.extend(devices)
+        if len(self.devices) > self.numDevices:
+            print("too many devices received?")
+            raise UserWarning("Chunk overflow")
+    def reset(self):
+        self.ts = None
+        self.numDevices = None
+        self.devices = []
+    def completed(self):
+        return len(self.devices) >= self.numDevices
+
 
 # This class handles incoming data from the badge. It will buffer the
 # data so external processes can read from it more easy. Reset will
@@ -45,14 +70,15 @@ class BadgeDelegate(DefaultDelegate):
     tempChunk = Chunk((None,None,None,None,None),[])
     #data is received as chunks, keep the chunk organization
     chunks = []
-    #to keep track of the dialogue
-    gotStatus = False
-    gotDateTime = False
-    gotHeader = False
-    numSamples = 0  # expected number of samples from current chunk
-    gotEndOfData = False #flag that indicates no more data will be sent
-    #badge states, reported from badge
+    scans = []
+    #to keep track of the dialogue - data expected to be received next from badge
+    expected = Expect.none
     
+    gotStatus = False
+    gotTimestamp = False
+    gotEndOfData = False #flag that indicates no more data will be sent
+    
+    # Parameters received from badge status report
     clockSet = False  # whether the badge's time had been set
     dataReady = False # whether there's unsent data in FLASH
     recording = False # whether the badge is collecting samples
@@ -68,36 +94,80 @@ class BadgeDelegate(DefaultDelegate):
    
     def reset(self):
         self.tempChunk = Chunk((None,None,None,None,None),[])
-        self.chunks = [] 
+        self.tempScan = Scan((None,None),[])
+        self.chunks = []
+        self.scans = []
+        
+        self.expected = Expect.none
+        
         self.gotStatus = False
+        self.gotTimestamp = False
         self.gotEndOfData = False
+        self.gotEndOfScans = False
         self.dataReady = False
-        self.gotHeader = False
+        self.clockSet = False  # whether the badge's time had been set
+        self.dataReady = False # whether there's unsent data in FLASH
+        self.recording = False # whether the badge is collecting samples
+        self.scanning = False
+        self.timestamp_sec = None # badge time in seconds
+        self.timestamp_ms = None  # fractional part of badge time
+        self.voltage = None       # badge battery voltage
+    
+        self.timestamp = None # badge time as timestamp (includes seconds+milliseconds)
         
 
     def handleNotification(self, cHandle, data):
-        if not self.gotStatus:  # whether date has been set
-            self.clockSet,self.dataReady,self.recording,self.timestamp_sec,self.timestamp_ms,self.voltage = struct.unpack('<BBBLHf',data)
+        if self.expected == Expect.status:  # whether we expect a status packet
+            self.dataReady = True
+            self.clockSet,self.scanning,self.recording,self.timestamp_sec,self.timestamp_ms,self.voltage = struct.unpack('<BBBLHf',data)
             self.gotStatus = True
-        elif not self.gotHeader:
+            self.expected = Expect.none
+        elif self.expected == Expect.timestamp:
+            self.timestamp_sec,self.timestamp_ms = struct.unpack('<LH',data)
+            self.gotTimestamp = True
+            self.expected = Expect.none
+        elif self.expected == Expect.header:
             self.tempChunk.reset()
-            self.tempChunk.setHeader(struct.unpack('<LHfHB',data)) #time, fraction time (ms), voltage, sample delay
+            self.tempChunk.setHeader(struct.unpack('<LHfHB',data)) #time, fraction time (ms), voltage, sample delay, number of samples
             if (self.tempChunk.sampleDelay == 0): # got an empty header? done
                 self.gotEndOfData = True
+                self.expected = Expect.none
                 pass
             else:
                 self.tempChunk.ts = self._longToDatetime(self.tempChunk.ts)  # fix time
                 self.tempChunk.ts = self.tempChunk.ts + datetime.timedelta(milliseconds=self.tempChunk.fract)  # add ms
-                self.gotHeader = True
-
-        else: # just data
+                self.expected = Expect.samples
+        elif self.expected == Expect.samples: # just samples
             sample_arr = struct.unpack('<%dB' % len(data),data) # Nrfuino bytes are unsigned bytes
             self.tempChunk.addData(sample_arr)
             if self.tempChunk.completed():
                 #add chunk with tempChunk's data to list
                 #print self.tempChunk.ts, self.tempChunk.samples
                 self.chunks.append(Chunk(self.tempChunk.getHeader(),self.tempChunk.samples))
-                self.gotHeader = False  #we should move on to a new chunk
+                self.expected = Expect.header  #we should move on to a new chunk
+        elif self.expected == Expect.scanHeader:
+            self.tempScan.reset()
+            self.tempScan.setHeader(struct.unpack('<LB',data)) #time, number of devices
+            #print self.tempScan.ts
+            if (self.tempScan.ts == 0): # got an empty header? done
+                self.gotEndOfScans = True
+                self.expected = Expect.none
+                pass
+            else:
+                self.tempScan.ts = self._longToDatetime(self.tempScan.ts)  # fix time
+                self.expected = Expect.scanDevices
+        elif self.expected == Expect.scanDevices: # just devices
+            raw_arr = struct.unpack('<' + (len(data)/4)*'Hbb',data)
+            tuple_arr = zip(raw_arr[0::3],raw_arr[1::3],raw_arr[2::3])
+            device_arr = [SeenDevice(params) for params in tuple_arr]
+            self.tempScan.addDevices(device_arr)
+            if self.tempScan.completed():
+                #add scan with tempScan's data to list
+                #print self.tempScan.ts, self.tempChunk.devices
+                self.scans.append(Scan(self.tempScan.getHeader(),self.tempScan.devices))
+                self.expected = Expect.scanHeader  #we should move on to a new chunk
+        else:  # not expecting any data from badge
+            print "Error: not expecting data"
 
     # reads UTC time from badge, stores is at local time (that what datetime
     # does for some reason)
@@ -128,7 +198,37 @@ class Badge(Nrf):
     def sendStatusRequest(self):
         n = datetime.datetime.utcnow()
         long_epoch_seconds, ts_fract = self._datetimeToEpoch(n)
+        self.dlg.expected = Expect.status
         return self.write('<cLH',"s",long_epoch_seconds,ts_fract)
+    
+    # sends request to start recording, with specified timeout
+    #   (if after timeout minutes badge has not seen server, it will stop recording)
+    def sendStartRecRequest(self, timeout):
+        n = datetime.datetime.utcnow()
+        long_epoch_seconds, ts_fract = self._datetimeToEpoch(n)
+        self.gotTimestamp = False
+        self.dlg.expected = Expect.timestamp
+        return self.write('<cLHH',"1",long_epoch_seconds,ts_fract,timeout)
+        
+    # sends request to stop recording
+    def sendStopRec(self):
+        return self.write('<c',"0")
+        
+    # sends request to start scan, with specified timeout and other scan parameters
+    #   (if after timeout minutes badge has not seen server, it will stop recording)
+    def sendStartScanRequest(self, timeout, window, interval, duration, period):
+        n = datetime.datetime.utcnow()
+        long_epoch_seconds, ts_fract = self._datetimeToEpoch(n)
+        self.gotTimestamp = False
+        self.dlg.expected = Expect.timestamp
+        return self.write('<cLHHHHHH',"p",long_epoch_seconds,ts_fract,timeout,window,interval,duration,period)
+        
+    # sends request to stop recording
+    def sendStopScan(self):
+        return self.write('<c',"q")
+        
+    def sendIdentifyReq(self, timeout):
+        return self.write('<cH',"i",timeout)
 
     # send request for data since given date
     # Note - given date should be in local timezone. It will
@@ -136,7 +236,14 @@ class Badge(Nrf):
     def sendDataRequest(self, lastChunkDate):
         n = self._localToUTC(lastChunkDate)
         long_epoch_seconds, ts_fract = self._datetimeToEpoch(n)
+        self.dlg.expected = Expect.header
         return self.write('<cLH',"r",long_epoch_seconds,ts_fract)
+        
+    def sendScanRequest(self, lastChunkDate):
+        n = self._localToUTC(lastChunkDate)
+        long_epoch_seconds, ts_fract = self._datetimeToEpoch(n)
+        self.dlg.expected = Expect.scanHeader
+        return self.write('<cL',"b",long_epoch_seconds)
 
     def _datetimeToEpoch(self, n):
         epoch_seconds = (n - datetime.datetime(1970,1,1)).total_seconds()

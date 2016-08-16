@@ -9,7 +9,7 @@ from bluepy import btle
 # date of the latest scan, and a list of RSSIs
 class BadgeDiscoverer:
 	def __init__(self):
-		self.DEVICE_NAME = "BADGE"
+		self.DEVICE_NAME = "HDBDG"
 		self.CLOCK_STATE_SYNC = "CLKSYN"
 		self.CLOCK_STATE_UNSYNC = "CLKUN"
 		self.DEVICE_NAME_FIELD_ID = 9
