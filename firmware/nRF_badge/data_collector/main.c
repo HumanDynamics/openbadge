@@ -222,34 +222,8 @@ int main(void)
     }*/
     
     nrf_delay_ms(1000);
-    
-    
-    /*int numDevices = sizeof(masterDeviceList)/sizeof(device_t);
-    for(int i = 0; i < numDevices; i++)
-    {
-        deviceList[i] = masterDeviceList[i];
-    }
-    
-    sortDeviceList(deviceList,numDevices);
-    printDeviceList(deviceList,numDevices);
-    
-    debug_log("\r\n\r\n");*/
-    
-    /*
-    nrf_gpio_pin_write(LED_2,LED_ON);
-    scans_init();
-    nrf_gpio_pin_write(LED_2,LED_OFF);
 
-    
-    if(nrf_gpio_pin_read(BUTTON_1) == 0)
-    {
-        for(int i = 0; i < 10; i++)
-        {
-            printScanResult(i);
-        }   
-    }*/
-
-    debug_log("Done with setup().  Entering main loop.\r\n");
+    debug_log("Done with setup.  Entering main loop.\r\n\r\n");
     
     BLEstartAdvertising();
     
@@ -417,7 +391,7 @@ int main(void)
 
 void BLEonConnect()
 {
-    debug_log("Connected.\r\n");
+    debug_log("--CONNECTED--\r\n");
     sleep = false;
 
     // for app development. disable if forgotten in prod. version
@@ -430,7 +404,7 @@ void BLEonConnect()
 
 void BLEonDisconnect()
 {
-    debug_log("Disconnected.\r\n");
+    debug_log("--DISCONNECTED--\r\n");
     sleep = false;
 
     // for app development. disable if forgotten in prod. version

@@ -27,10 +27,9 @@ server_command_params_t unpackCommand(uint8_t* pkt, unsigned char len)
     
     switch(command.cmd)
     {
-        
         case CMD_STATUS:
             debug_log("SENDER: Got STATUS request.\r\n");
-            if(len != CMD_STATUS_LEN)
+            if(len != CMD_STATUS_LEN && len != CMD_STATUS_ASSIGN_LEN)
             {
                 command.cmd = CMD_INVALID;
                 debug_log("  Bad parameters.\r\n");
@@ -38,6 +37,13 @@ server_command_params_t unpackCommand(uint8_t* pkt, unsigned char len)
             }
             memcpy(&command.timestamp,pkt+1,sizeof(unsigned long));
             memcpy(&command.ms,       pkt+5,sizeof(unsigned short));
+            if(len == CMD_STATUS_ASSIGN_LEN)
+            {
+                debug_log("  with ASSIGN request\r\n");
+                command.cmd = CMD_STATUS_ASSIGN;
+                memcpy(&command.ID,       pkt+7,sizeof(unsigned short));
+                memcpy(&command.group,    pkt+9,sizeof(unsigned char));
+            }
             break;
         case CMD_STARTREC:
             debug_log("SENDER: Got STARTREC request.\r\n");
@@ -191,7 +197,7 @@ static void setTimeFromCommand(server_command_params_t* command_p)
         msCorrection -= 1000;
         sCorrection++;
     }
-    debug_log("Setting time to %lX, %lums.\r\n",command_p->timestamp+sCorrection,command_p->ms+msCorrection);
+    debug_log("  Setting time to %lX, %lums.\r\n",command_p->timestamp+sCorrection,command_p->ms+msCorrection);
     setTimeFractional(command_p->timestamp+sCorrection,command_p->ms+msCorrection);
     if(!dateReceived)
     {
@@ -222,8 +228,8 @@ bool updateSender()
         command = pendingCommand;       // local copy, in case interrupt changes it.
         
         // ===================================================================
-        // ======== Status request - send back packet of status info. ========
-        if(command.cmd == CMD_STATUS)
+        // ======== Status request (or assign) - send back packet of status info. ========
+        if(command.cmd == CMD_STATUS || command.cmd == CMD_STATUS_ASSIGN)
         {
             // If the packet is already prepared, try sending it.
             if(send.bufContents == SENDBUF_STATUS)  // are we currently waiting to send status packet
@@ -253,6 +259,19 @@ bool updateSender()
                     
                     pendingCommand.cmd = CMD_NONE;      // we're done with that pending command
                     debug_log("SENDER: Sent status.\r\n");
+                    
+                    if(command.cmd == CMD_STATUS_ASSIGN)
+                    {
+                        if(command.ID == 0xFFFF)
+                        {
+                            command.ID = defaultID;
+                        }
+                        if(command.group == 0xFF)
+                        {
+                            command.group = 0;
+                        }
+                        //BLEsetBadgeIdentity(command.ID,command.group);
+                    }
                 }
             }
             else    // otherwise prepare status packet
@@ -373,9 +392,9 @@ bool updateSender()
                     send.source = SRC_SCAN_RAM;
                     
                     // look for potential scan chunks, in RAM first, starting right before current scanner chunk
-                    int latestScanchunk = (scan.to > 0) ? scan.to-1 : LAST_SCAN_CHUNK;
+                    int latestScanChunk = (scan.to > 0) ? scan.to-1 : LAST_SCAN_CHUNK;
                     // advance through all RAM chunks except current collecting chunk
-                    for(int c=latestScanchunk; c != scan.to; c = (c > 0) ? c-1 : LAST_SCAN_CHUNK)
+                    for(int c=latestScanChunk; c != scan.to; c = (c > 0) ? c-1 : LAST_SCAN_CHUNK)
                     {   
                         unsigned long timestamp = scanBuffer[c].timestamp;
                         unsigned long check = scanBuffer[c].check;
@@ -443,7 +462,7 @@ bool updateSender()
                 }
                 
                 unsigned char srcChar = (send.source==SRC_FLASH) ? 'F' : ((send.source==SRC_RAM)?'R':'C');
-                srcChar = (send.source==SRC_EXT) ? 'E' : srcChar;
+                srcChar = (send.source==SRC_EXT) ? 'P' : ((send.source==SRC_SCAN_RAM)?'Q':srcChar);
                 debug_log("SENDER: sending since: s:%c c:%d\r\n",srcChar,send.from);
                 
                 send.loc = SEND_LOC_HEADER;  // we'll need to send a header first
@@ -948,7 +967,7 @@ bool updateSender()
     
     if(scannerTimeout > 0)  // 0 means timeout disabled
     {
-        if((millis() - lastReceipt >= scannerTimeout))
+        if(scanner_enable && (millis() - lastReceipt >= scannerTimeout))
         {
             debug_log("SENDER: scanner timeout.  Stopping scanner...\r\n");
             stopScanner();

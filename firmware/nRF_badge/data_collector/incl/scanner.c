@@ -96,47 +96,6 @@ uint32_t startScan()
     scan.timestamp = now();
     
     return sd_ble_gap_scan_start(&scan_params);
-    
-    
-    /*memset((char*)scanResults,0,sizeof(scanResults));  //clear previous scan results
-    scanStore.resultLoc = 0;
-    scanStore.numTotal = 0;
-    scanStore.numStored = 0;
-    
-    // Move on to next chunk, and erase a new flash block if necessary
-    int oldBlock = EXT_BLOCK_OF_CHUNK(scanStore.chunk);
-    scanStore.chunk = (scanStore.chunk < EXT_LAST_CHUNK) ? scanStore.chunk+1 : EXT_FIRST_DATA_CHUNK;
-    int newBlock = EXT_BLOCK_OF_CHUNK(scanStore.chunk);
-    
-    debug_log("Scanning - to chunk %d, block %d",(int)scanStore.chunk,newBlock);
-    if(newBlock != oldBlock)
-    {
-        ext_flash_block_erase(EXT_ADDRESS_OF_CHUNK(scanStore.chunk));
-        debug_log(" (erased)");
-    }
-    debug_log("\r\n");
-    
-    
-    // Define scanning parameters
-    ble_gap_scan_params_t scan_params;
-    
-    scan_params.active = 0;  //passive scanning, only looking for advertising packets
-    scan_params.selective = 0;  //non-selective, don't use whitelist
-    scan_params.p_whitelist = NULL;  //no whitelist
-    scan_params.interval = (interval_ms * 1000) / 625;   //scan_params uses interval in units of 0.625ms
-    scan_params.window = (window_ms * 1000) / 625;       //window also in units of 0.625ms
-    scan_params.timeout = timeout_s;                     //timeout is in s
-    
-    
-    // Initiate scan
-    disableStorage();  // internal flash and BLE operations conflict
-    
-    scanStore.timestamp = now();
-    lastScanTime = millis();
-    sd_ble_gap_scan_start(&scan_params);
-    
-    scan_state = SCAN_SCANNING;*/
-    //debug_log("Scan started\r\n");
 }
     
 
@@ -231,22 +190,7 @@ void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
 }
 
 void BLEonScanTimeout()
-{
-    // Perhaps move this code to updateScans eventually?
-    /*for(int i=0; i<scan.num; i++)
-    {
-        scan.RSSIsum[i] /= scan.counts[i];
-        //scan.counts[i] = 1;
-    }
-    
-    debug_log("SCANNER: Scan results:\r\n");
-    for(int i=0; i<scan.num; i++)
-    {
-        debug_log("  saw %.4hX, rssi %hd, %d times\r\n",scan.IDs[i],(short int)scan.RSSIsum[i],
-                                                        scan.counts[i]);
-    }
-    debug_log("  ---\r\n");*/
-    
+{   
     scan_state = SCANNER_SAVE;
 
     /*#ifdef DEBUG_LOG_ENABLED
@@ -356,7 +300,7 @@ bool updateScanner()
                 {
                     scanBuffer[scan.to].check = CHECK_CONTINUE;
                 }
-                debug_log("--num: %d\r\n",scanBuffer[scan.to].num);
+                //debug_log("--num: %d\r\n",scanBuffer[scan.to].num);
                 
                 chunksUsed++;
                 scan.to = (scan.to < LAST_SCAN_CHUNK) ? scan.to+1 : 0;

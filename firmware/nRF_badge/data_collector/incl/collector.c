@@ -28,7 +28,7 @@ void collector_init()
     sampleStart = 0;
     sampleStartms = 0;
     
-    unsigned long startTime = millis();
+    /*unsigned long startTime = millis();
     int calCount = 0;
     unsigned long calTotal = 0;
     while(millis() - startTime <= 1000UL)
@@ -38,7 +38,7 @@ void collector_init()
     }
     int calVal = calTotal/calCount;
     UNUSED_VARIABLE(calVal);
-    debug_log("cal: %d\r\n",calVal);
+    debug_log("cal: %d\r\n",calVal);*/
     
     isCollecting = false;
 }
@@ -115,7 +115,7 @@ void startCollector()
     if(!isCollecting)
     {
         isCollecting = true;
-        debug_log("Collector started\r\n");
+        debug_log("  Collector started\r\n");
         updateAdvData();
     }
 }
@@ -134,7 +134,7 @@ void stopCollector()
         micBuffer[collect.to].check = CHECK_TRUNC;          // mark chunk as truncated; it's not full, but we're done writing in it
         micBuffer[collect.to].samples[SAMPLES_PER_CHUNK-1] = collect.loc;   // store the number of samples in this chunk
     
-        debug_log("Collector stopped.  Truncated RAM chunk %d.\r\n",collect.to);
+        debug_log("  Collector stopped.  Truncated RAM chunk %d.\r\n",collect.to);
     
         // Advance to next chunk in buffer (will resume collecting from a new chunk)
         collect.to = (collect.to < LAST_RAM_CHUNK) ? collect.to+1 : 0;

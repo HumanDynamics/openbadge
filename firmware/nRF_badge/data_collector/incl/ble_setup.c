@@ -123,7 +123,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
         
         case BLE_GAP_EVT_TIMEOUT:
             if(p_ble_evt->evt.gap_evt.params.timeout.src == BLE_GAP_TIMEOUT_SRC_SCAN)  {
-                debug_log("Scan ended\r\n");
+                //debug_log("Scan ended\r\n");
                 BLEonScanTimeout();
             }
             /*else  {
@@ -367,7 +367,7 @@ void setAdvData()
     }
     else
     {
-        debug_log("Updated adv. data.\r\n");
+        debug_log("  Updated adv. data.\r\n");
     }
     
 }
@@ -382,11 +382,12 @@ void BLE_init()
     
     ble_gap_addr_t MAC;
     sd_ble_gap_address_get(&MAC);
-    debug_log("MAC address: %.2X:%.2X:%.2X:%.2X:%.2X:%.2X\r\n", MAC.addr[5],MAC.addr[4],MAC.addr[3],
+    debug_log("MAC address: %.2X:%.2X:%.2X:%.2X:%.2X:%.2X", MAC.addr[5],MAC.addr[4],MAC.addr[3],
                                                                 MAC.addr[2],MAC.addr[1],MAC.addr[0]);
     
-    badgeID = crc16_compute(MAC.addr,6,NULL);  // compute default badge ID from MAC address
-    debug_log("Default ID:  %hX\r\n",badgeID);
+    defaultID = crc16_compute(MAC.addr,6,NULL);  // compute default badge ID from MAC address
+    debug_log("-->default ID: 0x%hX\r\n",defaultID);
+    badgeID = defaultID;
     badgeGroup = NO_GROUP;
     
     // Copy MAC address into custom advertising data struct.

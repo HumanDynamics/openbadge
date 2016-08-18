@@ -28,26 +28,27 @@
  * -Command/Notes-  . . . . . .  -Server Sends-  . . . . . .  -Badge Responds-  .
  *
  * CMD_STATUS                    
- *   Ask for badge status        "s" (uchar)                  clock status (uchar) - 0, clock was unset; 1, clock was set
+ *   Ask for badge status        's' (uchar)                  clock status (uchar) - 0, clock was unset; 1, clock was set
  *   and send date               timestamp (ulong)            data status (uchar) - 1 if unsent data ready (backwards-compatibility)
- *                               ms (ushort)                  recording status (uchar) - 1 if collecting samples
- *                                                            scan status (uchar) - 1 if scanning
- *                                                            timestamp (ulong) - 0 if none set
+ *   Optionally, set             ms (ushort)                  recording status (uchar) - 1 if collecting samples
+ *     badge ID and group      [ ID (ushort) ]                scan status (uchar) - 1 if scanning
+ *                             [ group (uchar) ]              timestamp (ulong) - 0 if none set
  *                                                            ms (ushort) - 0 if none set
  *                                                            battery voltage (float)
+ *   Send ID=0 to use the default ID.  Send ID=0xFFFF/group=0xFF to reset the persistent (non-volatile) assignments.
  *                    .  .  .  .  .  .  .  .
  * CMD_STARTREC
- *   Start collecting data       "1" (uchar)                  timestamp (ulong) - acknowledge time.  0 if none set.
+ *   Start collecting data       '1' (uchar)                  timestamp (ulong) - acknowledge time.  0 if none set.
  *                               timestamp (ulong)            ms (ushort)                            0 if none set.
  *                               ms (ushort)
  *                               timeout (ushort) - stop recording if didn't see server for [timeout] minutes
  *                                                  0 for no timeout
  *                    .  .  .  .  .  .  .  .
  * CMD_ENDREC
- *   Stop collecting data        "0" (uchar)                  none
+ *   Stop collecting data        '0' (uchar)                  none
  *                    .  .  .  .  .  .  .  .
  * CMD_STARTSCAN
- *   Start performing scans      "p" (uchar)                  timestamp (ulong) - acknowledge time.  0 if none set.
+ *   Start performing scans      'p' (uchar)                  timestamp (ulong) - acknowledge time.  0 if none set.
  *                               timestamp (ulong)            ms (ushort)                            0 if none set.
  *                               ms (ushort)
  *                               timeout (ushort) - stop scanning if didn't see server for [timeout] minutes
@@ -58,13 +59,13 @@
  *                               period (ushort)   - how often to perform scans, s.  0 for default.
  *                    .  .  .  .  .  .  .  .
  * CMD_ENDSCAN
- *   Stop collecting data        "q" (uchar)                  none
+ *   Stop collecting data        'q' (uchar)                  none
  *                    .  .  .  .  .  .  .  .
  * CMD_REQUNSENT ***UNIMPLEMENTED***
- *   Request all unsent data    "d" (uchar)                  Chunks of data
+ *   Request all unsent data    'd' (uchar)                  Chunks of data
  *   from FLASH.                                                Header (13bytes)
  *                                                                timestamp (ulong)
- * CMD_REQSINCE                  "r" (uchar)                      ms (ushort)
+ * CMD_REQSINCE                  'r' (uchar)                      ms (ushort)
  *   Request all data since      timestamp (ulong)                voltage (float)
  *   specified time,             ms (ushort)                      sample period in ms (ushort)
  *   sent or unsent,                                              number of samples in chunk (uchar)
@@ -75,7 +76,7 @@
  *                                                                all bytes 0
  *                    .  .  .  .  .  .  .  .
  * CMD_REQSCANS
- *   Request scan data           "b" (uchar)                  Scan results
+ *   Request scan data           'b' (uchar)                  Scan results
  *   from ext. EEPROM.           timestamp (ulong)              Header (5bytes)
  *                                                                timestamp (ulong)
  *                                                                number of devices in scan
@@ -88,7 +89,7 @@
  *                                                                all bytes 0
  *                    .  .  .  .  .  .  .  .
  * CMD_IDENTIFY
- *   Light an LED for               "i"                          none (lights LED)
+ *   Light an LED for               'i'                          none (lights LED)
  *   specified duration             timeout (ushort) - 0 to turn off LED
  *                    .  .  .  .  .  .  .  .
  */
@@ -97,21 +98,24 @@ enum SERVER_COMMANDS
 {
     CMD_NONE = 0,
     CMD_INVALID = 255,
-    CMD_STATUS = 's',       // server requests send badge status
-    CMD_STARTREC = '1',     // server requests start collecting
-    CMD_ENDREC = '0',       // server requests stop collecting
-    CMD_STARTSCAN = 'p',    // server requests start scanning
-    CMD_ENDSCAN = 'q',      // server requests stop scanning
-    CMD_REQUNSENT = 'd',    // server requests send unsent data from flash
-    CMD_REQSINCE = 'r',     // server requests send all data, flash or ram, since time X 
-    CMD_REQSCANS = 'b',
-    CMD_IDENTIFY = 'i'      // server requests light an LED for specified time
+    CMD_STATUS = 's',           // server requests send badge status
+    CMD_STARTREC = '1',         // server requests start collecting
+    CMD_ENDREC = '0',           // server requests stop collecting
+    CMD_STARTSCAN = 'p',        // server requests start scanning
+    CMD_ENDSCAN = 'q',          // server requests stop scanning
+    CMD_REQUNSENT = 'd',        // server requests send unsent data from flash
+    CMD_REQSINCE = 'r',         // server requests send all data, flash or ram, since time X 
+    CMD_REQSCANS = 'b',         // server requests send all scan results, since time X
+    CMD_IDENTIFY = 'i',         // server requests light an LED for specified time
+    
+    CMD_STATUS_ASSIGN = 'S'     // Only used internally to the badge, to distinguish status requests with optional ID/group assignment
 };
 
 enum SERVER_COMMAND_LENGTHS
 {
     CMD_NONE_LEN = 0,
     CMD_STATUS_LEN = 7,
+    CMD_STATUS_ASSIGN_LEN = 10,
     CMD_STARTREC_LEN = 9,
     CMD_ENDREC_LEN = 1,
     CMD_STARTSCAN_LEN = 17,
@@ -134,6 +138,8 @@ typedef struct
     unsigned short period;
     unsigned short window;
     unsigned short interval;
+    unsigned short ID;
+    unsigned char group;
     unsigned char cmd;      // ordered for nice packing
 } server_command_params_t;
 
