@@ -17,9 +17,12 @@ import sys
 import time
 import csv
 
+import random
+
 from functools import wraps
 import errno
 import signal
+
 
 log_file_name = 'out.log'
 scans_file_name = 'rssi_scan.txt'
@@ -107,7 +110,11 @@ def get_devices(device_file="device_macs.txt"):
 '''
 Attempts to read data from the device specified by the address. Reading is handled by gatttool.
 '''
+lastScanTimestamp = datetime.datetime.fromtimestamp(1471539036)
+
 def dialogue(addr=""):
+	global lastScanTimestamp
+
 	logger.info("Connecting to {}".format(addr))
 	retcode = 0
 	bdg = None
@@ -144,7 +151,7 @@ def dialogue(addr=""):
 			logger.info("Last chunk date: {}".format(lastChunkDate))
 
 		bdg.sendDataRequest(lastChunkDate) # ask for data
-		wait_count = 0;
+		wait_count = 0
 		while True:
 			if bdg.dlg.gotEndOfData == True:
 				break
@@ -160,8 +167,14 @@ def dialogue(addr=""):
 		# data request using the "r" command - data since time X
 		logger.info("Requesting scans...")
 
-		bdg.sendScanRequest(datetime.datetime.fromtimestamp(1470970942)) # ask for data
-		wait_count = 0;
+
+		bdg.sendScanRequest(lastScanTimestamp)
+
+		#rand = random.randint(0,300)
+		#bdg.sendScanRequest(lastScanTimestamp-datetime.timedelta(seconds=rand)) # ask for data
+		
+		
+		wait_count = 0
 		while True:
 			if bdg.dlg.gotEndOfScans == True:
 				break
@@ -193,10 +206,7 @@ def dialogue(addr=""):
 			bdg.disconnect()
 			logger.info("disconnected")
 
-			if not bdg.dlg.dataReady:
-				logger.info("No data ready")
-
-			elif bdg.dlg.chunks: 
+			if bdg.dlg.chunks: 
 				logger.info("Chunks received: {}".format(len(bdg.dlg.chunks)))
 				logger.info("saving chunks to file")
 				outfile = addr.replace(":","_") + ".scn"
@@ -224,6 +234,9 @@ def dialogue(addr=""):
 
 				logger.info("done writing")
 			
+			else:
+				logger.info("No mic data ready")
+			
 			if bdg.dlg.scans:
 				for scan in bdg.dlg.scans:
 					logger.info("SCAN: scan timestamp: {}, number: {}".format(scan.ts,scan.numDevices))
@@ -232,10 +245,10 @@ def dialogue(addr=""):
 						for dev in scan.devices:
 							deviceList += "[#{:x},{},{}]".format(dev.ID,dev.rssi,dev.count)
 						logger.info('  >  ' + deviceList)
-
+					#lastScanTimestamp = bdg.dlg.scans[-1].ts
+			
 			else:
-				logger.error("invalid data from badge")
-				retcode = -1
+				logger.info("No scans ready")
 
 	return retcode
 	
@@ -347,6 +360,7 @@ def startRec(addr=""):
 
 	return retcode
 
+'''
 def send_time(addr=""):
 	logger.info("Sending date to {}".format(addr))
 	retcode = 0
@@ -365,6 +379,7 @@ def send_time(addr=""):
 			logger.info("disconnected")
 			del bdg
 	return retcode
+'''
 
 def scan_for_devices(devices_whitelist):
 	bd = BadgeDiscoverer()
@@ -538,6 +553,32 @@ if __name__ == "__main__":
 	if args.mode == "pull":
 		logger.info('Started')
 		while True:
+		
+			whitelist_devices = get_devices()
+			scanned_devices = []
+			
+			if not args.use_whitelist:
+				logger.info("Scanning for devices...")
+				scanned_devices = scan_for_devices(whitelist_devices)
+				logger.info("Found: {} devices".format(len(scanned_devices)))
+			else:
+				logger.info("Scan is disabled. Using whitelist.")
+				scanned_devices = [{'mac':x} for x in whitelist_devices]
+
+			time.sleep(0.5) 
+			
+			if len(scanned_devices)>0:            
+				logger.info("Communicating with devices...")
+				for device in scanned_devices:
+					mac=device['mac']
+					dialogue(mac)
+					time.sleep(0.5)  # requires sleep between devices
+					mac=None
+
+			logger.info("Sleeping...")
+			time.sleep(10);
+			
+			'''
 			whitelist_devices = get_devices()
 			synced_devices = []
 			unsynced_devices = []
@@ -552,7 +593,7 @@ if __name__ == "__main__":
 				synced_devices = [{'mac':x} for x in whitelist_devices]
 
 			time.sleep(1) 
-
+			
 			if len(unsynced_devices)>0:
 				logger.info("Sending dates to unsynced devices...")
 				for device in unsynced_devices:
@@ -573,5 +614,6 @@ if __name__ == "__main__":
 
 			logger.info("Sleeping...")
 			time.sleep(10);
+			'''
 
 exit(0)
