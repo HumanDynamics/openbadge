@@ -178,6 +178,7 @@ int main(void)
     sender_init();
     scanner_init();
     
+    BLEsetBadgeAssignment(getStoredBadgeAssignment());
     advertising_init();
     
     /*#ifdef DEBUG_LOG_ENABLE
@@ -266,8 +267,27 @@ int main(void)
             while(1);
         }
     }*/
-        
     
+    /*
+    debug_log("\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n");
+    debug_log("====================================================\r\n");
+    debug_log("===== DEVELOPMENT BADGE.  DUMPS EXT FLASH ONLY. =====\r\n");
+    debug_log("  Press button to start scanning.\r\n\r\n");
+        
+    for(int i = 0; i <= EXT_LAST_CHUNK; i++)
+    {
+        scan_chunk_t scanChunk;
+        getScanChunk(&scanChunk,i);
+        for(int j=0; j<8; j++)
+        {
+            for(int k=0; k<8; k++)
+            {
+                debug_log("%.2X "dfkjngskfjngkjgndfkjgns
+            }
+        }
+    }
+    while(1);
+    */
     
     
     // Enter main loop

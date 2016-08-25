@@ -148,7 +148,7 @@ void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
             if(gotPayload)     // is there custom data, and the correct amount?
             {
                 //debug_log("Badge seen: group %d, ID %hX, rssi %d.\r\n",(int)payload.group,payload.ID,(int)rssi);
-                if(payload.group == badgeGroup)
+                if(payload.group == badgeAssignment.group)
                 {
                     bool prevSeen = false;
                     for(int i=0; i<scan.num; i++)        // check through list of already seen badges

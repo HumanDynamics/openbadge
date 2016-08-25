@@ -338,8 +338,8 @@ void setAdvData()
     customAdvData.statusFlags |= (dateReceived) ? 0x01 : 0x00;  // set sync status bit
     customAdvData.statusFlags |= (isCollecting) ? 0x02 : 0x00;  // set collector status bit
     customAdvData.statusFlags |= (scanner_enable) ? 0x04 : 0x00;  // set collector status bit
-    customAdvData.group = badgeGroup;
-    customAdvData.ID = badgeID;
+    customAdvData.group = badgeAssignment.group;
+    customAdvData.ID = badgeAssignment.ID;
     // customAdvData.MAC is already set
     
     //debug_log("custom data size: %d\r\n",sizeof(custom_data_array));
@@ -368,8 +368,23 @@ void setAdvData()
     else
     {
         debug_log("  Updated adv. data.\r\n");
+        needAdvDataUpdate = false;
     }
     
+}
+
+
+void BLEsetBadgeAssignment(badge_assignment_t assignment)
+{
+    if (assignment.ID == RESET_ID)  {
+        assignment.ID = defaultID;
+    }
+    if (assignment.group == RESET_GROUP)  {
+        assignment.group = NO_GROUP;
+    }
+    badgeAssignment = assignment;
+    debug_log("BLE: new assignment ID:0x%hX group:%d.\r\n",   badgeAssignment.ID, (int)badgeAssignment.group);
+    updateAdvData();
 }
 
 
@@ -387,8 +402,8 @@ void BLE_init()
     
     defaultID = crc16_compute(MAC.addr,6,NULL);  // compute default badge ID from MAC address
     debug_log("-->default ID: 0x%hX\r\n",defaultID);
-    badgeID = defaultID;
-    badgeGroup = NO_GROUP;
+    badgeAssignment.ID = defaultID;
+    badgeAssignment.group = NO_GROUP;
     
     // Copy MAC address into custom advertising data struct.
     for(int i = 0; i <= 5; i++)

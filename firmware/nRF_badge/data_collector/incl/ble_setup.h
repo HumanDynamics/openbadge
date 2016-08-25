@@ -17,9 +17,7 @@
 //#include "ble_bas.h"  //battery service
 #include "ble_nus.h"  //Nordic UART service
  
- 
-#include "scanner.h"
-#include "storer.h" 
+
 
  
 #define IS_SRVC_CHANGED_CHARACT_PRESENT 0                                           /**< Include or not the service_changed characteristic. if not enabled, the server's database cannot be changed for the lifetime of the device*/
@@ -42,10 +40,20 @@
 
 #define DEAD_BEEF                       0xDEADBEEF                                  /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
+
 #define NO_GROUP 0
 unsigned short defaultID;
-volatile unsigned char badgeGroup;
-volatile unsigned short badgeID;
+#define RESET_GROUP 0xff
+#define RESET_ID 0xffff
+
+typedef struct
+{
+    unsigned short ID;
+    unsigned char group;  
+} badge_assignment_t;
+
+volatile badge_assignment_t badgeAssignment;
+
 
 volatile bool isConnected;
 volatile bool isAdvertising;
@@ -85,6 +93,9 @@ volatile custom_adv_data_t customAdvData;
 
 volatile bool needAdvDataUpdate;
 
+
+#include "scanner.h"
+#include "storer.h" 
 
 
 /**
@@ -189,6 +200,11 @@ void updateAdvData();
  */
 void setAdvData();
 
+/**
+ * Updates badge assignment info (ID, group #)
+ */
+void BLEsetBadgeAssignment(badge_assignment_t assignment);
+
 
 /**
  * Initialize BLE structures
@@ -242,7 +258,6 @@ void BLEonReceive(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length);
 
 /**
  * Function for handling BLE advertising reports (from scan)
- * XXXXXXXXXXXXXXXXXXXXXXXXXParameters are 6-byte array of BLE address, and RSSI signal strength
  */
 void BLEonAdvReport(ble_gap_evt_adv_report_t* advReportPtr);
 

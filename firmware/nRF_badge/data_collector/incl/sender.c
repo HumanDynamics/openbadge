@@ -16,8 +16,7 @@ server_command_params_t unpackCommand(uint8_t* pkt, unsigned char len)
     server_command_params_t command;
     command.receiptTime = millis();
     
-    if(len == 0)
-    {
+    if (len == 0)  {
         debug_log("SENDER: Invalid server packet.\r\n");
         command.cmd = CMD_INVALID;
         return command;
@@ -25,126 +24,119 @@ server_command_params_t unpackCommand(uint8_t* pkt, unsigned char len)
     
     command.cmd = pkt[0];
     
-    switch(command.cmd)
-    {
-        case CMD_STATUS:
-            debug_log("SENDER: Got STATUS request.\r\n");
-            if(len != CMD_STATUS_LEN && len != CMD_STATUS_ASSIGN_LEN)
-            {
-                command.cmd = CMD_INVALID;
-                debug_log("  Bad parameters.\r\n");
-                break;
-            }
-            memcpy(&command.timestamp,pkt+1,sizeof(unsigned long));
-            memcpy(&command.ms,       pkt+5,sizeof(unsigned short));
-            if(len == CMD_STATUS_ASSIGN_LEN)
-            {
-                debug_log("  with ASSIGN request\r\n");
-                command.cmd = CMD_STATUS_ASSIGN;
-                memcpy(&command.ID,       pkt+7,sizeof(unsigned short));
-                memcpy(&command.group,    pkt+9,sizeof(unsigned char));
-            }
-            break;
-        case CMD_STARTREC:
-            debug_log("SENDER: Got STARTREC request.\r\n");
-            if(len != CMD_STARTREC_LEN)
-            {
-                command.cmd = CMD_INVALID;
-                debug_log("  Bad parameters.\r\n");
-                break;
-            }
-            memcpy(&command.timestamp,pkt+1,sizeof(unsigned long));     // get timestamp from packet
-            memcpy(&command.ms,       pkt+5,sizeof(unsigned short));    // get milliseconds from packet
-            memcpy(&command.timeout,  pkt+7,sizeof(unsigned short));    // get timeout from packet
-            break;
-        case CMD_ENDREC:
-            debug_log("SENDER: Got ENDREC request.\r\n");
-            if(len != CMD_ENDREC_LEN)
-            {
-                command.cmd = CMD_INVALID;
-                debug_log("  Bad parameters.\r\n");
-                break;
-            }
-            break;
-        case CMD_STARTSCAN:
-            debug_log("SENDER: Got STARTSCAN request.\r\n");
-            if(len != CMD_STARTSCAN_LEN)
-            {
-                command.cmd = CMD_INVALID;
-                debug_log("  Bad parameters.\r\n");
-                break;
-            }
-            memcpy(&command.timestamp,pkt+1,sizeof(unsigned long));     // get timestamp from packet
-            memcpy(&command.ms,       pkt+5,sizeof(unsigned short));    // get milliseconds from packet
-            memcpy(&command.timeout,  pkt+7,sizeof(unsigned short));    // get scan timeout from packet
-            memcpy(&command.window,   pkt+9,sizeof(unsigned short));    // get scan window from packet
-            memcpy(&command.interval, pkt+11,sizeof(unsigned short));    // get scan interval from packet
-            memcpy(&command.duration, pkt+13,sizeof(unsigned short));    // get scan duration from packet
-            memcpy(&command.period,   pkt+15,sizeof(unsigned short));    // get scan period from packet
-            break;
-        case CMD_ENDSCAN:
-            if(len != CMD_ENDSCAN_LEN)
-            {
-                command.cmd = CMD_INVALID;
-                debug_log("  Bad parameters.\r\n");
-                break;
-            }
-            debug_log("SENDER: Got ENDSCAN request.\r\n");
-            break;
-        case CMD_REQUNSENT:
-            debug_log("SENDER: Got REQUNSENT request.\r\n");
-            if(len != CMD_REQUNSENT_LEN)
-            {
-                command.cmd = CMD_INVALID;
-                debug_log("  Bad parameters.\r\n");
-                break;
-            }
-            break;
-        case CMD_REQSINCE:
-            debug_log("SENDER: Got REQSINCE request.\r\n");
-            if(len != CMD_REQSINCE_LEN)
-            {
-                command.cmd = CMD_INVALID;
-                debug_log("  Bad parameters.\r\n");
-                break;
-            }
-            memcpy(&command.timestamp,pkt+1,sizeof(unsigned long));
-            memcpy(&command.ms,       pkt+5,sizeof(unsigned short));
-            send.from = NO_CHUNK;
-            send.bufContents = SENDBUF_EMPTY;
-            send.loc = SEND_LOC_HEADER;
-            break;
-        case CMD_REQSCANS:
-            debug_log("SENDER: Got REQSCANS request.\r\n");
-            if(len != CMD_REQSCANS_LEN)
-            {
-                command.cmd = CMD_INVALID;
-                debug_log("  Bad parameters.\r\n");
-                break;
-            }
-            memcpy(&command.timestamp,pkt+1,sizeof(unsigned long));
-            send.from = NO_CHUNK;
-            send.bufContents = SENDBUF_EMPTY;
-            send.loc = SEND_LOC_HEADER;
-            break;
-        case CMD_IDENTIFY:
-            debug_log("SENDER: Got IDENTIFY request.\r\n");
-            if(len != CMD_IDENTIFY_LEN)
-            {
-                command.cmd = CMD_INVALID;
-                debug_log("  Bad parameters.\r\n");
-                break;
-            }
-            memcpy(&command.timeout,pkt+1,sizeof(unsigned short));
-            break;
-        default:
-            debug_log("SENDER: Got INVALID request.\r\n");
+    switch (command.cmd)  {
+    case CMD_STATUS:
+        debug_log("SENDER: Got STATUS request.\r\n");
+        if (len != CMD_STATUS_LEN && len != CMD_STATUS_ASSIGN_LEN)  {
             command.cmd = CMD_INVALID;
+            debug_log("  Bad parameters.\r\n");
             break;
+        }
+        memcpy(&command.timestamp,pkt+1,sizeof(unsigned long));
+        memcpy(&command.ms,       pkt+5,sizeof(unsigned short));
+        if (len == CMD_STATUS_ASSIGN_LEN)  {
+            debug_log("  with ASSIGN request\r\n");
+            command.cmd = CMD_STATUS_ASSIGN;
+            memcpy(&command.ID,       pkt+7,sizeof(unsigned short));
+            memcpy(&command.group,    pkt+9,sizeof(unsigned char));
+        }
+        break;
+    case CMD_STARTREC:
+        debug_log("SENDER: Got STARTREC request.\r\n");
+        if (len != CMD_STARTREC_LEN)  {
+            command.cmd = CMD_INVALID;
+            debug_log("  Bad parameters.\r\n");
+            break;
+        }
+        memcpy(&command.timestamp,pkt+1,sizeof(unsigned long));     // get timestamp from packet
+        memcpy(&command.ms,       pkt+5,sizeof(unsigned short));    // get milliseconds from packet
+        memcpy(&command.timeout,  pkt+7,sizeof(unsigned short));    // get timeout from packet
+        break;
+    case CMD_ENDREC:
+        debug_log("SENDER: Got ENDREC request.\r\n");
+        if (len != CMD_ENDREC_LEN)  {
+            command.cmd = CMD_INVALID;
+            debug_log("  Bad parameters.\r\n");
+            break;
+        }
+        break;
+    case CMD_STARTSCAN:
+        debug_log("SENDER: Got STARTSCAN request.\r\n");
+        if (len != CMD_STARTSCAN_LEN)  {
+            command.cmd = CMD_INVALID;
+            debug_log("  Bad parameters.\r\n");
+            break;
+        }
+        memcpy(&command.timestamp,pkt+1,sizeof(unsigned long));     // get timestamp from packet
+        memcpy(&command.ms,       pkt+5,sizeof(unsigned short));    // get milliseconds from packet
+        memcpy(&command.timeout,  pkt+7,sizeof(unsigned short));    // get scan timeout from packet
+        memcpy(&command.window,   pkt+9,sizeof(unsigned short));    // get scan window from packet
+        memcpy(&command.interval, pkt+11,sizeof(unsigned short));    // get scan interval from packet
+        memcpy(&command.duration, pkt+13,sizeof(unsigned short));    // get scan duration from packet
+        memcpy(&command.period,   pkt+15,sizeof(unsigned short));    // get scan period from packet
+        break;
+    case CMD_ENDSCAN:
+        if (len != CMD_ENDSCAN_LEN)  {
+            command.cmd = CMD_INVALID;
+            debug_log("  Bad parameters.\r\n");
+            break;
+        }
+        debug_log("SENDER: Got ENDSCAN request.\r\n");
+        break;
+    case CMD_REQUNSENT:
+        debug_log("SENDER: Got REQUNSENT request.\r\n");
+        if (len != CMD_REQUNSENT_LEN)  {
+            command.cmd = CMD_INVALID;
+            debug_log("  Bad parameters.\r\n");
+            break;
+        }
+        break;
+    case CMD_REQSINCE:
+        debug_log("SENDER: Got REQSINCE request.\r\n");
+        if (len != CMD_REQSINCE_LEN)  {
+            command.cmd = CMD_INVALID;
+            debug_log("  Bad parameters.\r\n");
+            break;
+        }
+        memcpy(&command.timestamp,pkt+1,sizeof(unsigned long));
+        memcpy(&command.ms,       pkt+5,sizeof(unsigned short));
+        send.from = NO_CHUNK;
+        send.bufContents = SENDBUF_EMPTY;
+        send.loc = SEND_LOC_HEADER;
+        break;
+    case CMD_REQSCANS:
+        debug_log("SENDER: Got REQSCANS request.\r\n");
+        if (len != CMD_REQSCANS_LEN)  {
+            command.cmd = CMD_INVALID;
+            debug_log("  Bad parameters.\r\n");
+            break;
+        }
+        memcpy(&command.timestamp,pkt+1,sizeof(unsigned long));
+        send.from = NO_CHUNK;
+        send.bufContents = SENDBUF_EMPTY;
+        send.loc = SEND_LOC_HEADER;
+        break;
+    case CMD_IDENTIFY:
+        debug_log("SENDER: Got IDENTIFY request.\r\n");
+        if (len != CMD_IDENTIFY_LEN)  {
+            command.cmd = CMD_INVALID;
+            debug_log("  Bad parameters.\r\n");
+            break;
+        }
+        memcpy(&command.timeout,pkt+1,sizeof(unsigned short));
+        break;
+    default:
+        debug_log("SENDER: Got INVALID request.\r\n");
+        command.cmd = CMD_INVALID;
+        break;
     }
     return command;
 }
 
+static bool timestampValid(unsigned long timestamp)
+{
+    return (timestamp > MODERN_TIME && timestamp < FUTURE_TIME);
+}
 
 void sender_init()
 {
@@ -157,21 +149,17 @@ void sender_init()
     
     unsigned long earliestUnsentTime = MODERN_TIME;
     
-    for(int c = 0; c <= LAST_FLASH_CHUNK; c++)
-    {
+    for (int c = 0; c <= LAST_FLASH_CHUNK; c++){
         mic_chunk_t* chunkPtr = (mic_chunk_t*)ADDRESS_OF_CHUNK(c);
 
         unsigned long timestamp = chunkPtr->timestamp;
-        unsigned long chunkCheck = chunkPtr->check;
+        unsigned long check = chunkPtr->check;
         
         //debug_log("time: 0x%lX\r\n", timestamp);
         
-        if (timestamp != 0xffffffffUL && timestamp > MODERN_TIME)  //is the timestamp possibly valid?
-        { 
-            if (timestamp == chunkCheck && chunkCheck != 0)  //is it a completely stored, but unsent, chunk?
-            { 
-                if (timestamp < earliestUnsentTime)  //is it earlier than the earliest one sent so far?
-                { 
+        if (timestampValid(timestamp))  { 
+            if (timestamp == check && check != 0)  {  //is it a completely stored, but unsent, chunk?
+                if (timestamp < earliestUnsentTime)  {  //is it earlier than the earliest one sent so far?
                     send.firstUnsent = c; //keep track of latest stored chunk
                     earliestUnsentTime = timestamp;
                 }
@@ -192,23 +180,16 @@ static void setTimeFromCommand(server_command_params_t* command_p)
     //   There might be a delay between command receipt and command handling, so account for that.
     unsigned long msCorrection = millis() - command_p->receiptTime;
     unsigned long sCorrection = 0;
-    while(msCorrection >= 1000UL)
-    {
+    while (msCorrection >= 1000UL)  {
         msCorrection -= 1000;
         sCorrection++;
     }
     debug_log("  Setting time to %lX, %lums.\r\n",command_p->timestamp+sCorrection,command_p->ms+msCorrection);
     setTimeFractional(command_p->timestamp+sCorrection,command_p->ms+msCorrection);
-    if(!dateReceived)
-    {
+    if (!dateReceived)  {
         updateAdvData();
         dateReceived = true;
     }
-}
-
-static bool timestampValid(unsigned long timestamp)
-{
-    return (timestamp > MODERN_TIME && timestamp < FUTURE_TIME);
 }
 
 bool updateSender()
@@ -219,8 +200,7 @@ bool updateSender()
     bool senderActive = false;
     
     
-    if(pendingCommand.cmd != CMD_NONE)
-    {
+    if (pendingCommand.cmd != CMD_NONE)  {
         senderActive = true;  
         lastReceipt = millis();
         
@@ -229,53 +209,27 @@ bool updateSender()
         
         // ===================================================================
         // ======== Status request (or assign) - send back packet of status info. ========
-        if(command.cmd == CMD_STATUS || command.cmd == CMD_STATUS_ASSIGN)
-        {
+        if (command.cmd == CMD_STATUS || command.cmd == CMD_STATUS_ASSIGN)  {
             // If the packet is already prepared, try sending it.
-            if(send.bufContents == SENDBUF_STATUS)  // are we currently waiting to send status packet
-            {
-                if(BLEwrite(send.buf,send.bufSize))   // try sending packet
-                {
+            if (send.bufContents == SENDBUF_STATUS)  {
+                if (BLEwrite(send.buf,send.bufSize))  {
                     send.bufContents = SENDBUF_EMPTY;   // buffer has been sent
                     
                     setTimeFromCommand(&command);
-                    /*
-                    // Set badge internal timestamp
-                    //   There might be a delay between command receipt and command handling, so account for that.
-                    unsigned long msCorrection = millis() - command.receiptTime;
-                    unsigned long sCorrection = 0;
-                    while(msCorrection >= 1000UL)
-                    {
-                        msCorrection -= 1000;
-                        sCorrection++;
-                    }
-                    debug_log("Setting time to %lX, %lums.\r\n",command.timestamp+sCorrection,command.ms+msCorrection);
-                    setTimeFractional(command.timestamp+sCorrection,command.ms+msCorrection);
-                    if(!dateReceived)
-                    {
-                        updateAdvData();
-                        dateReceived = true;
-                    }*/
                     
                     pendingCommand.cmd = CMD_NONE;      // we're done with that pending command
                     debug_log("SENDER: Sent status.\r\n");
                     
-                    if(command.cmd == CMD_STATUS_ASSIGN)
-                    {
-                        if(command.ID == 0xFFFF)
-                        {
-                            command.ID = defaultID;
-                        }
-                        if(command.group == 0xFF)
-                        {
-                            command.group = 0;
-                        }
-                        //BLEsetBadgeIdentity(command.ID,command.group);
+                    if (command.cmd == CMD_STATUS_ASSIGN)  {
+                        badge_assignment_t cmdAssignment;
+                        cmdAssignment.ID = command.ID;
+                        cmdAssignment.group = command.group;
+                        BLEsetBadgeAssignment(cmdAssignment);
                     }
                 }
             }
-            else    // otherwise prepare status packet
-            {
+            // otherwise prepare status packet
+            else  {
                 send.buf[0] = (dateReceived) ? 1 : 0;
                 send.buf[1] = (isCollecting) ? 1 : 0;  // COLLECTING DATA
                 send.buf[2] = (scanner_enable) ? 1 : 0;  // SCANNING
@@ -283,8 +237,7 @@ bool updateSender()
                 // Reply with onboard timestamp (0 if none set)
                 unsigned long timestamp = 0;
                 unsigned short ms = 0;
-                if(dateReceived)
-                {
+                if (dateReceived)  {
                     timestamp = now();
                     ms = nowFractional();
                 }
@@ -296,22 +249,18 @@ bool updateSender()
                 
                 send.bufContents = SENDBUF_STATUS;
                 send.bufSize = SENDBUF_STATUS_SIZE;
-                
             }
         }
         
         // ==========================================
         // ========  Data-sending commands.  ========
-        else if(command.cmd == CMD_REQUNSENT || command.cmd == CMD_REQSINCE  || command.cmd == CMD_REQSCANS)
-        {
+        else if (command.cmd == CMD_REQUNSENT || command.cmd == CMD_REQSINCE  || command.cmd == CMD_REQSCANS)  {
             // --------------------------------
             // ----- initializing sending -----
             // If send.from isn't set, then we just got the request, and we need to find where to start sending from
-            if(send.from == NO_CHUNK)
-            {
+            if (send.from == NO_CHUNK)  {
                 // If request is REQSINCE, we need to find the first chunk that includes the requested timestamp.
-                if(command.cmd == CMD_REQSINCE)
-                {
+                if (command.cmd == CMD_REQSINCE)  {
                     // Walk back from most recent data till we find a chunk that includes the requested timestamp
                     
                     // if nothing else, send the in-progress chunk
@@ -321,23 +270,18 @@ bool updateSender()
                     // look for potential chunks, in RAM first, starting right before current collector chunk
                     int latestRAMchunk = (collect.to > 0) ? collect.to-1 : LAST_RAM_CHUNK;
                     // advance through all RAM chunks except current collecting chunk
-                    for(int c=latestRAMchunk; c != collect.to; c = (c > 0) ? c-1 : LAST_RAM_CHUNK)
-                    {   
+                    for (int c=latestRAMchunk; c != collect.to; c = (c > 0) ? c-1 : LAST_RAM_CHUNK)  {   
                         unsigned long timestamp = micBuffer[c].timestamp;
                         unsigned long check = micBuffer[c].check;
                         
                         // Check to see if the candidate chunk is one we should send
-                        if(check == timestamp || check == CHECK_TRUNC)      // is it a valid RAM chunk?
-                        {
-                            if(timestampValid(timestamp))   // is the timestamp valid?
-                            {
-                                if(timestamp >= command.timestamp)  // is the chunk within the requested time?
-                                {
+                        if (check == timestamp || check == CHECK_TRUNC)  {    // is it a valid RAM chunk?
+                            if (timestampValid(timestamp))  {
+                                if (timestamp >= command.timestamp)  {  // is the chunk within the requested time?
                                     send.from = c;  // potentially start sending from this chunk (need to check others still)
                                     send.source = SRC_RAM;
                                 }
-                                else      // if RAM chunk is earlier than requested time, we're done looking in RAM
-                                {
+                                else  {    // if RAM chunk is earlier than requested time, we're done looking in RAM
                                     break;
                                 }
                             }
@@ -353,40 +297,37 @@ bool updateSender()
                     // look through FLASH, from latest stored chunk (one chunk before store.to)
                     int latestFLASHchunk = (store.to > 0) ? store.to-1 : LAST_FLASH_CHUNK;
                     // advance through all FLASH chunks except current storing chunk
-                    for(int c=latestFLASHchunk; c != store.to; c = (c > 0) ? c-1 : LAST_FLASH_CHUNK)
-                    {
+                    for (int c=latestFLASHchunk; c != store.to; c = (c > 0) ? c-1 : LAST_FLASH_CHUNK)  {
                         mic_chunk_t* chunkPtr = (mic_chunk_t*)ADDRESS_OF_CHUNK(c);
                         unsigned long timestamp = chunkPtr->timestamp;
                         unsigned long check = chunkPtr->check;
                         
                         // is it a valid chunk (check == timestamp and timestamp is valid, OR check is a special value)
-                        if((check == timestamp && timestampValid(timestamp))
+                        if ((check == timestamp && timestampValid(timestamp))
                             || check == CHECK_TRUNC || check == CHECK_SENT || check == CHECK_TRUNC_SENT)
                         {
                             invalid = 0;  // reset counter of sequential invalid chunks
                             
-                            if(timestamp >= command.timestamp)  // is the chunk within the requested time?
-                            {  
+                            if (timestamp >= command.timestamp)  {  // is the chunk within the requested time?
                                 send.from = c;  // potentially start sending from this chunk (need to check others still)
                                 send.source = SRC_FLASH;
                             }
-                            else      // if RAM chunk is earlier than requested time, we're done looking in FLASH
-                            {
+                            else  {    // if RAM chunk is earlier than requested time, we're done looking in FLASH
                                 break;
                             }
                         }
                         else
                         {
                             invalid++;
-                            if(invalid > 5)     // If we have seen a few invalid chunks in a row, we should stop looking.
+                            if (invalid > 5)     // If we have seen a few invalid chunks in a row, we should stop looking.
                             {
                                 break;          // Stop looking, we've found the earliest data available.
                             }
                         }
                     } 
-                }    // if(command.cmd == CMD_REQSINCE)
+                }    // if (command.cmd == CMD_REQSINCE)
                 
-                else if(command.cmd == CMD_REQSCANS)
+                else if (command.cmd == CMD_REQSCANS)
                 {
                     send.from = SEND_FROM_END;
                     send.source = SRC_SCAN_RAM;
@@ -400,11 +341,11 @@ bool updateSender()
                         unsigned long check = scanBuffer[c].check;
                         
                         // Check to see if the candidate chunk is one we should send
-                        if(check == timestamp || check == CHECK_TRUNC || check == CHECK_CONTINUE)      // is it a valid scan chunk?
+                        if (check == timestamp || check == CHECK_TRUNC || check == CHECK_CONTINUE)      // is it a valid scan chunk?
                         {
-                            if(timestampValid(timestamp))   // is the timestamp valid?
+                            if (timestampValid(timestamp))   // is the timestamp valid?
                             {
-                                if(timestamp >= command.timestamp)  // is the chunk within the requested time?
+                                if (timestamp >= command.timestamp)  // is the chunk within the requested time?
                                 {
                                     send.from = c;  // potentially start sending from this chunk (need to check others still)
                                     send.source = SRC_SCAN_RAM;
@@ -428,11 +369,11 @@ bool updateSender()
                         unsigned long check = getScanCheck(c);
                         
                         // is it a valid chunk (check == timestamp and timestamp is valid or check is a special value)
-                        if(timestampValid(timestamp) && (check == timestamp || check == CHECK_TRUNC))
+                        if (timestampValid(timestamp) && (check == timestamp || check == CHECK_TRUNC))
                         {
                             invalid = 0;  // reset counter of sequential invalid chunks
                             
-                            if(timestamp >= command.timestamp)  // is the chunk within the requested time?
+                            if (timestamp >= command.timestamp)  // is the chunk within the requested time?
                             {  
                                 send.from = c;  // potentially start sending from this chunk (need to check others still)
                                 send.source = SRC_EXT;
@@ -445,7 +386,7 @@ bool updateSender()
                         else
                         {
                             invalid++;
-                            if(invalid > 5)     // If we have seen a few invalid chunks in a row, we should stop looking.
+                            if (invalid > 5)     // If we have seen a few invalid chunks in a row, we should stop looking.
                             {
                                 break;          // Stop looking, we've found the earliest data available.
                             }
@@ -467,7 +408,7 @@ bool updateSender()
                 
                 send.loc = SEND_LOC_HEADER;  // we'll need to send a header first
                 
-            }   // if(send.from == NO_CHUNK)
+            }   // if (send.from == NO_CHUNK)
             
             // -----------------------------
             // ----- executing sending -----
@@ -476,10 +417,10 @@ bool updateSender()
             {
                 // -- packet already prepared
                 // If a data packet is already prepared, try sending it.  Following actions depend on what was sent.
-                if(send.bufContents == SENDBUF_HEADER || send.bufContents == SENDBUF_SAMPLES || send.bufContents == SENDBUF_END
+                if (send.bufContents == SENDBUF_HEADER || send.bufContents == SENDBUF_SAMPLES || send.bufContents == SENDBUF_END
                     || send.bufContents == SENDBUF_SCANHEADER || send.bufContents == SENDBUF_SCANDEVICES)
                 {
-                    if(BLEwrite(send.buf,send.bufSize))
+                    if (BLEwrite(send.buf,send.bufSize))
                     {
                         switch(send.bufContents)
                         {
@@ -492,7 +433,7 @@ bool updateSender()
                                 send.loc += send.bufSize;  // increment loc by number of samples we just sent
                                 
                                 // If we reached the end of the chunk, we need to advance to the next chunk (if there is one ready)
-                                if(send.loc >= send.num)
+                                if (send.loc >= send.num)
                                 {
                                     debug_log("SENDER: sent s:%c c:%d n:%d\r\n",
                                                 (send.source==SRC_FLASH) ? 'F' : ((send.source==SRC_RAM)?'R':'C')
@@ -514,7 +455,7 @@ bool updateSender()
                         
                                                 // is it a valid chunk 
                                                 //   (check == timestamp and timestamp is valid, OR check is a special value)
-                                                if((check == timestamp && timestampValid(timestamp))
+                                                if ((check == timestamp && timestampValid(timestamp))
                                                     || check == CHECK_TRUNC || check == CHECK_SENT || check == CHECK_TRUNC_SENT)
                                                 {
                                                     break;  // from while(send.from != store.to)
@@ -523,7 +464,7 @@ bool updateSender()
                                             } while(send.from != store.to);    
                                             
                                             // If send.from is earlier than store.to, then we have more FLASH chunks to send.
-                                            if(send.from != store.to)
+                                            if (send.from != store.to)
                                             {
                                                 // send.from is next FLASH chunk to be sent
                                                 break;  // from switch(send.source)
@@ -546,7 +487,7 @@ bool updateSender()
                                                 
                                                 // is it a valid chunk 
                                                 //   (check == timestamp and timestamp is valid, OR check is a special value)
-                                                if((check == timestamp && timestampValid(timestamp))
+                                                if ((check == timestamp && timestampValid(timestamp))
                                                     || check == CHECK_TRUNC)
                                                 {
                                                     break;  // from switch(send.source)
@@ -556,7 +497,7 @@ bool updateSender()
                                             } while(send.from != collect.to);
                                             
                                             // If send.from hasn't wrapped around to collect.to yet, we have more RAM chunks to send
-                                            if(send.from != collect.to)
+                                            if (send.from != collect.to)
                                             {
                                                 // send.from is next RAM chunk to be sent
                                                 break;  // from switch(send.source)
@@ -566,7 +507,7 @@ bool updateSender()
                                             
                                             send.source = SRC_REALTIME;
                                             
-                                            if(collect.loc > 0)  // have any samples been collected into the real-time chunk
+                                            if (collect.loc > 0)  // have any samples been collected into the real-time chunk
                                             {
                                                 // send.from is collect.to, the real-time chunk
                                                 break;  // from switch(send.source)
@@ -584,7 +525,7 @@ bool updateSender()
                                     }   // switch(send.source)
                                     
                                     send.loc = SEND_LOC_HEADER;  // need to send header of next chunk first
-                                }  // if(send.loc >= send.num)
+                                }  // if (send.loc >= send.num)
                                 // Else we need to send another data packet in this chunk
                                 break;
                             
@@ -593,7 +534,7 @@ bool updateSender()
                                 break;
                             case SENDBUF_SCANDEVICES:
                                 send.loc += send.bufSize / sizeof(seenDevice_t);
-                                if(send.loc >= send.num)
+                                if (send.loc >= send.num)
                                 {
                                     debug_log("SENDER: sent s:%c c:%d n:%d\r\n",(send.source==SRC_EXT) ? 'P' : 'Q',
                                                                                 send.from, send.num);
@@ -613,7 +554,7 @@ bool updateSender()
                 
                                                 // is it a valid chunk 
                                                 //   (check == timestamp and timestamp is valid)
-                                                if(check == timestamp && timestampValid(timestamp))
+                                                if (check == timestamp && timestampValid(timestamp))
                                                 {
                                                     break;  // from while(send.from != store.to)
                                                 }
@@ -621,7 +562,7 @@ bool updateSender()
                                             } while(send.from != store.extTo);
                                             
                                             // If send.from is earlier than store.extTo, then we have more EXT chunks to send.
-                                            if(send.from != store.extTo)
+                                            if (send.from != store.extTo)
                                             {
                                                 // send.from is next FLASH chunk to be sent
                                                 break;  // from switch(send.source)
@@ -644,7 +585,7 @@ bool updateSender()
                                                 
                                                 // is it a valid chunk 
                                                 //   (check == timestamp and timestamp is valid, OR check is a special value)
-                                                if((check == timestamp && timestampValid(timestamp))
+                                                if ((check == timestamp && timestampValid(timestamp))
                                                     || check == CHECK_TRUNC)
                                                 {
                                                     break;  // from switch(send.source)
@@ -654,7 +595,7 @@ bool updateSender()
                                             } while(send.from != scan.to);
                                             
                                             // If send.from hasn't wrapped around to collect.to yet, we have more RAM chunks to send
-                                            if(send.from == scan.to)
+                                            if (send.from == scan.to)
                                             {
                                                 send.from = SEND_FROM_END;
                                             }
@@ -663,7 +604,7 @@ bool updateSender()
                                             break;
                                     }  // switch(send.source)
                                     send.loc = SEND_LOC_HEADER;
-                                }  // if(send.loc >= send.num)
+                                }  // if (send.loc >= send.num)
                                 
                                 break;    
                                 
@@ -678,19 +619,19 @@ bool updateSender()
                         
                         
                         send.bufContents = SENDBUF_EMPTY;
-                    }   //if(BLEwrite(send.buf,send.bufSize))
+                    }   //if (BLEwrite(send.buf,send.bufSize))
                     
-                }   // if(data packet was already prepared)
+                }   // if (data packet was already prepared)
                 
                 // -- else need to prepare packet 
                 // If the send packet buffer is empty, we need to fill it.
                 else
                 {
                     // If we sent all the data, we need to send an empty header to terminate
-                    if(send.from == SEND_FROM_END)      // terminating null header
+                    if (send.from == SEND_FROM_END)      // terminating null header
                     {
                         int headerLen;
-                        if(send.source != SRC_EXT && send.source != SRC_SCAN_RAM)
+                        if (send.source != SRC_EXT && send.source != SRC_SCAN_RAM)
                         {
                             headerLen = SENDBUF_HEADER_SIZE;
                         }
@@ -723,7 +664,7 @@ bool updateSender()
                                 scanChunkPtr = &(scanBuffer[send.from]);
                                 break;
                             case SRC_EXT:
-                                if(extChunkFrom != send.from)
+                                if (extChunkFrom != send.from)
                                 {
                                     //debug_log("SENDER: Copying ext chunk %d to RAM\r\n",send.from);
                                     //memset(&extChunk.buf,0xaa,sizeof(&extChunk.buf));
@@ -739,9 +680,9 @@ bool updateSender()
                                 break;
                         }
                         
-                        if(send.loc == SEND_LOC_HEADER)
+                        if (send.loc == SEND_LOC_HEADER)
                         {
-                            if(send.source != SRC_EXT && send.source != SRC_SCAN_RAM)  // not sending scan header
+                            if (send.source != SRC_EXT && send.source != SRC_SCAN_RAM)  // not sending scan header
                             {
                                 // Compose header
                                 memcpy(send.buf,    &(chunkPtr->timestamp),        sizeof(unsigned long));   // timestamp
@@ -750,11 +691,11 @@ bool updateSender()
                                 unsigned short period = samplePeriod;  // cast to unsigned short
                                 memcpy(send.buf+10, &period, sizeof(unsigned short));  // sample period ms
                             
-                                if(send.source == SRC_REALTIME)
+                                if (send.source == SRC_REALTIME)
                                 {
                                     send.num = collect.loc;  // all collected samples so far
                                 }
-                                else if(chunkPtr->check == CHECK_TRUNC || chunkPtr->check == CHECK_TRUNC_SENT)
+                                else if (chunkPtr->check == CHECK_TRUNC || chunkPtr->check == CHECK_TRUNC_SENT)
                                 {
                                     send.num = chunkPtr->samples[SAMPLES_PER_CHUNK-1];  // last byte of sample array is number
                                                                                                  //   of samples in truncated chunk
@@ -783,12 +724,12 @@ bool updateSender()
                         
                         else    // else we're sending data
                         {
-                            if(send.source != SRC_EXT && send.source != SRC_SCAN_RAM)  // not sending scan data
+                            if (send.source != SRC_EXT && send.source != SRC_SCAN_RAM)  // not sending scan data
                             {
                                 // compose next packet of sample data
                                 int samplesLeft = send.num - send.loc;
                                 // Must send 20 or fewer samples at a time.
-                                if(samplesLeft > SAMPLES_PER_PACKET)
+                                if (samplesLeft > SAMPLES_PER_PACKET)
                                 {
                                     send.bufSize = SAMPLES_PER_PACKET;
                                 }
@@ -803,7 +744,7 @@ bool updateSender()
                             {
                                 // compose next packet of device data
                                 int devicesLeft = send.num - send.loc;
-                                if(devicesLeft > DEVICES_PER_PACKET)
+                                if (devicesLeft > DEVICES_PER_PACKET)
                                 {
                                     send.bufSize = DEVICES_PER_PACKET;
                                 }
@@ -822,15 +763,15 @@ bool updateSender()
                 
             }
             
-        }  // else if(command.cmd == CMD_REQUNSENT || command.cmd == CMD_REQSINCE || command.cmd == CMD_REQSCANS)
+        }  // else if (command.cmd == CMD_REQUNSENT || command.cmd == CMD_REQSINCE || command.cmd == CMD_REQSCANS)
         
         
-        else if(command.cmd == CMD_STARTREC || command.cmd == CMD_STARTSCAN)
+        else if (command.cmd == CMD_STARTREC || command.cmd == CMD_STARTSCAN)
         {
             // If the packet is already prepared, try sending it.
-            if(send.bufContents == SENDBUF_TIMESTAMP)  // are we currently waiting to send status packet
+            if (send.bufContents == SENDBUF_TIMESTAMP)  // are we currently waiting to send status packet
             {
-                if(BLEwrite(send.buf,send.bufSize))   // try sending packet
+                if (BLEwrite(send.buf,send.bufSize))   // try sending packet
                 {
                     send.bufContents = SENDBUF_EMPTY;   // buffer has been sent
                     
@@ -849,13 +790,13 @@ bool updateSender()
                     debug_log("Setting time to %lX, %lums.\r\n",command.timestamp+sCorrection,command.ms+msCorrection);
                     setTimeFractional(command.timestamp+sCorrection,command.ms+msCorrection);
                     
-                    if(!dateReceived)
+                    if (!dateReceived)
                     {
                         updateAdvData();
                         dateReceived = true;
                     }*/
                     
-                    if(command.cmd == CMD_STARTREC)
+                    if (command.cmd == CMD_STARTREC)
                     {
                         // Timeout value expressed as minutes - convert to ms.
                         debug_log("SENDER: starting collector, timeout %d minutes.\r\n",(int)command.timeout);
@@ -863,7 +804,7 @@ bool updateSender()
                         startCollector();
                     }
                     
-                    else if(command.cmd == CMD_STARTSCAN)
+                    else if (command.cmd == CMD_STARTSCAN)
                     {
                         // Timeout value expressed as minutes - convert to ms.
                         debug_log("SENDER: starting scanner, timeout %d minutes.\r\n",(int)command.timeout);
@@ -889,7 +830,7 @@ bool updateSender()
             {
                 unsigned long timestamp = 0;
                 unsigned short ms = 0;
-                if(dateReceived)
+                if (dateReceived)
                 {
                     timestamp = now();
                     ms = nowFractional();
@@ -904,7 +845,7 @@ bool updateSender()
             
         }
         
-        else if(command.cmd == CMD_ENDREC)
+        else if (command.cmd == CMD_ENDREC)
         {
             debug_log("SENDER: stopping collector.\r\n");
             stopCollector();
@@ -917,16 +858,16 @@ bool updateSender()
             pendingCommand.cmd = CMD_NONE;
         }
         
-        else if(command.cmd == CMD_ENDSCAN)
+        else if (command.cmd == CMD_ENDSCAN)
         {
             debug_log("SENDER: stopping scanner.\r\n");
             stopScanner();
             pendingCommand.cmd = CMD_NONE;
         }
         
-        else if(command.cmd == CMD_IDENTIFY)
+        else if (command.cmd == CMD_IDENTIFY)
         {
-            if(command.timeout == 0)
+            if (command.timeout == 0)
             {
                 led_timeout_cancel();
                 nrf_gpio_pin_write(LED_2,0);   // clunky - sender.c doesn't see LED_OFF define
@@ -935,7 +876,7 @@ bool updateSender()
         
             else 
             {
-                if(command.timeout > 30) command.timeout = 30;  // clip to 30seconds
+                if (command.timeout > 30) command.timeout = 30;  // clip to 30seconds
                 unsigned long timeout_ms = ((unsigned long)command.timeout) * 1000UL;
                 led_timeout_set(timeout_ms);
                 nrf_gpio_pin_write(LED_2,1); // clunky - sender.c doesn't see LED_ON define
@@ -944,7 +885,7 @@ bool updateSender()
             pendingCommand.cmd = CMD_NONE;
         }
         
-        else if(command.cmd == CMD_INVALID)
+        else if (command.cmd == CMD_INVALID)
         {
             pendingCommand.cmd = CMD_NONE;
         }
@@ -952,22 +893,22 @@ bool updateSender()
         
         
         
-    }   //if(pendingCommand.cmd != CMD_NONE)
+    }   //if (pendingCommand.cmd != CMD_NONE)
     
     
     // Collector timeout.  Stop collector if server is unseen for a long time
-    if(collectorTimeout > 0)  // 0 means timeout disabled
+    if (collectorTimeout > 0)  // 0 means timeout disabled
     {
-        if(isCollecting && (millis() - lastReceipt >= collectorTimeout))
+        if (isCollecting && (millis() - lastReceipt >= collectorTimeout))
         {
             debug_log("SENDER: collector timeout.  Stopping collector...\r\n");
             stopCollector();
         }
     }
     
-    if(scannerTimeout > 0)  // 0 means timeout disabled
+    if (scannerTimeout > 0)  // 0 means timeout disabled
     {
-        if(scanner_enable && (millis() - lastReceipt >= scannerTimeout))
+        if (scanner_enable && (millis() - lastReceipt >= scannerTimeout))
         {
             debug_log("SENDER: scanner timeout.  Stopping scanner...\r\n");
             stopScanner();

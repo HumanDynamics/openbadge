@@ -15,6 +15,7 @@
 
 #include "nrf_soc.h"
 
+#include "ble_setup.h"
 #include "ext_eeprom.h"
 
 
@@ -81,7 +82,7 @@ typedef enum storer_mode_t
     STORER_STORE_EXT,
     STORER_STORE_EXT_WAIT,
     STORER_ADVANCE_EXT,
-    //STORER_ADVANCE_EXT_WAIT,
+    STORER_STORE_ASSIGNMENT,
     STORER_INIT         // performing various initialization tasks
 } storer_mode_t;
 
@@ -111,6 +112,26 @@ bool updateStorer();
 void storer_on_sys_evt(uint32_t sys_evt);
 
 void printStorerChunk(int chunk);
+
+
+#define STORED_ASSIGNMENT_MAGIC_NUMBER 0xfb
+#define STORED_ASSIGNMENT_ADDRESS 0
+
+typedef union
+{
+    struct
+    {
+        unsigned char dummy[4];     // (4byte)
+        unsigned char magicNumber;  // (1byte)
+        unsigned char group;        // (1byte)
+        unsigned short ID;          // (2byte)
+    };                          //  4+4byte total
+    unsigned char buf[8];
+} stored_assignment_t;
+
+stored_assignment_t lastStoredAssignment;
+
+badge_assignment_t getStoredBadgeAssignment();
 
 
 // Functions for dealing with flash.  Protect from invalid writes/erases.
