@@ -1,7 +1,6 @@
 #!/usr/bin/python
 from bluepy.btle import BTLEException
 from badge import Badge
-from badge_db import badgeDB
 from badge_discoverer import BadgeDiscoverer
 
 import datetime
@@ -13,7 +12,6 @@ import shlex
 import csv
 
 import signal
-
 
 log_file_name = 'server.log'
 scans_file_name = 'scan.txt'
@@ -117,7 +115,12 @@ def get_devices(device_file="device_macs.txt"):
     return devices
 
 
-lastScanTimestamp = datetime.datetime.fromtimestamp(1472326899)
+#hacky
+n = datetime.datetime.utcnow()
+epoch_seconds = (n - datetime.datetime(1970,1,1)).total_seconds()
+print("Will read data since:",epoch_seconds)
+lastScanTimestamp = datetime.datetime.fromtimestamp(epoch_seconds)
+lastAudioTimestamp = lastScanTimestamp
 
 
 def dialogue(addr=""):
@@ -148,15 +151,7 @@ def dialogue(addr=""):
 
         #  data request using the "r" command - data since time X
         logger.info("Requesting data...")
-        lastChunkDate = None
-        with badgeDB() as db:
-            lastChunkDate = db.getLastChunkDate(addr)
-
-        if lastChunkDate == None:
-            lastChunkDate = datetime.datetime.now()
-            logger.info("Cannot find saved chunks. Setting last chunk date to: {}".format(lastChunkDate))
-        else:
-            logger.info("Last chunk date: {}".format(lastChunkDate))
+        lastChunkDate = lastAudioTimestamp
 
         bdg.sendDataRequest(lastChunkDate) # ask for data
         wait_count = 0
@@ -196,7 +191,7 @@ def dialogue(addr=""):
     except TimeoutError, te:
         logger.error("TimeoutError: "+te.message)
     except Exception as e:
-        logger.error("unexpected failure, {}".format(e))
+        logger.error("unexpected failure, {}, {}".format(type(e),e))
     finally:
         if bdg:
             bdg.disconnect()
@@ -209,19 +204,13 @@ def dialogue(addr=""):
                 # store in CSV file
                 fout = open(audio_file_name, "a")
                 for chunk in bdg.dlg.chunks:
-                    logger.info("CSV: Chunk timestamp: {}, Voltage: {}, Delay: {}, Samples in chunk: {}".format(chunk.ts,chunk.voltage,chunk.sampleDelay,len(chunk.samples)))
-                    fout.write("{},{},{},{}".format(addr,chunk.ts,chunk.voltage,chunk.sampleDelay))
+                    ts_with_ms = "%0.3f" % chunk.ts
+                    logger.info("CSV: Chunk timestamp: {}, Voltage: {}, Delay: {}, Samples in chunk: {}".format(ts_with_ms,chunk.voltage,chunk.sampleDelay,len(chunk.samples)))
+                    fout.write("{},{},{},{}".format(addr,ts_with_ms,chunk.voltage,chunk.sampleDelay))
                     for sample in chunk.samples:
                         fout.write(",{}".format(sample))
                     fout.write("\n")
                 fout.close()
-
-                # store in DB
-                with badgeDB() as db:
-                    for chunk in bdg.dlg.chunks:
-                        logger.info("DB: Chunk timestamp: {}, Voltage: {}, Delay: {}, Samples in chunk: {}".format(chunk.ts,chunk.voltage,chunk.sampleDelay,len(chunk.samples)))
-                        db.insertChunk(addr,chunk.ts,chunk.voltage)
-                        db.insertSamples(addr,chunk)
                 logger.info("done writing")
 
             else:
@@ -232,14 +221,15 @@ def dialogue(addr=""):
                 logger.info("saving proximity scans to file")
                 fout = open(proximity_file_name, "a")
                 for scan in bdg.dlg.scans:
-                    logger.info("SCAN: scan timestamp: {}, number: {}".format(scan.ts,scan.numDevices))
+                    ts_with_ms = "%0.3f" % scan.ts
+                    logger.info("SCAN: scan timestamp: {}, number: {}".format(ts_with_ms,scan.numDevices))
                     if scan.devices:
                         device_list = ''
                         for dev in scan.devices:
                             device_list += "[#{:x},{},{}]".format(dev.ID, dev.rssi, dev.count)
                         logger.info('  >  ' + device_list)
 
-                        fout.write("{},{},{},{},{}\n".format(addr, scan.ts, dev.ID, dev.rssi, dev.count))
+                        fout.write("{},{},{},{},{}\n".format(addr, ts_with_ms, dev.ID, dev.rssi, dev.count))
                     #lastScanTimestamp = bdg.dlg.scans[-1].ts
                 fout.close()
             else:

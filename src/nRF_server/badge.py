@@ -1,3 +1,5 @@
+from __future__ import division
+from __future__ import print_function
 from bluepy import btle
 from bluepy.btle import UUID, Peripheral, DefaultDelegate, AssignedNumbers
 from nrf import Nrf, SimpleDelegate
@@ -5,7 +7,6 @@ from math import floor
 from dateutil import tz
 import struct
 import datetime
-import time
 
 class Expect:
     none,status,timestamp,header,samples,scanHeader,scanDevices = range(7)
@@ -115,7 +116,6 @@ class BadgeDelegate(DefaultDelegate):
 
         self.timestamp = None # badge time as timestamp (includes seconds+milliseconds)
 
-
     def handleNotification(self, cHandle, data):
         if self.expected == Expect.status:  # whether we expect a status packet
             self.dataReady = True
@@ -134,8 +134,7 @@ class BadgeDelegate(DefaultDelegate):
                 self.expected = Expect.none
                 pass
             else:
-                self.tempChunk.ts = self._longToDatetime(self.tempChunk.ts)  # fix time
-                self.tempChunk.ts = self.tempChunk.ts + datetime.timedelta(milliseconds=self.tempChunk.fract)  # add ms
+                self.tempChunk.ts += (self.tempChunk.fract/1000.0)
                 self.expected = Expect.samples
         elif self.expected == Expect.samples: # just samples
             sample_arr = struct.unpack('<%dB' % len(data),data) # Nrfuino bytes are unsigned bytes
@@ -154,10 +153,13 @@ class BadgeDelegate(DefaultDelegate):
                 self.expected = Expect.none
                 pass
             else:
-                self.tempScan.ts = self._longToDatetime(self.tempScan.ts)  # fix time
+                self.tempScan.ts += 0  # uncomment when fractions are supported(self.tempScan.fract/1000.0)
                 self.expected = Expect.scanDevices
+
         elif self.expected == Expect.scanDevices: # just devices
-            raw_arr = struct.unpack('<' + (len(data)/4)*'Hbb',data)
+            num_devices = int(len(data)/4)
+            raw_arr = struct.unpack('<' + num_devices * 'Hbb',data)
+            print(raw_arr)
             tuple_arr = zip(raw_arr[0::3],raw_arr[1::3],raw_arr[2::3])
             device_arr = [SeenDevice(params) for params in tuple_arr]
             self.tempScan.addDevices(device_arr)
@@ -167,13 +169,8 @@ class BadgeDelegate(DefaultDelegate):
                 self.scans.append(Scan(self.tempScan.getHeader(),self.tempScan.devices))
                 self.expected = Expect.scanHeader  #we should move on to a new chunk
         else:  # not expecting any data from badge
-            print "Error: not expecting data"
+            print("Error: not expecting data")
 
-    # reads UTC time from badge, stores is at local time (that what datetime
-    # does for some reason)
-    def _longToDatetime(self,n):
-        local_ts = datetime.datetime.fromtimestamp(n)
-        return local_ts
 
 class Badge(Nrf):
     dlg = None
@@ -246,6 +243,11 @@ class Badge(Nrf):
         return self.write('<cL',"b",long_epoch_seconds)
 
     def _datetimeToEpoch(self, n):
+        """
+        Converts given datetime to epoch seconds and ms
+        :param n:
+        :return:
+        """
         epoch_seconds = (n - datetime.datetime(1970,1,1)).total_seconds()
         long_epoch_seconds = long(floor(epoch_seconds))
         ts_fract = n.microsecond/1000;
@@ -258,13 +260,18 @@ class Badge(Nrf):
         localDateTimeWithTz = localDateTime.replace(tzinfo=localTz)
         return localDateTimeWithTz.astimezone(utcTz).replace(tzinfo=None)
 
+    def utc_now(self):
+        """
+        Returns
+        :return:
+        """
+        return datetime.datetime.utcnow()
+
 if __name__ == "__main__":
     import time
     import sys
     import argparse
     import datetime
-
-    print(Badge.localToUTC(datetime.datetime.now()))
 
     bdg_addr = "E1:C1:21:A2:B2:E0"
     bdg = Badge(bdg_addr)
@@ -275,7 +282,7 @@ if __name__ == "__main__":
             bdg.NrfReadWrite.write("s")  # ask for status
             bdg.waitForNotifications(1.0)  # waiting for status report
 
-        print "got status"
+        print("got status")
 
         while not bdg.dlg.gotDateTime:
             bdg.NrfReadWrite.write("t")  # ask for time

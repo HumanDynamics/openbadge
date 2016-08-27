@@ -27,24 +27,24 @@ class BadgeDiscoverer:
         scanner = btle.Scanner().withDelegate(ScanDummy())
         raw_devices = scanner.scan(scan_duration)
 
-        devices={}
-        for device in raw_devices:
+        scan_items = {}
+        for scan_item in raw_devices:
             device_name = None
-            for (sdid, desc, val) in device.getScanData():
+            for (sdid, desc, val) in scan_item.getScanData():
                 if sdid  == self.DEVICE_NAME_FIELD_ID: device_name = val
 
             if device_name == self.DEVICE_NAME:
-                rssi = device.rssi
-                mac = device.addr.upper()
+                rssi = scan_item.rssi
+                mac = scan_item.addr.upper()
                 scan_date = datetime.datetime.now()
-                adv_payload = self.unpack_broadcast_data(device.rawData)
-                if not (mac in devices):
-                    devices[mac] = {'scan_date':scan_date,'rssi':rssi,'adv_payload':adv_payload}
+                adv_payload = self.unpack_broadcast_data(scan_item.rawData)
+                if not (mac in scan_items):
+                    scan_items[mac] = {'scan_date':scan_date,'rssi':rssi,'adv_payload':adv_payload}
                 else:
-                    devices[mac]['rssi']=rssi
-                    devices[mac]['scan_date'] = scan_date
+                    scan_items[mac]['rssi']=rssi
+                    scan_items[mac]['scan_date'] = scan_date
 
-        return devices
+        return scan_items
 
     @staticmethod
     def print_bytes(data):
