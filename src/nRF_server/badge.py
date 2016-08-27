@@ -49,7 +49,7 @@ class Scan():
     def setHeader(self,header):
         self.ts,self.numDevices = header
     def getHeader(self):
-        return (self.ts,self.numDevices)  
+        return (self.ts,self.numDevices)
     def addDevices(self,devices):
         self.devices.extend(devices)
         if len(self.devices) > self.numDevices:
@@ -73,11 +73,11 @@ class BadgeDelegate(DefaultDelegate):
     scans = []
     #to keep track of the dialogue - data expected to be received next from badge
     expected = Expect.none
-    
+
     gotStatus = False
     gotTimestamp = False
     gotEndOfData = False #flag that indicates no more data will be sent
-    
+
     # Parameters received from badge status report
     clockSet = False  # whether the badge's time had been set
     dataReady = False # whether there's unsent data in FLASH
@@ -85,21 +85,21 @@ class BadgeDelegate(DefaultDelegate):
     timestamp_sec = None # badge time in seconds
     timestamp_ms = None  # fractional part of badge time
     voltage = None       # badge battery voltage
-    
+
     timestamp = None # badge time as timestamp (includes seconds+milliseconds)
 
     def __init__(self, params):
         btle.DefaultDelegate.__init__(self)
         self.reset()
-   
+
     def reset(self):
         self.tempChunk = Chunk((None,None,None,None,None),[])
         self.tempScan = Scan((None,None),[])
         self.chunks = []
         self.scans = []
-        
+
         self.expected = Expect.none
-        
+
         self.gotStatus = False
         self.gotTimestamp = False
         self.gotEndOfData = False
@@ -112,9 +112,9 @@ class BadgeDelegate(DefaultDelegate):
         self.timestamp_sec = None # badge time in seconds
         self.timestamp_ms = None  # fractional part of badge time
         self.voltage = None       # badge battery voltage
-    
+
         self.timestamp = None # badge time as timestamp (includes seconds+milliseconds)
-        
+
 
     def handleNotification(self, cHandle, data):
         if self.expected == Expect.status:  # whether we expect a status packet
@@ -200,7 +200,7 @@ class Badge(Nrf):
         long_epoch_seconds, ts_fract = self._datetimeToEpoch(n)
         self.dlg.expected = Expect.status
         return self.write('<cLH',"s",long_epoch_seconds,ts_fract)
-    
+
     # sends request to start recording, with specified timeout
     #   (if after timeout minutes badge has not seen server, it will stop recording)
     def sendStartRecRequest(self, timeout):
@@ -209,11 +209,11 @@ class Badge(Nrf):
         self.gotTimestamp = False
         self.dlg.expected = Expect.timestamp
         return self.write('<cLHH',"1",long_epoch_seconds,ts_fract,timeout)
-        
+
     # sends request to stop recording
     def sendStopRec(self):
         return self.write('<c',"0")
-        
+
     # sends request to start scan, with specified timeout and other scan parameters
     #   (if after timeout minutes badge has not seen server, it will stop recording)
     def sendStartScanRequest(self, timeout, window, interval, duration, period):
@@ -222,11 +222,11 @@ class Badge(Nrf):
         self.gotTimestamp = False
         self.dlg.expected = Expect.timestamp
         return self.write('<cLHHHHHH',"p",long_epoch_seconds,ts_fract,timeout,window,interval,duration,period)
-        
+
     # sends request to stop recording
     def sendStopScan(self):
         return self.write('<c',"q")
-        
+
     def sendIdentifyReq(self, timeout):
         return self.write('<cH',"i",timeout)
 
@@ -238,7 +238,7 @@ class Badge(Nrf):
         long_epoch_seconds, ts_fract = self._datetimeToEpoch(n)
         self.dlg.expected = Expect.header
         return self.write('<cLH',"r",long_epoch_seconds,ts_fract)
-        
+
     def sendScanRequest(self, lastChunkDate):
         n = self._localToUTC(lastChunkDate)
         long_epoch_seconds, ts_fract = self._datetimeToEpoch(n)
@@ -271,23 +271,23 @@ if __name__ == "__main__":
     time.sleep(1.0)
 
     try:
-      while not bdg.dlg.gotStatus:
+        while not bdg.dlg.gotStatus:
             bdg.NrfReadWrite.write("s")  # ask for status
             bdg.waitForNotifications(1.0)  # waiting for status report
 
-      print "got status"
+        print "got status"
 
-      while not bdg.dlg.gotDateTime:
+        while not bdg.dlg.gotDateTime:
             bdg.NrfReadWrite.write("t")  # ask for time
             bdg.waitForNotifications(1.0)
-            
-      print("Got datetime: {},{}".format(bdg.dlg.badge_sec,bdg.dlg.badge_ts))
+
+        print("Got datetime: {},{}".format(bdg.dlg.badge_sec,bdg.dlg.badge_ts))
 
     except:
-      retcode=-1
-      e = sys.exc_info()[0]
-      print("unexpected failure, {}".format(e))
+        retcode=-1
+        e = sys.exc_info()[0]
+        print("unexpected failure, {}".format(e))
 
     finally:
-      bdg.disconnect()
-      del bdg
+        bdg.disconnect()
+        del bdg
