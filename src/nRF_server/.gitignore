@@ -1,6 +1,7 @@
-*.scn
 *.py[co]
 device_macs*
 scan.txt
+badges_proximity.txt
+badges_audio.txt
 data.db
 *.log

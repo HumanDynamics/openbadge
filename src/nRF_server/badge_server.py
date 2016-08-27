@@ -17,6 +17,8 @@ import signal
 
 log_file_name = 'server.log'
 scans_file_name = 'scan.txt'
+audio_file_name = 'badges_audio.txt'
+proximity_file_name = 'badges_proximity.txt'
 
 WAIT_FOR = 1.0  # timeout for WaitForNotification calls.  Must be > samplePeriod of badge
 PULL_WAIT = 2
@@ -203,17 +205,14 @@ def dialogue(addr=""):
             if bdg.dlg.chunks:
                 logger.info("Chunks received: {}".format(len(bdg.dlg.chunks)))
                 logger.info("saving chunks to file")
-                outfile = addr.replace(":","_") + ".scn"
-                i = 0
 
                 # store in CSV file
-                fout = open(outfile, "a")
+                fout = open(audio_file_name, "a")
                 for chunk in bdg.dlg.chunks:
                     logger.info("CSV: Chunk timestamp: {}, Voltage: {}, Delay: {}, Samples in chunk: {}".format(chunk.ts,chunk.voltage,chunk.sampleDelay,len(chunk.samples)))
-                    fout.write("{},{},{}".format(chunk.ts,chunk.voltage,chunk.sampleDelay))
+                    fout.write("{},{},{},{}".format(addr,chunk.ts,chunk.voltage,chunk.sampleDelay))
                     for sample in chunk.samples:
                         fout.write(",{}".format(sample))
-
                     fout.write("\n")
                 fout.close()
 
@@ -223,26 +222,28 @@ def dialogue(addr=""):
                         logger.info("DB: Chunk timestamp: {}, Voltage: {}, Delay: {}, Samples in chunk: {}".format(chunk.ts,chunk.voltage,chunk.sampleDelay,len(chunk.samples)))
                         db.insertChunk(addr,chunk.ts,chunk.voltage)
                         db.insertSamples(addr,chunk)
-                    #for sample in chunk.samples:
-                    #	fout.write(",{}".format(sample))
-
                 logger.info("done writing")
 
             else:
                 logger.info("No mic data ready")
 
             if bdg.dlg.scans:
+                logger.info("Proximity scans received: {}".format(len(bdg.dlg.scans)))
+                logger.info("saving proximity scans to file")
+                fout = open(proximity_file_name, "a")
                 for scan in bdg.dlg.scans:
                     logger.info("SCAN: scan timestamp: {}, number: {}".format(scan.ts,scan.numDevices))
                     if scan.devices:
-                        deviceList = ''
+                        device_list = ''
                         for dev in scan.devices:
-                            deviceList += "[#{:x},{},{}]".format(dev.ID,dev.rssi,dev.count)
-                        logger.info('  >  ' + deviceList)
-                    #lastScanTimestamp = bdg.dlg.scans[-1].ts
+                            device_list += "[#{:x},{},{}]".format(dev.ID, dev.rssi, dev.count)
+                        logger.info('  >  ' + device_list)
 
+                        fout.write("{},{},{},{},{}\n".format(addr, scan.ts, dev.ID, dev.rssi, dev.count))
+                    #lastScanTimestamp = bdg.dlg.scans[-1].ts
+                fout.close()
             else:
-                logger.info("No scans ready")
+                logger.info("No proximity scans ready")
 
     return retcode
 
