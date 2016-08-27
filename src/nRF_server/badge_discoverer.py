@@ -90,15 +90,15 @@ class BadgeDiscoverer:
                     adv_payload['project_id'] = payload[4]
 
                     # Check if the 1st bit is set
-                    sync_status = adv_payload['status_flags'] & 1
+                    sync_status = 1 if adv_payload['status_flags'] & 0b1 > 0 else 0
                     adv_payload['sync_status'] = sync_status
 
                     # Check if the 2nd bit is set:
-                    audio_status = adv_payload['status_flags'] & 2
+                    audio_status = 1 if adv_payload['status_flags'] & 0b10 > 0 else 0
                     adv_payload['audio_status'] = audio_status
 
                     # Check if the 3rd bit is set:
-                    proximity_status = adv_payload['status_flags'] & 4
+                    proximity_status = 1 if adv_payload['status_flags'] & 0b100 > 0 else 0
                     adv_payload['proximity_status'] = proximity_status
 
                     mac = payload[5:5+self.MAC_LENGTH]
