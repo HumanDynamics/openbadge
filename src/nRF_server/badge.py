@@ -153,7 +153,6 @@ class BadgeDelegate(DefaultDelegate):
                 self.expected = Expect.none
                 pass
             else:
-                self.tempScan.ts += 0  # uncomment when fractions are supported(self.tempScan.fract/1000.0)
                 self.expected = Expect.scanDevices
 
         elif self.expected == Expect.scanDevices: # just devices
@@ -193,16 +192,14 @@ class Badge(Nrf):
 
     # sends status request with UTC time to the badge
     def sendStatusRequest(self):
-        n = datetime.datetime.utcnow()
-        long_epoch_seconds, ts_fract = self._datetimeToEpoch(n)
+        long_epoch_seconds, ts_fract = now_utc_epoch()
         self.dlg.expected = Expect.status
         return self.write('<cLH',"s",long_epoch_seconds,ts_fract)
 
     # sends request to start recording, with specified timeout
     #   (if after timeout minutes badge has not seen server, it will stop recording)
     def sendStartRecRequest(self, timeout):
-        n = datetime.datetime.utcnow()
-        long_epoch_seconds, ts_fract = self._datetimeToEpoch(n)
+        long_epoch_seconds, ts_fract = now_utc_epoch()
         self.gotTimestamp = False
         self.dlg.expected = Expect.timestamp
         return self.write('<cLHH',"1",long_epoch_seconds,ts_fract,timeout)
@@ -214,8 +211,7 @@ class Badge(Nrf):
     # sends request to start scan, with specified timeout and other scan parameters
     #   (if after timeout minutes badge has not seen server, it will stop recording)
     def sendStartScanRequest(self, timeout, window, interval, duration, period):
-        n = datetime.datetime.utcnow()
-        long_epoch_seconds, ts_fract = self._datetimeToEpoch(n)
+        long_epoch_seconds, ts_fract = now_utc_epoch()
         self.gotTimestamp = False
         self.dlg.expected = Expect.timestamp
         return self.write('<cLHHHHHH',"p",long_epoch_seconds,ts_fract,timeout,window,interval,duration,period)
@@ -227,45 +223,54 @@ class Badge(Nrf):
     def sendIdentifyReq(self, timeout):
         return self.write('<cH',"i",timeout)
 
-    # send request for data since given date
-    # Note - given date should be in local timezone. It will
-    # be converted to UTC before sending to the badge
-    def sendDataRequest(self, lastChunkDate):
-        n = self._localToUTC(lastChunkDate)
-        long_epoch_seconds, ts_fract = self._datetimeToEpoch(n)
+    def sendDataRequest(self, ts, ts_fract):
+        """
+        send request for data since given date
+        Note - date is given in UTC epoch
+        :param ts: last timestamp, seconds
+        :param ts_fract: last timestamp, fraction
+        :return:
+        """
         self.dlg.expected = Expect.header
-        return self.write('<cLH',"r",long_epoch_seconds,ts_fract)
+        return self.write('<cLH',"r",ts,ts_fract)
 
-    def sendScanRequest(self, lastChunkDate):
-        n = self._localToUTC(lastChunkDate)
-        long_epoch_seconds, ts_fract = self._datetimeToEpoch(n)
+    def sendScanRequest(self, ts):
+        """
+        send request for proximity data since given date
+        Note - date is given in UTC epoch
+        :param ts: last timestamp, seconds
+        :return:
+        """
         self.dlg.expected = Expect.scanHeader
-        return self.write('<cL',"b",long_epoch_seconds)
+        return self.write('<cL',"b",ts)
 
-    def _datetimeToEpoch(self, n):
-        """
-        Converts given datetime to epoch seconds and ms
-        :param n:
-        :return:
-        """
-        epoch_seconds = (n - datetime.datetime(1970,1,1)).total_seconds()
-        long_epoch_seconds = long(floor(epoch_seconds))
-        ts_fract = n.microsecond/1000;
-        return(long_epoch_seconds,ts_fract)
 
-    # converts local time to UTC
-    def _localToUTC(self, localDateTime):
-        localTz = tz.tzlocal()
-        utcTz = tz.gettz('UTC')
-        localDateTimeWithTz = localDateTime.replace(tzinfo=localTz)
-        return localDateTimeWithTz.astimezone(utcTz).replace(tzinfo=None)
+def datetime_to_epoch(d):
+    """
+    Converts given datetime to epoch seconds and ms
+    :param d: datetime
+    :return:
+    """
+    epoch_seconds = (d - datetime.datetime(1970,1,1)).total_seconds()
+    long_epoch_seconds = long(floor(epoch_seconds))
+    ts_fract = d.microsecond/1000;
+    return(long_epoch_seconds,ts_fract)
 
-    def utc_now(self):
-        """
-        Returns
-        :return:
-        """
-        return datetime.datetime.utcnow()
+
+def now_utc():
+    """
+    Returns current UTC as datetime
+    :return: datetime
+    """
+    return datetime.datetime.utcnow()
+
+
+def now_utc_epoch():
+    """
+    Returns current UTC as epoch seconds and ms
+    :return: long_epoch_seconds, ts_fract
+    """
+    return datetime_to_epoch(now_utc())
 
 if __name__ == "__main__":
     import time

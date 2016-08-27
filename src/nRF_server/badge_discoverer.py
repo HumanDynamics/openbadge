@@ -104,7 +104,6 @@ class BadgeDiscoverer:
                     mac = payload[5:5+self.MAC_LENGTH]
                     mac = list(mac)
                     mac = mac[::-1]  # reverse
-                    print(mac)
                     adv_payload['mac'] = mac
 
             # advance to next field

@@ -1,6 +1,7 @@
 #!/usr/bin/python
 from bluepy.btle import BTLEException
 from badge import Badge
+from badge import *
 from badge_discoverer import BadgeDiscoverer
 
 import datetime
@@ -116,12 +117,10 @@ def get_devices(device_file="device_macs.txt"):
 
 
 #hacky
-n = datetime.datetime.utcnow()
-epoch_seconds = (n - datetime.datetime(1970,1,1)).total_seconds()
-print("Will read data since:",epoch_seconds)
-lastScanTimestamp = datetime.datetime.fromtimestamp(epoch_seconds)
-lastAudioTimestamp = lastScanTimestamp
-
+now_ts, now_ts_fract = now_utc_epoch()
+print("Will read data since:",now_ts)
+last_proximity_ts, last_proximity_ts_fract = now_ts, now_ts_fract
+last_audio_ts, last_audio_ts_fract = now_ts, now_ts_fract
 
 def dialogue(addr=""):
     """
@@ -129,7 +128,6 @@ def dialogue(addr=""):
     :param addr:
     :return:
     """
-    global lastScanTimestamp
 
     logger.info("Connecting to {}".format(addr))
     retcode = -1
@@ -146,14 +144,13 @@ def dialogue(addr=""):
                 bdg.waitForNotifications(WAIT_FOR)  # waiting for status report
 
             logger.info("Got status")
-            logger.info("Badge datetime: {},{}, Voltage: {}".format(
+            logger.info("Badge datetime was: {},{}, Voltage: {}".format(
                 bdg.dlg.timestamp_sec, bdg.dlg.timestamp_ms, bdg.dlg.voltage))
 
         #  data request using the "r" command - data since time X
         logger.info("Requesting data...")
-        lastChunkDate = lastAudioTimestamp
 
-        bdg.sendDataRequest(lastChunkDate) # ask for data
+        bdg.sendDataRequest(last_audio_ts, last_audio_ts_fract) # ask for data
         wait_count = 0
         while True:
             if bdg.dlg.gotEndOfData == True:
@@ -168,8 +165,7 @@ def dialogue(addr=""):
 
         # data request using the "r" command - data since time X
         logger.info("Requesting scans...")
-
-        bdg.sendScanRequest(lastScanTimestamp)
+        bdg.sendScanRequest(last_proximity_ts)
         wait_count = 0
         while True:
             if bdg.dlg.gotEndOfScans == True:
@@ -264,7 +260,7 @@ def getStatus(addr=""):
             bdg.sendIdentifyReq(10)
 
             if bdg.dlg.timestamp_sec != 0:
-                logger.info("Badge datetime: {},{}".format(bdg.dlg.timestamp_sec,bdg.dlg.timestamp_ms))
+                logger.info("Badge datetime was: {},{}".format(bdg.dlg.timestamp_sec,bdg.dlg.timestamp_ms))
             else:
                 logger.info("Badge previously unsynced.")
 
@@ -309,7 +305,7 @@ def startRec(addr=""):
             logger.info("Got time ack")
 
             if bdg.dlg.timestamp_sec != 0:
-                logger.info("Badge datetime: {},{}".format(bdg.dlg.timestamp_sec,bdg.dlg.timestamp_ms))
+                logger.info("Badge datetime was: {},{}".format(bdg.dlg.timestamp_sec,bdg.dlg.timestamp_ms))
             else:
                 logger.info("Badge previously unsynced.")
 
@@ -325,7 +321,7 @@ def startRec(addr=""):
 
 
             if bdg.dlg.timestamp_sec != 0:
-                logger.info("Badge datetime: {},{}".format(bdg.dlg.timestamp_sec,bdg.dlg.timestamp_ms))
+                logger.info("Badge datetime was: {},{}".format(bdg.dlg.timestamp_sec,bdg.dlg.timestamp_ms))
             else:
                 logger.info("Badge previously unsynced.")
 
