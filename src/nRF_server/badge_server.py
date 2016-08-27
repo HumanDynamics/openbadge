@@ -24,12 +24,14 @@ import errno
 import signal
 
 
-log_file_name = 'out.log'
-scans_file_name = 'rssi_scan.txt'
+log_file_name = 'server.log'
+scans_file_name = 'scan.txt'
 
 WAIT_FOR = 1.0  # timeout for WaitForNotification calls.  Must be > samplePeriod of badge
 PULL_WAIT = 2
 SCAN_DURATION = 3 # seconds
+RECORDING_TIMEOUT = 10
+
 # create logger with 'badge_server'
 logger = logging.getLogger('badge_server')
 logger.setLevel(logging.DEBUG)
@@ -110,7 +112,7 @@ def get_devices(device_file="device_macs.txt"):
 '''
 Attempts to read data from the device specified by the address. Reading is handled by gatttool.
 '''
-lastScanTimestamp = datetime.datetime.fromtimestamp(1471539036)
+lastScanTimestamp = datetime.datetime.fromtimestamp(1472326899)
 
 def dialogue(addr=""):
 	global lastScanTimestamp
@@ -136,7 +138,6 @@ def dialogue(addr=""):
 			#	bdg.waitForNotifications(WAIT_FOR)
 
 			logger.info("Badge datetime: {},{}, Voltage: {}".format(bdg.dlg.timestamp_sec,bdg.dlg.timestamp_ms,bdg.dlg.voltage))
-
 		
 		# data request using the "r" command - data since time X
 		logger.info("Requesting data...")
@@ -166,7 +167,6 @@ def dialogue(addr=""):
 		
 		# data request using the "r" command - data since time X
 		logger.info("Requesting scans...")
-
 
 		bdg.sendScanRequest(lastScanTimestamp)
 
@@ -251,13 +251,16 @@ def dialogue(addr=""):
 				logger.info("No scans ready")
 
 	return retcode
-	
-'''
-Attempts to get status of badge specified by address. Reading is handled by gatttool.
-'''
+
 def getStatus(addr=""):
+	"""
+	Attempts to get status of badge specified by address. Reading is handled by gatttool.
+	Can be used for sync the date of the badge as well
+	:param addr:
+	:return:
+	"""
 	logger.info("Connecting to {}".format(addr))
-	retcode = 0
+	retcode = -1
 	bdg = None
 	try:
 		with timeout(seconds=5, error_message="Connect timeout"):
@@ -279,17 +282,15 @@ def getStatus(addr=""):
 			else:
 				logger.info("Badge previously unsynced.")
 
+		retcode = 0
+
 	except BTLEException, e:
-		retcode=-1
-		logger.error("failed pulling data")
+		logger.error("Bluetooth error")
 		logger.error(e.code)
 		logger.error(e.message)
 	except TimeoutError, te:
-		retcode=-1
 		logger.error("TimeoutError: "+te.message)
 	except Exception as e:
-		#retcode=-1
-		#e = sys.exc_info()[0]
 		logger.error("unexpected failure, {}".format(e))
 	finally:
 		if bdg:
@@ -297,13 +298,15 @@ def getStatus(addr=""):
 			logger.info("disconnected")
 
 	return retcode
-	
-'''
-Attempts to start badge recording.
-'''
+
 def startRec(addr=""):
+	"""
+	Requests badge to start recording
+	:param addr:
+	:return:
+	"""
 	logger.info("Connecting to {}".format(addr))
-	retcode = 0
+	retcode = -1
 	bdg = None
 	try:
 		with timeout(seconds=5, error_message="Connect timeout"):
@@ -311,14 +314,13 @@ def startRec(addr=""):
 
 		logger.info("Connected")
 
+		# Starting audio rec
 		with timeout(seconds=5, error_message="StartRec timeout (wrong firmware version?)"):
 			while not bdg.dlg.gotTimestamp:
-				bdg.sendStartRecRequest(10)  # start recording
-				#bdg.sendStartScanRequest(10,0,0,0,0)  # start recording
+				bdg.sendStartRecRequest(RECORDING_TIMEOUT)  # start recording
 				bdg.waitForNotifications(WAIT_FOR)  # waiting for time acknowledgement
 			
 			logger.info("Got time ack")
-						
 
 			if bdg.dlg.timestamp_sec != 0:
 				logger.info("Badge datetime: {},{}".format(bdg.dlg.timestamp_sec,bdg.dlg.timestamp_ms))
@@ -326,11 +328,11 @@ def startRec(addr=""):
 				logger.info("Badge previously unsynced.")
 		
 		bdg.dlg.gotTimestamp = False
-				
+
+		# Starting scans
 		with timeout(seconds=5, error_message="StartScan timeout (wrong firmware version?)"):
 			while not bdg.dlg.gotTimestamp:
-				#bdg.sendStartRecRequest(10)  # start recording
-				bdg.sendStartScanRequest(10,0,0,0,0)  # start recording
+				bdg.sendStartScanRequest(RECORDING_TIMEOUT,0,0,0,0)  # start recording
 				bdg.waitForNotifications(WAIT_FOR)  # waiting for time acknowledgement
 			
 			logger.info("Got time ack")
@@ -341,17 +343,15 @@ def startRec(addr=""):
 			else:
 				logger.info("Badge previously unsynced.")
 
+		retcode = 0
+
 	except BTLEException, e:
-		retcode=-1
-		logger.error("failed starting recording")
+		logger.error("Bluetooth error")
 		logger.error(e.code)
 		logger.error(e.message)
 	except TimeoutError, te:
-		retcode=-1
 		logger.error("TimeoutError: "+te.message)
 	except Exception as e:
-		#retcode=-1
-		#e = sys.exc_info()[0]
 		logger.error("unexpected failure, {}".format(e))
 	finally:
 		if bdg:
@@ -360,43 +360,21 @@ def startRec(addr=""):
 
 	return retcode
 
-'''
-def send_time(addr=""):
-	logger.info("Sending date to {}".format(addr))
-	retcode = 0
-	bdg = None
-	try:
-		bdg = Badge(addr)
-		logger.info("Connected")
-		bdg.sendDateTime()
-		logger.info("Sent date")
-	except BTLEException, e:
-		retcode=-1
-		logger.error("failed sending time,{},{}".format(e.code,e.message))
-	finally:
-		if bdg:
-			bdg.disconnect()
-			logger.info("disconnected")
-			del bdg
-	return retcode
-'''
-
 def scan_for_devices(devices_whitelist):
 	bd = BadgeDiscoverer()
 	try:
-		all_devices = bd.discover(scanDuration=SCAN_DURATION)
-	except: # catch *all* exceptions
-		e = sys.exc_info()[0]
-		logger.error("Scan failed: {}".format(e))
+		all_devices = bd.discover(scan_duration=SCAN_DURATION)
+	except Exception as e: # catch *all* exceptions
+		logger.error("Scan failed,{}".format(e))
 		all_devices = {}
 
 	scanned_devices = []
 	for addr,device_info in all_devices.iteritems():
 		if addr in devices_whitelist:
-			logger.debug("Found {}, added".format(addr))
+			logger.debug("Found {}, added. Device info: {}".format(addr,device_info))
 			scanned_devices.append({'mac':addr,'device_info':device_info})
 		else:
-			logger.debug("Found {}, but not on whitelist".format(addr))
+			logger.debug("Found {}, but not on whitelist. Device info: {}".format(addr,device_info))
 	return scanned_devices
 
 def reset():
@@ -410,15 +388,9 @@ def add_pull_command_options(subparsers):
 
 def add_scan_command_options(subparsers):
 	pull_parser = subparsers.add_parser('scan', help='Continuously scan for badges')
-	
+
 def add_sync_all_command_options(subparsers):
 	sa_parser = subparsers.add_parser('sync_all', help='Send date to all devices in whitelist')
-	sa_parser.add_argument('-w','--use_whitelist', action='store_true', default=False, help="Use whitelist instead of continuously scanning for badges")
-
-def add_start_all_command_options(subparsers):
-	st_parser = subparsers.add_parser('start_all', help='Start recording on all devices in whitelist')
-	st_parser.add_argument('-w','--use_whitelist', action='store_true', default=False, help="Use whitelist instead of continuously scanning for badges")
-
 
 def add_sync_device_command_options(subparsers):
 	sd_parser = subparsers.add_parser('sync_device', help='Send date to a given device')
@@ -428,7 +400,11 @@ def add_sync_device_command_options(subparsers):
 		action='store',
 		dest='device',
 		help='device to sync')
-	
+
+def add_start_all_command_options(subparsers):
+	st_parser = subparsers.add_parser('start_all', help='Start recording on all devices in whitelist')
+	st_parser.add_argument('-w','--use_whitelist', action='store_true', default=False, help="Use whitelist instead of continuously scanning for badges")
+
 if __name__ == "__main__":
 	import time
 	import sys
@@ -436,13 +412,13 @@ if __name__ == "__main__":
 
 	parser = argparse.ArgumentParser(description="Run scans, send dates, or continuously pull data")
 	parser.add_argument('-dr','--disable_reset_ble', action='store_true', default=False, help="Do not reset BLE")
-	
+
 	subparsers = parser.add_subparsers(help='Program mode (e.g. Scan, send dates, pull, scan etc.)', dest='mode')
 	add_pull_command_options(subparsers)
-	add_scan_command_options(subparsers)	
+	add_scan_command_options(subparsers)
 	add_sync_all_command_options(subparsers)
-	add_start_all_command_options(subparsers)
 	add_sync_device_command_options(subparsers)
+	add_start_all_command_options(subparsers)
 
 	args = parser.parse_args()
 
@@ -451,87 +427,19 @@ if __name__ == "__main__":
 		reset()
 		time.sleep(2)  # requires sleep after reset
 		logger.info("Done resetting BLE")
-	
+
 	if args.mode == "sync_device":
-		status = send_time(args.device)
-		if status != 0:
-			logger.error("error sending time to {}".format(args.device))
-		
-		exit(0)
+		getStatus(args.device)
 
-	if args.mode == "sync_all":  
-	    logger.info('Syncing all badges.')
-        whitelist_devices = get_devices()
-        synced_devices = []
-        unsynced_devices = []
-        if not args.use_whitelist:
-            logger.info("Scanning for devices...")
-            scanned_devices = scan_for_devices(whitelist_devices)
-            logger.info("Found: {} devices".format(len(scanned_devices)))
-            synced_devices = [x for x in scanned_devices if x['device_info']['is_sync']==True]
-            unsynced_devices = [x for x in scanned_devices if x['device_info']['is_sync']==False]
-        else:
-            logger.info("Scan is disabled. Using whitelist.")
-            synced_devices = [{'mac':x} for x in whitelist_devices]
+	if args.mode == "sync_all":
+		whitelist_devices = get_devices()
+		for addr in whitelist_devices:
+			mac=addr
+			getStatus(mac)
+			mac=None
+			time.sleep(2)  # requires sleep between devices
 
-        time.sleep(2) 
-
-        if len(unsynced_devices)>0:
-            logger.info("Sending dates to unsynced devices...")
-            for device in unsynced_devices:
-                mac=device['mac']
-                status = send_time(mac)
-                if status != 0:
-                    logger.error("error sending time to {}".format(mac))
-
-                time.sleep(2)  # requires sleep between devices
-                mac=None
-        if len(synced_devices)>0:            
-            logger.info("Communicating with synced devices...")
-            for device in synced_devices:
-                mac=device['mac']
-                getStatus(mac)
-                time.sleep(2)  # requires sleep between devices
-                mac=None
-					
-		time.sleep(2) # allow BLE time to disconnect 
-	
-	if args.mode == "start_all":  
-	    logger.info('Starting all badges recording.')
-        whitelist_devices = get_devices()
-        synced_devices = []
-        unsynced_devices = []
-        if not args.use_whitelist:
-            logger.info("Scanning for devices...")
-            scanned_devices = scan_for_devices(whitelist_devices)
-            logger.info("Found: {} devices".format(len(scanned_devices)))
-            synced_devices = [x for x in scanned_devices if x['device_info']['is_sync']==True]
-            unsynced_devices = [x for x in scanned_devices if x['device_info']['is_sync']==False]
-        else:
-            logger.info("Scan is disabled. Using whitelist.")
-            synced_devices = [{'mac':x} for x in whitelist_devices]
-
-        time.sleep(2) 
-
-        if len(unsynced_devices)>0:
-            logger.info("Sending startRec to unsynced devices...")
-            for device in unsynced_devices:
-                mac=device['mac']
-                status = send_time(mac)
-                if status != 0:
-                    logger.error("error sending time to {}".format(mac))
-
-                time.sleep(2)  # requires sleep between devices
-                mac=None
-        if len(synced_devices)>0:            
-            logger.info("Sending startRec to alldevices...")
-            for device in synced_devices:
-                mac=device['mac']
-                startRec(mac)
-                time.sleep(2)  # requires sleep between devices
-                mac=None
-					
-		time.sleep(2) # allow BLE time to disconnect 
+		time.sleep(5) # allow BLE time to disconnect
 
 	# scan for devices
 	if args.mode == "scan":
@@ -540,80 +448,49 @@ if __name__ == "__main__":
 			whitelist_devices = get_devices()
 			logger.info("Scanning for devices...")
 			scanned_devices = scan_for_devices(whitelist_devices)
-			fout = open(scans_file_name, "a")			
+			fout = open(scans_file_name, "a")
 			for device in scanned_devices:
-					mac=device['mac']
-					scan_date=device['device_info']['scan_date']
-					rssi=device['device_info']['rssi']
-					logger.debug("{},{},{:.2f}".format(scan_date,mac,rssi))
-					fout.write("{},{},{:.2f}\n".format(scan_date,mac,rssi))
+				mac=device['mac']
+				scan_date=device['device_info']['scan_date']
+				rssi=device['device_info']['rssi']
+				voltage = device['device_info']['adv_payload']['voltage']
+				logger.debug("{},{},{:.2f},{:.2f}".format(scan_date,mac,rssi,voltage))
+				fout.write("{},{},{:.2f},{:.2f}\n".format(scan_date,mac,rssi,voltage))
 			fout.close()
-		
+			time.sleep(5) # give time to Ctrl-C
+
 	# pull data from all devices
 	if args.mode == "pull":
 		logger.info('Started')
 		while True:
-		
 			whitelist_devices = get_devices()
-			scanned_devices = []
-			
 			if not args.use_whitelist:
 				logger.info("Scanning for devices...")
 				scanned_devices = scan_for_devices(whitelist_devices)
-				logger.info("Found: {} devices".format(len(scanned_devices)))
 			else:
 				logger.info("Scan is disabled. Using whitelist.")
 				scanned_devices = [{'mac':x} for x in whitelist_devices]
 
-			time.sleep(0.5) 
-			
-			if len(scanned_devices)>0:            
-				logger.info("Communicating with devices...")
-				for device in scanned_devices:
-					mac=device['mac']
-					dialogue(mac)
-					time.sleep(0.5)  # requires sleep between devices
-					mac=None
+			time.sleep(2)
+
+			for device in scanned_devices:
+				mac=device['mac']
+				dialogue(mac)
+				time.sleep(2)  # requires sleep between devices
+				mac=None
 
 			logger.info("Sleeping...")
-			time.sleep(10);
-			
-			'''
-			whitelist_devices = get_devices()
-			synced_devices = []
-			unsynced_devices = []
-			if not args.use_whitelist:
-				logger.info("Scanning for devices...")
-				scanned_devices = scan_for_devices(whitelist_devices)
-				logger.info("Found: {} devices".format(len(scanned_devices)))
-				synced_devices = [x for x in scanned_devices if x['device_info']['is_sync']==True]
-				unsynced_devices = [x for x in scanned_devices if x['device_info']['is_sync']==False]
-			else:
-				logger.info("Scan is disabled. Using whitelist.")
-				synced_devices = [{'mac':x} for x in whitelist_devices]
+			time.sleep(6);
 
-			time.sleep(1) 
-			
-			if len(unsynced_devices)>0:
-				logger.info("Sending dates to unsynced devices...")
-				for device in unsynced_devices:
-					mac=device['mac']
-					status = send_time(mac)
-					if status != 0:
-						logger.error("error sending time to {}".format(mac))
 
-					time.sleep(1)  # requires sleep between devices
-					mac=None
-			if len(synced_devices)>0:            
-				logger.info("Communicating with synced devices...")
-				for device in synced_devices:
-					mac=device['mac']
-					dialogue(mac)
-					time.sleep(1)  # requires sleep between devices
-					mac=None
-
-			logger.info("Sleeping...")
-			time.sleep(10);
-			'''
+	if args.mode == "start_all":
+		logger.info('Starting all badges recording.')
+		whitelist_devices = get_devices()
+		for addr in whitelist_devices:
+			mac=addr
+			startRec(mac)
+			mac=None
+			time.sleep(2)  # requires sleep between devices
+		time.sleep(5) # allow BLE time to disconnect
 
 exit(0)

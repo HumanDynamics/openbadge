@@ -1,0 +1,6 @@
+*.scn
+*.py[co]
+device_macs*
+scan.txt
+data.db
+*.log
