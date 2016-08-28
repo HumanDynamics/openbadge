@@ -126,14 +126,15 @@ def dialogue(addr=""):
             fout = open(proximity_file_name, "a")
             for scan in bdg.dlg.scans:
                 ts_with_ms = "%0.3f" % scan.ts
-                logger.info("SCAN: scan timestamp: {}, number: {}".format(ts_with_ms,scan.numDevices))
+                logger.info("SCAN: scan timestamp: {}, voltage: {}, number: {}".format(
+                    ts_with_ms, scan.voltage, scan.numDevices))
                 if scan.devices:
                     device_list = ''
                     for dev in scan.devices:
                         device_list += "[#{:x},{},{}]".format(dev.ID, dev.rssi, dev.count)
                     logger.info('  >  ' + device_list)
 
-                    fout.write("{},{},{},{},{}\n".format(addr, ts_with_ms, dev.ID, dev.rssi, dev.count))
+                    fout.write("{},{},{},{},{},{}\n".format(addr, scan.voltage, ts_with_ms, dev.ID, dev.rssi, dev.count))
                     #lastScanTimestamp = bdg.dlg.scans[-1].ts
             fout.close()
         else:

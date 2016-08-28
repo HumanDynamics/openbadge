@@ -93,21 +93,27 @@ class Scan():
     """
 
     def __init__(self, header, devices):
-        self.ts,self.numDevices = header
+        self.ts, self.voltage, self.numDevices = header
         self.devices = devices[0:]
+
     def setHeader(self,header):
-        self.ts,self.numDevices = header
+        self.ts, self.voltage, self.numDevices = header
+
     def getHeader(self):
-        return (self.ts,self.numDevices)
+        return (self.ts, self.voltage, self.numDevices)
+
     def addDevices(self,devices):
         self.devices.extend(devices)
         if len(self.devices) > self.numDevices:
             print("too many devices received?")
             raise UserWarning("Chunk overflow")
+
     def reset(self):
         self.ts = None
+        self.voltage = None
         self.numDevices = None
         self.devices = []
+
     def completed(self):
         return len(self.devices) >= self.numDevices
 
@@ -119,6 +125,8 @@ class BadgeDelegate(DefaultDelegate):
     delete all buffered data
     """
     tempChunk = Chunk((None,None,None,None,None),[])
+    tempScan = Scan((None, None, None), [])
+
     #data is received as chunks, keep the chunk organization
     chunks = []
     scans = []
@@ -145,7 +153,7 @@ class BadgeDelegate(DefaultDelegate):
 
     def reset(self):
         self.tempChunk = Chunk((None,None,None,None,None),[])
-        self.tempScan = Scan((None,None),[])
+        self.tempScan = Scan((None,None,None),[])
         self.chunks = []
         self.scans = []
 
@@ -196,7 +204,8 @@ class BadgeDelegate(DefaultDelegate):
                 self.expected = Expect.header  #we should move on to a new chunk
         elif self.expected == Expect.scanHeader:
             self.tempScan.reset()
-            self.tempScan.setHeader(struct.unpack('<LB',data)) #time, number of devices
+            header = struct.unpack('<LfB',data)
+            self.tempScan.setHeader(header) #time, voltage, number of devices
             #print self.tempScan.ts
             if (self.tempScan.ts == 0): # got an empty header? done
                 self.gotEndOfScans = True
@@ -493,6 +502,17 @@ class Badge():
            self.disconnect()
 
         return retcode
+
+
+def print_bytes(data):
+    """
+    Prints a given string as an array of unsigned bytes
+    :param data:
+    :return:
+    """
+    raw_arr = struct.unpack('<%dB' % len(data), data)
+    print(raw_arr)
+
 
 def datetime_to_epoch(d):
         """
