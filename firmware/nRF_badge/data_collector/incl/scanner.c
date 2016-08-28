@@ -107,13 +107,6 @@ void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
         else  {
             //debug_log("Unknown device seen, name %.5s, rssi %d.\r\n",name,(int)rssi);
         }
-
-        /*
-        debug_log("found: ");
-        printMac(addr);
-        int ID = getIndexFromMac(addr,deviceList,NUM_DEVICES);
-        debug_log(", ID %d\r\n",ID);
-        */
     }
 }
 
@@ -150,16 +143,10 @@ bool updateScanner()
             scannerActive = false;
         }
         break;
-    case SCANNER_SCANNING:    // nothing to do, timeout callback will stop scans when it's time
-        //debug_log("scan scanning\r\n");
-        // Scan timeout is interrupt-driven; we don't need to manually stop it here.
+    case SCANNER_SCANNING:
+        // Scan timeout callback will exit scanning state.
         break;
-    case SCANNER_SAVE:     // we need to store scan results
-        //debug_log("SCANNER: Scan storing not yet implemented.\r\n");
-        //scan_state = SCANNER_IDLE;
-        
-        // ************* MUST VERIFY NUM = 0 CASE
-        
+    case SCANNER_SAVE:
         debug_log("SCANNER: Saving scan results. %d devices seen\r\n",scan.num);
         
         int numSaved = 0;
@@ -169,6 +156,8 @@ bool updateScanner()
             // Fill chunk header
             scanBuffer[scan.to].timestamp = scan.timestamp;
             scanBuffer[scan.to].num = scan.num;
+            int scaledBatteryLevel = (int)(100.0*getBatteryVoltage()) - 100;
+            scanBuffer[scan.to].batteryLevel =  (scaledBatteryLevel <= 255) ? scaledBatteryLevel : 255;  // clip scaled level
             
             debug_log("  C:%d\r\n",scan.to);
         

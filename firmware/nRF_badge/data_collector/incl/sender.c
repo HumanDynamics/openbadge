@@ -671,8 +671,10 @@ bool updateSender()
                             else  {
                                 // Compose header
                                 send.num = scanChunkPtr->num;
+                                float batteryVoltage = ((int)scanChunkPtr->batteryLevel + 100) / 100.0;
                                 memcpy(send.buf,    &(scanChunkPtr->timestamp),     sizeof(unsigned long));   // timestamp
-                                memcpy(send.buf+4,  &(scanChunkPtr->num),           sizeof(unsigned char));  // number of devices seen
+                                memcpy(send.buf+4,  &batteryVoltage,                sizeof(float));          // battery voltage
+                                memcpy(send.buf+8,  &(scanChunkPtr->num),           sizeof(unsigned char));  // number of devices seen
                                 send.bufContents = SENDBUF_SCANHEADER;
                                 send.bufSize = SENDBUF_SCANHEADER_SIZE;
                             }

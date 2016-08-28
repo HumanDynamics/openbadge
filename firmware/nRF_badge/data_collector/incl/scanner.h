@@ -22,7 +22,7 @@
 #include "nrf_delay.h"          // includes blocking delay functions
 #include "nrf_gpio.h"           // abstraction for dealing with gpio
 
-
+#include "analog.h"
 #include "rtc_timing.h"         // Timing-related code, incl. millis()
 #include "ble_setup.h"          // BLE operations
 #include "debug_log.h"          // UART debugging logger
@@ -177,7 +177,8 @@ typedef union
         unsigned char dummy[4];  // Padding, for flash opcode, address.        (4byte)
         uint32_t timestamp;       // timestamp of scan start                    4byte
         unsigned char num;        // number of devices seen in scan             1byte
-        unsigned char padding[3];     // padding to manually fill chunk         3byte
+        unsigned char batteryLevel;  // battery voltage = 1V + 0.01V*level      1byte
+        unsigned char padding[2];     // padding to manually fill chunk         2byte
         seenDevice_t devices[SCAN_DEVICES_PER_CHUNK]; // all the devices seen    29*4byte
         uint32_t check;      // copy of timestamp, to verify                    4byte
     };                                                             //           4+128byte total

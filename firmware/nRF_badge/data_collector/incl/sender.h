@@ -61,15 +61,15 @@
  * CMD_ENDSCAN
  *   Stop collecting data        'q' (uchar)                  none
  *                    .  .  .  .  .  .  .  .
- * CMD_REQUNSENT ***UNIMPLEMENTED***
- *   Request all unsent data    'd' (uchar)                  Chunks of data
- *   from FLASH.                                                Header (13bytes)
- *                                                                timestamp (ulong)
- * CMD_REQSINCE                  'r' (uchar)                      ms (ushort)
- *   Request all data since      timestamp (ulong)                voltage (float)
- *   specified time,             ms (ushort)                      sample period in ms (ushort)
- *   sent or unsent,                                              number of samples in chunk (uchar)
- *   from FLASH or RAM.                                         Samples
+ * CMD_REQSINCE
+ *   Request all data since      'r' (uchar)                  Chunks of data
+ *   specified time,             timestamp (ulong)              Header (13bytes)
+ *   from FLASH or RAM           ms (ushort)                      timestamp (ulong)
+ *                                                                ms (ushort)
+ *                                                                voltage (float)
+ *                                                                sample period in ms (ushort)
+ *                                                                number of samples in chunk (uchar)
+ *                                                              Samples
  *                                                                in packets of 20bytes
  *                                                            End marker
  *                                                              Dummy header
@@ -79,7 +79,8 @@
  *   Request scan data           'b' (uchar)                  Scan results
  *   from ext. EEPROM.           timestamp (ulong)              Header (5bytes)
  *                                                                timestamp (ulong)
- *                                                                number of devices in scan
+ *                                                                battery voltage (float)
+ *                                                                number of devices in scan (uchar)
  *                                                              Devices, in packets of 20bytes (5 devices)
  *                                                                Device ID (ushort)
  *                                                                RSSI (signed char)
@@ -167,7 +168,7 @@ enum SENDBUF_CONTENTS
 // Special sendBuf sizes
 #define SENDBUF_STATUS_SIZE 13  // see badge response structure above - 13 bytes total in status report packet
 #define SENDBUF_HEADER_SIZE 13  // see badge response structure above - 13 bytes total in chunk header packet
-#define SENDBUF_SCANHEADER_SIZE 5
+#define SENDBUF_SCANHEADER_SIZE 9
 #define SENDBUF_TIMESTAMP_SIZE 6    // 4byte timestamp + 2byte milliseconds
 #define SAMPLES_PER_PACKET 20   // maximum by BLE spec
 #define DEVICES_PER_PACKET 5    // scan devices per packet - one scan device report is 4bytes
