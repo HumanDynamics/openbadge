@@ -280,7 +280,7 @@ class Badge():
     #   (if after timeout minutes badge has not seen server, it will stop recording)
     def sendStartRecRequest(self, timeout):
         long_epoch_seconds, ts_fract = now_utc_epoch()
-        self.gotTimestamp = False
+        self.dlg.gotTimestamp = False
         self.dlg.expected = Expect.timestamp
         return self.conn.write('<cLHH',"1",long_epoch_seconds,ts_fract,timeout)
 
@@ -292,7 +292,7 @@ class Badge():
     #   (if after timeout minutes badge has not seen server, it will stop recording)
     def sendStartScanRequest(self, timeout, window, interval, duration, period):
         long_epoch_seconds, ts_fract = now_utc_epoch()
-        self.gotTimestamp = False
+        self.dlg.gotTimestamp = False
         self.dlg.expected = Expect.timestamp
         return self.conn.write('<cLHHHHHH',"p",long_epoch_seconds,ts_fract,timeout,window,interval,duration,period)
 
