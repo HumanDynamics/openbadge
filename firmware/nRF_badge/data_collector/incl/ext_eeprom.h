@@ -62,7 +62,7 @@ typedef enum ext_eeprom_result_t
     EXT_EEPROM_ERR_BUSY = 1
 } ext_eeprom_result_t;
 
-#define READ_PADDING 4          //size of padding at beginning of rx buffer, for tx bytes
+#define EXT_EEPROM_PADDING 4          //size of padding at beginning of rx buffer, for tx bytes
 
 
 

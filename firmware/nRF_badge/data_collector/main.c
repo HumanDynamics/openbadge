@@ -112,7 +112,7 @@ int main(void)
 
     // Define and set LEDs
     nrf_gpio_pin_dir_set(LED_1,NRF_GPIO_PIN_DIR_OUTPUT);  //set LED pin to output
-    nrf_gpio_pin_write(LED_1,LED_ON);  //turn off LED
+    nrf_gpio_pin_write(LED_1,LED_ON);  //turn on LED
     nrf_gpio_pin_dir_set(LED_2,NRF_GPIO_PIN_DIR_OUTPUT);  //set LED pin to output
     nrf_gpio_pin_write(LED_2,LED_OFF);  //turn off LED
 
@@ -131,6 +131,27 @@ int main(void)
         runSelfTests();
         while(1);
     #endif    // end of self tests
+    
+    
+    /*
+    debug_log("=DEVELOPMENT BADGE.  ONLY ERASES EEPROM=");
+    debug_log("=ERASING EEPROM...=\r\n");
+    ext_eeprom_wait();
+    unsigned char empty[EXT_CHUNK_SIZE + EXT_EEPROM_PADDING];
+    memset(empty,0,sizeof(empty));
+    for (int i = EXT_FIRST_CHUNK; i <= EXT_LAST_CHUNK; i++)  {
+        ext_eeprom_write(EXT_ADDRESS_OF_CHUNK(i),empty,sizeof(empty));
+        if (i % 10 == 0)  {
+            nrf_gpio_pin_toggle(LED_1);
+            nrf_gpio_pin_toggle(LED_2);
+        }
+        ext_eeprom_wait();
+    }
+    debug_log("  done.  \r\n");
+    nrf_gpio_pin_write(LED_1,LED_ON);
+    nrf_gpio_pin_write(LED_2,LED_ON);
+    while (1);
+    */
     
     
     collector_init();
