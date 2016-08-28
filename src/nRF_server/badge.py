@@ -1,12 +1,51 @@
 from __future__ import division
 from __future__ import print_function
+
 from bluepy import btle
 from bluepy.btle import UUID, Peripheral, DefaultDelegate, AssignedNumbers
+from bluepy.btle import BTLEException
+
 from nrf import Nrf, SimpleDelegate
+import logging.handlers
+
 from badge_dialogue import BadgeDialogue
+
 import struct
 from math import floor
 import datetime
+import signal
+import traceback
+import time
+
+WAIT_FOR = 1.0  # timeout for WaitForNotification calls.  Must be > samplePeriod of badge
+PULL_WAIT = 2
+RECORDING_TIMEOUT = 10
+
+class TimeoutError(Exception):
+    """
+    # Raises a timeout exception if a function takes too long
+    # http://stackoverflow.com/questions/2281850/timeout-function-if-it-takes-too-long-to-finish
+    """
+    pass
+
+
+class timeout:
+    """
+    Or, to use with a "with" statement
+    """
+    def __init__(self, seconds=1, error_message='Timeout'):
+        self.seconds = seconds
+        self.error_message = error_message
+
+    def handle_timeout(self, signum, frame):
+        raise TimeoutError(self.error_message)
+
+    def __enter__(self):
+        signal.signal(signal.SIGALRM, self.handle_timeout)
+        signal.alarm(self.seconds)
+
+    def __exit__(self, type, value, traceback):
+        signal.alarm(0)
 
 class Expect:
     none,status,timestamp,header,samples,scanHeader,scanDevices = range(7)
@@ -204,19 +243,32 @@ class BadgeConnection(Nrf):
         return self.NrfReadWrite.write(s)
 
 
+class BadgeAddressAdapter(logging.LoggerAdapter):
+    """
+    Log adapter that passes badge 'addr' to be prepended to the log message.
+    """
+    def process(self, msg, kwargs):
+        return '[%s] %s' % (self.extra['addr'], msg), kwargs
+
 class Badge():
-    def __init__(self, addr):
+    def __init__(self, addr,logger):
         self.addr = addr
-        self.dlg = BadgeDelegate(params=1)
+        self.logger = adapter = BadgeAddressAdapter(logger, {'addr': addr})
+        self.dlg = None
         self.conn = None
         self.connDialogue = BadgeDialogue(self)
 
     def connect(self):
+        self.logger.info("Connecting to {}".format(self.addr))
+        self.dlg = BadgeDelegate(params=1)
         self.conn = BadgeConnection(self.addr, self.dlg)
 
     def disconnect(self):
         if self.conn is not None:
+            self.logger.info("Disconnecting from {}".format(self.addr))
             self.conn.disconnect()
+        else:
+            self.logger.info("Can't disconnect from {}. Not connected".format(self.addr))
 
     # sends status request with UTC time to the badge
     def sendStatusRequest(self):
@@ -271,6 +323,176 @@ class Badge():
         """
         self.dlg.expected = Expect.scanHeader
         return self.conn.write('<cL',"b",ts)
+
+    def sync_timestamp(self):
+        """
+        used for sync the date of the badge
+        :param addr:
+        :return:
+        """
+        retcode = -1
+        try:
+            with timeout(seconds=5, error_message="Connect timeout"):
+                self.connect()
+
+            self.logger.info("Connected")
+
+            with timeout(seconds=5, error_message="Status request timeout (wrong firmware version?)"):
+                while not self.dlg.gotStatus:
+                    self.sendStatusRequest()  # ask for status
+                    self.conn.waitForNotifications(WAIT_FOR)  # waiting for status report
+
+                    self.logger.info("Got status")
+
+                    self.sendIdentifyReq(10)
+
+                if self.dlg.timestamp_sec != 0:
+                    self.logger.info("Badge datetime was: {},{}".format(self.dlg.timestamp_sec, self.dlg.timestamp_ms))
+                else:
+                    self.logger.info("Badge previously unsynced.")
+
+            retcode = 0
+
+        except BTLEException, e:
+            self.logger.error("Bluetooth error")
+            self.logger.error(e.code)
+            self.logger.error(e.message)
+        except TimeoutError, te:
+            self.logger.error("TimeoutError: " + te.message)
+        except Exception as e:
+            s = traceback.format_exc()
+            self.logger.error("unexpected failure, {} ,{}".format(e, s))
+        finally:
+            self.disconnect()
+
+        return retcode
+
+    def start_recording(self):
+        """
+        Requests badge to start recording
+        :param addr:
+        :return:
+        """
+        retcode = -1
+        try:
+            with timeout(seconds=5, error_message="Connect timeout"):
+                self.connect()
+
+            self.logger.info("Connected")
+
+            # Starting audio rec
+            self.logger.info("Starting audio recording")
+            with timeout(seconds=5, error_message="StartRec timeout (wrong firmware version?)"):
+                while not self.dlg.gotTimestamp:
+                    self.sendStartRecRequest(RECORDING_TIMEOUT)  # start recording
+                    self.conn.waitForNotifications(WAIT_FOR)  # waiting for time acknowledgement
+
+                self.logger.info("Got time ack")
+
+                if self.dlg.timestamp_sec != 0:
+                    self.logger.info("Badge datetime was: {},{}".format(self.dlg.timestamp_sec, self.dlg.timestamp_ms))
+                else:
+                    self.logger.info("Badge previously unsynced.")
+
+            # Reset flag (hacky)
+            self.dlg.gotTimestamp = False
+
+            # Starting scans
+            self.logger.info("Starting proximity scans")
+            with timeout(seconds=5, error_message="StartScan timeout (wrong firmware version?)"):
+                while not self.dlg.gotTimestamp:
+                    self.sendStartScanRequest(RECORDING_TIMEOUT, 0, 0, 0, 0)  # start recording
+                    self.conn.waitForNotifications(WAIT_FOR)  # waiting for time acknowledgement
+
+                self.logger.info("Got time ack")
+
+                if self.dlg.timestamp_sec != 0:
+                    self.logger.info("Badge datetime was: {},{}".format(self.dlg.timestamp_sec, self.dlg.timestamp_ms))
+                else:
+                    self.logger.info("Badge previously unsynced.")
+
+            retcode = 0
+
+        except BTLEException, e:
+            self.logger.error("Bluetooth error")
+            self.logger.error(e.code)
+            self.logger.error(e.message)
+        except TimeoutError, te:
+            self.logger.error("TimeoutError: " + te.message)
+        except Exception as e:
+            s = traceback.format_exc()
+            self.logger.error("unexpected failure, {} ,{}".format(e, s))
+        finally:
+            self.disconnect()
+
+        return retcode
+
+    def pull_data(self, last_audio_ts, last_audio_ts_fract, last_proximity_ts):
+        """
+        Attempts to read data from the device
+        """
+        retcode = -1
+        try:
+            with timeout(seconds=5, error_message="Connect timeout"):
+                self.connect()
+
+            self.logger.info("Connected")
+
+            with timeout(seconds=5, error_message="Dialogue timeout (wrong firmware version?)"):
+                while not self.dlg.gotStatus:
+                    self.sendStatusRequest()  # ask for status
+                    self.conn.waitForNotifications(WAIT_FOR)  # waiting for status report
+
+                self.logger.info("Got status")
+                self.logger.info("Badge datetime was: {},{}, Voltage: {}".format(
+                    self.dlg.timestamp_sec, self.dlg.timestamp_ms, self.dlg.voltage))
+
+            # data request using the "r" command - data since time X
+            self.logger.info("Requesting data...")
+
+            self.sendDataRequest(last_audio_ts, last_audio_ts_fract)  # ask for data
+            wait_count = 0
+            while True:
+                if self.dlg.gotEndOfData == True:
+                    break
+                if self.conn.waitForNotifications(WAIT_FOR):
+                    # if got data, don't inrease the wait counter
+                    continue
+                self.logger.info("Waiting for more data...")
+                wait_count = wait_count + 1
+                if wait_count >= PULL_WAIT: break
+            self.logger.info("finished reading data")
+
+            # data request using the "r" command - data since time X
+            self.logger.info("Requesting scans...")
+            self.sendScanRequest(last_proximity_ts)
+            wait_count = 0
+            while True:
+                if self.dlg.gotEndOfScans == True:
+                    break
+                if self.conn.waitForNotifications(WAIT_FOR):
+                    # if got data, don't inrease the wait counter
+                    continue
+                self.logger.info("Waiting for more data...")
+                wait_count = wait_count + 1
+                if wait_count >= PULL_WAIT: break
+            self.logger.info("finished reading data")
+
+            retcode = 0
+
+        except BTLEException, e:
+            self.logger.error("failed pulling data")
+            self.logger.error(e.code)
+            self.logger.error(e.message)
+        except TimeoutError, te:
+            self.logger.error("TimeoutError: " + te.message)
+        except Exception as e:
+            s = traceback.format_exc()
+            self.logger.error("unexpected failure, {} ,{}".format(e, s))
+        finally:
+           self.disconnect()
+
+        return retcode
 
 def datetime_to_epoch(d):
         """
