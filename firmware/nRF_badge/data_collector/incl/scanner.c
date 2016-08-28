@@ -231,26 +231,26 @@ scan_state_t getScanState()
 
 unsigned long getScanTimestamp(int chunk)
 {
-    ext_flash_wait();
+    ext_eeprom_wait();
     scan_header_t header;
-    ext_flash_read(EXT_ADDRESS_OF_CHUNK(chunk),header.buf,sizeof(header.buf));
+    ext_eeprom_read(EXT_ADDRESS_OF_CHUNK(chunk),header.buf,sizeof(header.buf));
     while(spi_busy());
     return header.timestamp;
 }
 
 unsigned long getScanCheck(int chunk)
 {
-    ext_flash_wait();
+    ext_eeprom_wait();
     scan_tail_t tail;
-    ext_flash_read(EXT_ADDRESS_OF_CHUNK_CHECK(chunk),tail.buf,sizeof(tail.buf));
+    ext_eeprom_read(EXT_ADDRESS_OF_CHUNK_CHECK(chunk),tail.buf,sizeof(tail.buf));
     while(spi_busy());
     return tail.check;
 }
 
 void getScanChunk(scan_chunk_t* destPtr,int chunk)
 {
-    ext_flash_wait();
-    ext_flash_read(EXT_ADDRESS_OF_CHUNK(chunk),destPtr->buf,sizeof(destPtr->buf));
+    ext_eeprom_wait();
+    ext_eeprom_read(EXT_ADDRESS_OF_CHUNK(chunk),destPtr->buf,sizeof(destPtr->buf));
     while(spi_busy());
 }
 
@@ -258,7 +258,7 @@ void getScanChunk(scan_chunk_t* destPtr,int chunk)
 void printScanResult(scan_chunk_t* srcPtr)
 {
     //scan_chunk_t readChunk;
-    //ext_flash_read(EXT_ADDRESS_OF_CHUNK(chunk),readChunk.buf,sizeof(readChunk.buf));
+    //ext_eeprom_read(EXT_ADDRESS_OF_CHUNK(chunk),readChunk.buf,sizeof(readChunk.buf));
     
     debug_log("Read: TS 0x%X, N %d, C 0x%X\r\n", (unsigned int)srcPtr->timestamp,
                                                             (int)srcPtr->num,

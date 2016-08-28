@@ -1,4 +1,4 @@
-/* Methods to simplify access to an external Adesto AT25XE041B flash memory IC
+/* Methods to simplify access to an external Atmel AT25M02 (or equivalent) EEPROM IC
  *
  */
 
@@ -28,51 +28,39 @@
 #include "boards.h"
 
 
-// The following opcodes are common to both the ATXE flash and M95 EEPROM
 #define WEL_OPCODE        0x06          // enable write
 #define WRITESREG_OPCODE  0x01          // write to status register
 #define READSREG_OPCODE   0x05          // read status register
 #define WRITE_OPCODE      0x02          // write to main memory
 #define READ_OPCODE       0x03          // read from main memory
 
-// The following opcodes are exclusive to the ATXE flash - the M95 EEPROM will ignore them
-//#define BLOCKERASE_OPCODE 0x20          // erase 4kByte block of memory
-#define READMFID_OPCODE   0x9f          // read manufacturer ID
-#define READOTP_OPCODE    0x77          // read one-time-programmable memory (includes some ID data)
 
 
-
-// The following status register flags are common to both the ATXE flash and M95 EEPROM
-#define EXT_FLASH_SREG_BUSY 0x1         // bit in flash status register indicating an in-progress write or erase
-#define EXT_FLASH_SREG_WEL  0x2         // write enable bit
-#define EXT_FLASH_SREG_PR0  0x04        // block/sector protect bit 0
-#define EXT_FLASH_SREG_PR1  0x08        // block/sector protect bit 1
-#define EXT_FLASH_SREG_SPRL 0x80        // sector protect register lock / status register lock
-
-// The following status register flags are exclusive to the ATXE flash - always 0 on M95 EEPROM
-#define EXT_FLASH_SREG_WPP  0x10        // state of write protect pin (active low)
-#define EXT_FLASH_SREG_EPE  0x20        // erase/program error
-#define EXT_FLASH_SREG_SPRG 0x40        // sequential program mode - unused here
+#define EXT_EEPROM_SREG_BUSY 0x1         // indicates whether device is busy
+#define EXT_EEPROM_SREG_WEL  0x2         // write enable bit
+#define EXT_EEPROM_SREG_PR0  0x04        // block protect bit 0
+#define EXT_EEPROM_SREG_PR1  0x08        // block protect bit 1
+#define EXT_EEPROM_SREG_WPEN 0x80        // write protect enable
 
 
 typedef enum
 {
-    EXT_FLASH_SPI_IDLE = 0,         // no pending SPI operations.  Flash IC may still be busy
-    EXT_FLASH_COMMAND,              // sending a one-off command over SPI, e.g. write enable
-    EXT_FLASH_READ,                 // sending a read command over SPI
-    EXT_FLASH_WRITE,                // sending a write command over SPI
-    EXT_FLASH_PENDING,              // IC may be busy with a write operation
-    // The following are only used in returns from ext_flash_get_state()
-    //   because they require polling the state of the flash IC, which isn't done continuously
-    EXT_FLASH_IC_BUSY,              // SPI is not active, but flash IC is still busy
-    EXT_FLASH_ALL_IDLE              // SPI is not active, and flash IC not busy
-} ext_flash_status_t;
+    EXT_EEPROM_SPI_IDLE = 0,         // no pending SPI operations.  EEPROM IC may still be busy
+    EXT_EEPROM_COMMAND,              // sending a one-off command over SPI, e.g. write enable
+    EXT_EEPROM_READ,                 // sending a read command over SPI
+    EXT_EEPROM_WRITE,                // sending a write command over SPI
+    EXT_EEPROM_PENDING,              // IC may be busy with a write operation
+    // The following are only used in returns from ext_eeprom_get_state()
+    //   because they require polling the state of the EEPROM IC, which isn't done continuously
+    EXT_EEPROM_IC_BUSY,              // SPI is not active, but EEPROM IC is still busy
+    EXT_EEPROM_ALL_IDLE              // SPI is not active, and EEPROM IC not busy
+} ext_eeprom_status_t;
 
-typedef enum ext_flash_result_t
+typedef enum ext_eeprom_result_t
 {
-    EXT_FLASH_SUCCESS = 0,
-    EXT_FLASH_ERR_BUSY = 1
-} ext_flash_result_t;
+    EXT_EEPROM_SUCCESS = 0,
+    EXT_EEPROM_ERR_BUSY = 1
+} ext_eeprom_result_t;
 
 #define READ_PADDING 4          //size of padding at beginning of rx buffer, for tx bytes
 
@@ -80,14 +68,14 @@ typedef enum ext_flash_result_t
 
 
 /**
- * Macro for creating a buffer appropriate for use with the ext_flash_write function.
- *   Buffer needs to have 4 extra bytes at start, for external flash opcode+address
+ * Macro for creating a buffer appropriate for use with the ext_eeprom_write function.
+ *   Buffer needs to have 4 extra bytes at start, for external EEPROM opcode+address
  * The following macro sets up a union that accomplishes this, while allowing the actual data
  *   to be manipulated (via the .data member) as a normal array without the 4-byte padding.
  * Example usage: 
  *   CREATE_TX_BUFFER(buffer,1);
  *   buffer.data[0] = 42;
- *   ext_flash_write(address,buffer.whole,sizeof(buffer.whole));
+ *   ext_eeprom_write(address,buffer.whole,sizeof(buffer.whole));
  */
         
 #define CREATE_TX_BUFFER(__BUF_NAME__,__BUF_LEN__)      \
@@ -102,7 +90,7 @@ typedef enum ext_flash_result_t
     } __BUF_NAME__
 
 
-volatile int extFlashState;
+volatile int extEEPROMstate;
 
 /*
  *  Called on SPI event interrupt
@@ -125,90 +113,72 @@ void spi_end();
 bool spi_busy();
 
 /*
- *  Returns flash status, including checking whether the external flash chip itself is busy
+ *  Returns EEPROM access status, including checking whether the external EEPROM chip itself is busy
  */
-ext_flash_status_t ext_flash_get_status();
+ext_eeprom_status_t ext_eeprom_get_status();
 
 /*
- *  Returns true if external flash access operations are active
+ *  Returns true if external eeprom access operations are active
  */
-bool ext_flash_busy();
+bool ext_eeprom_busy();
 
 /*
- *  Waits until external flash access operations are done
+ *  Waits until external eeprom access operations are done
  */
-void ext_flash_wait();
+void ext_eeprom_wait();
 
 
 /*
- *  Enable writing to external flash
+ *  Enable writing to external EEPROM
  */
-uint32_t ext_flash_write_enable();
+uint32_t ext_eeprom_write_enable();
 
 /*
- *  Globally unprotect sectors on flash  (must call ext_flash_write_enable first)
+ *  Globally unprotect sectors on EEPROM  (must call ext_eeprom_write_enable first)
  */
-uint32_t ext_flash_global_unprotect();
+uint32_t ext_eeprom_global_unprotect();
 
 /*
- *  Read status register of external flash chip
+ *  Read status register of external EEPROM chip
  */
-uint8_t ext_flash_read_status();
+uint8_t ext_eeprom_read_status();
 
 /*
  *  Read manufacturer and device ID information
  */
-uint32_t ext_flash_read_MFID();
+uint32_t ext_eeprom_read_MFID();
 
 /*
  *  Read from the OTP security register
  *  (useful to verify SPI communication is functional)
  *  Parameters: initial address, receiving buffer, number of bytes to read
- *  Returns EXT_FLASH_ERR_BUSY if there's currently another pending external flash operation
+ *  Returns EXT_EEPROM_ERR_BUSY if there's currently another pending external EEPROM operation
  */
-uint32_t ext_flash_read_OTP(unsigned int address, uint8_t* rx, unsigned int numBytes);
+uint32_t ext_eeprom_read_OTP(unsigned int address, uint8_t* rx, unsigned int numBytes);
 
 /*
- *  Read from flash
+ *  Read from EEPROM
  *  Parameters: initial address, receiving buffer, number of bytes to read
  ** NOTE: rx buffer should contain 4 dummy bytes at beginning, for transmitting opcode, address
- *  Returns EXT_FLASH_ERR_BUSY if there's currently another pending external flash operation
+ *  Returns EXT_EEPROM_ERR_BUSY if there's currently another pending external EEPROM operation
  */
-uint32_t ext_flash_read(unsigned int address, uint8_t* rx, unsigned int numBytes);
+uint32_t ext_eeprom_read(unsigned int address, uint8_t* rx, unsigned int numBytes);
 
 
 /*
- *  Write to flash
+ *  Write to EEPROM
  *  Parameters: initial address, transmitting buffer, number of bytes to write
- ** NOTE: tx buffer must contain 4 dummy bytes at beginning.  ext_flash_write will fill them
+ ** NOTE: tx buffer must contain 4 dummy bytes at beginning.  ext_eeprom_write will fill them
  *    with opcode and address bytes.
  *    For convenience, see CREATE_TX_BUFFER macro above
- *  Returns EXT_FLASH_ERR_BUSY if there's currently another pending external flash operation
+ *  Returns EXT_EEPROM_ERR_BUSY if there's currently another pending external EEPROM operation
  */
-uint32_t ext_flash_write(unsigned int address, uint8_t* tx, unsigned int numBytes);
+uint32_t ext_eeprom_write(unsigned int address, uint8_t* tx, unsigned int numBytes);
 
 
-/*
- *  Write to flash - blocking till entire write is done (not interrupt-driven)
- *  Parameters: initial address, transmitting buffer, number of bytes to write
- *  Returns EXT_FLASH_ERR_BUSY if there's currently another pending external flash operation
- */
-//uint32_t ext_flash_write_blocking(unsigned int address, uint8_t* tx, unsigned int numBytes);
 
-
-//uint32_t ext_flash_block_erase(uint32_t address);
-
-/*
- *  NOT USEFUL - CAN ONLY ERASE WITHIN FIRST 64kB of MEMORY
- *  Erase a page of flash
- *  Parameters: byte page address
- *  Returns EXT_FLASH_ERR_BUSY if there's currently another pending external flash operation
- */
- //uint32_t ext_flash_page_erase(uint8_t page);
-
-
-// Tests external flash. Returns true on success
-bool testExternalFlash(void);
+// Tests external EEPROM. Returns true on success
+bool testExternalEEPROM(void);
 
 
 
@@ -218,4 +188,4 @@ bool testExternalFlash(void);
 //void clock(unsigned char bit);
 
 
-#endif //#ifndef EXTERNAL_FLASH_H
+#endif //#ifndef EXTERNAL_EEPROM_H

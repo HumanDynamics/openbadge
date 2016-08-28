@@ -113,16 +113,16 @@ void storer_init()
     scan_header_t header;
     scan_tail_t tail;
     
-    ext_flash_wait();
+    ext_eeprom_wait();
     
     store.extTo = EXT_FIRST_DATA_CHUNK;
     unsigned long lastStoredTimestamp = 0;
     for (int i = EXT_FIRST_DATA_CHUNK; i <= EXT_LAST_CHUNK; i++)  {
         unsigned int addr = EXT_ADDRESS_OF_CHUNK(i);
-        ext_flash_read(addr,header.buf,sizeof(header.buf));               // Beginning of the chunk
-        ext_flash_wait();
-        ext_flash_read(addr+EXT_CHUNK_SIZE-4,tail.buf,sizeof(tail.buf));  // End of the chunk
-        ext_flash_wait();
+        ext_eeprom_read(addr,header.buf,sizeof(header.buf));               // Beginning of the chunk
+        ext_eeprom_wait();
+        ext_eeprom_read(addr+EXT_CHUNK_SIZE-4,tail.buf,sizeof(tail.buf));  // End of the chunk
+        ext_eeprom_wait();
         
         // Print all written chunks
         /*if(header.timestamp != 0xFFFFFFFFUL)
@@ -155,9 +155,8 @@ void storer_init()
     
     //store.extFrom = 0;
     //store.extTo = EXT_FIRST_DATA_CHUNK;
-    ext_flash_global_unprotect();
-    //ext_flash_block_erase(EXT_ADDRESS_OF_CHUNK(EXT_FIRST_DATA_CHUNK));
-    ext_flash_wait();
+    ext_eeprom_global_unprotect();
+    ext_eeprom_wait();
     
     
     
@@ -269,17 +268,13 @@ bool updateStorer()
         case STORER_STORE_EXT:
             debug_log("STORER: writing SCAN chunk %d to EXT chunk %d\r\n",store.extFrom,store.extTo);
             //printScanResult(&scanBuffer[store.extFrom]);
-            ext_flash_write(EXT_ADDRESS_OF_CHUNK(store.extTo),scanBuffer[store.extFrom].buf,
+            ext_eeprom_write(EXT_ADDRESS_OF_CHUNK(store.extTo),scanBuffer[store.extFrom].buf,
                                                               sizeof(scanBuffer[store.extFrom].buf));
             storerMode = STORER_STORE_EXT_WAIT;
             break;
         
         case STORER_STORE_EXT_WAIT:
-            if (ext_flash_get_status() == EXT_FLASH_ALL_IDLE)  {
-                /*scan_chunk_t readChunk;
-                ext_flash_read(EXT_ADDRESS_OF_CHUNK(store.extTo),readChunk.buf,sizeof(readChunk.buf));
-                while(spi_busy());
-                printScanResult(&readChunk);*/
+            if (ext_eeprom_get_status() == EXT_EEPROM_ALL_IDLE)  {
                 scanBuffer[store.extFrom].check = CHECK_STORED;
                 storerMode = STORER_ADVANCE_EXT;
             }
@@ -296,8 +291,8 @@ bool updateStorer()
             lastStoredAssignment.ID = badgeAssignment.ID;
             lastStoredAssignment.group = badgeAssignment.group;
             lastStoredAssignment.magicNumber = STORED_ASSIGNMENT_MAGIC_NUMBER;
-            ext_flash_write(STORED_ASSIGNMENT_ADDRESS,lastStoredAssignment.buf,sizeof(lastStoredAssignment.buf));
-            ext_flash_wait();
+            ext_eeprom_write(STORED_ASSIGNMENT_ADDRESS,lastStoredAssignment.buf,sizeof(lastStoredAssignment.buf));
+            ext_eeprom_wait();
             debug_log("STORER: stored assignment ID:0x%hX group:%d.\r\n",   lastStoredAssignment.ID, 
                                                                         (int)lastStoredAssignment.group);
             storerMode = STORER_IDLE;
@@ -377,8 +372,8 @@ void printStorerChunk(int chunk)
 badge_assignment_t getStoredBadgeAssignment()
 {
     badge_assignment_t assignment;
-    ext_flash_wait();
-    ext_flash_read(STORED_ASSIGNMENT_ADDRESS,lastStoredAssignment.buf,sizeof(lastStoredAssignment.buf));
+    ext_eeprom_wait();
+    ext_eeprom_read(STORED_ASSIGNMENT_ADDRESS,lastStoredAssignment.buf,sizeof(lastStoredAssignment.buf));
     // If magic number is not present, then the data found is not actually a valid assignment.
     if (lastStoredAssignment.magicNumber != STORED_ASSIGNMENT_MAGIC_NUMBER)  {
         lastStoredAssignment.group = 0xff;  // invalid

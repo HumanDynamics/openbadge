@@ -101,7 +101,7 @@ void runSelfTests()
     nrf_gpio_pin_write(GREEN_LED,LED_ON);
     
     // read/write
-    if (testExternalFlash()) {
+    if (testExternalEEPROM()) {
         debug_log("  Success\r\n");
     }
     else{
