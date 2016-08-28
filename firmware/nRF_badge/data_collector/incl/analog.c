@@ -27,7 +27,7 @@ static float readBattery()
 
 
 // ADC initialization.
-void adc_config(void)
+void adc_config(void)  
 {
     //default: 10bit res, 1/3 prescalar, ext VCC_MIC reference
     const nrf_adc_config_t nrf_adc_config = ANALOG_CONFIG_MIC;
@@ -56,13 +56,11 @@ int analogRead(nrf_adc_config_input_t input)
 
 float getBatteryVoltage()
 {
-    if(millis() - lastBatteryUpdate >= MAX_BATTERY_READ_INTERVAL)
-    {
-        debug_log("Forced battery reading.\r\n");
+    if(millis() - lastBatteryUpdate >= MAX_BATTERY_READ_INTERVAL)  {
+        debug_log("  Forced battery reading.\r\n");
         return readBattery();
     }
-    else
-    {
+    else  {
         return currentBatteryVoltage;
     }
 }

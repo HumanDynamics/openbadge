@@ -379,6 +379,7 @@ badge_assignment_t getStoredBadgeAssignment()
     badge_assignment_t assignment;
     ext_flash_wait();
     ext_flash_read(STORED_ASSIGNMENT_ADDRESS,lastStoredAssignment.buf,sizeof(lastStoredAssignment.buf));
+    // If magic number is not present, then the data found is not actually a valid assignment.
     if (lastStoredAssignment.magicNumber != STORED_ASSIGNMENT_MAGIC_NUMBER)  {
         lastStoredAssignment.group = 0xff;  // invalid
         lastStoredAssignment.ID = 0xffff;   // invalid
@@ -387,20 +388,6 @@ badge_assignment_t getStoredBadgeAssignment()
     assignment.group = lastStoredAssignment.group;
     return assignment;
 }
-
-/*
-void storeBadgeAssignment(badge_assignment_t assignment)
-{
-    unsigned short oldID = lastStoredBadgeAssignment.ID;
-    unsigned char oldGroup = lastStoredBadgeAssignment.group;
-    if (assignment.ID != oldID || assignment.group != oldGroup)
-    {
-        stored_assignment_t toStore;
-        toStore.ID = assignment.ID;
-        toStore.group = assignment.group;
-        toStore.magicNumber = STORED_ASSIGNMENT_MAGIC_NUMBER;
-        XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-*/
 
 
 // If we try an illegal flash write, something's very wrong, so we should not continue.

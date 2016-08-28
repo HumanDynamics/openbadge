@@ -265,39 +265,6 @@ static void ble_stack_init(void)
     BLE_ERROR_CHECK(err_code);
 }
 
-
-
-/*static void on_adv_evt(ble_adv_evt_t const adv_evt)
-{
-    switch(adv_evt)
-    {
-        case BLE_ADV_EVT_IDLE:
-            if(pauseRequest)
-            {
-                isAdvertising = false;
-                pauseRequest = false;
-                debug_log("ADV: advertising paused\r\n");
-            }
-            else
-            {
-                uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);  // restart advertising immediately
-                BLE_ERROR_CHECK(err_code);
-                //debug_log("ADV: advertising restarted...\r\n");
-            }
-            break;
-        case BLE_ADV_EVT_FAST:          // Advertising config should only allow fast mode, so following cases should be irrelevant
-        case BLE_ADV_EVT_DIRECTED:
-        case BLE_ADV_EVT_SLOW:
-        case BLE_ADV_EVT_FAST_WHITELIST:
-        case BLE_ADV_EVT_SLOW_WHITELIST:
-            isAdvertising = true;
-            //debug_log("ADV: advertising active\r\n");
-            break;
-        default:
-            break;
-    }
-}*/
-
 void advertising_init(void)
 {
     uint32_t      err_code;
@@ -361,12 +328,10 @@ void setAdvData()
     advdata.p_manuf_specific_data = &custom_manuf_data;
     
     uint32_t result = ble_advdata_set(&advdata, NULL);  // set advertising data, don't set scan response data.
-    if(result != NRF_SUCCESS)
-    {
+    if(result != NRF_SUCCESS)  {
         debug_log("ERR: error setting advertising data, #%d.\r\n",(int)result);
     }
-    else
-    {
+    else  {
         debug_log("  Updated adv. data.\r\n");
         needAdvDataUpdate = false;
     }
@@ -406,8 +371,7 @@ void BLE_init()
     badgeAssignment.group = NO_GROUP;
     
     // Copy MAC address into custom advertising data struct.
-    for(int i = 0; i <= 5; i++)
-    { 
+    for(int i = 0; i <= 5; i++)  { 
         customAdvData.MAC[i] = MAC.addr[i];
     }
     
@@ -418,11 +382,9 @@ void BLE_init()
 
 void BLEstartAdvertising()
 {
-    if((!isConnected) && (!isAdvertising))
-    {
+    if((!isConnected) && (!isAdvertising))  {
         uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
-        if(err_code == NRF_SUCCESS)
-        {
+        if(err_code == NRF_SUCCESS)  {
             debug_log("ADV: advertising started\r\n");
             isAdvertising = true;
             return;
@@ -450,8 +412,7 @@ bool BLEpause(ble_pauseReq_src source)
 void BLEresume(ble_pauseReq_src source)
 {
     pauseRequest[source] = false;
-    for(int src=0; src<PAUSE_REQ_NONE; src++)  // look through all pause request sources
-    {
+    for(int src=0; src<PAUSE_REQ_NONE; src++)  {  // look through all pause request sources
         if(pauseRequest[src]) return;  // if any pending pause requests, don't restart advertising
     }
     // If no pending pause requests, restart advertising.
@@ -466,39 +427,35 @@ void BLEforceDisconnect()
 
 ble_status_t BLEgetStatus()
 {
-    if(isConnected)
-    {
+    if(isConnected)  {
         return BLE_CONNECTED;
     }
-    else if(isAdvertising)
-    {
+    else if(isAdvertising)  {
         return BLE_ADVERTISING;
     }
-    else
-    {
+    else  {
         return BLE_INACTIVE;
     }
 }
 
 bool BLEpauseReqPending()
 {
-    for(int src=0; src<PAUSE_REQ_NONE; src++)  // look through all pause request sources
-    {
+    for(int src=0; src<PAUSE_REQ_NONE; src++)  {  // look through all pause request sources
         if(pauseRequest[src]) return true;  // if any pending pause requests, don't restart advertising
     }
     return false;
 }
 
 
-bool notificationEnabled()  {
+bool notificationEnabled()  
+{
     return m_nus.is_notification_enabled;
 }
 
 
 bool BLEwrite(uint8_t* data, uint16_t len)  {
     uint32_t err_code = ble_nus_string_send(&m_nus, data, len);
-    if (err_code != NRF_SUCCESS)  
-    {
+    if (err_code != NRF_SUCCESS)  {
         //debug_log("BLEwrite error: %u\r\n",(unsigned int)err_code);
         //BLEwrite fails if we try writing before the master has received the previous packet
         //Can happen frequently while trying to send a large chunk of data
@@ -511,7 +468,8 @@ bool BLEwrite(uint8_t* data, uint16_t len)  {
 }
 
 
-bool BLEwriteChar(uint8_t dataChar)  {
+bool BLEwriteChar(uint8_t dataChar)  
+{
     uint8_t data = dataChar;
     return BLEwrite(&data, 1);
 }

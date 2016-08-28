@@ -49,8 +49,7 @@ void uart_error_handle(app_uart_evt_t * p_event)
 void debug_log_init(void)
 {
     uint32_t err_code = NRF_SUCCESS;
-    const app_uart_comm_params_t comm_params =  
-    {
+    const app_uart_comm_params_t comm_params =  {
         RX_PIN_NUMBER, 
         TX_PIN_NUMBER, 
         RTS_PIN_NUMBER, 
@@ -72,8 +71,7 @@ void debug_log_init(void)
 void debug_log_dump(uint8_t * p_buffer, uint32_t len)
 {
     debug_log("\r\n");
-    for (uint32_t index = 0; index <  len; index++)
-    {
+    for (uint32_t index = 0; index <  len; index++)  {
         debug_log("0x%02X ", p_buffer[index]);
     }
     debug_log("\r\n");

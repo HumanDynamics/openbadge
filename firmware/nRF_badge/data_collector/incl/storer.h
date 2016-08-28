@@ -114,8 +114,11 @@ void storer_on_sys_evt(uint32_t sys_evt);
 void printStorerChunk(int chunk);
 
 
-#define STORED_ASSIGNMENT_MAGIC_NUMBER 0xfb
-#define STORED_ASSIGNMENT_ADDRESS 0
+#define STORED_ASSIGNMENT_ADDRESS 0  // first address in EEPROM
+
+// Magic number is stored to EEPROM along with ID and group #, to denote a valid stored assignment.
+#define STORED_ASSIGNMENT_MAGIC_NUMBER 0xfa
+
 
 typedef union
 {

@@ -1,14 +1,4 @@
-/* Copyright (c) 2014 Nordic Semiconductor. All Rights Reserved.
- *
- * The information contained herein is property of Nordic Semiconductor ASA.
- * Terms and conditions of usage are described in detail in NORDIC
- * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
- *
- * Licensees are granted free, non-transferable use of the information. NO
- * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
- * the file.
- *
- */
+
 
 #include <stdint.h>
 #include <string.h>
@@ -69,11 +59,6 @@ int cycleState = SAMPLE;     // to keep track of state of main loop
 
 // If any module (collecting, storing, sending) has any pending operations, this gets set to true
 bool badgeActive = false;   // Otherwise, the badge is inactive and can enter indefinite sleep.
-
-
-//============================ time-related stuff ======================================
-//======================================================================================
-
 
 
 
@@ -141,31 +126,6 @@ int main(void)
     rtc_config();
     spi_init();
     
-    /*scan_chunk_t scanChunk;
-    for(int i = EXT_FIRST_DATA_CHUNK; i < 64; i++)
-    {
-        uint32_t result = ext_flash_read(EXT_ADDRESS_OF_CHUNK(i), scanChunk.buf, sizeof(scanChunk.buf));
-        if(result != NRF_SUCCESS)
-        {
-            debug_log("ERR: err reading ext flash.\r\n");
-            while(1);
-        }
-        ext_flash_wait();
-        unsigned long ts = scanChunk.timestamp;
-        if(ts == scanChunk.check && ts > MODERN_TIME && ts < FUTURE_TIME)  // not looking at trunc/continue chunks yet.
-        {
-            debug_log("Ext chunk %d, time 0x%lX num %d\r\n",i,scanChunk.timestamp,scanChunk.num);
-            for(int j=0; j<scanChunk.num; j++)
-            {
-                debug_log("  bdg ID#%.4hX, rssi %d, count %d\r\n", scanChunk.devices[j].ID,
-                                                                   (int)scanChunk.devices[j].rssi,
-                                                                   (int)scanChunk.devices[j].count );
-                nrf_delay_ms(5);
-            }
-        }
-        nrf_delay_ms(10);
-    }
-    while(1);*/
     
     #if defined(TESTER_ENABLE) // tester mode is enabled
         runSelfTests();
@@ -181,46 +141,11 @@ int main(void)
     BLEsetBadgeAssignment(getStoredBadgeAssignment());
     advertising_init();
     
-    /*#ifdef DEBUG_LOG_ENABLE
-        ble_gap_addr_t MAC;
-        sd_ble_gap_address_get(&MAC);
-        debug_log("MAC address: %X:%X:%X:%X:%X:%X\r\n", MAC.addr[5],MAC.addr[4],MAC.addr[3],
-                                                    MAC.addr[2],MAC.addr[1],MAC.addr[0]);
-    
-        //uint32_t* deviceAddrPtr = (uint32_t*)NRF_FICR->DEVICEADDR;
-        //debug_log("MAC address address: 0x%X\r\n",(unsigned int)deviceAddrPtr);
-    #endif*/
-    
     // Blink once on start
     nrf_gpio_pin_write(LED_1,LED_ON);
     nrf_delay_ms(2000);
     nrf_gpio_pin_write(LED_1,LED_OFF);
     
-    
-    //setTime(MODERN_TIME+100);
-    //startCollector();
-    //dateReceived = true;
-    
-    /**
-     * Reset tracker
-     * If the board resets for some reason, an LED will blink.
-     * To intentionally reset the board, the button must be held on start.
-     
-    if(nrf_gpio_pin_read(BUTTON_1) != 0)
-    {
-        nrf_gpio_pin_write(LED_1,LED_ON);
-        nrf_delay_ms(1000);
-        nrf_gpio_pin_write(LED_1,LED_OFF);
-        while(1)  {
-            nrf_gpio_pin_write(LED_2,LED_ON);
-            nrf_delay_ms(5);
-            nrf_gpio_pin_write(LED_2,LED_OFF);
-            //nrf_delay_ms(1000);
-            sleep = true;
-            goToSleep(1000);
-        }
-            
-    }*/
     
     nrf_delay_ms(1000);
 
@@ -233,181 +158,108 @@ int main(void)
     nrf_delay_ms(2);
     
     
-    /*scan_params.active = 0;  //passive scanning, only looking for advertising packets
-    scan_params.selective = 0;  //non-selective, don't use whitelist
-    scan_params.p_whitelist = NULL;  //no whitelist
-    scan_params.interval = (SCAN_INTERVAL * 1000) / 625;   //scan_params uses interval in units of 0.625ms
-    scan_params.window = (SCAN_WINDOW * 1000) / 625;       //window also in units of 0.625ms
-    scan_params.timeout = SCAN_TIMEOUT;                    //timeout is in s
-    
-    debug_log("\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n");
-    debug_log("====================================================\r\n");
-    debug_log("===== DEVELOPMENT BADGE.  PERFORMS SCANS ONLY. =====\r\n");
-    debug_log("  Press button to start scanning.\r\n\r\n");
-    
-    while(1)
-    {
-        uint32_t result;
-        
-        // wait till button pressed
-        while(nrf_gpio_pin_read(BUTTON_1) == 0);
-        nrf_delay_ms(200);
-        while(nrf_gpio_pin_read(BUTTON_1) != 0);
-        nrf_delay_ms(200);
-        
-        debug_log("Starting scans...");
-        result = startScan();
-        if(result == NRF_SUCCESS)
-        {
-            debug_log(" Scan started.\r\n");
-        }
-        else
-        {
-            debug_log(" Error starting scan.\r\n");
-            while(1);
-        }
-    }*/
-    
-    /*
-    debug_log("\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n");
-    debug_log("====================================================\r\n");
-    debug_log("===== DEVELOPMENT BADGE.  DUMPS EXT FLASH ONLY. =====\r\n");
-    debug_log("  Press button to start scanning.\r\n\r\n");
-        
-    for(int i = 0; i <= EXT_LAST_CHUNK; i++)
-    {
-        scan_chunk_t scanChunk;
-        getScanChunk(&scanChunk,i);
-        for(int j=0; j<8; j++)
-        {
-            for(int k=0; k<8; k++)
-            {
-                debug_log("%.2X "dfkjngskfjngkjgndfkjgns
-            }
-        }
-    }
-    while(1);
-    */
-    
-    
     // Enter main loop
     for (;;)  {
         //================ Sampling/Sleep handler ================
         
-        if(ble_timeout)
-        {
+        if (ble_timeout)  {
             debug_log("Connection timeout.  Disconnecting...\r\n");
             BLEforceDisconnect();
             ble_timeout = false;
         }
         
-        if(led_timeout)
-        {
+        if (led_timeout)  {
             nrf_gpio_pin_write(LED_2,LED_OFF);
             led_timeout = false;
         }
         
-        switch(cycleState)
-        {
+        switch (cycleState)  {
             
-            case SAMPLE:
-                if(millis() - lastBatteryUpdate >= MIN_BATTERY_READ_INTERVAL)
-                {
-                    //badgeActive |= true;
-                    if(BLEpause(PAUSE_REQ_COLLECTOR))
-                    {
-                        updateBatteryVoltage();
-                        BLEresume(PAUSE_REQ_COLLECTOR);
-                    }
+        case SAMPLE:
+            if (millis() - lastBatteryUpdate >= MIN_BATTERY_READ_INTERVAL)  {
+                //badgeActive |= true;
+                if(BLEpause(PAUSE_REQ_COLLECTOR))  {
+                    updateBatteryVoltage();
+                    BLEresume(PAUSE_REQ_COLLECTOR);
                 }
+            }
+            
+            if (isCollecting)  {
+                badgeActive |= true;
                 
-                if(isCollecting)
-                {
-                    badgeActive |= true;
-                    
-                    if(millis() - cycleStart < sampleWindow)
-                    {
-                        takeMicReading();
-                        //sleep = false;
-                    }
-                    else  {
-                        collectSample();
-                        cycleState = SCAN;
-                    }
+                if (millis() - cycleStart < sampleWindow)  {
+                    takeMicReading();
+                    //sleep = false;
                 }
-                else
-                {
+                else  {
+                    collectSample();
                     cycleState = SCAN;
                 }
-                break;
+            }
+            else  {
+                cycleState = SCAN;
+            }
+            break;
+        
+        case SCAN:
+            ;
+            bool scannerActive = updateScanner();
+            badgeActive |= scannerActive;
+            cycleState = STORE;
+            break;
             
-            case SCAN:
-                ;
-                bool scannerActive = updateScanner();
-                badgeActive |= scannerActive;
-                cycleState = STORE;
-                break;
-                
-            case STORE:
-                ;
-                bool storerActive = updateStorer();
-                badgeActive |= storerActive;
-                cycleState = SEND;
-                break;
-                
-            case SEND:
-                ;
-                bool senderActive = updateSender();
-                badgeActive |= senderActive;
-                
-                if(millis() - cycleStart > (samplePeriod - MIN_SLEEP) || (!senderActive))  // is it time to sleep, or done sending?
-                {
-                    cycleState = SLEEP;
-                }
-                
-                break;
-            case SLEEP:
-                ;// can't put declaration directly after case label.
-                long sleepDuration;
-                unsigned long elapsed = millis() - cycleStart;
-                
-                
-                // If none of the modules (collector, storer, sender) is active, then we can sleep indefinitely (until BLE activity)
-                if(!badgeActive)
-                {
-                    sleepDuration = -1;  // infinite sleep
-                }
-                
-                // Else we're actively cycling thru main loop, and should sleep for the remainder of the sampling period
-                else if(elapsed < samplePeriod)
-                {
-                    sleepDuration = samplePeriod - elapsed;
-                }
-                else
-                {
-                    sleepDuration = 0;
-                }
-                
-                // Main loop will halt on the following line as long as the badge is sleeping (i.e. until an interrupt wakes it)
-                goToSleep(sleepDuration);
-                
-                // Exit sleep if we've reached the end of the sampling period, or if we're in idle mode
-                if(millis() - cycleStart >= samplePeriod || (!badgeActive))  // did we exit sleep by the countdown event
-                {
-                    cycleState = SAMPLE;
-                    cycleStart = millis();
-                    badgeActive = false;
-                }
-                
-                break;
-            default:
-                break;
+        case STORE:
+            ;
+            bool storerActive = updateStorer();
+            badgeActive |= storerActive;
+            cycleState = SEND;
+            break;
+            
+        case SEND:
+            ;
+            bool senderActive = updateSender();
+            badgeActive |= senderActive;
+            
+            if (millis() - cycleStart > (samplePeriod - MIN_SLEEP) || (!senderActive))  {  // is it time to sleep, or done sending?
+                cycleState = SLEEP;
+            }
+            
+            break;
+        case SLEEP:
+            ;// can't put declaration directly after case label.
+            long sleepDuration;
+            unsigned long elapsed = millis() - cycleStart;
+            
+            
+            // If none of the modules (collector, storer, sender) is active, then we can sleep indefinitely (until BLE activity)
+            if (!badgeActive)  {
+                sleepDuration = -1;  // infinite sleep
+            }
+            
+            // Else we're actively cycling thru main loop, and should sleep for the remainder of the sampling period
+            else if (elapsed < samplePeriod)  {
+                sleepDuration = samplePeriod - elapsed;
+            }
+            else  {
+                sleepDuration = 0;
+            }
+            
+            // Main loop will halt on the following line as long as the badge is sleeping (i.e. until an interrupt wakes it)
+            goToSleep(sleepDuration);
+            
+            // Exit sleep if we've reached the end of the sampling period, or if we're in idle mode
+            if (millis() - cycleStart >= samplePeriod || (!badgeActive))  {  // did we exit sleep by the countdown event
+                cycleState = SAMPLE;
+                cycleStart = millis();
+                badgeActive = false;
+            }
+            
+            break;
+        default:
+            break;
         }
-
     }
 }
-
-
 
 void BLEonConnect()
 {
@@ -434,15 +286,6 @@ void BLEonDisconnect()
     
     ble_timeout_cancel();
 }
-
-// Convert chars to long (expects little endian)
-unsigned long readLong(uint8_t *a) {
-  unsigned long retval;
-  retval  = (unsigned long) a[3] << 24 | (unsigned long) a[2] << 16;
-  retval |= (unsigned long) a[1] << 8 | a[0];
-  return retval;
-}
-
 
 /** Function for handling incoming data from the BLE UART service
  */
