@@ -39,22 +39,6 @@ ch.setFormatter(formatter)
 logger.addHandler(fh)
 logger.addHandler(ch)
 
-# global logging variable
-mac = None
-
-'''
-class ContextFilter(logging.Filter):
-    """
-    adding a context filter that adds the MAC to the log
-    """
-    def filter(self, record):
-        record.mac = mac
-        return True
-
-f = ContextFilter()
-logger.addFilter(f)
-'''
-
 def get_devices(device_file="device_macs.txt"):
     """
     Returns a list of devices included in device_macs.txt
@@ -83,21 +67,13 @@ def get_devices(device_file="device_macs.txt"):
     return devices
 
 
-#hacky
-now_ts, now_ts_fract = now_utc_epoch()
-print("Will request data since %f" % now_ts)
-last_proximity_ts, last_proximity_ts_fract = now_ts, now_ts_fract
-last_audio_ts, last_audio_ts_fract = now_ts, now_ts_fract
-
-
-def dialogue(addr=""):
+def dialogue(bdg):
     """
     Attempts to read data from the device specified by the address. Reading is handled by gatttool.
-    :param addr:
+    :param bdg:
     :return:
     """
-    bdg = Badge(addr, logger)
-    ret = bdg.pull_data(last_audio_ts, last_audio_ts_fract, last_proximity_ts)
+    ret = bdg.pull_data()
     if ret == 0:
         logger.info("Successfully pulled data")
 
@@ -167,8 +143,6 @@ def reset():
 
 def add_pull_command_options(subparsers):
     pull_parser = subparsers.add_parser('pull', help='Continuously pull data from badges')
-    pull_parser.add_argument('-w','--use_whitelist', action='store_true', default=False, help="Use whitelist instead of continuously scanning for badges")
-
 
 def add_scan_command_options(subparsers):
     pull_parser = subparsers.add_parser('scan', help='Continuously scan for badges')
@@ -249,22 +223,33 @@ if __name__ == "__main__":
     # pull data from all devices
     if args.mode == "pull":
         logger.info('Started')
+
+        # hacky
+        now_ts, now_ts_fract = now_utc_epoch()
+        logger.info("Will request data since %f" % now_ts)
+        init_proximity_ts, init_proximity_ts_fract = now_ts, now_ts_fract
+        init_audio_ts, init_audio_ts_fract = now_ts, now_ts_fract
+
+        badges = {} # Keeps a list of badge objects
         while True:
+            logger.info("Scanning for devices...")
             whitelist_devices = get_devices()
-            if not args.use_whitelist:
-                logger.info("Scanning for devices...")
-                scanned_devices = scan_for_devices(whitelist_devices)
-            else:
-                logger.info("Scan is disabled. Using whitelist.")
-                scanned_devices = [{'mac':x} for x in whitelist_devices]
+            scanned_devices = scan_for_devices(whitelist_devices)
 
             time.sleep(2)
 
             for device in scanned_devices:
-                mac = device['mac']
-                dialogue(mac)
+                addr = device['mac']
+                if addr not in badges:
+                    logger.debug("Unseen device. Adding to dict: %s" % addr)
+                    # init new badge. set last seen chunk to the time the pull command was called
+                    new_badge = Badge(addr, logger)
+                    new_badge.set_last_ts(
+                        init_audio_ts, init_audio_ts_fract, init_proximity_ts, init_proximity_ts_fract)
+                    badges[addr] = new_badge
+                badge = badges[addr]
+                dialogue(badge)
                 time.sleep(2)  # requires sleep between devices
-                mac = None
 
             logger.info("Sleeping...")
             time.sleep(6)

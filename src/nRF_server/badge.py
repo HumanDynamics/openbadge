@@ -267,6 +267,11 @@ class Badge():
         self.conn = None
         self.connDialogue = BadgeDialogue(self)
 
+        self.last_proximity_ts = None
+        self.last_proximity_ts_fract = None
+        self.last_audio_ts = None
+        self.last_audio_ts_fract = None
+
     def connect(self):
         self.logger.info("Connecting to {}".format(self.addr))
         self.dlg = BadgeDelegate(params=1)
@@ -278,6 +283,10 @@ class Badge():
             self.conn.disconnect()
         else:
             self.logger.info("Can't disconnect from {}. Not connected".format(self.addr))
+
+    def set_last_ts(self, init_audio_ts, init_audio_ts_fract, init_proximity_ts, init_proximity_ts_fract):
+        self.last_proximity_ts, self.last_proximity_ts_fract, self.last_audio_ts, self.last_audio_ts_fract = \
+            init_audio_ts, init_audio_ts_fract, init_proximity_ts, init_proximity_ts_fract
 
     # sends status request with UTC time to the badge
     def sendStatusRequest(self):
@@ -436,7 +445,7 @@ class Badge():
 
         return retcode
 
-    def pull_data(self, last_audio_ts, last_audio_ts_fract, last_proximity_ts):
+    def pull_data(self):
         """
         Attempts to read data from the device
         """
@@ -459,7 +468,7 @@ class Badge():
             # data request using the "r" command - data since time X
             self.logger.info("Requesting data...")
 
-            self.sendDataRequest(last_audio_ts, last_audio_ts_fract)  # ask for data
+            self.sendDataRequest(self.last_audio_ts, self.last_audio_ts_fract)  # ask for data
             wait_count = 0
             while True:
                 if self.dlg.gotEndOfData == True:
@@ -474,7 +483,7 @@ class Badge():
 
             # data request using the "r" command - data since time X
             self.logger.info("Requesting scans...")
-            self.sendScanRequest(last_proximity_ts)
+            self.sendScanRequest(self.last_proximity_ts)
             wait_count = 0
             while True:
                 if self.dlg.gotEndOfScans == True:
