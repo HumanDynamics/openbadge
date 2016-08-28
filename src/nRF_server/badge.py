@@ -192,7 +192,8 @@ class BadgeDelegate(DefaultDelegate):
                 self.expected = Expect.none
                 pass
             else:
-                self.tempChunk.ts += (self.tempChunk.fract/1000.0)
+                self.tempChunk.ts = ts_and_fract_to_float(self.tempChunk.ts, self.tempChunk.fract)
+
                 self.expected = Expect.samples
         elif self.expected == Expect.samples: # just samples
             sample_arr = struct.unpack('<%dB' % len(data),data) # Nrfuino bytes are unsigned bytes
@@ -268,7 +269,6 @@ class Badge():
         self.connDialogue = BadgeDialogue(self)
 
         self.last_proximity_ts = None
-        self.last_proximity_ts_fract = None
         self.last_audio_ts = None
         self.last_audio_ts_fract = None
 
@@ -284,9 +284,10 @@ class Badge():
         else:
             self.logger.info("Can't disconnect from {}. Not connected".format(self.addr))
 
-    def set_last_ts(self, init_audio_ts, init_audio_ts_fract, init_proximity_ts, init_proximity_ts_fract):
-        self.last_proximity_ts, self.last_proximity_ts_fract, self.last_audio_ts, self.last_audio_ts_fract = \
-            init_audio_ts, init_audio_ts_fract, init_proximity_ts, init_proximity_ts_fract
+    def set_last_ts(self, init_audio_ts, init_audio_ts_fract, init_proximity_ts):
+        self.last_audio_ts = init_audio_ts
+        self.last_audio_ts_fract = init_audio_ts_fract
+        self.last_proximity_ts = init_proximity_ts
 
     # sends status request with UTC time to the badge
     def sendStatusRequest(self):
@@ -466,7 +467,7 @@ class Badge():
                     self.dlg.timestamp_sec, self.dlg.timestamp_ms, self.dlg.voltage))
 
             # data request using the "r" command - data since time X
-            self.logger.info("Requesting data...")
+            self.logger.info("Requesting data since {} {}".format(self.last_audio_ts, self.last_audio_ts_fract))
 
             self.sendDataRequest(self.last_audio_ts, self.last_audio_ts_fract)  # ask for data
             wait_count = 0
@@ -482,7 +483,7 @@ class Badge():
             self.logger.info("finished reading data")
 
             # data request using the "r" command - data since time X
-            self.logger.info("Requesting scans...")
+            self.logger.info("Requesting scans since {}".format(self.last_proximity_ts))
             self.sendScanRequest(self.last_proximity_ts)
             wait_count = 0
             while True:
@@ -495,6 +496,22 @@ class Badge():
                 wait_count = wait_count + 1
                 if wait_count >= PULL_WAIT: break
             self.logger.info("finished reading data")
+
+            # update last seen chunks and scans
+            if len(self.dlg.chunks) > 0:
+                last_chunk = self.dlg.chunks[-1]
+                if last_chunk.ts > 0:
+                    last_ts = last_chunk.ts - 1  # minus 1 second to compensate for potential conversion errors from float
+                    last_ts_int, last_ts_fract = split_ts_float(last_ts)
+                    self.logger.debug("Setting last seen audio chunk to {}.{}".format(last_ts_int, last_ts_fract))
+                    self.last_audio_ts = last_ts_int
+                    self.last_audio_ts_fract = last_ts_fract
+
+            if len(self.dlg.scans) > 0:
+                last_scan = self.dlg.scans[-1]
+                last_ts = last_scan.ts
+                self.logger.debug("Setting last seen proximirt scan to {}".format(last_ts))
+                self.last_proximity_ts = last_ts
 
             retcode = 0
 
@@ -524,31 +541,66 @@ def print_bytes(data):
 
 
 def datetime_to_epoch(d):
-        """
-        Converts given datetime to epoch seconds and ms
-        :param d: datetime
-        :return:
-        """
-        epoch_seconds = (d - datetime.datetime(1970, 1, 1)).total_seconds()
-        long_epoch_seconds = long(floor(epoch_seconds))
-        ts_fract = d.microsecond / 1000;
-        return (long_epoch_seconds, ts_fract)
+    """
+    Converts given datetime to epoch seconds and ms
+    :param d: datetime
+    :return:
+    """
+    epoch_seconds = (d - datetime.datetime(1970, 1, 1)).total_seconds()
+    long_epoch_seconds = long(floor(epoch_seconds))
+    ts_fract = d.microsecond / 1000;
+    return (long_epoch_seconds, ts_fract)
 
 
 def now_utc():
-        """
-        Returns current UTC as datetime
-        :return: datetime
-        """
-        return datetime.datetime.utcnow()
+    """
+    Returns current UTC as datetime
+    :return: datetime
+    """
+    return datetime.datetime.utcnow()
 
 
 def now_utc_epoch():
-        """
-        Returns current UTC as epoch seconds and ms
-        :return: long_epoch_seconds, ts_fract
-        """
-        return datetime_to_epoch(now_utc())
+    """
+    Returns current UTC as epoch seconds and ms
+    :return: long_epoch_seconds, ts_fract
+    """
+    return datetime_to_epoch(now_utc())
+
+
+def split_ts_float(ts):
+    """
+    Splits a timestamp that is represented as a float to an integral part and a fraction
+    :param ts:
+    :return:
+    """
+    seconds = long(floor(ts))
+    fract = int(round((ts - seconds) * 1000))
+    return seconds,fract
+
+
+def ts_and_fract_to_float(ts_int,ts_fract):
+    """
+    takes integral part and a fraction and converts to float
+    :param ts:
+    :return:
+    """
+    return ts_int + (ts_fract / 1000.0)
 
 if __name__ == "__main__":
-   pass
+    print("Basic conversion tests")
+    print("Int and fraction to float")
+    ts_int = 1472396048
+    ts_fract = 501
+    print("Original values: {} {}".format(ts_int,ts_fract))
+    ts_float = ts_and_fract_to_float(ts_int, ts_fract)
+    print(ts_float)
+    print("%0.3f" % ts_float)
+    print(type(ts_float))
+
+    print("--------------------------")
+
+    print("Float to int and fraction")
+    new_ts_int, new_ts_fract = split_ts_float(ts_float)
+    print("New values: {} {}".format(new_ts_int, new_ts_fract))
+    print("{} {}".format(type(new_ts_int),type(new_ts_fract)))

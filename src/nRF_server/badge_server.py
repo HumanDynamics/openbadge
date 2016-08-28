@@ -227,7 +227,7 @@ if __name__ == "__main__":
         # hacky
         now_ts, now_ts_fract = now_utc_epoch()
         logger.info("Will request data since %f" % now_ts)
-        init_proximity_ts, init_proximity_ts_fract = now_ts, now_ts_fract
+        init_proximity_ts = now_ts
         init_audio_ts, init_audio_ts_fract = now_ts, now_ts_fract
 
         badges = {} # Keeps a list of badge objects
@@ -245,7 +245,7 @@ if __name__ == "__main__":
                     # init new badge. set last seen chunk to the time the pull command was called
                     new_badge = Badge(addr, logger)
                     new_badge.set_last_ts(
-                        init_audio_ts, init_audio_ts_fract, init_proximity_ts, init_proximity_ts_fract)
+                        init_audio_ts, init_audio_ts_fract, init_proximity_ts)
                     badges[addr] = new_badge
                 badge = badges[addr]
                 dialogue(badge)
