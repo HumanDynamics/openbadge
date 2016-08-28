@@ -3,17 +3,18 @@ from __future__ import print_function
 from bluepy import btle
 from bluepy.btle import UUID, Peripheral, DefaultDelegate, AssignedNumbers
 from nrf import Nrf, SimpleDelegate
-from math import floor
-from dateutil import tz
+from badge_dialogue import BadgeDialogue
 import struct
+from math import floor
 import datetime
 
 class Expect:
     none,status,timestamp,header,samples,scanHeader,scanDevices = range(7)
 
-#This class is the contents of one chunk of mic data
 class Chunk():
-    #maxSamples = 114
+    """
+    #This class is the contents of one chunk of mic data
+    """
     def __init__(self, header, data):
         self.ts,self.fract,self.voltage,self.sampleDelay,self.numSamples = header
         self.samples = data[0:]
@@ -38,12 +39,20 @@ class Chunk():
 
 
 class SeenDevice():
+    """
+    Represents an instance of a proximity data for a device found during a scan
+    """
     def __init__(self,(ID,rssi,count)):
         self.ID = ID
         self.rssi = rssi
         self.count = count
 
+
 class Scan():
+    """
+    This class holds the content of one scan record
+    """
+
     def __init__(self, header, devices):
         self.ts,self.numDevices = header
         self.devices = devices[0:]
@@ -64,10 +73,12 @@ class Scan():
         return len(self.devices) >= self.numDevices
 
 
-# This class handles incoming data from the badge. It will buffer the
-# data so external processes can read from it more easy. Reset will
-# delete all buffered data
 class BadgeDelegate(DefaultDelegate):
+    """
+    This class handles incoming data from the badge. It will buffer the
+    data so external processes can read from it more easy. Reset will
+    delete all buffered data
+    """
     tempChunk = Chunk((None,None,None,None,None),[])
     #data is received as chunks, keep the chunk organization
     chunks = []
@@ -158,7 +169,7 @@ class BadgeDelegate(DefaultDelegate):
         elif self.expected == Expect.scanDevices: # just devices
             num_devices = int(len(data)/4)
             raw_arr = struct.unpack('<' + num_devices * 'Hbb',data)
-            print(raw_arr)
+
             tuple_arr = zip(raw_arr[0::3],raw_arr[1::3],raw_arr[2::3])
             device_arr = [SeenDevice(params) for params in tuple_arr]
             self.tempScan.addDevices(device_arr)
@@ -171,30 +182,47 @@ class BadgeDelegate(DefaultDelegate):
             print("Error: not expecting data")
 
 
-class Badge(Nrf):
+class BadgeConnection(Nrf):
+    """
+    Extends a Nrf device and wraps with struct
+    """
     dlg = None
-    def __init__(self, periph):
+
+    def __init__(self, periph, dlg):
         Nrf.__init__(self, periph)
         self.NrfReadWrite.enable()
         self.NrfNotifications.enable()
-        self.dlg = BadgeDelegate(params=1)
-        self.setDelegate(self.dlg)
+        self.setDelegate(dlg)
 
-    def read(self,fmt):
+    def read(self, fmt):
         d = self.NrfReadWrite.read()
         arr = struct.unpack(fmt, d)
         return arr
 
-
-    def write(self,fmt,*arr):
+    def write(self, fmt, *arr):
         s = struct.pack(fmt, *arr)
         return self.NrfReadWrite.write(s)
+
+
+class Badge():
+    def __init__(self, addr):
+        self.addr = addr
+        self.dlg = BadgeDelegate(params=1)
+        self.conn = None
+        self.connDialogue = BadgeDialogue(self)
+
+    def connect(self):
+        self.conn = BadgeConnection(self.addr, self.dlg)
+
+    def disconnect(self):
+        if self.conn is not None:
+            self.conn.disconnect()
 
     # sends status request with UTC time to the badge
     def sendStatusRequest(self):
         long_epoch_seconds, ts_fract = now_utc_epoch()
         self.dlg.expected = Expect.status
-        return self.write('<cLH',"s",long_epoch_seconds,ts_fract)
+        return self.conn.write('<cLH',"s",long_epoch_seconds,ts_fract)
 
     # sends request to start recording, with specified timeout
     #   (if after timeout minutes badge has not seen server, it will stop recording)
@@ -202,11 +230,11 @@ class Badge(Nrf):
         long_epoch_seconds, ts_fract = now_utc_epoch()
         self.gotTimestamp = False
         self.dlg.expected = Expect.timestamp
-        return self.write('<cLHH',"1",long_epoch_seconds,ts_fract,timeout)
+        return self.conn.write('<cLHH',"1",long_epoch_seconds,ts_fract,timeout)
 
     # sends request to stop recording
     def sendStopRec(self):
-        return self.write('<c',"0")
+        return self.conn.write('<c',"0")
 
     # sends request to start scan, with specified timeout and other scan parameters
     #   (if after timeout minutes badge has not seen server, it will stop recording)
@@ -214,14 +242,14 @@ class Badge(Nrf):
         long_epoch_seconds, ts_fract = now_utc_epoch()
         self.gotTimestamp = False
         self.dlg.expected = Expect.timestamp
-        return self.write('<cLHHHHHH',"p",long_epoch_seconds,ts_fract,timeout,window,interval,duration,period)
+        return self.conn.write('<cLHHHHHH',"p",long_epoch_seconds,ts_fract,timeout,window,interval,duration,period)
 
     # sends request to stop recording
     def sendStopScan(self):
-        return self.write('<c',"q")
+        return self.conn.write('<c',"q")
 
     def sendIdentifyReq(self, timeout):
-        return self.write('<cH',"i",timeout)
+        return self.conn.write('<cH',"i",timeout)
 
     def sendDataRequest(self, ts, ts_fract):
         """
@@ -232,7 +260,7 @@ class Badge(Nrf):
         :return:
         """
         self.dlg.expected = Expect.header
-        return self.write('<cLH',"r",ts,ts_fract)
+        return self.conn.write('<cLH',"r",ts,ts_fract)
 
     def sendScanRequest(self, ts):
         """
@@ -242,64 +270,34 @@ class Badge(Nrf):
         :return:
         """
         self.dlg.expected = Expect.scanHeader
-        return self.write('<cL',"b",ts)
-
+        return self.conn.write('<cL',"b",ts)
 
 def datetime_to_epoch(d):
-    """
-    Converts given datetime to epoch seconds and ms
-    :param d: datetime
-    :return:
-    """
-    epoch_seconds = (d - datetime.datetime(1970,1,1)).total_seconds()
-    long_epoch_seconds = long(floor(epoch_seconds))
-    ts_fract = d.microsecond/1000;
-    return(long_epoch_seconds,ts_fract)
+        """
+        Converts given datetime to epoch seconds and ms
+        :param d: datetime
+        :return:
+        """
+        epoch_seconds = (d - datetime.datetime(1970, 1, 1)).total_seconds()
+        long_epoch_seconds = long(floor(epoch_seconds))
+        ts_fract = d.microsecond / 1000;
+        return (long_epoch_seconds, ts_fract)
 
 
 def now_utc():
-    """
-    Returns current UTC as datetime
-    :return: datetime
-    """
-    return datetime.datetime.utcnow()
+        """
+        Returns current UTC as datetime
+        :return: datetime
+        """
+        return datetime.datetime.utcnow()
 
 
 def now_utc_epoch():
-    """
-    Returns current UTC as epoch seconds and ms
-    :return: long_epoch_seconds, ts_fract
-    """
-    return datetime_to_epoch(now_utc())
+        """
+        Returns current UTC as epoch seconds and ms
+        :return: long_epoch_seconds, ts_fract
+        """
+        return datetime_to_epoch(now_utc())
 
 if __name__ == "__main__":
-    import time
-    import sys
-    import argparse
-    import datetime
-
-    bdg_addr = "E1:C1:21:A2:B2:E0"
-    bdg = Badge(bdg_addr)
-    time.sleep(1.0)
-
-    try:
-        while not bdg.dlg.gotStatus:
-            bdg.NrfReadWrite.write("s")  # ask for status
-            bdg.waitForNotifications(1.0)  # waiting for status report
-
-        print("got status")
-
-        while not bdg.dlg.gotDateTime:
-            bdg.NrfReadWrite.write("t")  # ask for time
-            bdg.waitForNotifications(1.0)
-
-        print("Got datetime: {},{}".format(bdg.dlg.badge_sec,bdg.dlg.badge_ts))
-
-    except:
-        retcode=-1
-        e = sys.exc_info()[0]
-        print("unexpected failure, {}".format(e))
-
-    finally:
-        bdg.disconnect()
-        del bdg
+   pass

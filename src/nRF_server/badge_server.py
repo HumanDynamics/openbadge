@@ -1,10 +1,10 @@
 #!/usr/bin/python
 from bluepy.btle import BTLEException
-from badge import Badge
 from badge import *
 from badge_discoverer import BadgeDiscoverer
 
 import datetime
+import traceback
 import logging.handlers
 import os
 import re
@@ -135,13 +135,14 @@ def dialogue(addr=""):
     try:
         with timeout(seconds=5, error_message="Connect timeout"):
             bdg = Badge(addr)
+            bdg.connect()
 
         logger.info("Connected")
 
         with timeout(seconds=5, error_message="Dialogue timeout (wrong firmware version?)"):
             while not bdg.dlg.gotStatus:
                 bdg.sendStatusRequest()  # ask for status
-                bdg.waitForNotifications(WAIT_FOR)  # waiting for status report
+                bdg.conn.waitForNotifications(WAIT_FOR)  # waiting for status report
 
             logger.info("Got status")
             logger.info("Badge datetime was: {},{}, Voltage: {}".format(
@@ -155,7 +156,7 @@ def dialogue(addr=""):
         while True:
             if bdg.dlg.gotEndOfData == True:
                 break
-            if bdg.waitForNotifications(WAIT_FOR):
+            if bdg.conn.waitForNotifications(WAIT_FOR):
                 # if got data, don't inrease the wait counter
                 continue
             logger.info("Waiting for more data...")
@@ -170,7 +171,7 @@ def dialogue(addr=""):
         while True:
             if bdg.dlg.gotEndOfScans == True:
                 break
-            if bdg.waitForNotifications(WAIT_FOR):
+            if bdg.conn.waitForNotifications(WAIT_FOR):
                 # if got data, don't inrease the wait counter
                 continue
             logger.info("Waiting for more data...")
@@ -187,7 +188,8 @@ def dialogue(addr=""):
     except TimeoutError, te:
         logger.error("TimeoutError: "+te.message)
     except Exception as e:
-        logger.error("unexpected failure, {}, {}".format(type(e),e))
+        s = traceback.format_exc()
+        logger.error("unexpected failure, {} ,{}".format(e,s))
     finally:
         if bdg:
             bdg.disconnect()
@@ -247,13 +249,14 @@ def getStatus(addr=""):
     try:
         with timeout(seconds=5, error_message="Connect timeout"):
             bdg = Badge(addr)
+            bdg.connect()
 
         logger.info("Connected")
 
         with timeout(seconds=5, error_message="Status request timeout (wrong firmware version?)"):
             while not bdg.dlg.gotStatus:
                 bdg.sendStatusRequest()  # ask for status
-                bdg.waitForNotifications(WAIT_FOR)  # waiting for status report
+                bdg.conn.waitForNotifications(WAIT_FOR)  # waiting for status report
 
             logger.info("Got status")
 
@@ -273,7 +276,8 @@ def getStatus(addr=""):
     except TimeoutError, te:
         logger.error("TimeoutError: "+te.message)
     except Exception as e:
-        logger.error("unexpected failure, {}".format(e))
+        s = traceback.format_exc()
+        logger.error("unexpected failure, {} ,{}".format(e,s))
     finally:
         if bdg:
             bdg.disconnect()
@@ -293,6 +297,7 @@ def startRec(addr=""):
     try:
         with timeout(seconds=5, error_message="Connect timeout"):
             bdg = Badge(addr)
+            bdg.connect()
 
         logger.info("Connected")
 
@@ -300,7 +305,7 @@ def startRec(addr=""):
         with timeout(seconds=5, error_message="StartRec timeout (wrong firmware version?)"):
             while not bdg.dlg.gotTimestamp:
                 bdg.sendStartRecRequest(RECORDING_TIMEOUT)  # start recording
-                bdg.waitForNotifications(WAIT_FOR)  # waiting for time acknowledgement
+                bdg.conn.waitForNotifications(WAIT_FOR)  # waiting for time acknowledgement
 
             logger.info("Got time ack")
 
@@ -315,7 +320,7 @@ def startRec(addr=""):
         with timeout(seconds=5, error_message="StartScan timeout (wrong firmware version?)"):
             while not bdg.dlg.gotTimestamp:
                 bdg.sendStartScanRequest(RECORDING_TIMEOUT,0,0,0,0)  # start recording
-                bdg.waitForNotifications(WAIT_FOR)  # waiting for time acknowledgement
+                bdg.conn.waitForNotifications(WAIT_FOR)  # waiting for time acknowledgement
 
             logger.info("Got time ack")
 
@@ -334,7 +339,8 @@ def startRec(addr=""):
     except TimeoutError, te:
         logger.error("TimeoutError: "+te.message)
     except Exception as e:
-        logger.error("unexpected failure, {}".format(e))
+        s = traceback.format_exc()
+        logger.error("unexpected failure, {} ,{}".format(e,s))
     finally:
         if bdg:
             bdg.disconnect()
