@@ -223,10 +223,13 @@ bool updateSender()
     case CMD_REQSINCE:
         if (send.from == NO_CHUNK)  {
             // Walk back from most recent data till we find a chunk that includes the requested timestamp
-                
-            // if nothing else, send the in-progress chunk
-            send.from = collect.to;
+            
+            send.from = SEND_FROM_END;
             send.source = SRC_REALTIME;
+            
+            if (collect.loc > 0)  {
+                send.from = collect.to;  // if there's anything in the real-time chunk, send it.
+            }
             
             // look for potential chunks, in RAM first, starting right before current collector chunk
             int latestRAMchunk = (collect.to > 0) ? collect.to-1 : LAST_RAM_CHUNK;
