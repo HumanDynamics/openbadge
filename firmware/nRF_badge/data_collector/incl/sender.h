@@ -29,13 +29,12 @@
  *
  * CMD_STATUS                    
  *   Ask for badge status        's' (uchar)                  clock status (uchar) - 0, clock was unset; 1, clock was set
- *   and send date               timestamp (ulong)            data status (uchar) - 1 if unsent data ready (backwards-compatibility)
- *   Optionally, set             ms (ushort)                  recording status (uchar) - 1 if collecting samples
- *     badge ID and group      [ ID (ushort) ]                scan status (uchar) - 1 if scanning
- *                             [ group (uchar) ]              timestamp (ulong) - 0 if none set
- *                                                            ms (ushort) - 0 if none set
+ *   and send date               timestamp (ulong)            scan status (uchar) - 1 if scanning
+ *   Optionally, set             ms (ushort)                  collector status (uchar) - 1 if collecting samples
+ *     badge ID and group      [ ID (ushort) ]                timestamp (ulong) - 0 if none set
+ *                             [ group (uchar) ]              ms (ushort) - 0 if none set
  *                                                            battery voltage (float)
- *   Send ID=0 to use the default ID.  Send ID=0xFFFF/group=0xFF to reset the persistent (non-volatile) assignments.
+ *   Send ID=0xFFFF/group=0xFF to reset the persistent (non-volatile) assignments.
  *                    .  .  .  .  .  .  .  .
  * CMD_STARTREC
  *   Start collecting data       '1' (uchar)                  timestamp (ulong) - acknowledge time.  0 if none set.
@@ -104,7 +103,6 @@ enum SERVER_COMMANDS
     CMD_ENDREC = '0',           // server requests stop collecting
     CMD_STARTSCAN = 'p',        // server requests start scanning
     CMD_ENDSCAN = 'q',          // server requests stop scanning
-    CMD_REQUNSENT = 'd',        // server requests send unsent data from flash
     CMD_REQSINCE = 'r',         // server requests send all data, flash or ram, since time X 
     CMD_REQSCANS = 'b',         // server requests send all scan results, since time X
     CMD_IDENTIFY = 'i',         // server requests light an LED for specified time
@@ -121,7 +119,6 @@ enum SERVER_COMMAND_LENGTHS
     CMD_ENDREC_LEN = 1,
     CMD_STARTSCAN_LEN = 17,
     CMD_ENDSCAN_LEN = 1,
-    CMD_REQUNSENT_LEN = 1,
     CMD_REQSINCE_LEN = 7,
     CMD_REQSCANS_LEN = 5,
     CMD_IDENTIFY_LEN = 3
@@ -192,7 +189,6 @@ enum SEND_SOURCE
 struct
 {
     int from;                   // current chunk we're sending from
-    int firstUnsent;            // the earliest unsent chunk (by REQUNSENT commands).  Updated at end of REQUNSENT execution.
     int source;                 // where send.from refers to (see SEND_SOURCE above)
     
     int loc;                    // index of next data to be sent from chunk - SEND_LOC_HEADER if header is to be sent next

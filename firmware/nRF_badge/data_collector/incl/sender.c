@@ -83,14 +83,6 @@ server_command_params_t unpackCommand(uint8_t* pkt, unsigned char len)
         }
         debug_log("SENDER: Got ENDSCAN request.\r\n");
         break;
-    case CMD_REQUNSENT:
-        debug_log("SENDER: Got REQUNSENT request.\r\n");
-        if (len != CMD_REQUNSENT_LEN)  {
-            command.cmd = CMD_INVALID;
-            debug_log("  Bad parameters.\r\n");
-            break;
-        }
-        break;
     case CMD_REQSINCE:
         debug_log("SENDER: Got REQSINCE request.\r\n");
         if (len != CMD_REQSINCE_LEN)  {
@@ -140,34 +132,11 @@ static bool timestampValid(unsigned long timestamp)
 
 void sender_init()
 {
-    send.firstUnsent = 0;
     send.from = NO_CHUNK;
     send.source = SRC_FLASH;
     send.bufContents = SENDBUF_EMPTY;
     send.loc = SEND_LOC_HEADER;
-    send.num = 0;
-    
-    unsigned long earliestUnsentTime = MODERN_TIME;
-    
-    for (int c = 0; c <= LAST_FLASH_CHUNK; c++){
-        mic_chunk_t* chunkPtr = (mic_chunk_t*)ADDRESS_OF_CHUNK(c);
-
-        unsigned long timestamp = chunkPtr->timestamp;
-        unsigned long check = chunkPtr->check;
-        
-        //debug_log("time: 0x%lX\r\n", timestamp);
-        
-        if (timestampValid(timestamp))  { 
-            if (timestamp == check && check != 0)  {  //is it a completely stored, but unsent, chunk?
-                if (timestamp < earliestUnsentTime)  {  //is it earlier than the earliest one sent so far?
-                    send.firstUnsent = c; //keep track of latest stored chunk
-                    earliestUnsentTime = timestamp;
-                }
-            }
-        }
-        //nrf_delay_ms(50);
-    }
-    
+    send.num = 0;    
     
     dateReceived = false;
     pendingCommand.cmd = CMD_NONE;   
@@ -231,8 +200,8 @@ bool updateSender()
             // otherwise prepare status packet
             else  {
                 send.buf[0] = (dateReceived) ? 1 : 0;
-                send.buf[1] = (isCollecting) ? 1 : 0;  // COLLECTING DATA
-                send.buf[2] = (scanner_enable) ? 1 : 0;  // SCANNING
+                send.buf[1] = (scanner_enable) ? 1 : 0;  // SCANNING
+                send.buf[2] = (isCollecting) ? 1 : 0;  // COLLECTING DATA
                 
                 // Reply with onboard timestamp (0 if none set)
                 unsigned long timestamp = 0;
@@ -254,7 +223,7 @@ bool updateSender()
         
         // ==========================================
         // ========  Data-sending commands.  ========
-        else if (command.cmd == CMD_REQUNSENT || command.cmd == CMD_REQSINCE  || command.cmd == CMD_REQSCANS)  {
+        else if (command.cmd == CMD_REQSINCE  || command.cmd == CMD_REQSCANS)  {
             // --------------------------------
             // ----- initializing sending -----
             // If send.from isn't set, then we just got the request, and we need to find where to start sending from
@@ -379,13 +348,6 @@ bool updateSender()
                             }
                         }
                     }
-                }
-                
-                // If request is REQUNSENT, just send from the last sent chunk.
-                else  {
-                    //send.from = send.firstUnsent;    NOT IMPLEMENTED YET
-                    debug_log("ERR: CMD_REQUNSENT unimplemented.\r\n");
-                    pendingCommand.cmd = CMD_NONE;
                 }
                 
                 unsigned char srcChar = (send.source==SRC_FLASH) ? 'F' : ((send.source==SRC_RAM)?'R':'C');
@@ -710,7 +672,7 @@ bool updateSender()
                     }         
                 } 
             } 
-        }  // else if (command.cmd == CMD_REQUNSENT || command.cmd == CMD_REQSINCE || command.cmd == CMD_REQSCANS)
+        }  // else if (command.cmd == CMD_REQSINCE || command.cmd == CMD_REQSCANS)
         
         
         else if (command.cmd == CMD_STARTREC || command.cmd == CMD_STARTSCAN)  {
