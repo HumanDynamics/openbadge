@@ -1,7 +1,7 @@
 *.py[co]
 device_macs*
 scan.txt
-badges_proximity.txt
-badges_audio.txt
+log_proximity.txt
+log_audio.txt
 data.db
 *.log

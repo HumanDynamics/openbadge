@@ -12,8 +12,8 @@ import csv
 
 log_file_name = 'server.log'
 scans_file_name = 'scan.txt'
-audio_file_name = 'badges_audio.txt'
-proximity_file_name = 'badges_proximity.txt'
+audio_file_name = 'log_audio.txt'
+proximity_file_name = 'log_proximity.txt'
 
 SCAN_DURATION = 3  # seconds
 
@@ -108,10 +108,9 @@ def dialogue(bdg):
                     device_list = ''
                     for dev in scan.devices:
                         device_list += "[#{:x},{},{}]".format(dev.ID, dev.rssi, dev.count)
+                        fout.write(
+                            "{},{},{},{},{},{}\n".format(addr, scan.voltage, ts_with_ms, dev.ID, dev.rssi, dev.count))
                     logger.info('  >  ' + device_list)
-
-                    fout.write("{},{},{},{},{},{}\n".format(addr, scan.voltage, ts_with_ms, dev.ID, dev.rssi, dev.count))
-                    #lastScanTimestamp = bdg.dlg.scans[-1].ts
             fout.close()
         else:
             logger.info("No proximity scans ready")

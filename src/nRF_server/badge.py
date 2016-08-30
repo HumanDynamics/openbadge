@@ -19,7 +19,14 @@ import time
 
 WAIT_FOR = 1.0  # timeout for WaitForNotification calls.  Must be > samplePeriod of badge
 PULL_WAIT = 2
+
 RECORDING_TIMEOUT = 10
+
+# Scan settings. See documentation for more details
+SCAN_WINDOW = 100
+SCAN_INTERVAL = 300
+SCAN_DURATION = 5 # how long each scan lasts
+SCAN_PERIOD = 60 # how often to run a scan
 
 class TimeoutError(Exception):
     """
@@ -420,7 +427,7 @@ class Badge():
             self.logger.info("Starting proximity scans")
             with timeout(seconds=5, error_message="StartScan timeout (wrong firmware version?)"):
                 while not self.dlg.gotTimestamp:
-                    self.sendStartScanRequest(RECORDING_TIMEOUT, 0, 0, 0, 0)  # start recording
+                    self.sendStartScanRequest(RECORDING_TIMEOUT, SCAN_WINDOW, SCAN_INTERVAL, SCAN_DURATION, SCAN_PERIOD)
                     self.conn.waitForNotifications(WAIT_FOR)  # waiting for time acknowledgement
 
                 self.logger.info("Got time ack")
