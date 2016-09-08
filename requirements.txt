@@ -1,2 +1,2 @@
-bluepy==1.0.5
+bluepy==1.0.4
 python-dateutil==2.5.3
