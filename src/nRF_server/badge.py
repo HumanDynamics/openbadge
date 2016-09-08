@@ -464,14 +464,37 @@ class Badge():
 
             self.logger.info("Connected")
 
-            with timeout(seconds=5, error_message="Dialogue timeout (wrong firmware version?)"):
-                while not self.dlg.gotStatus:
-                    self.sendStatusRequest()  # ask for status
-                    self.conn.waitForNotifications(WAIT_FOR)  # waiting for status report
+            # Starting audio rec
+            self.logger.info("Starting audio recording")
+            with timeout(seconds=5, error_message="StartRec timeout (wrong firmware version?)"):
+                while not self.dlg.gotTimestamp:
+                    self.sendStartRecRequest(RECORDING_TIMEOUT)  # start recording
+                    self.conn.waitForNotifications(WAIT_FOR)  # waiting for time acknowledgement
 
-                self.logger.info("Got status")
-                self.logger.info("Badge datetime was: {},{}, Voltage: {}".format(
-                    self.dlg.timestamp_sec, self.dlg.timestamp_ms, self.dlg.voltage))
+                self.logger.info("Got time ack")
+
+                if self.dlg.timestamp_sec != 0:
+                    self.logger.info("Badge datetime was: {},{}".format(self.dlg.timestamp_sec, self.dlg.timestamp_ms))
+                else:
+                    self.logger.info("Badge previously unsynced.")
+
+            # Reset flag (hacky)
+            self.dlg.gotTimestamp = False
+
+            # Starting scans
+            self.logger.info("Starting proximity scans")
+            with timeout(seconds=5, error_message="StartScan timeout (wrong firmware version?)"):
+                while not self.dlg.gotTimestamp:
+                    self.sendStartScanRequest(RECORDING_TIMEOUT, SCAN_WINDOW, SCAN_INTERVAL, SCAN_DURATION, SCAN_PERIOD)
+                    self.conn.waitForNotifications(WAIT_FOR)  # waiting for time acknowledgement
+
+                self.logger.info("Got time ack")
+
+                if self.dlg.timestamp_sec != 0:
+                    self.logger.info("Badge datetime was: {},{}".format(self.dlg.timestamp_sec, self.dlg.timestamp_ms))
+                else:
+                    self.logger.info("Badge previously unsynced.")
+
 
             # data request using the "r" command - data since time X
             self.logger.info("Requesting data since {} {}".format(self.last_audio_ts, self.last_audio_ts_fract))
