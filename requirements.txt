@@ -1,3 +1,2 @@
--e git+https://github.com/IanHarvey/bluepy.git@14c63f7add92c9e774588750fef1e010cf6de8c2#egg=bluepy
-SQLAlchemy==1.0.11
-wheel==0.24.0
+bluepy==1.0.4
+python-dateutil==2.5.3
