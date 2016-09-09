@@ -4,17 +4,18 @@
 static ble_gap_sec_params_t             m_sec_params;                               /**< Security requirements for this application. */
 static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;    /**< Handle of the current connection. */
 
-static ble_bas_t                        m_bas;      //Struct for Battery Service module
+//static ble_bas_t                        m_bas;      //Struct for Battery Service module
 static ble_nus_t                        m_nus;      //Struct for Nordic UART Service module
 
 volatile bool isConnected = false;
 volatile bool isAdvertising = false;
-volatile bool isScanning = false;
+//volatile bool isScanning = false;
 
-ble_uuid_t m_adv_uuids[] = {{BLE_UUID_BATTERY_SERVICE, BLE_UUID_TYPE_BLE},        // Universally unique service identifiers.
-                            {BLE_UUID_NUS_SERVICE,     BLE_UUID_TYPE_BLE}};  
-//ble_uuid_t m_adv_uuids[] = {{BLE_UUID_NUS_SERVICE,     BLE_UUID_TYPE_BLE}};      
-
+//ble_uuid_t m_adv_uuids[] = {{BLE_UUID_BATTERY_SERVICE, BLE_UUID_TYPE_BLE},        // Universally unique service identifiers.
+//                            {BLE_UUID_NUS_SERVICE,     BLE_UUID_TYPE_BLE}};  
+ble_uuid_t m_adv_uuids[] = {{BLE_UUID_NUS_SERVICE,     BLE_UUID_TYPE_BLE}};      
+// ^^^ With both service UUIDs, ID, and group #, adv payload is too big.  Quick fix above to make it fit.
+//    may also be fixable by specifying size of custom data manually, instead of sizeof (which includes padding)
 
 
 void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
@@ -60,6 +61,7 @@ static void services_init(void)
     BLE_ERROR_CHECK(err_code);
     
     
+    /*
     ble_bas_init_t bas_init;           //Battery service  (part of BLE standard)
     memset(&bas_init,0,sizeof(bas_init));
 
@@ -70,6 +72,7 @@ static void services_init(void)
 
     err_code = ble_bas_init(&m_bas, &bas_init);
     BLE_ERROR_CHECK(err_code);
+    */
     
 }
 
@@ -115,15 +118,14 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
             BLEonDisconnect();
             break;
         case BLE_GAP_EVT_ADV_REPORT:  //On receipt of a response to an advertising request (during a scan)
-            //BLEonAdvReport(p_ble_evt->evt.gap_evt.params.adv_report.peer_addr.addr,
-            //                p_ble_evt->evt.gap_evt.params.adv_report.rssi);
+            BLEonAdvReport(&(p_ble_evt->evt.gap_evt.params.adv_report));
             break;
         
         case BLE_GAP_EVT_TIMEOUT:
-            /*if(p_ble_evt->evt.gap_evt.params.timeout.src == BLE_GAP_TIMEOUT_SRC_SCAN)  {
+            if(p_ble_evt->evt.gap_evt.params.timeout.src == BLE_GAP_TIMEOUT_SRC_SCAN)  {
+                //debug_log("Scan ended\r\n");
                 BLEonScanTimeout();
-                debug_log("Scan ended\r\n");
-            }*/
+            }
             /*else  {
                 debug_log("Timeout.  src=%d\r\n", p_ble_evt->evt.gap_evt.params.timeout.src);
             }*/
@@ -226,7 +228,7 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
         ble_advertising_on_ble_evt(p_ble_evt);
     }
     
-    ble_bas_on_ble_evt(&m_bas, p_ble_evt);
+    //ble_bas_on_ble_evt(&m_bas, p_ble_evt);
     ble_nus_on_ble_evt(&m_nus, p_ble_evt);
 }
 
@@ -263,39 +265,6 @@ static void ble_stack_init(void)
     BLE_ERROR_CHECK(err_code);
 }
 
-
-
-/*static void on_adv_evt(ble_adv_evt_t const adv_evt)
-{
-    switch(adv_evt)
-    {
-        case BLE_ADV_EVT_IDLE:
-            if(pauseRequest)
-            {
-                isAdvertising = false;
-                pauseRequest = false;
-                debug_log("ADV: advertising paused\r\n");
-            }
-            else
-            {
-                uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);  // restart advertising immediately
-                BLE_ERROR_CHECK(err_code);
-                //debug_log("ADV: advertising restarted...\r\n");
-            }
-            break;
-        case BLE_ADV_EVT_FAST:          // Advertising config should only allow fast mode, so following cases should be irrelevant
-        case BLE_ADV_EVT_DIRECTED:
-        case BLE_ADV_EVT_SLOW:
-        case BLE_ADV_EVT_FAST_WHITELIST:
-        case BLE_ADV_EVT_SLOW_WHITELIST:
-            isAdvertising = true;
-            //debug_log("ADV: advertising active\r\n");
-            break;
-        default:
-            break;
-    }
-}*/
-
 void advertising_init(void)
 {
     uint32_t      err_code;
@@ -329,15 +298,23 @@ void updateAdvData()
 
 void setAdvData()
 {
-    custom_adv_data_t custom_data_array;
-    custom_data_array.battery = getBatteryVoltage();
-    custom_data_array.synced = dateReceived;
-    custom_data_array.collecting = isCollecting;
+
+    int scaledBatteryLevel = (int)(100.0*getBatteryVoltage()) - 100;
+    customAdvData.battery = (scaledBatteryLevel <= 255) ? scaledBatteryLevel : 255;  // clip scaled level
+    customAdvData.statusFlags = 0;
+    customAdvData.statusFlags |= (dateReceived) ? 0x01 : 0x00;  // set sync status bit
+    customAdvData.statusFlags |= (isCollecting) ? 0x02 : 0x00;  // set collector status bit
+    customAdvData.statusFlags |= (scanner_enable) ? 0x04 : 0x00;  // set collector status bit
+    customAdvData.group = badgeAssignment.group;
+    customAdvData.ID = badgeAssignment.ID;
+    // customAdvData.MAC is already set
+    
+    //debug_log("custom data size: %d\r\n",sizeof(custom_data_array));
     
     ble_advdata_manuf_data_t custom_manuf_data;
     custom_manuf_data.company_identifier = 0xFF00;  // unofficial manufacturer code
-    custom_manuf_data.data.p_data = (uint8_t*)(&custom_data_array);
-    custom_manuf_data.data.size = sizeof(custom_data_array);
+    custom_manuf_data.data.p_data = (uint8_t*)(&customAdvData);
+    custom_manuf_data.data.size = CUSTOM_DATA_LEN;
     
     // Build advertising data struct to pass into @ref ble_advdata_set.
     ble_advdata_t advdata;
@@ -351,15 +328,28 @@ void setAdvData()
     advdata.p_manuf_specific_data = &custom_manuf_data;
     
     uint32_t result = ble_advdata_set(&advdata, NULL);  // set advertising data, don't set scan response data.
-    if(result != NRF_SUCCESS)
-    {
+    if(result != NRF_SUCCESS)  {
         debug_log("ERR: error setting advertising data, #%d.\r\n",(int)result);
     }
-    else
-    {
-        debug_log("Updated adv. data.\r\n");
+    else  {
+        debug_log("  Updated adv. data.\r\n");
+        needAdvDataUpdate = false;
     }
     
+}
+
+
+void BLEsetBadgeAssignment(badge_assignment_t assignment)
+{
+    if (assignment.ID == RESET_ID)  {
+        assignment.ID = defaultID;
+    }
+    if (assignment.group == RESET_GROUP)  {
+        assignment.group = NO_GROUP;
+    }
+    badgeAssignment = assignment;
+    debug_log("BLE: new assignment ID:0x%hX group:%d.\r\n",   badgeAssignment.ID, (int)badgeAssignment.group);
+    updateAdvData();
 }
 
 
@@ -369,6 +359,22 @@ void BLE_init()
     gap_params_init();
     services_init();
     sec_params_init();
+    
+    ble_gap_addr_t MAC;
+    sd_ble_gap_address_get(&MAC);
+    debug_log("MAC address: %.2X:%.2X:%.2X:%.2X:%.2X:%.2X", MAC.addr[5],MAC.addr[4],MAC.addr[3],
+                                                                MAC.addr[2],MAC.addr[1],MAC.addr[0]);
+    
+    defaultID = crc16_compute(MAC.addr,6,NULL);  // compute default badge ID from MAC address
+    debug_log("-->default ID: 0x%hX\r\n",defaultID);
+    badgeAssignment.ID = defaultID;
+    badgeAssignment.group = NO_GROUP;
+    
+    // Copy MAC address into custom advertising data struct.
+    for(int i = 0; i <= 5; i++)  { 
+        customAdvData.MAC[i] = MAC.addr[i];
+    }
+    
     //advertising_init();
     //uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
     //BLE_ERROR_CHECK(err_code);
@@ -376,11 +382,9 @@ void BLE_init()
 
 void BLEstartAdvertising()
 {
-    if((!isConnected) && (!isAdvertising))
-    {
+    if((!isConnected) && (!isAdvertising))  {
         uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
-        if(err_code == NRF_SUCCESS)
-        {
+        if(err_code == NRF_SUCCESS)  {
             debug_log("ADV: advertising started\r\n");
             isAdvertising = true;
             return;
@@ -400,15 +404,15 @@ void BLEdisable()
 bool BLEpause(ble_pauseReq_src source)
 {
     pauseRequest[source] = true;
-    if(isConnected || isAdvertising)  return false;  // return false if BLE active.
+    bool isScanning = (getScanState() == SCANNER_SCANNING);
+    if(isConnected || isAdvertising || isScanning)  return false;  // return false if BLE active.
     else return true;
 }
 
 void BLEresume(ble_pauseReq_src source)
 {
     pauseRequest[source] = false;
-    for(int src=0; src<PAUSE_REQ_NONE; src++)  // look through all pause request sources
-    {
+    for(int src=0; src<PAUSE_REQ_NONE; src++)  {  // look through all pause request sources
         if(pauseRequest[src]) return;  // if any pending pause requests, don't restart advertising
     }
     // If no pending pause requests, restart advertising.
@@ -423,30 +427,35 @@ void BLEforceDisconnect()
 
 ble_status_t BLEgetStatus()
 {
-    if(isConnected)
-    {
+    if(isConnected)  {
         return BLE_CONNECTED;
     }
-    else if(isAdvertising)
-    {
+    else if(isAdvertising)  {
         return BLE_ADVERTISING;
     }
-    else
-    {
+    else  {
         return BLE_INACTIVE;
     }
 }
 
+bool BLEpauseReqPending()
+{
+    for(int src=0; src<PAUSE_REQ_NONE; src++)  {  // look through all pause request sources
+        if(pauseRequest[src]) return true;  // if any pending pause requests, don't restart advertising
+    }
+    return false;
+}
 
-bool notificationEnabled()  {
+
+bool notificationEnabled()  
+{
     return m_nus.is_notification_enabled;
 }
 
 
 bool BLEwrite(uint8_t* data, uint16_t len)  {
     uint32_t err_code = ble_nus_string_send(&m_nus, data, len);
-    if (err_code != NRF_SUCCESS)  
-    {
+    if (err_code != NRF_SUCCESS)  {
         //debug_log("BLEwrite error: %u\r\n",(unsigned int)err_code);
         //BLEwrite fails if we try writing before the master has received the previous packet
         //Can happen frequently while trying to send a large chunk of data
@@ -459,7 +468,8 @@ bool BLEwrite(uint8_t* data, uint16_t len)  {
 }
 
 
-bool BLEwriteChar(uint8_t dataChar)  {
+bool BLEwriteChar(uint8_t dataChar)  
+{
     uint8_t data = dataChar;
     return BLEwrite(&data, 1);
 }

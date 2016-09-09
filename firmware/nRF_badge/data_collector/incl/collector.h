@@ -39,8 +39,6 @@
 #define CHECK_INCOMPLETE 0xFFFFFFFFUL  // chunk check value for incomplete chunk
 #define CHECK_TRUNC    0x7FFFFFFFUL  // chunk check value for truncated chunk - collector was stopped before complete chunk
                                      // Last byte of sample array stores the number of samples in the chunk.
-#define CHECK_SENT 0x0UL               // chunk check value for chunk already sent by REQUNSENT
-#define CHECK_TRUNC_SENT 0x01UL          // chunk check value for truncated chunk already ent by REQUNSENT
 
 
 // --------- Sampling timing parameters ----------

@@ -15,6 +15,9 @@
 
 #include "nrf_soc.h"
 
+#include "ble_setup.h"
+#include "ext_eeprom.h"
+
 
 
 
@@ -60,13 +63,14 @@
 
 
 #define MODERN_TIME 1434240000UL  // Unix time in the recent past (sometime June 2015), used to check for reasonable timestamps
-#define FUTURE_TIME 2524608000UL  // Unix time somewhere around 2050, used to check for reasonable timestamps
+#define FUTURE_TIME 1893456000UL  // Unix time somewhere around 2030, used to check for reasonable timestamps
 
 #define CHECK_STORED 0x2UL        // Used to mark a RAM chunk once it's been stored to FLASH (to avoid having 2 identical copies)
 
 #include "collector.h"
-#include "sender.h"
 #include "analog.h"
+#include "scanner.h"
+#include "sender.h"
 
 
 
@@ -75,16 +79,23 @@ typedef enum storer_mode_t
     STORER_IDLE,        // storer inactive; nothing to store
     STORER_STORE,       // waiting to store data (BLE must be disabled first, then data must be written to flash)
     STORER_ADVANCE,     // advancing to next from/to chunks, possibly erasing a new page
+    STORER_STORE_EXT,
+    STORER_STORE_EXT_WAIT,
+    STORER_ADVANCE_EXT,
+    STORER_STORE_ASSIGNMENT,
     STORER_INIT         // performing various initialization tasks
 } storer_mode_t;
 
 
+// Struct for keeping track of storing mic data to RAM
 struct
 {
     int from;      // which chunk in RAM buffer we're currently storing from
     int to;        // which chunk in flash we're currently storing to
-    int loc;        // next word index in chunk word buffer to be transferred to flash
-} store;          // Struct for keeping track of storing mic data to RAM
+    
+    int extFrom;   // which chunk in scanner RAM buffer we're currently storing from
+    int extTo;     // which chunk in external FLASH/EEPROM we're currently storing to
+} store;          
 
 
 void storer_init();
@@ -101,6 +112,29 @@ bool updateStorer();
 void storer_on_sys_evt(uint32_t sys_evt);
 
 void printStorerChunk(int chunk);
+
+
+#define STORED_ASSIGNMENT_ADDRESS 0  // first address in EEPROM
+
+// Magic number is stored to EEPROM along with ID and group #, to denote a valid stored assignment.
+#define STORED_ASSIGNMENT_MAGIC_NUMBER 0xfa
+
+
+typedef union
+{
+    struct
+    {
+        unsigned char dummy[4];     // (4byte)
+        unsigned char magicNumber;  // (1byte)
+        unsigned char group;        // (1byte)
+        unsigned short ID;          // (2byte)
+    };                          //  4+4byte total
+    unsigned char buf[8];
+} stored_assignment_t;
+
+stored_assignment_t lastStoredAssignment;
+
+badge_assignment_t getStoredBadgeAssignment();
 
 
 // Functions for dealing with flash.  Protect from invalid writes/erases.

@@ -14,20 +14,17 @@ void rtc_handler(nrf_drv_rtc_int_type_t int_type)
         extTicks += 0x1000000ULL;  //increment rtc extension by 2^24
         extTicks &= 0x7ffffffffffULL;  //clip it to 43bits (so doesn't overflow when *1000000 in micros()
     }
-    else if(int_type == NRF_DRV_RTC_INT_COMPARE0)  //countdown timer interrupt
-    {
+    else if (int_type == NRF_DRV_RTC_INT_COMPARE0)  {  //countdown timer interrupt
         nrf_drv_rtc_cc_disable(&rtc, 0);  //disable the compare channel - countdown is finished
         //debug_log("Countdown end\r\n");
         countdownOver = true;
     }
-    else if(int_type == NRF_DRV_RTC_INT_COMPARE1)  //countdown timer interrupt
-    {
+    else if (int_type == NRF_DRV_RTC_INT_COMPARE1)  {  //countdown timer interrupt
         nrf_drv_rtc_cc_disable(&rtc, 1);  //disable the compare channel - ble timeout
         //debug_log("BLE connection timeout.\r\n");
         ble_timeout = true;
     }
-    else if(int_type == NRF_DRV_RTC_INT_COMPARE2)  //countdown timer interrupt
-    {
+    else if (int_type == NRF_DRV_RTC_INT_COMPARE2)  {  //countdown timer interrupt
         nrf_drv_rtc_cc_disable(&rtc, 2);  //disable the compare channel - led timeout
         led_timeout = true;
     }
@@ -58,7 +55,7 @@ void rtc_config(void)
 
 void countdown_set(unsigned long ms)
 {
-    if(ms > 130000UL)  {  // 130 seconds.
+    if (ms > 130000UL)  {  // 130 seconds.
         ms = 130000UL;  // avoid overflow in calculation of compareTicks below.
     }
     //Set compare value so that an interrupt will occur ms milliseconds from now
@@ -71,7 +68,7 @@ void countdown_set(unsigned long ms)
 
 void ble_timeout_set(unsigned long ms)
 {
-    if(ms > 130000UL)  {  // 130 seconds.
+    if (ms > 130000UL)  {  // 130 seconds.
         ms = 130000UL;  // avoid overflow in calculation of compareTicks below.
     }
     //Set compare value so that an interrupt will occur ms milliseconds from now
@@ -88,7 +85,7 @@ void ble_timeout_cancel()
 
 void led_timeout_set(unsigned long ms)
 {
-    if(ms > 130000UL)  {  // 130 seconds.
+    if (ms > 130000UL)  {  // 130 seconds.
         ms = 130000UL;  // avoid overflow in calculation of compareTicks below.
     }
     //Set compare value so that an interrupt will occur ms milliseconds from now
@@ -128,8 +125,7 @@ struct
 unsigned long now()
 {
     unsigned long difference = millis() - lastMillis;
-    while(difference >= 1000)
-    {
+    while (difference >= 1000)  {
         masterTime.s++;
         lastMillis += 1000;
         difference = millis() - lastMillis;

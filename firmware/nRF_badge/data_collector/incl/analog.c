@@ -19,11 +19,15 @@ static float readBattery()
     nrf_adc_configure( (nrf_adc_config_t *)&nrf_adc_config_mic);
 
     return reading * (3.6 / 1023.0); // convert value to voltage
+    
+    // Rescale reading so that voltage = 1 + 0.01 * reading
+    //reading = (reading * 100 / 284);  // ((reading * 3.6 / 1023) - 1) * 100
+    //return (unsigned char)((reading <= 255) ? reading : 255);  // clip reading to unsigned char
 }
 
 
 // ADC initialization.
-void adc_config(void)
+void adc_config(void)  
 {
     //default: 10bit res, 1/3 prescalar, ext VCC_MIC reference
     const nrf_adc_config_t nrf_adc_config = ANALOG_CONFIG_MIC;
@@ -33,7 +37,7 @@ void adc_config(void)
     nrf_adc_input_select(NRF_ADC_CONFIG_INPUT_DISABLED);
     
     currentBatteryVoltage = readBattery();
-    debug_log("Battery: %d.\r\n",(int)(1000.0*currentBatteryVoltage));
+    debug_log("Battery: %dmV.\r\n",(int)(1000.0*currentBatteryVoltage));
     
 }
 
@@ -52,13 +56,11 @@ int analogRead(nrf_adc_config_input_t input)
 
 float getBatteryVoltage()
 {
-    if(millis() - lastBatteryUpdate >= MAX_BATTERY_READ_INTERVAL)
-    {
-        debug_log("Forced battery reading.\r\n");
+    if(millis() - lastBatteryUpdate >= MAX_BATTERY_READ_INTERVAL)  {
+        debug_log("  Forced battery reading.\r\n");
         return readBattery();
     }
-    else
-    {
+    else  {
         return currentBatteryVoltage;
     }
 }
@@ -73,7 +75,7 @@ void updateBatteryVoltage()
     //if(millis() - lastBatteryUpdate >= MIN_BATTERY_READ_INTERVAL)
     //{
         currentBatteryVoltage = readBattery();
-        debug_log("Read battery: %d.\r\n",(int)(1000.0*currentBatteryVoltage));
+        debug_log("  Read battery: %dmV.\r\n",(int)(1000.0*currentBatteryVoltage));
         lastBatteryUpdate = millis();
         updateAdvData();
     //}

@@ -8,26 +8,28 @@
 #include "ble_advertising.h"
 #include "softdevice_handler.h"
 
+#include "crc16.h"
+
 #include "nrf_drv_config.h"
 
 #include "debug_log.h"          //UART debugging logger
 
-#include "ble_bas.h"  //battery service
+//#include "ble_bas.h"  //battery service
 #include "ble_nus.h"  //Nordic UART service
  
- 
-#include "storer.h" 
+
+
  
 #define IS_SRVC_CHANGED_CHARACT_PRESENT 0                                           /**< Include or not the service_changed characteristic. if not enabled, the server's database cannot be changed for the lifetime of the device*/
 
 #ifdef BOARD_PCA10028
     #define DEVICE_NAME                     "NRF51DK"
 #else
-    #define DEVICE_NAME                     "BADGE"                           /**< Name of device. Will be included in the advertising data. */
+    #define DEVICE_NAME                     "HDBDG"                           /**< Name of device. Will be included in the advertising data. */
 #endif
 
 #define APP_ADV_INTERVAL                320                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 200 ms). */
-#define APP_ADV_TIMEOUT_IN_SECONDS      5                                          
+#define APP_ADV_TIMEOUT_IN_SECONDS      6                                          
 
 #define SEC_PARAM_BOND                  1                                           /**< Perform bonding. */
 #define SEC_PARAM_MITM                  0                                           /**< Man In The Middle protection not required. */
@@ -37,6 +39,20 @@
 #define SEC_PARAM_MAX_KEY_SIZE          16                                          /**< Maximum encryption key size. */
 
 #define DEAD_BEEF                       0xDEADBEEF                                  /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
+
+
+#define NO_GROUP 0
+unsigned short defaultID;
+#define RESET_GROUP 0xff
+#define RESET_ID 0xffff
+
+typedef struct
+{
+    unsigned short ID;
+    unsigned char group;  
+} badge_assignment_t;
+
+volatile badge_assignment_t badgeAssignment;
 
 
 volatile bool isConnected;
@@ -60,14 +76,27 @@ typedef enum ble_status_t
 } ble_status_t;
 
 
+
+#define CUSTOM_DATA_LEN 11   // bytes in custom data struct to be sent in advertising payload.
+                            //   Note that this differs from sizeof(custom_adv_data_t), which includes padding at end of struct
+ 
 typedef struct
 {
-    float battery;
-    unsigned char synced;
-    unsigned char collecting;
+    unsigned char battery;   // scaled so that voltage = 1 + 0.01 * battery
+    unsigned char statusFlags;
+    unsigned short ID;
+    unsigned char group;
+    unsigned char MAC[6];
 } custom_adv_data_t;
 
+volatile custom_adv_data_t customAdvData;
+
 volatile bool needAdvDataUpdate;
+
+
+#include "scanner.h"
+#include "storer.h" 
+
 
 /**
  * Callback function for asserts in the SoftDevice; called in case of SoftDevice assert.
@@ -171,6 +200,11 @@ void updateAdvData();
  */
 void setAdvData();
 
+/**
+ * Updates badge assignment info (ID, group #)
+ */
+void BLEsetBadgeAssignment(badge_assignment_t assignment);
+
 
 /**
  * Initialize BLE structures
@@ -209,6 +243,8 @@ void BLEforceDisconnect();
  */
 ble_status_t BLEgetStatus();
 
+bool BLEpauseReqPending();
+
 /**
  * Functions called on connection or disconnection events
  */
@@ -222,9 +258,8 @@ void BLEonReceive(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length);
 
 /**
  * Function for handling BLE advertising reports (from scan)
- * Parameters are 6-byte array of BLE address, and RSSI signal strength
  */
-void BLEonAdvReport(uint8_t addr[6], int8_t rssi);
+void BLEonAdvReport(ble_gap_evt_adv_report_t* advReportPtr);
 
 /**
  * Function called on timeout of scan, to finalize and store scan results

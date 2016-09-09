@@ -31,6 +31,7 @@
                                 NRF_ADC_CONFIG_REF_VBG }
 
 float currentBatteryVoltage;
+//unsigned char currentBatteryLevel;  // battery voltage is (1V + 0.01V*batteryLevel)
 unsigned long lastBatteryUpdate;
 #define MIN_BATTERY_READ_INTERVAL 180000UL  // minimum time between supply analogReads.  We don't need to do this often.
 #define MAX_BATTERY_READ_INTERVAL 300000UL  // time after lastBatteryUpdate to consider currentBatteryVoltage invalid

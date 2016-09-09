@@ -18,7 +18,7 @@
 //#include "internal_flash.h"
 #include "analog.h"
 #include "storer.h"
-#include "external_flash.h"
+#include "ext_eeprom.h"
 
 #define THRESH_BUFSIZE 32  //size of the thresholding buffer, in bytes
 #define THRESH_SAMPLES 64 // number of samples averaged to create a single reading

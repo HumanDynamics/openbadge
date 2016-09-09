@@ -94,11 +94,13 @@ incl/analog.c \
 incl/rtc_timing.c \
 incl/ble_setup.c \
 incl/debug_log.c \
-incl/external_flash.c \
+incl/ext_eeprom.c \
 incl/collector.c \
 incl/storer.c \
 incl/sender.c \
 incl/self_test.c \
+incl/scanner.c \
+$(SDK_PATH)/components/libraries/crc16/crc16.c \
 $(SDK_PATH)/components/libraries/util/app_error.c \
 $(SDK_PATH)/components/libraries/util/nrf_assert.c \
 $(SDK_PATH)/components/libraries/uart/retarget.c \
@@ -120,7 +122,6 @@ $(SDK_PATH)/components/softdevice/common/softdevice_handler/softdevice_handler.c
 $(SDK_PATH)/components/ble/ble_services/ble_bas/ble_bas.c \
 $(SDK_PATH)/components/ble/ble_services/ble_nus/ble_nus.c \
 #incl/internal_flash.c \
-#incl/scanning.c \
 
 
 #assembly files
@@ -134,6 +135,7 @@ INC_PATHS += -I$(SDK_PATH)/components/toolchain
 INC_PATHS += -I$(SDK_PATH)/components/toolchain/gcc
 INC_PATHS += -I$(SDK_PATH)/components/softdevice/s130/headers
 INC_PATHS += -I$(SDK_PATH)/components/softdevice/common/softdevice_handler
+INC_PATHS += -I$(SDK_PATH)/components/libraries/crc16/
 INC_PATHS += -I$(SDK_PATH)/components/libraries/util
 INC_PATHS += -I$(SDK_PATH)/components/libraries/fifo
 INC_PATHS += -I$(SDK_PATH)/components/libraries/trace
