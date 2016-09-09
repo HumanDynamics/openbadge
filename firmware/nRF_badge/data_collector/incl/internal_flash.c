@@ -208,7 +208,6 @@ bool initSendingFromChunk(int chunk)
     send.chunk = chunk;
     send.sentHeader = false;
     send.loc = 0;
-    send.flagSendEnd = false;
     return true;
 }
 
@@ -226,47 +225,22 @@ bool updateSending()
 {
     if (send.enabled)  
     {
-        if (send.flagSendEnd == true)
-        {
-            // send "empty" header
-            unsigned char header[10];
-            memset(header, 0, sizeof(header));
-            
-            if (BLEwrite(header, sizeof(header)))  //try to send header
-            {
-                //debug_log("OK.\r\n");
-                debug_log("Sent empty header.\r\n");
-
-                //if we've sent all ready chunks, stop sending.
-                send.flagSendEnd = false;
-                disableSending();  
-
-            }
-            else  //BLE was busy
-            {
-                //debug_log("busy.\r\n"); 
-                send.flagSendEnd = true;
-            }
-        }
-        else if (send.sentHeader == false)  
+        if (send.sentHeader == false)  
         {  //try to send header
             //debug_log("Send header...");  //Spams UART if not immediately able to send
             uint32_t* toSendAddr = ADDRESS_OF_CHUNK(send.chunk);
             // send date
             char dateAsChars[4];
-            char dateFractAsChars[2];
             char batAsChars[4];
             char delayAsChars[2];
             long2Chars(*toSendAddr, dateAsChars);  //get date from flash
-            short2Chars(0, dateFractAsChars);  //get date fractional (ms) from flash -- TODO - replace dummy data with stored info
             long2Chars(*(toSendAddr + 1), batAsChars);  //get battery voltage from flash
             short2Chars(send.samplePeriod, delayAsChars);  //turn sample period into chars
             // pack and send
-            unsigned char header[12];
+            unsigned char header[10];
             memcpy(header, dateAsChars, 4);
-            memcpy(header + 4, dateFractAsChars, 2);
-            memcpy(header + 6, batAsChars, 4);
-            memcpy(header + 10, delayAsChars, 2);
+            memcpy(header + 4, batAsChars, 4);
+            memcpy(header + 8, delayAsChars, 2);
             if (BLEwrite(header, sizeof(header)))  //try to send header
             {
                 //debug_log("OK.\r\n");
@@ -309,8 +283,7 @@ bool updateSending()
                 }
                 else  
                 {
-                    // signal that we are ready to send end of transmission
-                    send.flagSendEnd = true;
+                    disableSending();  //if we've sent all ready chunks, stop sending.
                 }
             }
         } //end of else "if send.sentHeader==true"
@@ -442,12 +415,6 @@ unsigned long readLong(uint8_t *a) {
   return retval;
 }
 
-// Convert chars to short (expects little endian)
-unsigned short readShort(uint8_t *a) {
-  unsigned short retval;
-  retval = (unsigned short) a[1] << 8 | a[0];
-  return retval;
-}
 
 //Halt the main loop if doWePanic == true
 void panic(int doWePanic)  

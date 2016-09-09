@@ -11,9 +11,12 @@
 #include "debug_log.h"
 
 volatile bool countdownOver;  //set true when the countdown interrupt triggers
-volatile bool ble_timeout;
+volatile bool sleep;  //whether we should sleep (so actions like data sending can override sleep)
 
-#define CONNECTION_TIMEOUT_MS 5000UL
+volatile bool ble_timeout;
+#define CONNECTION_TIMEOUT_MS 6000UL
+
+volatile bool led_timeout;
 
 /**
  * rtc event handler function
@@ -34,6 +37,7 @@ void rtc_config(void);
  */
 void countdown_set(unsigned long ms);
 
+
 /**
  * similar to countdown_set, but used to keep track of BLE connection timeout.
  */
@@ -43,6 +47,16 @@ void ble_timeout_set(unsigned long ms);
  * cancel the ble timeout counter
  */
 void ble_timeout_cancel();
+
+/**
+ * similar to countdown_set, but used to keep track of LED indicator timeout.
+ */
+void led_timeout_set(unsigned long ms);
+
+/**
+ * cancel the LED timeout counter
+ */
+void led_timeout_cancel();
 
 
 /**

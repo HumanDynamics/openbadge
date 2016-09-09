@@ -17,7 +17,6 @@ data.db
 *.sch.lck
 
 .idea
-.env
 env/
 localsettings.js
 

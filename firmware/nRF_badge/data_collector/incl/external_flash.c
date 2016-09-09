@@ -48,8 +48,8 @@ void spi_init()
         SPIM0_SS_PIN,                         //    // SS, we'll handle that manually
         APP_IRQ_PRIORITY_LOW,       // Interrupt priority LOW.
         SPI_CONFIG_ORDER_MsbFirst,  // Bits order LSB.
-        SPI_CONFIG_CPOL_ActiveHigh, // Serial clock polarity ACTIVEHIGH.
-        SPI_CONFIG_CPHA_Leading,    // Serial clock phase LEADING.
+        SPI_CONFIG_CPOL_ActiveLow, // Serial clock polarity ACTIVELOW.
+        SPI_CONFIG_CPHA_Trailing,    // Serial clock phase TRAILING.
         0                           // Don't disable all IRQs.
     };
 
@@ -231,6 +231,49 @@ uint32_t ext_flash_block_erase(uint32_t address)
     extFlashState = EXT_FLASH_COMMAND;
     spi_master_send_recv(SPI_MASTER_0,txBuf,sizeof(txBuf),dummyRxBuf,0);
     return EXT_FLASH_SUCCESS;
+}
+
+
+bool testExternalFlash(void)
+{
+    
+    // unlock flash
+    uint32_t stat = ext_flash_global_unprotect();
+    if (stat != EXT_FLASH_SUCCESS) {
+        return false;
+    }
+    ext_flash_wait(); // wait for unlock to finish
+
+    // erase the first data block
+    stat = ext_flash_block_erase(0);
+    if (stat != EXT_FLASH_SUCCESS) {
+        return false;
+    }
+
+    ext_flash_wait(); // wait for erase to finish
+
+    // write to the first block and test the result  
+    unsigned char value[8] = {0,0,0,0,1,2,3,4};  // includes padding bytes
+    stat = ext_flash_write(0,value,sizeof(value));
+    if (stat != EXT_FLASH_SUCCESS) {
+        return false;
+    }
+
+    ext_flash_wait(); // wait for write to finish
+
+    /* not getting what I expected */
+    unsigned char buf[8];  // includes padding bytes
+    stat = ext_flash_read(0,buf,sizeof(buf));               
+    if (stat != EXT_FLASH_SUCCESS) {
+        return false;
+    }
+
+    if (buf[4] != 1) {
+        debug_log("Error - got : %d\r\n", buf[0]);
+        return false;
+    }
+    
+    return true;
 }
 
 // NOT USEFUL - CAN ONLY ERASE WITHIN FIRST 64kB of MEMORY

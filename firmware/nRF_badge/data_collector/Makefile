@@ -94,9 +94,10 @@ incl/analog.c \
 incl/rtc_timing.c \
 incl/ble_setup.c \
 incl/debug_log.c \
-incl/internal_flash.c \
 incl/external_flash.c \
-incl/scanning.c \
+incl/collector.c \
+incl/storer.c \
+incl/sender.c \
 incl/self_test.c \
 $(SDK_PATH)/components/libraries/util/app_error.c \
 $(SDK_PATH)/components/libraries/util/nrf_assert.c \
@@ -118,6 +119,8 @@ $(SDK_PATH)/components/toolchain/system_nrf51.c \
 $(SDK_PATH)/components/softdevice/common/softdevice_handler/softdevice_handler.c \
 $(SDK_PATH)/components/ble/ble_services/ble_bas/ble_bas.c \
 $(SDK_PATH)/components/ble/ble_services/ble_nus/ble_nus.c \
+#incl/internal_flash.c \
+#incl/scanning.c \
 
 
 #assembly files
@@ -338,7 +341,7 @@ flashUnlock: clean flashUnlock.jlink
 
 #create flash unlocking script for JLinkExe.
 flashUnlock.jlink:
-	printf "w4 4001e504 2\nw4 4001e50c 1\nr\ng\nexit\n" > $(OBJECT_DIRECTORY)/flashUnlock.jlink	
+	printf "w4 4001e504 2\nw4 4001e50c 1\nexit\n" > $(OBJECT_DIRECTORY)/flashUnlock.jlink	
 	
 	
 #build and flash firmware

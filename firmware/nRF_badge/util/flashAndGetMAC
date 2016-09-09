@@ -1,0 +1,2 @@
+JLinkEXE -device nrf51422_xxac -if swd -speed 500 flashBadge.jlink | tee out.log
+cat out.log | grep "100000A4" | awk -f fixMAC
