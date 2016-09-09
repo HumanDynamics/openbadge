@@ -1,0 +1,5 @@
+mv badge_03v4.bottom* Badge_03v4_RTC_export_20160906
+mv badge_03v4.top* Badge_03v4_RTC_export_20160906
+mv badge_03v4.drill* Badge_03v4_RTC_export_20160906
+mv badge_03v4.outline* Badge_03v4_RTC_export_20160906
+
