@@ -1,32 +1,78 @@
+from __future__ import division
+from __future__ import print_function
+
 from bluepy import btle
 from bluepy.btle import UUID, Peripheral, DefaultDelegate, AssignedNumbers
+from bluepy.btle import BTLEException
+
 from nrf import Nrf, SimpleDelegate
-from math import floor
-from dateutil import tz
+import logging.handlers
+
+from badge_dialogue import BadgeDialogue
+
 import struct
+from math import floor
 import datetime
+import signal
+import traceback
 import time
 
-#This class is the contents of one chunk of data
+WAIT_FOR = 1.0  # timeout for WaitForNotification calls.  Must be > samplePeriod of badge
+PULL_WAIT = 2
+
+RECORDING_TIMEOUT = 10
+
+# Scan settings. See documentation for more details
+SCAN_WINDOW = 100
+SCAN_INTERVAL = 300
+SCAN_DURATION = 5 # how long each scan lasts
+SCAN_PERIOD = 60 # how often to run a scan
+
+class TimeoutError(Exception):
+    """
+    # Raises a timeout exception if a function takes too long
+    # http://stackoverflow.com/questions/2281850/timeout-function-if-it-takes-too-long-to-finish
+    """
+    pass
+
+
+class timeout:
+    """
+    Or, to use with a "with" statement
+    """
+    def __init__(self, seconds=1, error_message='Timeout'):
+        self.seconds = seconds
+        self.error_message = error_message
+
+    def handle_timeout(self, signum, frame):
+        raise TimeoutError(self.error_message)
+
+    def __enter__(self):
+        signal.signal(signal.SIGALRM, self.handle_timeout)
+        signal.alarm(self.seconds)
+
+    def __exit__(self, type, value, traceback):
+        signal.alarm(0)
+
+class Expect:
+    none,status,timestamp,header,samples,scanHeader,scanDevices = range(7)
+
 class Chunk():
-    maxSamples = 114
-    
+    """
+    #This class is the contents of one chunk of mic data
+    """
     def __init__(self, header, data):
         self.ts,self.fract,self.voltage,self.sampleDelay,self.numSamples = header
         self.samples = data[0:]
-    
     def setHeader(self,header):
         self.ts,self.fract,self.voltage,self.sampleDelay,self.numSamples = header
-    
     def getHeader(self):
         return (self.ts,self.fract,self.voltage,self.sampleDelay,self.numSamples)
-        
     def addData(self,data):
         self.samples.extend(data)
         if len(self.samples) > self.numSamples:
             print("too many samples received?")
             raise UserWarning("Chunk overflow")
-    
     def reset(self):
         self.ts = None
         self.fract = None
@@ -34,166 +80,557 @@ class Chunk():
         self.sampleDelay = None
         self.numSamples = None
         self.samples = []
-        
     def completed(self):
         return len(self.samples) >= self.numSamples
 
-# This class handles incoming data from the badge. It will buffer the
-# data so external processes can read from it more easy. Reset will
-# delete all buffered data
+
+class SeenDevice():
+    """
+    Represents an instance of a proximity data for a device found during a scan
+    """
+    def __init__(self,(ID,rssi,count)):
+        self.ID = ID
+        self.rssi = rssi
+        self.count = count
+
+
+class Scan():
+    """
+    This class holds the content of one scan record
+    """
+
+    def __init__(self, header, devices):
+        self.ts, self.voltage, self.numDevices = header
+        self.devices = devices[0:]
+
+    def setHeader(self,header):
+        self.ts, self.voltage, self.numDevices = header
+
+    def getHeader(self):
+        return (self.ts, self.voltage, self.numDevices)
+
+    def addDevices(self,devices):
+        self.devices.extend(devices)
+        if len(self.devices) > self.numDevices:
+            print("too many devices received?")
+            raise UserWarning("Chunk overflow")
+
+    def reset(self):
+        self.ts = None
+        self.voltage = None
+        self.numDevices = None
+        self.devices = []
+
+    def completed(self):
+        return len(self.devices) >= self.numDevices
+
+
 class BadgeDelegate(DefaultDelegate):
+    """
+    This class handles incoming data from the badge. It will buffer the
+    data so external processes can read from it more easy. Reset will
+    delete all buffered data
+    """
     tempChunk = Chunk((None,None,None,None,None),[])
+    tempScan = Scan((None, None, None), [])
+
     #data is received as chunks, keep the chunk organization
     chunks = []
-    #to keep track of the dialogue
+    scans = []
+    #to keep track of the dialogue - data expected to be received next from badge
+    expected = Expect.none
+
     gotStatus = False
-    gotDateTime = False
-    gotHeader = False
-    numSamples = 0  # expected number of samples from current chunk
+    gotTimestamp = False
     gotEndOfData = False #flag that indicates no more data will be sent
-    #badge states, reported from badge
-    sentStartRec = False
-    
+
+    # Parameters received from badge status report
     clockSet = False  # whether the badge's time had been set
     dataReady = False # whether there's unsent data in FLASH
     recording = False # whether the badge is collecting samples
     timestamp_sec = None # badge time in seconds
     timestamp_ms = None  # fractional part of badge time
     voltage = None       # badge battery voltage
-    
+
     timestamp = None # badge time as timestamp (includes seconds+milliseconds)
 
     def __init__(self, params):
         btle.DefaultDelegate.__init__(self)
         self.reset()
-   
+
     def reset(self):
         self.tempChunk = Chunk((None,None,None,None,None),[])
-        self.chunks = [] 
+        self.tempScan = Scan((None,None,None),[])
+        self.chunks = []
+        self.scans = []
+
+        self.expected = Expect.none
+
         self.gotStatus = False
+        self.gotTimestamp = False
         self.gotEndOfData = False
+        self.gotEndOfScans = False
         self.dataReady = False
-        self.gotHeader = False
-        self.sentStartRec = False
-        
+        self.clockSet = False  # whether the badge's time had been set
+        self.dataReady = False # whether there's unsent data in FLASH
+        self.recording = False # whether the badge is collecting samples
+        self.scanning = False
+        self.timestamp_sec = None # badge time in seconds
+        self.timestamp_ms = None  # fractional part of badge time
+        self.voltage = None       # badge battery voltage
+
+        self.timestamp = None # badge time as timestamp (includes seconds+milliseconds)
 
     def handleNotification(self, cHandle, data):
-        if not self.gotStatus:  # whether date has been set
-            self.clockSet,self.dataReady,self.recording,self.timestamp_sec,self.timestamp_ms,self.voltage = struct.unpack('<BBBLHf',data)
+        if self.expected == Expect.status:  # whether we expect a status packet
+            self.dataReady = True
+            self.clockSet,self.scanning,self.recording,self.timestamp_sec,self.timestamp_ms,self.voltage = struct.unpack('<BBBLHf',data)
             self.gotStatus = True
-        elif not self.sentStartRec:
-            self.sentStartRec = True
-        elif not self.gotHeader:
+            self.expected = Expect.none
+        elif self.expected == Expect.timestamp:
+            self.timestamp_sec,self.timestamp_ms = struct.unpack('<LH',data)
+            self.gotTimestamp = True
+            self.expected = Expect.none
+        elif self.expected == Expect.header:
             self.tempChunk.reset()
-            self.tempChunk.setHeader(struct.unpack('<LHfHB',data)) #time, fraction time (ms), voltage, sample delay
+            self.tempChunk.setHeader(struct.unpack('<LHfHB',data)) #time, fraction time (ms), voltage, sample delay, number of samples
             if (self.tempChunk.sampleDelay == 0): # got an empty header? done
                 self.gotEndOfData = True
+                self.expected = Expect.none
                 pass
             else:
-                self.tempChunk.ts = self._longToDatetime(self.tempChunk.ts)  # fix time
-                self.tempChunk.ts = self.tempChunk.ts + datetime.timedelta(milliseconds=self.tempChunk.fract)  # add ms
-                self.gotHeader = True
+                self.tempChunk.ts = ts_and_fract_to_float(self.tempChunk.ts, self.tempChunk.fract)
 
-        else: # just data
+                self.expected = Expect.samples
+        elif self.expected == Expect.samples: # just samples
             sample_arr = struct.unpack('<%dB' % len(data),data) # Nrfuino bytes are unsigned bytes
             self.tempChunk.addData(sample_arr)
             if self.tempChunk.completed():
                 #add chunk with tempChunk's data to list
                 #print self.tempChunk.ts, self.tempChunk.samples
                 self.chunks.append(Chunk(self.tempChunk.getHeader(),self.tempChunk.samples))
-                self.gotHeader = False  #we should move on to a new chunk
+                self.expected = Expect.header  #we should move on to a new chunk
+        elif self.expected == Expect.scanHeader:
+            self.tempScan.reset()
+            header = struct.unpack('<LfB',data)
+            self.tempScan.setHeader(header) #time, voltage, number of devices
+            #print self.tempScan.ts
+            if (self.tempScan.ts == 0): # got an empty header? done
+                self.gotEndOfScans = True
+                self.expected = Expect.none
+                pass
+            else:
+                self.expected = Expect.scanDevices
 
-    # reads UTC time from badge, stores is at local time (that what datetime
-    # does for some reason)
-    def _longToDatetime(self,n):
-        local_ts = datetime.datetime.fromtimestamp(n)
-        return local_ts
+        elif self.expected == Expect.scanDevices: # just devices
+            num_devices = int(len(data)/4)
+            raw_arr = struct.unpack('<' + num_devices * 'Hbb',data)
 
-class Badge(Nrf):
+            tuple_arr = zip(raw_arr[0::3],raw_arr[1::3],raw_arr[2::3])
+            device_arr = [SeenDevice(params) for params in tuple_arr]
+            self.tempScan.addDevices(device_arr)
+            if self.tempScan.completed():
+                #add scan with tempScan's data to list
+                #print self.tempScan.ts, self.tempChunk.devices
+                self.scans.append(Scan(self.tempScan.getHeader(),self.tempScan.devices))
+                self.expected = Expect.scanHeader  #we should move on to a new chunk
+        else:  # not expecting any data from badge
+            print("Error: not expecting data")
+
+
+class BadgeConnection(Nrf):
+    """
+    Extends a Nrf device and wraps with struct
+    """
     dlg = None
-    def __init__(self, periph):
+
+    def __init__(self, periph, dlg):
         Nrf.__init__(self, periph)
         self.NrfReadWrite.enable()
         self.NrfNotifications.enable()
-        self.dlg = BadgeDelegate(params=1)
-        self.setDelegate(self.dlg)
+        self.setDelegate(dlg)
 
-    def read(self,fmt):
+    def read(self, fmt):
         d = self.NrfReadWrite.read()
         arr = struct.unpack(fmt, d)
         return arr
 
-
-    def write(self,fmt,*arr):
+    def write(self, fmt, *arr):
         s = struct.pack(fmt, *arr)
         return self.NrfReadWrite.write(s)
 
+
+class BadgeAddressAdapter(logging.LoggerAdapter):
+    """
+    Log adapter that passes badge 'addr' to be prepended to the log message.
+    """
+    def process(self, msg, kwargs):
+        return '[%s] %s' % (self.extra['addr'], msg), kwargs
+
+class Badge():
+    def __init__(self, addr,logger):
+        self.addr = addr
+        self.logger = adapter = BadgeAddressAdapter(logger, {'addr': addr})
+        self.dlg = None
+        self.conn = None
+        self.connDialogue = BadgeDialogue(self)
+
+        self.last_proximity_ts = None
+        self.last_audio_ts = None
+        self.last_audio_ts_fract = None
+
+    def connect(self):
+        self.logger.info("Connecting to {}".format(self.addr))
+        self.dlg = BadgeDelegate(params=1)
+        self.conn = BadgeConnection(self.addr, self.dlg)
+
+    def disconnect(self):
+        if self.conn is not None:
+            self.logger.info("Disconnecting from {}".format(self.addr))
+            self.conn.disconnect()
+        else:
+            self.logger.info("Can't disconnect from {}. Not connected".format(self.addr))
+
+    def set_last_ts(self, init_audio_ts, init_audio_ts_fract, init_proximity_ts):
+        self.last_audio_ts = init_audio_ts
+        self.last_audio_ts_fract = init_audio_ts_fract
+        self.last_proximity_ts = init_proximity_ts
+
     # sends status request with UTC time to the badge
     def sendStatusRequest(self):
-        n = datetime.datetime.utcnow()
-        long_epoch_seconds, ts_fract = self._datetimeToEpoch(n)
-        return self.write('<cLH',"s",long_epoch_seconds,ts_fract)
+        long_epoch_seconds, ts_fract = now_utc_epoch()
+        self.dlg.expected = Expect.status
+        return self.conn.write('<cLH',"s",long_epoch_seconds,ts_fract)
 
-    # sends start rec request with UTC time to the badge
-    def sendStartRecRequest(self,timeoutMinutes):
-        n = datetime.datetime.utcnow()
-        long_epoch_seconds, ts_fract = self._datetimeToEpoch(n)
-        return self.write('<cLHH',"1",long_epoch_seconds,ts_fract,timeoutMinutes)
+    # sends request to start recording, with specified timeout
+    #   (if after timeout minutes badge has not seen server, it will stop recording)
+    def sendStartRecRequest(self, timeout):
+        long_epoch_seconds, ts_fract = now_utc_epoch()
+        self.dlg.gotTimestamp = False
+        self.dlg.expected = Expect.timestamp
+        return self.conn.write('<cLHH',"1",long_epoch_seconds,ts_fract,timeout)
+
+    # sends request to stop recording
+    def sendStopRec(self):
+        return self.conn.write('<c',"0")
+
+    # sends request to start scan, with specified timeout and other scan parameters
+    #   (if after timeout minutes badge has not seen server, it will stop recording)
+    def sendStartScanRequest(self, timeout, window, interval, duration, period):
+        long_epoch_seconds, ts_fract = now_utc_epoch()
+        self.dlg.gotTimestamp = False
+        self.dlg.expected = Expect.timestamp
+        return self.conn.write('<cLHHHHHH',"p",long_epoch_seconds,ts_fract,timeout,window,interval,duration,period)
+
+    # sends request to stop recording
+    def sendStopScan(self):
+        return self.conn.write('<c',"q")
+
+    def sendIdentifyReq(self, timeout):
+        return self.conn.write('<cH',"i",timeout)
+
+    def sendDataRequest(self, ts, ts_fract):
+        """
+        send request for data since given date
+        Note - date is given in UTC epoch
+        :param ts: last timestamp, seconds
+        :param ts_fract: last timestamp, fraction
+        :return:
+        """
+        self.dlg.expected = Expect.header
+        return self.conn.write('<cLH',"r",ts,ts_fract)
+
+    def sendScanRequest(self, ts):
+        """
+        send request for proximity data since given date
+        Note - date is given in UTC epoch
+        :param ts: last timestamp, seconds
+        :return:
+        """
+        self.dlg.expected = Expect.scanHeader
+        return self.conn.write('<cL',"b",ts)
+
+    def sync_timestamp(self):
+        """
+        used for sync the date of the badge
+        :param addr:
+        :return:
+        """
+        retcode = -1
+        try:
+            with timeout(seconds=5, error_message="Connect timeout"):
+                self.connect()
+
+            self.logger.info("Connected")
+
+            with timeout(seconds=5, error_message="Status request timeout (wrong firmware version?)"):
+                while not self.dlg.gotStatus:
+                    self.sendStatusRequest()  # ask for status
+                    self.conn.waitForNotifications(WAIT_FOR)  # waiting for status report
+
+                    self.logger.info("Got status")
+
+                    self.sendIdentifyReq(10)
+
+                if self.dlg.timestamp_sec != 0:
+                    self.logger.info("Badge datetime was: {},{}".format(self.dlg.timestamp_sec, self.dlg.timestamp_ms))
+                else:
+                    self.logger.info("Badge previously unsynced.")
+
+            retcode = 0
+
+        except BTLEException, e:
+            self.logger.error("Bluetooth error")
+            self.logger.error(e.code)
+            self.logger.error(e.message)
+        except TimeoutError, te:
+            self.logger.error("TimeoutError: " + te.message)
+        except Exception as e:
+            s = traceback.format_exc()
+            self.logger.error("unexpected failure, {} ,{}".format(e, s))
+        finally:
+            self.disconnect()
+
+        return retcode
+
+    def start_recording(self):
+        """
+        Requests badge to start recording
+        :param addr:
+        :return:
+        """
+        retcode = -1
+        try:
+            with timeout(seconds=5, error_message="Connect timeout"):
+                self.connect()
+
+            self.logger.info("Connected")
+
+            # Starting audio rec
+            self.logger.info("Starting audio recording")
+            with timeout(seconds=5, error_message="StartRec timeout (wrong firmware version?)"):
+                while not self.dlg.gotTimestamp:
+                    self.sendStartRecRequest(RECORDING_TIMEOUT)  # start recording
+                    self.conn.waitForNotifications(WAIT_FOR)  # waiting for time acknowledgement
+
+                self.logger.info("Got time ack")
+
+                if self.dlg.timestamp_sec != 0:
+                    self.logger.info("Badge datetime was: {},{}".format(self.dlg.timestamp_sec, self.dlg.timestamp_ms))
+                else:
+                    self.logger.info("Badge previously unsynced.")
+
+            # Reset flag (hacky)
+            self.dlg.gotTimestamp = False
+
+            # Starting scans
+            self.logger.info("Starting proximity scans")
+            with timeout(seconds=5, error_message="StartScan timeout (wrong firmware version?)"):
+                while not self.dlg.gotTimestamp:
+                    self.sendStartScanRequest(RECORDING_TIMEOUT, SCAN_WINDOW, SCAN_INTERVAL, SCAN_DURATION, SCAN_PERIOD)
+                    self.conn.waitForNotifications(WAIT_FOR)  # waiting for time acknowledgement
+
+                self.logger.info("Got time ack")
+
+                if self.dlg.timestamp_sec != 0:
+                    self.logger.info("Badge datetime was: {},{}".format(self.dlg.timestamp_sec, self.dlg.timestamp_ms))
+                else:
+                    self.logger.info("Badge previously unsynced.")
+
+            retcode = 0
+
+        except BTLEException, e:
+            self.logger.error("Bluetooth error")
+            self.logger.error(e.code)
+            self.logger.error(e.message)
+        except TimeoutError, te:
+            self.logger.error("TimeoutError: " + te.message)
+        except Exception as e:
+            s = traceback.format_exc()
+            self.logger.error("unexpected failure, {} ,{}".format(e, s))
+        finally:
+            self.disconnect()
+
+        return retcode
+
+    def pull_data(self):
+        """
+        Attempts to read data from the device
+        """
+        retcode = -1
+        try:
+            with timeout(seconds=5, error_message="Connect timeout"):
+                self.connect()
+
+            self.logger.info("Connected")
+
+            # Starting audio rec
+            self.logger.info("Starting audio recording")
+            with timeout(seconds=5, error_message="StartRec timeout (wrong firmware version?)"):
+                while not self.dlg.gotTimestamp:
+                    self.sendStartRecRequest(RECORDING_TIMEOUT)  # start recording
+                    self.conn.waitForNotifications(WAIT_FOR)  # waiting for time acknowledgement
+
+                self.logger.info("Got time ack")
+
+                if self.dlg.timestamp_sec != 0:
+                    self.logger.info("Badge datetime was: {},{}".format(self.dlg.timestamp_sec, self.dlg.timestamp_ms))
+                else:
+                    self.logger.info("Badge previously unsynced.")
+
+            # Reset flag (hacky)
+            self.dlg.gotTimestamp = False
+
+            # Starting scans
+            self.logger.info("Starting proximity scans")
+            with timeout(seconds=5, error_message="StartScan timeout (wrong firmware version?)"):
+                while not self.dlg.gotTimestamp:
+                    self.sendStartScanRequest(RECORDING_TIMEOUT, SCAN_WINDOW, SCAN_INTERVAL, SCAN_DURATION, SCAN_PERIOD)
+                    self.conn.waitForNotifications(WAIT_FOR)  # waiting for time acknowledgement
+
+                self.logger.info("Got time ack")
+
+                if self.dlg.timestamp_sec != 0:
+                    self.logger.info("Badge datetime was: {},{}".format(self.dlg.timestamp_sec, self.dlg.timestamp_ms))
+                else:
+                    self.logger.info("Badge previously unsynced.")
 
 
-    # send request for data since given date
-    # Note - given date should be in local timezone. It will
-    # be converted to UTC before sending to the badge
-    def sendDataRequest(self, lastChunkDate):
-        n = self._localToUTC(lastChunkDate)
-        long_epoch_seconds, ts_fract = self._datetimeToEpoch(n)
-        return self.write('<cLH',"r",long_epoch_seconds,ts_fract)
+            # data request using the "r" command - data since time X
+            self.logger.info("Requesting data since {} {}".format(self.last_audio_ts, self.last_audio_ts_fract))
 
-    def _datetimeToEpoch(self, n):
-        epoch_seconds = (n - datetime.datetime(1970,1,1)).total_seconds()
-        long_epoch_seconds = long(floor(epoch_seconds))
-        ts_fract = n.microsecond/1000;
-        return(long_epoch_seconds,ts_fract)
+            self.sendDataRequest(self.last_audio_ts, self.last_audio_ts_fract)  # ask for data
+            wait_count = 0
+            while True:
+                if self.dlg.gotEndOfData == True:
+                    break
+                if self.conn.waitForNotifications(WAIT_FOR):
+                    # if got data, don't inrease the wait counter
+                    continue
+                self.logger.info("Waiting for more data...")
+                wait_count = wait_count + 1
+                if wait_count >= PULL_WAIT: break
+            self.logger.info("finished reading data")
 
-    # converts local time to UTC
-    def _localToUTC(self, localDateTime):
-        localTz = tz.tzlocal()
-        utcTz = tz.gettz('UTC')
-        localDateTimeWithTz = localDateTime.replace(tzinfo=localTz)
-        return localDateTimeWithTz.astimezone(utcTz).replace(tzinfo=None)
+            # data request using the "r" command - data since time X
+            self.logger.info("Requesting scans since {}".format(self.last_proximity_ts))
+            self.sendScanRequest(self.last_proximity_ts)
+            wait_count = 0
+            while True:
+                if self.dlg.gotEndOfScans == True:
+                    break
+                if self.conn.waitForNotifications(WAIT_FOR):
+                    # if got data, don't inrease the wait counter
+                    continue
+                self.logger.info("Waiting for more data...")
+                wait_count = wait_count + 1
+                if wait_count >= PULL_WAIT: break
+            self.logger.info("finished reading data")
+
+            # update last seen chunks and scans
+            if len(self.dlg.chunks) > 0:
+                last_chunk = self.dlg.chunks[-1]
+                if last_chunk.ts > 0:
+                    last_ts = last_chunk.ts - 1  # minus 1 second to compensate for potential conversion errors from float
+                    last_ts_int, last_ts_fract = split_ts_float(last_ts)
+                    self.logger.debug("Setting last seen audio chunk to {}.{}".format(last_ts_int, last_ts_fract))
+                    self.last_audio_ts = last_ts_int
+                    self.last_audio_ts_fract = last_ts_fract
+
+            if len(self.dlg.scans) > 0:
+                last_scan = self.dlg.scans[-1]
+                last_ts = last_scan.ts
+                self.logger.debug("Setting last seen proximirt scan to {}".format(last_ts))
+                self.last_proximity_ts = last_ts
+
+            retcode = 0
+
+        except BTLEException, e:
+            self.logger.error("failed pulling data")
+            self.logger.error(e.code)
+            self.logger.error(e.message)
+        except TimeoutError, te:
+            self.logger.error("TimeoutError: " + te.message)
+        except Exception as e:
+            s = traceback.format_exc()
+            self.logger.error("unexpected failure, {} ,{}".format(e, s))
+        finally:
+           self.disconnect()
+
+        return retcode
+
+
+def print_bytes(data):
+    """
+    Prints a given string as an array of unsigned bytes
+    :param data:
+    :return:
+    """
+    raw_arr = struct.unpack('<%dB' % len(data), data)
+    print(raw_arr)
+
+
+def datetime_to_epoch(d):
+    """
+    Converts given datetime to epoch seconds and ms
+    :param d: datetime
+    :return:
+    """
+    epoch_seconds = (d - datetime.datetime(1970, 1, 1)).total_seconds()
+    long_epoch_seconds = long(floor(epoch_seconds))
+    ts_fract = d.microsecond / 1000;
+    return (long_epoch_seconds, ts_fract)
+
+
+def now_utc():
+    """
+    Returns current UTC as datetime
+    :return: datetime
+    """
+    return datetime.datetime.utcnow()
+
+
+def now_utc_epoch():
+    """
+    Returns current UTC as epoch seconds and ms
+    :return: long_epoch_seconds, ts_fract
+    """
+    return datetime_to_epoch(now_utc())
+
+
+def split_ts_float(ts):
+    """
+    Splits a timestamp that is represented as a float to an integral part and a fraction
+    :param ts:
+    :return:
+    """
+    seconds = long(floor(ts))
+    fract = int(round((ts - seconds) * 1000))
+    return seconds,fract
+
+
+def ts_and_fract_to_float(ts_int,ts_fract):
+    """
+    takes integral part and a fraction and converts to float
+    :param ts:
+    :return:
+    """
+    return ts_int + (ts_fract / 1000.0)
 
 if __name__ == "__main__":
-    import time
-    import sys
-    import argparse
+    print("Basic conversion tests")
+    print("Int and fraction to float")
+    ts_int = 1472396048
+    ts_fract = 501
+    print("Original values: {} {}".format(ts_int,ts_fract))
+    ts_float = ts_and_fract_to_float(ts_int, ts_fract)
+    print(ts_float)
+    print("%0.3f" % ts_float)
+    print(type(ts_float))
 
-    '''
-    bdg_addr = "E1:C1:21:A2:B2:E0" #"CC:4A:FD:5C:E3:5B"
-    bdg = Badge(bdg_addr)
-    time.sleep(1.0)
+    print("--------------------------")
 
-    try:
-      while not bdg.dlg.gotStatus:
-            bdg.NrfReadWrite.write("s")  # ask for status
-            bdg.waitForNotifications(1.0)  # waiting for status report
-
-      print "got status"
-
-      while not bdg.dlg.gotDateTime:
-            bdg.NrfReadWrite.write("t")  # ask for time
-            bdg.waitForNotifications(1.0)
-
-      print("Got datetime: {},{}".format(bdg.dlg.badge_sec,bdg.dlg.badge_ts))
-
-      #print "Sending date and time"
-      #bdg.sendDateTime()
-
-    except:
-      retcode=-1
-      e = sys.exc_info()[0]
-      print("unexpected failure, {}".format(e))
-
-    finally:
-      bdg.disconnect()
-      del bdg
-    '''
+    print("Float to int and fraction")
+    new_ts_int, new_ts_fract = split_ts_float(ts_float)
+    print("New values: {} {}".format(new_ts_int, new_ts_fract))
+    print("{} {}".format(type(new_ts_int),type(new_ts_fract)))
