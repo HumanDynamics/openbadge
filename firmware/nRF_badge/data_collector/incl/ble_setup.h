@@ -28,6 +28,7 @@
     #define DEVICE_NAME                     "HDBDG"                           /**< Name of device. Will be included in the advertising data. */
 #endif
 
+
 #define APP_ADV_INTERVAL                320                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 200 ms). */
 #define APP_ADV_TIMEOUT_IN_SECONDS      6                                          
 
@@ -43,8 +44,17 @@
 
 #define NO_GROUP 0
 unsigned short defaultID;
+
 #define RESET_GROUP 0xff
 #define RESET_ID 0xffff
+
+#define BAD_GROUP 0xff
+#define BAD_ID 0xffff
+
+//#define BEACON_NAME "HDBCN"
+//#define BEACON_GROUP 0xfe
+
+
 
 typedef struct
 {
@@ -77,9 +87,8 @@ typedef enum ble_status_t
 
 
 
-#define CUSTOM_DATA_LEN 11   // bytes in custom data struct to be sent in advertising payload.
-                            //   Note that this differs from sizeof(custom_adv_data_t), which includes padding at end of struct
- 
+
+// Structure for organizing custom badge advertising data
 typedef struct
 {
     unsigned char battery;   // scaled so that voltage = 1 + 0.01 * battery
@@ -89,8 +98,11 @@ typedef struct
     unsigned char MAC[6];
 } custom_adv_data_t;
 
-volatile custom_adv_data_t customAdvData;
+#define CUSTOM_ADV_DATA_LEN 11   // length of above struct (excluding struct padding)
+#define BADGE_MANUF_DATA_LEN (CUSTOM_ADV_DATA_LEN + 2)  // CUSTOM_ADV_DATA_LEN bytes, plus 16-bit company ID
 
+
+volatile custom_adv_data_t customAdvData;
 volatile bool needAdvDataUpdate;
 
 

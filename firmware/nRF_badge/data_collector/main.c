@@ -134,7 +134,7 @@ int main(void)
     
     
     /*
-    debug_log("=DEVELOPMENT BADGE.  ONLY ERASES EEPROM=");
+    debug_log("=DEVELOPMENT BADGE.  ONLY ERASES EEPROM=\r\n");
     debug_log("=ERASING EEPROM...=\r\n");
     ext_eeprom_wait();
     unsigned char empty[EXT_CHUNK_SIZE + EXT_EEPROM_PADDING];
