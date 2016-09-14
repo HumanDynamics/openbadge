@@ -121,7 +121,6 @@ $(SDK_PATH)/components/toolchain/system_nrf51.c \
 $(SDK_PATH)/components/softdevice/common/softdevice_handler/softdevice_handler.c \
 $(SDK_PATH)/components/ble/ble_services/ble_bas/ble_bas.c \
 $(SDK_PATH)/components/ble/ble_services/ble_nus/ble_nus.c \
-#incl/internal_flash.c \
 
 
 #assembly files

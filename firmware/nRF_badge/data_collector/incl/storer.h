@@ -37,7 +37,7 @@
 
 // Ideally this would be the first page free after program space.
 //   May be acquirable from linker script.  But the following value is a (conservative) estimated value.
-#define FIRST_PAGE 150
+#define FIRST_PAGE 155
 #define LAST_PAGE 251  // last available FLASH page - rest is reserved
  
 #define BYTES_PER_PAGE 1024  //1kB pages in nrf51 flash
@@ -114,7 +114,7 @@ void storer_on_sys_evt(uint32_t sys_evt);
 void printStorerChunk(int chunk);
 
 
-#define STORED_ASSIGNMENT_ADDRESS 0  // first address in EEPROM
+#define STORED_ASSIGNMENT_ADDRESS 10  // arbitrary address in EEPROM
 
 // Magic number is stored to EEPROM along with ID and group #, to denote a valid stored assignment.
 #define STORED_ASSIGNMENT_MAGIC_NUMBER 0xfa

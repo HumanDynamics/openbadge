@@ -641,7 +641,7 @@ bool updateSender()
                     // compose next packet of device data
                     int devicesLeft = send.num - send.loc;
                     if (devicesLeft > DEVICES_PER_PACKET)  {
-                        send.bufSize = DEVICES_PER_PACKET;
+                        send.bufSize = sizeof(seenDevice_t) * DEVICES_PER_PACKET;
                     }
                     else  {
                         send.bufSize = sizeof(seenDevice_t) * devicesLeft;

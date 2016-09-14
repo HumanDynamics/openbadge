@@ -134,7 +134,7 @@ int main(void)
     
     
     /*
-    debug_log("=DEVELOPMENT BADGE.  ONLY ERASES EEPROM=");
+    debug_log("=DEVELOPMENT BADGE.  ONLY ERASES EEPROM=\r\n");
     debug_log("=ERASING EEPROM...=\r\n");
     ext_eeprom_wait();
     unsigned char empty[EXT_CHUNK_SIZE + EXT_EEPROM_PADDING];
@@ -164,9 +164,13 @@ int main(void)
     
     // Blink once on start
     nrf_gpio_pin_write(LED_1,LED_ON);
-    nrf_delay_ms(2000);
+    nrf_delay_ms(200);
     nrf_gpio_pin_write(LED_1,LED_OFF);
-    
+    nrf_delay_ms(200);
+    nrf_gpio_pin_write(LED_1,LED_ON);
+    nrf_delay_ms(200);
+    nrf_gpio_pin_write(LED_1,LED_OFF);
+
     
     nrf_delay_ms(1000);
 

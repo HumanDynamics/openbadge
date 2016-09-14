@@ -314,7 +314,7 @@ void setAdvData()
     ble_advdata_manuf_data_t custom_manuf_data;
     custom_manuf_data.company_identifier = 0xFF00;  // unofficial manufacturer code
     custom_manuf_data.data.p_data = (uint8_t*)(&customAdvData);
-    custom_manuf_data.data.size = CUSTOM_DATA_LEN;
+    custom_manuf_data.data.size = CUSTOM_ADV_DATA_LEN;
     
     // Build advertising data struct to pass into @ref ble_advdata_set.
     ble_advdata_t advdata;

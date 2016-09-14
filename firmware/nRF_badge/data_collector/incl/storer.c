@@ -29,19 +29,13 @@ void storer_init()
     for (int c = 0; c <= LAST_FLASH_CHUNK; c++)  {
         mic_chunk_t* chunkPtr = (mic_chunk_t*)ADDRESS_OF_CHUNK(c);
 
-        unsigned long timestamp = (*chunkPtr).timestamp;
-        unsigned long chunkCheck = (*chunkPtr).check;
-        
-        /*if(timestamp != 0xffffffffUL)
-        {
-            debug_log("c: %d ts: 0x%lX ch: 0x%lX\r\n", c, timestamp, chunkCheck);
-            nrf_delay_ms(20);
-        }*/
+        unsigned long timestamp = chunkPtr->timestamp;
+        unsigned long check = chunkPtr->check;
         
         //is the timestamp possibly valid?
-        if (timestamp != 0xffffffffUL && timestamp > MODERN_TIME)  { 
+        if (timestamp < FUTURE_TIME && timestamp > MODERN_TIME)  { 
             //is it a completely stored chunk?
-            if (timestamp == chunkCheck || chunkCheck == 0)  { 
+            if (timestamp == check || check == CHECK_TRUNC)  { 
                 //is it later than the latest stored one found so far?
                 if (timestamp > lastStoredTime)  { 
                     store.to = c; //keep track of latest stored chunk
@@ -105,7 +99,6 @@ void storer_init()
     store.to = newChunk;
     debug_log("  Ready to store to chunk %d.\r\n",newChunk); 
     
-    
     store.extFrom = 0;
     
     // We need to find the most recent stored chunk, to start storing after it
@@ -114,7 +107,7 @@ void storer_init()
     scan_tail_t tail;
     
     ext_eeprom_wait();
-    
+
     store.extTo = EXT_FIRST_DATA_CHUNK;
     unsigned long lastStoredTimestamp = 0;
     for (int i = EXT_FIRST_DATA_CHUNK; i <= EXT_LAST_CHUNK; i++)  {

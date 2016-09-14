@@ -33,46 +33,21 @@
 #include "ext_eeprom.h"     // External flash manipulation
 
 
+// Values from iBeacon spec
+#define COMPANY_ID_APPLE  0x004C
+#define IBEACON_TYPE_PROXIMITY 0x1502
+#define IBEACON_MANUF_DATA_LEN 0x19
 
-
-
-
- 
-// Default scan timings
-#define SCAN_WINDOW 100     // Milliseconds of active scanning
-#define SCAN_INTERVAL 300   // Millisecond interval at which a scan window is performed  
-#define SCAN_TIMEOUT 5  // Scan duration, seconds.
-
-#define SCAN_PERIOD 10 // Scan period, s.  A scan is started at this interval.
-
-
-/*struct {
-    int interval;   // See above
-    int window;
-    int timeout;
-    int period;
-} scanTiming;*/
-
-unsigned long lastScanTime;  // millis() time of last scan
-unsigned long scanPeriod_ms;  // scan period in ms
-
-
-// Struct for representing a device, with a MAC address and associated device ID
-/*typedef struct
+// Structure of iBeacon manufacturer-specific data, after the 0xFF type specifier byte.
+typedef struct
 {
-    unsigned char mac[6];
-    unsigned char ID;
-} device_t;*/
-
-
-
-
-/**
- * Print a MAC address, via debug_log
- *   No CR/LF - requires a debug_log("\r\n") or similar afterwards.
- */
-void printMac(unsigned char mac[6]);
-
+    unsigned short companyID;
+    unsigned short type;
+    unsigned char UUID[16];
+    unsigned char major[2];  // big-endian
+    unsigned char minor[2];  // big-endian
+    unsigned char measuredPower;
+} iBeacon_data_t;
 
 
 //================================ Scanning + scan result storage ===============================
@@ -81,7 +56,7 @@ void printMac(unsigned char mac[6]);
 /**
  * External AT25XE041B flash (or EEPROM)
  *
- * Similarly to the internal flash, the external flash is organized into "chunks" for storing scan data
+ * Similarly to the internal flash, the external EEPROM is organized into "chunks" for storing scan data
  *   One chunk is one scan result, containing the ID, average RSSI, and number of sightings for each device
  * In a large scan, this might require more than one chunk's worth of space.  Such chunks are specially
  *   marked, and the data is divided into however many chunks are required.
@@ -97,23 +72,6 @@ void printMac(unsigned char mac[6]);
  *   Num is the number of devices seen in the entire scan.  (may be more than what's listed in
  *     a single chunk)
  */
- 
- /**
-  * Note on EEPROM
-  * 
-  * The latest badge revisions use EEPROM instead of FLASH external memory.  The EEPROM used has half the capacity of the
-  *   original FLASH component (CONFIRM SIZE)
-  * The EEPROM also does not require erasing before writing; an erase command simply does nothing.
-  *   All other SPI commands are the same, so the FLASH manipulation code is compatible with the EEPROM
-  */
- 
- 
-//#define EXT_PAGE_SIZE 256  // External flash can be written only up to 1 page at a time
-// But pages are not too useful in external flash, as page-level erase only works on first 64kB
-
-// Most useful unit of memory is a 4kB block, the smallest erase that can be done on any memory
-// External flash has 128 of these 4kB blocks
-#define EXT_BLOCK_SIZE 4096  // External flash can only be erased in minimum 4kB units
 
 #define EXT_CHUNK_SIZE 128
 #define EXT_ADDRESS_OF_CHUNK(chnk) ( (uint32_t)(chnk * 128) )
@@ -121,7 +79,6 @@ void printMac(unsigned char mac[6]);
 #define EXT_FIRST_CHUNK 0
 #define EXT_FIRST_DATA_CHUNK 8     // earlier chunks are for persistent device list, configuration, etc
 #define EXT_LAST_CHUNK 2047  // 524288 / 128  =  2^18 / EXT_CHUNK_SIZE = 2048 chunks total
-#define EXT_BLOCK_OF_CHUNK(chnk) ( (uint32_t)(chnk / 32) )
 
 
 #define CHECK_INCOMPLETE 0xFFFFFFFFUL  // chunk check value for incomplete chunk
@@ -130,31 +87,15 @@ void printMac(unsigned char mac[6]);
                             // Note the num parameter in truncated/continuing chunks is the total devices seen in the whole scan,
                             //   not the number reported in the chunk itself.
 
-// Chunk types
-//#define EXT_COMPLETE_CHUNK 0x01   // a chunk that contains a complete scan result
-//#define EXT_INCOMPLETE_CHUNK 0x11 // a chunk that contains the first part of a longer scan result
-//#define EXT_CONT_CHUNK 0x02       // a chunk that continues a scan result started in a previous chunk
-
 #define SCAN_DEVICES_PER_CHUNK 29  // maximum devices that we can report in one chunk.  See chunk structure.
 
-// Instead of a proper timestamp, chunks that complete a previous incomplete chunk are marked with
-//   a special "timestamp"
-//#define EXT_CONT_TIMESTAMP 0xf00df00d
-
-// Unix time in recent past (sometime June 2015), used to check for timestamp validity
-#define MODERN_TIME 1434240000UL  // Unix time in the recent past (sometime June 2015), used to check for reasonable times
-
  
-
 /**
- * Various unions/structs for making accessing the external flash more convenient.
- *
- * The external flash is most efficiently accessed with a single SPI transfer
- *   The following types define a union between an appropriate length buffer, and a 
- *   struct with members according to the above specified scan chunk structure.
- * They include 4 dummy bytes at the beginning, corresponding to the SPI transfer of
- *   opcodes and address bytes.
- *
+ * Various data types for convenient EEPROM access
+ * 
+ * The following types define unions between structs with relevant scan chunk members,
+ *   and unsigned char arrays, for use with EEPROM data transfer functions.
+ * They also include the required 4 dummy bytes at the start.  (see ext_eeprom.h)
  * Example usage: 
  *   scan_chunk_t storeChunk;
  *   storeChunk.devices[0].ID = 12;
@@ -211,9 +152,22 @@ typedef union
 } scan_tail_t;
 
  
-
-
+ 
+ 
+ 
 volatile bool scanner_enable;
+
+// Default scan timings
+#define SCAN_WINDOW 100     // Milliseconds of active scanning
+#define SCAN_INTERVAL 300   // Millisecond interval at which a scan window is performed  
+#define SCAN_TIMEOUT 5  // Scan duration, seconds.
+#define SCAN_PERIOD 10 // Scan period, s.  A scan is started at this interval.
+
+
+ble_gap_scan_params_t scan_params;
+
+unsigned long lastScanTime;  // millis() time of last scan
+unsigned long scanPeriod_ms;  // scan period in ms
 
 // For keeping track of current state of scanning
 typedef enum scan_state_t
@@ -227,41 +181,13 @@ volatile scan_state_t scan_state;
 
 
 
-
-ble_gap_scan_params_t scan_params;
-
-
 #define MAX_SCAN_RESULTS 28     // maximum number of devices that will be reported in a scan
                                 // ^^ temporarily capped to never be more than one chunk's worth
 #define MAX_SCAN_COUNT 127      // maximum number of RSSI readings for one device reported in a scan
 
-/*volatile struct
-{
-    int num;
-    unsigned short IDs[MAX_SCAN_RESULTS];
-    signed short RSSIsum[MAX_SCAN_RESULTS];
-    signed char counts[MAX_SCAN_RESULTS];
-} scanResults;*/
-
-// Table for temporarily storing results of a scan, during the scan itself.
-// When a device is seen with a strong enough RSSI, the RSSI is stored in this table,
-//   in the same position in the table as in the deviceList.  (i.e. scanResults[n] is the 
-//   detected signal strength of the device deviceList[n] )
-//volatile signed char scanResults[NUM_DEVICES];
-
 #define MINIMUM_RSSI (-120)
 signed char minimumRSSI;   // device seen on scan must reach this RSSI threshold to be acknowledged
 
-
-// Keep track of storage of scan data.
-/*struct
-{
-    unsigned char resultLoc;  //current location within scanResults table
-    int chunk;     // index of external flash chunk currently being stored to
-    unsigned long timestamp;  // Timestamp of beginning (end?) of scan period
-    unsigned char numTotal;    // Total number of devices seen in scan
-    unsigned char numStored;        // Number of seen devices stored so far
-} scanStore;*/
 
 struct
 {

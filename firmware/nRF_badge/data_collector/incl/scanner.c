@@ -2,16 +2,24 @@
 
 
 
-
-
-
-void printMac(unsigned char mac[6])
+static unsigned short hexStringToShort(unsigned char * string)
 {
-    debug_log("%.2X:%.2X:%.2X:%.2X:%.2X:%.2X",(int)mac[5],(int)mac[4],
-                                              (int)mac[3],(int)mac[2],
-                                              (int)mac[1],(int)mac[0]);
+    unsigned short result = 0;
+    for (int place = 0; place < 4; place++)  {
+        result *= 16;
+        if (string[place] >= '0' && string[place] <= '9')  {
+            result += string[place] - '0';
+        }
+        else if (string[place] >= 'A' && string[place] <= 'F')  {
+            result += string[place] - 'A' + 0xA;
+        }
+        else if (string[place] >= 'a' && string[place] <= 'f')  {
+            result += string[place] - 'a' + 0xa;
+        }
+        else return 0xffff;  // invalid string
+    }
+    return result;
 }
-
 
 
 //================================ Scanning + scan result storage ===============================
@@ -45,69 +53,196 @@ uint32_t startScan()
 
 void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
 {
+    //debug_log("BLECH\r\n");
     signed char rssi = advReport->rssi;
     
-    if(rssi >= MINIMUM_RSSI)  {  // ignore signals that are too weak
-        unsigned char dataLength = advReport->dlen;
-        unsigned char* data = (unsigned char*)advReport->data;
-        unsigned char index = 0;
-        unsigned char* name = NULL;
-        bool gotPayload = false;
-        custom_adv_data_t payload;
-        int payloadLen = 0;
-        
-        // step through data until we find both the name and custom data, or have reached the end of the data
-        while((gotPayload == false || name == NULL) && index < dataLength)  {
-            unsigned char fieldLen = data[index];
-            index++;
-            unsigned char fieldType = data[index];
-            if(fieldType == BLE_GAP_AD_TYPE_SHORT_LOCAL_NAME
-                || fieldType == BLE_GAP_AD_TYPE_COMPLETE_LOCAL_NAME)
-            {
-                name = &data[index+1];
+    if (rssi < MINIMUM_RSSI)  {
+        return;  // ignore signals that are too weak.
+    }
+    
+    unsigned char dataLength = advReport->dlen;
+    unsigned char* data = (unsigned char*)advReport->data;
+    unsigned char index = 0;
+    
+    unsigned char* namePtr = NULL;
+    //unsigned char  nameLen = 0;
+    unsigned char* manufDataPtr = NULL;
+    unsigned char  manufDataLen = 0;
+    
+    unsigned char group = BAD_GROUP;
+    unsigned short ID = BAD_ID;
+    
+    while ((namePtr == NULL || manufDataPtr == NULL) && index < dataLength)  {
+        unsigned char fieldLen = data[index];
+        index++;
+        unsigned char fieldType = data[index];
+        if (fieldType == BLE_GAP_AD_TYPE_SHORT_LOCAL_NAME || fieldType == BLE_GAP_AD_TYPE_COMPLETE_LOCAL_NAME)  {
+            namePtr = &data[index + 1];  // skip field type byte
+            //nameLen = fieldLen - 1;
+        }
+        else if (fieldType == BLE_GAP_AD_TYPE_MANUFACTURER_SPECIFIC_DATA)  {
+            manufDataPtr = &data[index + 1];  // skip field type byte
+            manufDataLen = fieldLen - 1;
+        }
+        index += fieldLen;
+    }
+    
+    if (manufDataLen == BADGE_MANUF_DATA_LEN)  {
+        if (namePtr != NULL && memcmp(namePtr,(const uint8_t *)DEVICE_NAME,strlen(DEVICE_NAME)) == 0)  {
+            custom_adv_data_t badgeAdvData;
+            memcpy(&badgeAdvData,&manufDataPtr[2],CUSTOM_ADV_DATA_LEN);  // skip past company ID; ensure data is properly aligned
+            ID = badgeAdvData.ID;
+            group = badgeAdvData.group;
+            debug_log("---Badge seen: group %d, ID %.4X, rssi %d.\r\n",(int)group,(int)ID,(int)rssi);
+        }
+    }
+    else if (manufDataLen == IBEACON_MANUF_DATA_LEN)  {
+        iBeacon_data_t iBeaconData;
+        memcpy(&iBeaconData,manufDataPtr,IBEACON_MANUF_DATA_LEN);  // ensure data is properly aligned
+        if (iBeaconData.companyID == COMPANY_ID_APPLE && iBeaconData.type == IBEACON_TYPE_PROXIMITY)  {
+            // major/minor values are big-endian
+            unsigned short major = ((unsigned short)iBeaconData.major[0] * 256) + iBeaconData.major[1];  
+            unsigned short minor = ((unsigned short)iBeaconData.minor[0] * 256) + iBeaconData.minor[1];
+            debug_log("---iBeacon seen: major %d, minor %d, rssi %d.\r\n",(int)major,minor,(int)rssi);
+            group = iBeaconData.major[1];  // take only lower byte of major value
+            ID = minor;
+        }
+    }
+    
+    if (ID != BAD_ID && group == badgeAssignment.group)  {
+        bool prevSeen = false;
+        for(int i=0; i<scan.num; i++)  {      // check through list of already seen badges
+            if(ID == scan.IDs[i])  {
+                scan.rssiSums[i] += rssi;
+                scan.counts[i]++;
+                prevSeen = true;
+                break;
             }
-            else if(fieldType == BLE_GAP_AD_TYPE_MANUFACTURER_SPECIFIC_DATA)
-            {
-                payloadLen = fieldLen - 3;  // length of field minus field type byte and manuf ID word
-                if(payloadLen == CUSTOM_DATA_LEN)
-                {
-                    // Need to copy payload data so it is properly aligned.
-                    memcpy(&payload,&data[index+3],CUSTOM_DATA_LEN);  // skip past field type byte, manuf ID word
+        }
+        if(!prevSeen)  {                             // is it a new badge
+            scan.IDs[scan.num] = ID;
+            scan.rssiSums[scan.num] = rssi;
+            scan.counts[scan.num] = 1;
+            scan.num++;
+        }
+    }
+    
+    /*
+    
+    // Parse the broadcast packet.  (find+check name, find custom data if present)
+    while ((name == NULL || gotPayload == false) && index < dataLength)  {
+        unsigned char fieldLen = data[index];
+        index++;
+        unsigned char fieldType = data[index];
+        if (fieldType == BLE_GAP_AD_TYPE_SHORT_LOCAL_NAME || fieldType == BLE_GAP_AD_TYPE_COMPLETE_LOCAL_NAME)  {
+            name = &data[index + 1];
+            if (memcmp(name,(const uint8_t *)DEVICE_NAME,strlen(DEVICE_NAME)) == 0)  {
+                // name checks out
+            }
+            else if (name != NULL && memcmp(name,(const uint8_t *)BEACON_NAME,strlen(BEACON_NAME)) == 0)  {
+                payload.group = BEACON_GROUP;
+                // our beacons are named "[BEACON_NAME]XXXX", where XXXX is a hex ID number.
+                payload.ID = hexStringToShort(&name[strlen(BEACON_NAME)]);
+                if (payload.ID != 0xffff)  {  // was there a valid ID in name?
                     gotPayload = true;
                 }
             }
-            index += fieldLen;
+            else  {
+                gotPayload = false;
+                break;  // if name doesn't match, stop parsing broadcast packet
+            }
         }
-        
-        if(name != NULL && memcmp(name,(const uint8_t *)DEVICE_NAME,strlen(DEVICE_NAME)) == 0)  {  // is it a badge?
-            if(gotPayload)  {   // is there custom data, and the correct amount?
-                //debug_log("Badge seen: group %d, ID %hX, rssi %d.\r\n",(int)payload.group,payload.ID,(int)rssi);
-                if(payload.group == badgeAssignment.group)  {
-                    bool prevSeen = false;
-                    for(int i=0; i<scan.num; i++)  {      // check through list of already seen badges
-                        if(payload.ID == scan.IDs[i])  {
-                            scan.rssiSums[i] += rssi;
-                            scan.counts[i]++;
-                            prevSeen = true;
-                            break;
-                        }
-                    }
-                    if(!prevSeen)  {                             // is it a new badge
-                        scan.IDs[scan.num] = payload.ID;
-                        scan.rssiSums[scan.num] = rssi;
-                        scan.counts[scan.num] = 1;
-                        scan.num++;
-                    }
+        else if(fieldType == BLE_GAP_AD_TYPE_MANUFACTURER_SPECIFIC_DATA)  {
+            int payloadLen = fieldLen - 3;  // length of field minus field type byte and manuf ID word
+            if(payloadLen == CUSTOM_DATA_LEN)  {
+                // Need to copy payload data so it is properly aligned.
+                memcpy(&payload,&data[index+3],CUSTOM_DATA_LEN);  // skip past field type byte, manuf ID word
+                gotPayload = true;
+            }
+        }
+        index += fieldLen;
+    }
+    
+    if(gotPayload)  {   // did we see a valid device, and retrieve relevant data?
+        debug_log("---Badge seen: group %d, ID %hX, rssi %d.\r\n",(int)payload.group,payload.ID,(int)rssi);
+        if(payload.group == badgeAssignment.group || payload.group == BEACON_GROUP)  {
+            bool prevSeen = false;
+            for(int i=0; i<scan.num; i++)  {      // check through list of already seen badges
+                if(payload.ID == scan.IDs[i])  {
+                    scan.rssiSums[i] += rssi;
+                    scan.counts[i]++;
+                    prevSeen = true;
+                    break;
                 }
             }
-            else  {
-                //debug_log("Badge seen, rssi %d, but wrong/missing adv data, len %d?\r\n",(int)rssi,payloadLen);
+            if(!prevSeen)  {                             // is it a new badge
+                scan.IDs[scan.num] = payload.ID;
+                scan.rssiSums[scan.num] = rssi;
+                scan.counts[scan.num] = 1;
+                scan.num++;
+            }
+        }
+    }
+    */
+    
+    /*
+    // step through data until we find both the name and custom data, or have reached the end of the data
+    while ((gotPayload == false || name == NULL) && index < dataLength)  {
+        unsigned char fieldLen = data[index];
+        index++;
+        unsigned char fieldType = data[index];
+        if(fieldType == BLE_GAP_AD_TYPE_SHORT_LOCAL_NAME
+            || fieldType == BLE_GAP_AD_TYPE_COMPLETE_LOCAL_NAME)
+        {
+            name = &data[index+1];
+        }
+        else if(fieldType == BLE_GAP_AD_TYPE_MANUFACTURER_SPECIFIC_DATA)
+        {
+            payloadLen = fieldLen - 3;  // length of field minus field type byte and manuf ID word
+            if(payloadLen == CUSTOM_DATA_LEN)
+            {
+                // Need to copy payload data so it is properly aligned.
+                memcpy(&payload,&data[index+3],CUSTOM_DATA_LEN);  // skip past field type byte, manuf ID word
+                gotPayload = true;
+            }
+        }
+        index += fieldLen;
+    }
+    
+    if(name != NULL && memcmp(name,(const uint8_t *)DEVICE_NAME,strlen(DEVICE_NAME)) == 0)  {  // is it a badge?
+        if(gotPayload)  {   // is there custom data, and the correct amount?
+            //debug_log("Badge seen: group %d, ID %hX, rssi %d.\r\n",(int)payload.group,payload.ID,(int)rssi);
+            if(payload.group == badgeAssignment.group)  {
+                bool prevSeen = false;
+                for(int i=0; i<scan.num; i++)  {      // check through list of already seen badges
+                    if(payload.ID == scan.IDs[i])  {
+                        scan.rssiSums[i] += rssi;
+                        scan.counts[i]++;
+                        prevSeen = true;
+                        break;
+                    }
+                }
+                if(!prevSeen)  {                             // is it a new badge
+                    scan.IDs[scan.num] = payload.ID;
+                    scan.rssiSums[scan.num] = rssi;
+                    scan.counts[scan.num] = 1;
+                    scan.num++;
+                }
             }
         }
         else  {
-            //debug_log("Unknown device seen, name %.5s, rssi %d.\r\n",name,(int)rssi);
+            //debug_log("Badge seen, rssi %d, but wrong/missing adv data, len %d?\r\n",(int)rssi,payloadLen);
         }
     }
+    else if (name != NULL && memcmp(name,(const uint8_t *)BEACON_NAME,strlen(BEACON_NAME)) == 0)  {
+        // beacons are named [BEACON_NAME]XXXX, where XXXX is a hex ID number.
+        unsigned short beaconID = hexStringToShort(&name[strlen(BEACON_NAME)]);  
+    }
+    else  {
+        //debug_log("Unknown device seen, name %.5s, rssi %d.\r\n",name,(int)rssi);
+    }
+    */
+        
 }
 
 void BLEonScanTimeout()
