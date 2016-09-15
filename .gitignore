@@ -7,7 +7,6 @@ _build/
 *.out
 *.bin
 device_macs*
-rssi_scan.txt
 data.db
 *.log
 *.s#*
@@ -16,7 +15,7 @@ data.db
 *.brd.lck
 *.sch.lck
 
+.ipynb_checkpoints/
+
 .idea
 env/
-localsettings.js
-
