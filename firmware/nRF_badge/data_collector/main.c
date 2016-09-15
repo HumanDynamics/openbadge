@@ -163,6 +163,8 @@ int main(void)
     advertising_init();
     
     // Blink once on start
+    nrf_gpio_pin_write(LED_1,LED_OFF);
+    nrf_delay_ms(200);
     nrf_gpio_pin_write(LED_1,LED_ON);
     nrf_delay_ms(200);
     nrf_gpio_pin_write(LED_1,LED_OFF);
