@@ -101,7 +101,8 @@ void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
         memcpy(&iBeaconData,manufDataPtr,IBEACON_MANUF_DATA_LEN);  // ensure data is properly aligned
         if (iBeaconData.companyID == COMPANY_ID_APPLE && iBeaconData.type == IBEACON_TYPE_PROXIMITY)  {
             // major/minor values are big-endian
-            unsigned short major = ((unsigned short)iBeaconData.major[0] * 256) + iBeaconData.major[1];  
+            unsigned short major = ((unsigned short)iBeaconData.major[0] * 256) + iBeaconData.major[1];
+            UNUSED_VARIABLE(major);
             unsigned short minor = ((unsigned short)iBeaconData.minor[0] * 256) + iBeaconData.minor[1];
             debug_log("---iBeacon seen: major %d, minor %d, rssi %d.\r\n",(int)major,minor,(int)rssi);
             group = iBeaconData.major[1];  // take only lower byte of major value
