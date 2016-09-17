@@ -1,5 +1,6 @@
-from __future__ import division
-from __future__ import print_function
+#!/usr/bin/env python
+
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 from bluepy import btle
 from bluepy.btle import UUID, Peripheral, DefaultDelegate, AssignedNumbers

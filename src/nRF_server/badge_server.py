@@ -1,6 +1,6 @@
-#!/usr/bin/python
-from badge import *
-from badge_discoverer import BadgeDiscoverer
+#!/usr/bin/env python
+
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import datetime
 import logging.handlers
@@ -9,6 +9,10 @@ import re
 import subprocess
 import shlex
 import csv
+
+from badge import *
+from badge_discoverer import BadgeDiscoverer
+
 
 log_file_name = 'server.log'
 scans_file_name = 'scan.txt'
@@ -55,7 +59,7 @@ def get_devices(device_file="device_macs.txt"):
     with open(device_file, 'r') as csvfile:
         fil = filter(lambda row: row[0]!='#', csvfile)
         fil = filter(lambda x: not re.match(r'^\s*$', x), fil)
-        rdr = csv.reader(fil, delimiter=' ')
+        rdr = csv.reader(fil, delimiter=b' ')
         for row in rdr:
             device = row[0]
             devices.append(device)
