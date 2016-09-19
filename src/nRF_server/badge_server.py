@@ -180,6 +180,77 @@ def add_start_all_command_options(subparsers):
     st_parser.add_argument('-w','--use_whitelist', action='store_true', default=False, help="Use whitelist instead of continuously scanning for badges")
 
 
+def pull_devices():
+    logger.info('Started')
+
+    # hacky
+    now_ts, now_ts_fract = now_utc_epoch()
+    logger.info("Will request data since %f" % now_ts)
+    init_proximity_ts = now_ts
+    init_audio_ts, init_audio_ts_fract = now_ts, now_ts_fract
+
+    badges = {}  # Keeps a list of badge objects
+    while True:
+        logger.info("Scanning for devices...")
+        whitelist_devices = get_devices()
+        scanned_devices = scan_for_devices(whitelist_devices)
+
+        time.sleep(2)
+
+        for device in scanned_devices:
+            addr = device['mac']
+            if addr not in badges:
+                logger.debug("Unseen device. Adding to dict: %s" % addr)
+                # init new badge. set last seen chunk to the time the pull command was called
+                new_badge = Badge(addr, logger)
+                new_badge.set_last_ts(
+                    init_audio_ts, init_audio_ts_fract, init_proximity_ts)
+                badges[addr] = new_badge
+            badge = badges[addr]
+            dialogue(badge)
+            time.sleep(2)  # requires sleep between devices
+
+        logger.info("Sleeping...")
+        time.sleep(6)
+
+
+def sync_all_devices():
+    whitelist_devices = get_devices()
+    for addr in whitelist_devices:
+        bdg = Badge(addr, logger)
+        bdg.sync_timestamp()
+        time.sleep(2)  # requires sleep between devices
+
+    time.sleep(5)  # allow BLE time to disconnect
+
+
+def devices_scanner():
+    logger.info('Scanning for badges')
+    while True:
+        whitelist_devices = get_devices()
+        logger.info("Scanning for devices...")
+        scanned_devices = scan_for_devices(whitelist_devices)
+        with open(scans_file_name, "a") as fout:
+            for device in scanned_devices:
+                mac = device['mac']
+                scan_date = device['device_info']['scan_date']
+                rssi = device['device_info']['rssi']
+                voltage = device['device_info']['adv_payload']['voltage']
+                logger.debug("{},{},{:.2f},{:.2f}".format(scan_date, mac, rssi, voltage))
+                fout.write("{},{},{:.2f},{:.2f}\n".format(scan_date, mac, rssi, voltage))
+        time.sleep(5)  # give time to Ctrl-C
+
+
+def start_all_devices():
+    logger.info('Starting all badges recording.')
+    whitelist_devices = get_devices()
+    for addr in whitelist_devices:
+        bdg = Badge(addr, logger)
+        bdg.start_recording()
+        time.sleep(2)  # requires sleep between devices
+    time.sleep(5)  # allow BLE time to disconnect
+
+
 if __name__ == "__main__":
     import time
     import argparse
@@ -203,76 +274,22 @@ if __name__ == "__main__":
         logger.info("Done resetting BLE")
 
     if args.mode == "sync_device":
-        bdg = Badge(args.device, logger)
-        bdg.sync_timestamp()
+        badge = Badge(args.device, logger)
+        badge.sync_timestamp()
+        del badge
 
     if args.mode == "sync_all":
-        whitelist_devices = get_devices()
-        for addr in whitelist_devices:
-            bdg = Badge(addr, logger)
-            bdg.sync_timestamp()
-            time.sleep(2)  # requires sleep between devices
-
-        time.sleep(5)  # allow BLE time to disconnect
+        sync_all_devices()
 
     # scan for devices
     if args.mode == "scan":
-        logger.info('Scanning for badges')
-        while True:
-            whitelist_devices = get_devices()
-            logger.info("Scanning for devices...")
-            scanned_devices = scan_for_devices(whitelist_devices)
-            with open(scans_file_name, "a") as fout:
-                for device in scanned_devices:
-                    mac = device['mac']
-                    scan_date=device['device_info']['scan_date']
-                    rssi=device['device_info']['rssi']
-                    voltage = device['device_info']['adv_payload']['voltage']
-                    logger.debug("{},{},{:.2f},{:.2f}".format(scan_date, mac, rssi, voltage))
-                    fout.write("{},{},{:.2f},{:.2f}\n".format(scan_date, mac, rssi, voltage))
-            time.sleep(5)  # give time to Ctrl-C
+        devices_scanner()
 
     # pull data from all devices
     if args.mode == "pull":
-        logger.info('Started')
-
-        # hacky
-        now_ts, now_ts_fract = now_utc_epoch()
-        logger.info("Will request data since %f" % now_ts)
-        init_proximity_ts = now_ts
-        init_audio_ts, init_audio_ts_fract = now_ts, now_ts_fract
-
-        badges = {}  # Keeps a list of badge objects
-        while True:
-            logger.info("Scanning for devices...")
-            whitelist_devices = get_devices()
-            scanned_devices = scan_for_devices(whitelist_devices)
-
-            time.sleep(2)
-
-            for device in scanned_devices:
-                addr = device['mac']
-                if addr not in badges:
-                    logger.debug("Unseen device. Adding to dict: %s" % addr)
-                    # init new badge. set last seen chunk to the time the pull command was called
-                    new_badge = Badge(addr, logger)
-                    new_badge.set_last_ts(
-                        init_audio_ts, init_audio_ts_fract, init_proximity_ts)
-                    badges[addr] = new_badge
-                badge = badges[addr]
-                dialogue(badge)
-                time.sleep(2)  # requires sleep between devices
-
-            logger.info("Sleeping...")
-            time.sleep(6)
+        pull_devices()
 
     if args.mode == "start_all":
-        logger.info('Starting all badges recording.')
-        whitelist_devices = get_devices()
-        for addr in whitelist_devices:
-            bdg = Badge(addr, logger)
-            bdg.start_recording()
-            time.sleep(2)  # requires sleep between devices
-        time.sleep(5)  # allow BLE time to disconnect
+        start_all_devices()
 
     exit(0)
