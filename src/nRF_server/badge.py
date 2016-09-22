@@ -268,17 +268,18 @@ class BadgeAddressAdapter(logging.LoggerAdapter):
     def process(self, msg, kwargs):
         return '[%s] %s' % (self.extra['addr'], msg), kwargs
 
+
 class Badge():
-    def __init__(self, addr,logger):
+    def __init__(self, addr,logger, init_audio_ts=None, init_audio_ts_fract=None, init_proximity_ts=None):
         self.addr = addr
         self.logger = adapter = BadgeAddressAdapter(logger, {'addr': addr})
         self.dlg = None
         self.conn = None
         self.connDialogue = BadgeDialogue(self)
 
-        self.last_proximity_ts = None
-        self.last_audio_ts = None
-        self.last_audio_ts_fract = None
+        self.last_proximity_ts = init_proximity_ts
+        self.last_audio_ts = init_audio_ts
+        self.last_audio_ts_fract = init_audio_ts_fract
 
     def connect(self):
         self.logger.info("Connecting to {}".format(self.addr))
