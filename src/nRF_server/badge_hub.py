@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import absolute_import, division, print_function
 
 import os
 import re
@@ -105,8 +105,8 @@ def dialogue(bdg):
                         ts_with_ms, chunk.voltage, chunk.sampleDelay, len(chunk.samples)))
                     fout.write(bytes("{},{},{},{}".format(addr, ts_with_ms, chunk.voltage, chunk.sampleDelay)))
                     for sample in chunk.samples:
-                        fout.write(b",{}".format(sample))
-                    fout.write(b"\n")
+                        fout.write(",{}".format(sample))
+                    fout.write("\n")
                 logger.info("done writing")
 
         else:
