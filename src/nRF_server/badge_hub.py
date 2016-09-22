@@ -206,13 +206,9 @@ def pull_devices():
                                     init_proximity_ts=d.get('init_proximity,ts')
                                     ) for d in response.json()}
 
-    print(badges)
-    exit(1)
-
     while True:
         logger.info("Scanning for devices...")
-        whitelist_devices = get_devices()
-        scanned_devices = scan_for_devices(whitelist_devices)
+        scanned_devices = scan_for_devices(badges.keys())
 
         time.sleep(2)  # ignore this sleep
 
