@@ -6,6 +6,6 @@ BADGES = '{}badges/'.format(SERVER)
 
 
 def _badge(x):
-    return 'badges/{}/'.format(x)
+    return '{}/{}/'.format(BADGES, x)
 
 BADGE = _badge
