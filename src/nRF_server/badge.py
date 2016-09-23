@@ -199,8 +199,8 @@ class BadgeDelegate(DefaultDelegate):
                 self.gotEndOfData = True
                 self.expected = Expect.none
                 pass
-            else:
-                self.tempChunk.ts = ts_and_fract_to_float(self.tempChunk.ts, self.tempChunk.fract)
+            # else:
+            #     self.tempChunk.ts = ts_and_fract_to_float(self.tempChunk.ts, self.tempChunk.fract)
 
                 self.expected = Expect.samples
         elif self.expected == Expect.samples: # just samples

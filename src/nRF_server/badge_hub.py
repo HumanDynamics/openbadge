@@ -100,7 +100,7 @@ def dialogue(bdg):
             # store in CSV file
             with open(audio_file_name, "a") as fout:
                 for chunk in bdg.dlg.chunks:
-                    ts_with_ms = "%0.3f" % chunk.ts
+                    ts_with_ms = '{}.{:03d}'.format(chunk.ts, chunk.fract)
                     logger.info("CSV: Chunk timestamp: {}, Voltage: {}, Delay: {}, Samples in chunk: {}".format(
                         ts_with_ms, chunk.voltage, chunk.sampleDelay, len(chunk.samples)))
                     fout.write(bytes("{},{},{},{}".format(addr, ts_with_ms, chunk.voltage, chunk.sampleDelay)))
@@ -130,11 +130,22 @@ def dialogue(bdg):
 
         else:
             logger.info("No proximity scans ready")
+
         # TODO: cache the badge mac with timestamp
         # TODO: send the timestamp to the server
-        last_chunk = bdg.dlg.chunks[-1]
-        print(last_chunk)
-
+        try:
+            last_chunk = bdg.dlg.chunks[-1]
+            last_scan = bdg.dlg.scans[-1]
+            badge.last_audio_ts = last_chunk.ts
+            badge.last_audio_ts_fract = last_chunk.fract
+            badge.last_proximity_ts = last_scan.ts
+            requests.put(BADGE(badge.addr), data={
+                'last_audio_ts': badge.last_audio_ts,
+                'last_audio_ts_fract': badge.last_audio_ts_fract,
+                'last_proximity_ts': badge.last_proximity_ts
+            })
+        except Exception():
+            pass
 
 
 def scan_for_devices(devices_whitelist):
@@ -198,13 +209,28 @@ def pull_devices():
     #
     # badges = {}  # Keeps a list of badge objects
 
-    response = requests.get(BADGES)
-    badges = {d.get('badge'): Badge(d.get('badge'),
-                                    logger,
-                                    init_audio_ts=d.get('init_audio_ts'),
-                                    init_audio_ts_fract=d.get('init_audio_ts_fract'),
-                                    init_proximity_ts=d.get('init_proximity,ts')
-                                    ) for d in response.json()}
+    try:
+        response = requests.get(BADGES)
+        if response.ok:
+            badges = {d.get('badge'): Badge(d.get('badge'),
+                                            logger,
+                                            init_audio_ts=float(d.get('last_audio_ts')),
+                                            init_audio_ts_fract=float(d.get('last_audio_ts_fract')),
+                                            init_proximity_ts=float(d.get('last_proximity_ts'))
+                                            ) for d in response.json()}
+        else:
+            badges = None
+
+    except requests.exceptions.ConnectionError as e:
+        print(e)
+        badges = {mac: Badge(mac,
+                             logger,
+                             init_audio_ts=0,
+                             init_audio_ts_fract=0,
+                             init_proximity_ts=0,
+                             ) for mac in get_devices()
+
+                  }
 
     while True:
         logger.info("Scanning for devices...")
