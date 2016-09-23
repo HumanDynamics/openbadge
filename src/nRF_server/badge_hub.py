@@ -136,13 +136,13 @@ def dialogue(bdg):
         try:
             last_chunk = bdg.dlg.chunks[-1]
             last_scan = bdg.dlg.scans[-1]
-            badge.last_audio_ts = last_chunk.ts
-            badge.last_audio_ts_fract = last_chunk.fract
-            badge.last_proximity_ts = last_scan.ts
+            bdg.last_audio_ts = last_chunk.ts
+            bdg.last_audio_ts_fract = last_chunk.fract
+            bdg.last_proximity_ts = last_scan.ts
             requests.put(BADGE(badge.addr), data={
-                'last_audio_ts': badge.last_audio_ts,
-                'last_audio_ts_fract': badge.last_audio_ts_fract,
-                'last_proximity_ts': badge.last_proximity_ts
+                'last_audio_ts': bdg.last_audio_ts,
+                'last_audio_ts_fract': bdg.last_audio_ts_fract,
+                'last_proximity_ts': bdg.last_proximity_ts
             })
         except Exception():
             pass
