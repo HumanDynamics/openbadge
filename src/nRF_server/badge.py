@@ -199,10 +199,10 @@ class BadgeDelegate(DefaultDelegate):
                 self.gotEndOfData = True
                 self.expected = Expect.none
                 pass
-            # else:
-            #     self.tempChunk.ts = ts_and_fract_to_float(self.tempChunk.ts, self.tempChunk.fract)
-
+            else:
+                # self.tempChunk.ts = ts_and_fract_to_float(self.tempChunk.ts, self.tempChunk.fract)
                 self.expected = Expect.samples
+                
         elif self.expected == Expect.samples: # just samples
             sample_arr = struct.unpack('<%dB' % len(data),data) # Nrfuino bytes are unsigned bytes
             self.tempChunk.addData(sample_arr)
