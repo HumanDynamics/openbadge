@@ -270,7 +270,8 @@ class BadgeAddressAdapter(logging.LoggerAdapter):
 
 
 class Badge():
-    def __init__(self, addr,logger, init_audio_ts=None, init_audio_ts_fract=None, init_proximity_ts=None):
+    def __init__(self, addr,logger, key, init_audio_ts=None, init_audio_ts_fract=None, init_proximity_ts=None):
+        self.key = key
         self.addr = addr
         self.logger = adapter = BadgeAddressAdapter(logger, {'addr': addr})
         self.dlg = None

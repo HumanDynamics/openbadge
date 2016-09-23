@@ -139,7 +139,7 @@ def dialogue(bdg):
             bdg.last_audio_ts = last_chunk.ts
             bdg.last_audio_ts_fract = last_chunk.fract
             bdg.last_proximity_ts = last_scan.ts
-            requests.put(BADGE(bdg.addr), data={
+            requests.put(BADGE(bdg.key), data={
                 'last_audio_ts': bdg.last_audio_ts,
                 'last_audio_ts_fract': bdg.last_audio_ts_fract,
                 'last_proximity_ts': bdg.last_proximity_ts
@@ -216,6 +216,7 @@ def pull_devices():
         if response.ok:
             badges = {d.get('badge'): Badge(d.get('badge'),
                                             logger,
+                                            d.get('key'),
                                             init_audio_ts=conv(d.get('last_audio_ts')),
                                             init_audio_ts_fract=conv(d.get('last_audio_ts_fract')),
                                             init_proximity_ts=conv(d.get('last_proximity_ts'))
@@ -227,11 +228,11 @@ def pull_devices():
         print(e)
         badges = {mac: Badge(mac,
                              logger,
+                             key='randomChars',  # Needs to be fixed
                              init_audio_ts=0,
                              init_audio_ts_fract=0,
                              init_proximity_ts=0,
                              ) for mac in get_devices()
-
                   }
 
     while True:
