@@ -139,13 +139,22 @@ def dialogue(bdg):
             bdg.last_audio_ts = last_chunk.ts
             bdg.last_audio_ts_fract = last_chunk.fract
             bdg.last_proximity_ts = last_scan.ts
-            requests.patch(BADGE(bdg.key), data={
-                'last_audio_ts': bdg.last_audio_ts,
-                'last_audio_ts_fract': bdg.last_audio_ts_fract,
-                'last_proximity_ts': bdg.last_proximity_ts
-            })
         except Exception() as e:
             print(e)
+
+        try:
+            response = requests.patch(BADGE(bdg.key), data={
+                'last_audio_ts': bdg.last_audio_ts,
+                'last_audio_ts_fract': bdg.last_audio_ts_fract,
+                'last_proximity_ts': bdg.last_proximity_ts,
+            })
+            if response.ok:
+                print("HOORAYYYYYYYYYYYYYYYYYYYYY")
+            else:
+                raise
+            
+        except Exception as e:
+            print('Exception with Requests {}'.format(e))
 
 
 def scan_for_devices(devices_whitelist):
