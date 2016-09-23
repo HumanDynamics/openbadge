@@ -209,14 +209,16 @@ def pull_devices():
     #
     # badges = {}  # Keeps a list of badge objects
 
+    conv = lambda x: int(float(x))
+
     try:
         response = requests.get(BADGES)
         if response.ok:
             badges = {d.get('badge'): Badge(d.get('badge'),
                                             logger,
-                                            init_audio_ts=float(d.get('last_audio_ts')),
-                                            init_audio_ts_fract=float(d.get('last_audio_ts_fract')),
-                                            init_proximity_ts=float(d.get('last_proximity_ts'))
+                                            init_audio_ts=conv(d.get('last_audio_ts')),
+                                            init_audio_ts_fract=conv(d.get('last_audio_ts_fract')),
+                                            init_proximity_ts=conv(d.get('last_proximity_ts'))
                                             ) for d in response.json()}
         else:
             badges = None
