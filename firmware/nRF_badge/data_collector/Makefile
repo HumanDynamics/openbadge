@@ -342,7 +342,7 @@ flashUnlock: clean flashUnlock.jlink
 
 #create flash unlocking script for JLinkExe.
 flashUnlock.jlink:
-	printf "w4 4001e504 2\nw4 4001e50c 1\nexit\n" > $(OBJECT_DIRECTORY)/flashUnlock.jlink	
+	printf "w4 4001e504 2\nw4 4001e50c 1\nr\ng\nexit\n" > $(OBJECT_DIRECTORY)/flashUnlock.jlink	
 	
 	
 #build and flash firmware
