@@ -370,3 +370,6 @@ flashErase: flashErase.jlink
 #create flash erasing for JLinkExe
 flashErase.jlink:
 	printf "erase\nr\ng\nexit\n" > $(OBJECT_DIRECTORY)/flashErase.jlink	
+
+#runs the complete sequence for a new badge
+flashNew: flashUnlock flashErase flashS130 flashAPP
