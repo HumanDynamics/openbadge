@@ -143,15 +143,14 @@ def dialogue(bdg):
             print(e)
 
         try:
-            response = requests.patch(BADGE(bdg.key), data={
-                'last_audio_ts': bdg.last_audio_ts,
-                'last_audio_ts_fract': bdg.last_audio_ts_fract,
-                'last_proximity_ts': bdg.last_proximity_ts,
-            })
-            if response.ok:
-                print("HOORAYYYYYYYYYYYYYYYYYYYYY")
-            else:
-                raise
+            for b in bdg.chilren:
+                response = requests.patch(BADGE(b.key), data={
+                    'last_audio_ts': b.last_audio_ts,
+                    'last_audio_ts_fract': b.last_audio_ts_fract,
+                    'last_proximity_ts': b.last_proximity_ts,
+                })
+                if response.ok is False:
+                    raise Exception('Server sent a {} status code instead of 200'.format(response.status_code))
 
         except Exception as e:
             print('Exception with Requests {}'.format(e))
@@ -220,32 +219,32 @@ def pull_devices():
 
     conv = lambda x: int(float(x))
 
-    try:
-        response = requests.get(BADGES)
-        if response.ok:
-            badges = {d.get('badge'): Badge(d.get('badge'),
-                                            logger,
-                                            d.get('key'),
-                                            init_audio_ts=conv(d.get('last_audio_ts')),
-                                            init_audio_ts_fract=conv(d.get('last_audio_ts_fract')),
-                                            init_proximity_ts=conv(d.get('last_proximity_ts'))
-                                            ) for d in response.json()}
-        else:
-            badges = None
-
-    except requests.exceptions.ConnectionError as e:
-        print(e)
-        badges = {mac: Badge(mac,
-                             logger,
-                             key='randomChars',  # Needs to be fixed
-                             init_audio_ts=0,
-                             init_audio_ts_fract=0,
-                             init_proximity_ts=0,
-                             ) for mac in get_devices()
-                  }
-
     while True:
         logger.info("Scanning for devices...")
+        try:
+            response = requests.get(BADGES)
+            if response.ok:
+                badges = {d.get('badge'): Badge(d.get('badge'),
+                                                logger,
+                                                d.get('key'),
+                                                init_audio_ts=conv(d.get('last_audio_ts')),
+                                                init_audio_ts_fract=conv(d.get('last_audio_ts_fract')),
+                                                init_proximity_ts=conv(d.get('last_proximity_ts'))
+                                                ) for d in response.json()}
+            else:
+                raise Exception('Got a {} from the server'.format(response.status_code))
+
+        except (requests.exceptions.ConnectionError, Exception) as e:
+            logging.error(e)
+            badges = {mac: Badge(mac,
+                                 logger,
+                                 key='randomChars',  # Needs to be fixed
+                                 init_audio_ts=0,
+                                 init_audio_ts_fract=0,
+                                 init_proximity_ts=0,
+                                 ) for mac in get_devices()
+                      }
+
         scanned_devices = scan_for_devices(badges.keys())
 
         time.sleep(2)  # ignore this sleep
