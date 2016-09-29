@@ -150,7 +150,8 @@ def dialogue(bdg):
                     'last_proximity_ts': b.last_proximity_ts,
                 })
                 if response.ok is False:
-                    raise Exception('Server sent a {} status code instead of 200'.format(response.status_code))
+                    raise Exception('Server sent a {} status code instead of 200\n{}'.format(response.status_code,
+                                                                                             response.text))
 
         except Exception as e:
             print('Exception with Requests {}'.format(e))
@@ -218,6 +219,7 @@ def pull_devices():
     # badges = {}  # Keeps a list of badge objects
 
     conv = lambda x: int(float(x))
+    first = True
 
     while True:
         logger.info("Scanning for devices...")
@@ -236,14 +238,18 @@ def pull_devices():
 
         except (requests.exceptions.ConnectionError, Exception) as e:
             logging.error(e)
-            badges = {mac: Badge(mac,
-                                 logger,
-                                 key='randomChars',  # Needs to be fixed
-                                 init_audio_ts=0,
-                                 init_audio_ts_fract=0,
-                                 init_proximity_ts=0,
-                                 ) for mac in get_devices()
-                      }
+            if first:
+                badges = {mac: Badge(mac,
+                                     logger,
+                                     key='randomChars',  # Needs to be fixed
+                                     init_audio_ts=0,
+                                     init_audio_ts_fract=0,
+                                     init_proximity_ts=0,
+                                     ) for mac in get_devices()
+                          }
+            else:
+                badges = None
+        first = False
 
         scanned_devices = scan_for_devices(badges.keys())
 
