@@ -270,10 +270,10 @@ class BadgeAddressAdapter(logging.LoggerAdapter):
 
 
 class Badge():
-    children = []
+    children = {}
 
     def __init__(self, addr,logger, key, init_audio_ts=None, init_audio_ts_fract=None, init_proximity_ts=None):
-        self.children.append(self)
+        self.children[key] = self
         self.key = key
         self.addr = addr
         self.logger = adapter = BadgeAddressAdapter(logger, {'addr': addr})

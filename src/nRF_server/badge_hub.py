@@ -143,7 +143,7 @@ def dialogue(bdg):
             print(e)
 
         try:
-            for b in bdg.children:
+            for b in bdg.children.values():
                 response = requests.patch(BADGE(b.key), data={
                     'last_audio_ts': b.last_audio_ts,
                     'last_audio_ts_fract': b.last_audio_ts_fract,
