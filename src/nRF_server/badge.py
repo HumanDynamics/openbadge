@@ -295,7 +295,7 @@ class Badge():
     @property
     def last_audio_ts_fract(self):
         num = ((self.__audio_ts - datetime.datetime(1970, 1, 1)).total_seconds())
-        return math.modf(num)[0]
+        return round(math.modf(num)[0], 3)
 
     @last_audio_ts_fract.setter
     def last_audio_ts_fract(self, value):
