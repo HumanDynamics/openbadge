@@ -8,6 +8,7 @@ import shlex
 import subprocess
 
 import requests
+import logging
 
 from server import BADGE, BADGES
 from badge import *
@@ -143,11 +144,13 @@ def dialogue(bdg):
 
         try:
             for b in bdg.children.values():
-                response = requests.patch(BADGE(b.key), data={
+                data = {
                     'last_audio_ts': b.last_audio_ts,
                     'last_audio_ts_fract': b.last_audio_ts_fract,
                     'last_proximity_ts': b.last_proximity_ts,
-                })
+                }
+                logger.debug("Update server, badge {} : {}".format(b.key, data))
+                response = requests.patch(BADGE(b.key), data=data)
                 if response.ok is False:
                     raise Exception('Server sent a {} status code instead of 200\n{}'.format(response.status_code,
                                                                                              response.text))
@@ -216,9 +219,10 @@ def pull_devices():
     while True:
         logger.info("Scanning for devices...")
         try:
+            logger.debug("Requesting devices from server...")
             response = requests.get(BADGES)
             if response.ok:
-
+                logger.debug("Updating devices list ({})...".format(len(response.json())))
                 for d in response.json():
                     ts = datetime.datetime.fromtimestamp(float('{}.{}'.format(conv(d.get('last_audio_ts')),
                                                                               conv(d.get('last_audio_ts_fract')))))
