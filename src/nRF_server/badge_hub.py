@@ -209,29 +209,25 @@ def add_start_all_command_options(subparsers):
 def pull_devices():
     logger.info('Started')
 
-    # # Setting pull timestamp to now
-    # now_ts, now_ts_fract = now_utc_epoch()
-    # logger.info("Will request data since %f" % now_ts)
-    # init_proximity_ts = now_ts
-    # init_audio_ts, init_audio_ts_fract = now_ts, now_ts_fract
-    #
-    # badges = {}  # Keeps a list of badge objects
-
     conv = lambda x: int(float(x))
     first = True
+    badges = {}
 
     while True:
         logger.info("Scanning for devices...")
         try:
             response = requests.get(BADGES)
             if response.ok:
-                badges = {d.get('badge'): Badge(d.get('badge'),
-                                                logger,
-                                                d.get('key'),
-                                                init_audio_ts=conv(d.get('last_audio_ts')),
-                                                init_audio_ts_fract=conv(d.get('last_audio_ts_fract')),
-                                                init_proximity_ts=conv(d.get('last_proximity_ts'))
-                                                ) for d in response.json()}
+
+                for d in response.json():
+                    ts = datetime.datetime.fromtimestamp(float('{}.{}'.format(conv(d.get('last_audio_ts')),
+                                                                              conv(d.get('last_audio_ts_fract')))))
+                    badges[d.get('badge')] = Badge(d.get('badge'),
+                                                   logger,
+                                                   d.get('key'),
+                                                   init_audio_ts=ts,
+                                                   init_proximity_ts=conv(d.get('last_proximity_ts'))
+                                                   )
             else:
                 raise Exception('Got a {} from the server'.format(response.status_code))
 
@@ -241,13 +237,10 @@ def pull_devices():
                 badges = {mac: Badge(mac,
                                      logger,
                                      key='randomChars',  # Needs to be fixed
-                                     init_audio_ts=0,
-                                     init_audio_ts_fract=0,
+                                     init_audio_ts=datetime.datetime(1970, 1, 1),
                                      init_proximity_ts=0,
                                      ) for mac in get_devices()
                           }
-            else:
-                badges = None
         first = False
 
         scanned_devices = scan_for_devices(badges.keys())
