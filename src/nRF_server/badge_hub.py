@@ -136,8 +136,7 @@ def dialogue(bdg):
         try:
             last_chunk = bdg.dlg.chunks[-1]
             last_scan = bdg.dlg.scans[-1]
-            bdg.last_audio_ts = last_chunk.ts
-            bdg.last_audio_ts_fract = last_chunk.fract
+            bdg.set_audio_ts(last_chunk.ts, last_chunk.fract)
             bdg.last_proximity_ts = last_scan.ts
         except Exception as e:
             print(e)
