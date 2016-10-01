@@ -102,7 +102,7 @@ def dialogue(bdg):
             with open(audio_file_name, "a") as fout:
                 for chunk in bdg.dlg.chunks:
                     ts_with_ms = '{}.{:03d}'.format(chunk.ts, chunk.fract)
-                    logger.info("CSV: Chunk timestamp: {}, Voltage: {}, Delay: {}, Samples in chunk: {}".format(
+                    logger.debug("CSV: Chunk timestamp: {}, Voltage: {}, Delay: {}, Samples in chunk: {}".format(
                         ts_with_ms, chunk.voltage, chunk.sampleDelay, len(chunk.samples)))
                     fout.write(bytes("{},{},{},{}".format(addr, ts_with_ms, chunk.voltage, chunk.sampleDelay)))
                     for sample in chunk.samples:
@@ -119,7 +119,7 @@ def dialogue(bdg):
             with open(proximity_file_name, "a") as fout:
                 for scan in bdg.dlg.scans:
                     ts_with_ms = "%0.3f" % scan.ts
-                    logger.info("SCAN: scan timestamp: {}, voltage: {}, number: {}".format(
+                    logger.debug("SCAN: scan timestamp: {}, voltage: {}, number: {}".format(
                         ts_with_ms, scan.voltage, scan.numDevices))
                     if scan.devices:
                         device_list = ''

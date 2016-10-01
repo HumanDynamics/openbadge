@@ -565,22 +565,6 @@ class Badge():
                 if wait_count >= PULL_WAIT: break
             self.logger.info("finished reading data")
 
-            # update last seen chunks and scans
-            if len(self.dlg.chunks) > 0:
-                last_chunk = self.dlg.chunks[-1]
-                if last_chunk.ts > 0:
-                    last_ts = last_chunk.ts - 1  # minus 1 second to compensate for potential conversion errors from float
-                    last_ts_int, last_ts_fract = split_ts_float(last_ts)
-                    self.logger.debug("Setting last seen audio chunk to {}.{}".format(last_ts_int, last_ts_fract))
-
-                    self.set_audio_ts(last_ts_int, last_ts_fract)
-
-            if len(self.dlg.scans) > 0:
-                last_scan = self.dlg.scans[-1]
-                last_ts = last_scan.ts
-                self.logger.debug("Setting last seen proximity scan to {}".format(last_ts))
-                self.last_proximity_ts = last_ts
-
             retcode = 0
 
         except BTLEException, e:
