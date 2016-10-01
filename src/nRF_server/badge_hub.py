@@ -139,22 +139,17 @@ def dialogue(bdg):
             last_scan = bdg.dlg.scans[-1]
             bdg.set_audio_ts(last_chunk.ts, last_chunk.fract)
             bdg.last_proximity_ts = last_scan.ts
-        except Exception as e:
-            print(e)
 
-        try:
-            for b in bdg.children.values():
-                data = {
-                    'last_audio_ts': b.last_audio_ts,
-                    'last_audio_ts_fract': b.last_audio_ts_fract,
-                    'last_proximity_ts': b.last_proximity_ts,
-                }
-                logger.debug("Update server, badge {} : {}".format(b.key, data))
-                response = requests.patch(BADGE(b.key), data=data)
-                if response.ok is False:
-                    raise Exception('Server sent a {} status code instead of 200\n{}'.format(response.status_code,
+            data = {
+                'last_audio_ts': last_chunk.ts,
+                'last_audio_ts_fract': last_chunk.fract,
+                'last_proximity_ts': last_scan.ts,
+            }
+            logger.debug("Update server, badge {} : {}".format(bdg.key, data))
+            response = requests.patch(BADGE(bdg.key), data=data)
+            if response.ok is False:
+                raise Exception('Server sent a {} status code instead of 200\n{}'.format(response.status_code,
                                                                                              response.text))
-
         except Exception as e:
             print('Exception with Requests {}'.format(e))
 
@@ -224,7 +219,7 @@ def pull_devices():
             if response.ok:
                 logger.debug("Updating devices list ({})...".format(len(response.json())))
                 for d in response.json():
-                    ts = datetime.datetime.fromtimestamp(float('{}.{}'.format(conv(d.get('last_audio_ts')),
+                    ts = datetime.datetime.utcfromtimestamp(float('{}.{}'.format(conv(d.get('last_audio_ts')),
                                                                               conv(d.get('last_audio_ts_fract')))))
                     badges[d.get('badge')] = Badge(d.get('badge'),
                                                    logger,

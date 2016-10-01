@@ -302,7 +302,7 @@ class Badge():
         raise ValueError('Use set_audio_ts to update this property')
 
     def set_audio_ts(self, audio_ts, audio_fract):
-        d = datetime.datetime.fromtimestamp(float('{}.{}'.format(audio_ts, audio_fract)))
+        d = datetime.datetime.utcfromtimestamp(float('{}.{}'.format(audio_ts, audio_fract)))
         if d > self.__audio_ts:
             self.__audio_ts = d
         else:
