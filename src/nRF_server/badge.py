@@ -281,7 +281,7 @@ class Badge():
     @last_proximity_ts.setter
     def last_proximity_ts(self, value):
         if value < self.__last_proximity_ts:
-            raise ValueError('trying to last_procimity_ts with an old value')
+            raise ValueError('Trying to last_proximity_ts with an old value')
         self.__last_proximity_ts = value
 
     @property
@@ -301,13 +301,12 @@ class Badge():
         raise ValueError('Use set_audio_ts to update this property')
 
     def set_audio_ts(self, audio_ts_int, audio_ts_fract):
-        if hasattr(self, '__audio_ts'):
-            new_d = datetime.datetime.utcfromtimestamp(float('{}.{}'.format(audio_ts_int, audio_ts_fract)))
-            old_d = datetime.datetime.utcfromtimestamp(float('{}.{}'.format(self.last_audio_ts_int, self.last_audio_ts_fract)))
-            self.logger.debug("Try to replace {} with {}".format(old_d,new_d))
+        if self.__audio_ts is not None:
+            new_d = audio_ts_int * 1000 + audio_ts_fract
+            old_d = self.last_audio_ts_int * 1000 + self.last_audio_ts_fract
             if new_d < old_d:
-                raise ValueError('Trying to update with old value')
-            
+                raise ValueError('Trying to update last_audio_ts with old value')
+
         self.__audio_ts = {'last_audio_ts_int': audio_ts_int, 'last_audio_ts_fract': audio_ts_fract}
 
     def __init__(self, addr,logger, key, init_audio_ts_int=None, init_audio_ts_fract=None, init_proximity_ts=None):
@@ -318,6 +317,8 @@ class Badge():
         self.dlg = None
         self.conn = None
         self.connDialogue = BadgeDialogue(self)
+
+        self.__audio_ts = None
 
         self.set_audio_ts(init_audio_ts_int, init_audio_ts_fract)
         self.__last_proximity_ts = init_proximity_ts
@@ -671,3 +672,18 @@ if __name__ == "__main__":
     new_ts_int, new_ts_fract = split_ts_float(ts_float)
     print("New values: {} {}".format(new_ts_int, new_ts_fract))
     print("{} {}".format(type(new_ts_int),type(new_ts_fract)))
+
+    print("--------------------------")
+    # create logger with 'badge_server'
+    logging.basicConfig()
+    logger = logging.getLogger('badge_server')
+    logger.setLevel(logging.DEBUG)
+    logger.info("LALALA")
+
+    #logger = logging.getLogger("Test")
+    #logger.setLevel(logging.DEBUG)
+
+    b = Badge("AAAAA",logger,"ABCDE",100,10,100)
+    print(b.last_audio_ts_int,b.last_audio_ts_fract)
+    b.set_audio_ts(100,1)
+    print(b.last_audio_ts_int, b.last_audio_ts_fract)
