@@ -285,30 +285,32 @@ class Badge():
         self.__last_proximity_ts = value
 
     @property
-    def last_audio_ts(self):
-        return int((self.__audio_ts - datetime.datetime(1970, 1, 1)).total_seconds() // 1)
+    def last_audio_ts_int(self):
+        return self.__audio_ts['last_audio_ts_int']
 
-    @last_audio_ts.setter
-    def last_audio_ts(self, value):
+    @last_audio_ts_int.setter
+    def last_audio_ts_int(self, value):
         raise ValueError('Use set_audio_ts to update this property')
 
     @property
     def last_audio_ts_fract(self):
-        num = ((self.__audio_ts - datetime.datetime(1970, 1, 1)).total_seconds())
-        return int(round(math.modf(num)[0], 3)*1000)
+        return self.__audio_ts['last_audio_ts_fract']
 
     @last_audio_ts_fract.setter
     def last_audio_ts_fract(self, value):
         raise ValueError('Use set_audio_ts to update this property')
 
-    def set_audio_ts(self, audio_ts, audio_fract):
-        d = datetime.datetime.utcfromtimestamp(float('{}.{}'.format(audio_ts, audio_fract)))
-        if d > self.__audio_ts:
-            self.__audio_ts = d
-        else:
-            raise ValueError('Trying to update with old value')
+    def set_audio_ts(self, audio_ts_int, audio_ts_fract):
+        if hasattr(self, '__audio_ts'):
+            new_d = datetime.datetime.utcfromtimestamp(float('{}.{}'.format(audio_ts_int, audio_ts_fract)))
+            old_d = datetime.datetime.utcfromtimestamp(float('{}.{}'.format(self.last_audio_ts_int, self.last_audio_ts_fract)))
+            self.logger.debug("Try to replace {} with {}".format(old_d,new_d))
+            if new_d < old_d:
+                raise ValueError('Trying to update with old value')
+            
+        self.__audio_ts = {'last_audio_ts_int': audio_ts_int, 'last_audio_ts_fract': audio_ts_fract}
 
-    def __init__(self, addr,logger, key, init_audio_ts=None, init_proximity_ts=None):
+    def __init__(self, addr,logger, key, init_audio_ts_int=None, init_audio_ts_fract=None, init_proximity_ts=None):
         self.children[key] = self
         self.key = key
         self.addr = addr
@@ -317,10 +319,7 @@ class Badge():
         self.conn = None
         self.connDialogue = BadgeDialogue(self)
 
-        self.__audio_ts = init_audio_ts
-        assert isinstance(self.__audio_ts, datetime.datetime), 'init_audio_ts has to be an instance of ' \
-                                                               'datetime.datetime class'
-
+        self.set_audio_ts(init_audio_ts_int, init_audio_ts_fract)
         self.__last_proximity_ts = init_proximity_ts
 
     def connect(self):
@@ -334,11 +333,6 @@ class Badge():
             self.conn.disconnect()
         else:
             self.logger.info("Can't disconnect from {}. Not connected".format(self.addr))
-
-    # def set_last_ts(self, init_audio_ts, init_audio_ts_fract, init_proximity_ts):
-    #     self.last_audio_ts = init_audio_ts
-    #     self.last_audio_ts_fract = init_audio_ts_fract
-    #     self.last_proximity_ts = init_proximity_ts
 
     # sends status request with UTC time to the badge
     def sendStatusRequest(self):
@@ -541,9 +535,8 @@ class Badge():
 
 
             # data request using the "r" command - data since time X
-            self.logger.info("Requesting data since {} {}".format(self.last_audio_ts, self.last_audio_ts_fract))
-
-            self.sendDataRequest(self.last_audio_ts, self.last_audio_ts_fract)  # ask for data
+            self.logger.info("Requesting data since {} {}".format(self.last_audio_ts_int, self.last_audio_ts_fract))
+            self.sendDataRequest(self.last_audio_ts_int, self.last_audio_ts_fract)  # ask for data
             wait_count = 0
             while True:
                 if self.dlg.gotEndOfData == True:
@@ -580,8 +573,6 @@ class Badge():
                     self.logger.debug("Setting last seen audio chunk to {}.{}".format(last_ts_int, last_ts_fract))
 
                     self.set_audio_ts(last_ts_int, last_ts_fract)
-                    # self.last_audio_ts = last_ts_int
-                    # self.last_audio_ts_fract = last_ts_fract
 
             if len(self.dlg.scans) > 0:
                 last_scan = self.dlg.scans[-1]

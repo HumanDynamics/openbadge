@@ -137,8 +137,9 @@ def dialogue(bdg):
         try:
             last_chunk = bdg.dlg.chunks[-1]
             last_scan = bdg.dlg.scans[-1]
-            logger.debug("Setting badge timestamp to {} {}".format(last_chunk.ts, last_chunk.fract))
+            logger.debug("Setting last badge audio timestamp to {} {}".format(last_chunk.ts, last_chunk.fract))
             bdg.set_audio_ts(last_chunk.ts, last_chunk.fract)
+            logger.debug("Setting last badge proximity timestamp to {}".format(last_scan.ts))
             bdg.last_proximity_ts = last_scan.ts
 
             data = {
@@ -220,13 +221,12 @@ def pull_devices():
             if response.ok:
                 logger.debug("Updating devices list ({})...".format(len(response.json())))
                 for d in response.json():
-                    ts = datetime.datetime.utcfromtimestamp(float('{}.{}'.format(conv(d.get('last_audio_ts')),
-                                                                              conv(d.get('last_audio_ts_fract')))))
                     badges[d.get('badge')] = Badge(d.get('badge'),
-                                                   logger,
-                                                   d.get('key'),
-                                                   init_audio_ts=ts,
-                                                   init_proximity_ts=conv(d.get('last_proximity_ts'))
+                                                    logger,
+                                                    d.get('key'),
+                                                    init_audio_ts_int=conv(d.get('last_audio_ts')),
+                                                    init_audio_ts_fract=conv(d.get('last_audio_ts_fract')),
+                                                    init_proximity_ts=conv(d.get('last_proximity_ts'))
                                                    )
             else:
                 raise Exception('Got a {} from the server'.format(response.status_code))
@@ -237,7 +237,8 @@ def pull_devices():
                 badges = {mac: Badge(mac,
                                      logger,
                                      key='randomChars',  # Needs to be fixed
-                                     init_audio_ts=datetime.datetime(1970, 1, 1),
+                                     init_audio_ts_int=0,
+                                     init_audio_ts_fract=0,
                                      init_proximity_ts=0,
                                      ) for mac in get_devices()
                           }
