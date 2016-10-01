@@ -135,17 +135,20 @@ def dialogue(bdg):
         # TODO: cache the badge mac with timestamp
         # TODO: send the timestamp to the server
         try:
-            last_chunk = bdg.dlg.chunks[-1]
-            last_scan = bdg.dlg.scans[-1]
-            logger.debug("Setting last badge audio timestamp to {} {}".format(last_chunk.ts, last_chunk.fract))
-            bdg.set_audio_ts(last_chunk.ts, last_chunk.fract)
-            logger.debug("Setting last badge proximity timestamp to {}".format(last_scan.ts))
-            bdg.last_proximity_ts = last_scan.ts
+            if len(bdg.dlg.chunks) > 0:
+                last_chunk = bdg.dlg.chunks[-1]
+                logger.debug("Setting last badge audio timestamp to {} {}".format(last_chunk.ts, last_chunk.fract))
+                bdg.set_audio_ts(last_chunk.ts, last_chunk.fract)
+
+            if len(bdg.dlg.scans) > 0:
+                last_scan = bdg.dlg.scans[-1]
+                logger.debug("Setting last badge proximity timestamp to {}".format(last_scan.ts))
+                bdg.last_proximity_ts = last_scan.ts
 
             data = {
-                'last_audio_ts': last_chunk.ts,
-                'last_audio_ts_fract': last_chunk.fract,
-                'last_proximity_ts': last_scan.ts,
+                'last_audio_ts': bdg.last_audio_ts_int,
+                'last_audio_ts_fract': bdg.last_audio_ts_fract,
+                'last_proximity_ts': bdg.last_proximity_ts,
             }
             logger.debug("Update server, badge {} : {}".format(bdg.key, data))
             response = requests.patch(BADGE(bdg.key), data=data)
