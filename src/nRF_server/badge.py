@@ -311,7 +311,7 @@ class Badge():
 
     def __init__(self, addr,logger, key, init_audio_ts_int=None, init_audio_ts_fract=None, init_proximity_ts=None):
         if self.children.get(key):
-            return self
+            return self.children.get(key)
         self.children[key] = self
         self.key = key
         self.addr = addr
