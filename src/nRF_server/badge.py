@@ -295,7 +295,7 @@ class Badge():
     @property
     def last_audio_ts_fract(self):
         num = ((self.__audio_ts - datetime.datetime(1970, 1, 1)).total_seconds())
-        return round(math.modf(num)[0], 3)
+        return int(round(math.modf(num)[0], 3)*1000)
 
     @last_audio_ts_fract.setter
     def last_audio_ts_fract(self, value):
@@ -586,7 +586,7 @@ class Badge():
             if len(self.dlg.scans) > 0:
                 last_scan = self.dlg.scans[-1]
                 last_ts = last_scan.ts
-                self.logger.debug("Setting last seen proximirt scan to {}".format(last_ts))
+                self.logger.debug("Setting last seen proximity scan to {}".format(last_ts))
                 self.last_proximity_ts = last_ts
 
             retcode = 0

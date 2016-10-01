@@ -137,6 +137,7 @@ def dialogue(bdg):
         try:
             last_chunk = bdg.dlg.chunks[-1]
             last_scan = bdg.dlg.scans[-1]
+            logger.debug("Setting badge timestamp to {} {}".format(last_chunk.ts, last_chunk.fract))
             bdg.set_audio_ts(last_chunk.ts, last_chunk.fract)
             bdg.last_proximity_ts = last_scan.ts
 
