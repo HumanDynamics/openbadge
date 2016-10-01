@@ -310,6 +310,8 @@ class Badge():
         self.__audio_ts = {'last_audio_ts_int': audio_ts_int, 'last_audio_ts_fract': audio_ts_fract}
 
     def __init__(self, addr,logger, key, init_audio_ts_int=None, init_audio_ts_fract=None, init_proximity_ts=None):
+        if self.children.get(key):
+            return self
         self.children[key] = self
         self.key = key
         self.addr = addr
@@ -671,3 +673,4 @@ if __name__ == "__main__":
     print(b.last_audio_ts_int,b.last_audio_ts_fract)
     b.set_audio_ts(100,1)
     print(b.last_audio_ts_int, b.last_audio_ts_fract)
+
