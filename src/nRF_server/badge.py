@@ -23,7 +23,7 @@ import time
 WAIT_FOR = 1.0  # timeout for WaitForNotification calls.  Must be > samplePeriod of badge
 PULL_WAIT = 2
 
-RECORDING_TIMEOUT = 10
+RECORDING_TIMEOUT = 3*60 # minutes
 
 # Scan settings. See documentation for more details
 SCAN_WINDOW = 100
