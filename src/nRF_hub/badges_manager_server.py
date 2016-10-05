@@ -1,4 +1,5 @@
 import requests
+import time
 
 from badge import *
 from server import BADGE, BADGES
@@ -9,7 +10,7 @@ class BadgesManagerServer:
         self._badges = None
         self.logger = logger
 
-    def _read_from_server(self, retry=True):
+    def _read_from_server(self, retry=True, retry_delay_sec=5):
         """
         Reads badges info from the server
         :param retry: is blocking is set, hub will keep retrying
@@ -41,6 +42,9 @@ class BadgesManagerServer:
                 self.logger.error("Error reading badges list from server : {}".format(e))
                 if not retry:
                     done = True
+                else:
+                    self.logger.info("Sleeping for {} seconds before retrying".format(retry_delay_sec))
+                    time.sleep(retry_delay_sec)
 
         return server_badges
 
