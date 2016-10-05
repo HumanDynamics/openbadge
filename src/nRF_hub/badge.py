@@ -2,8 +2,6 @@
 
 from __future__ import absolute_import, division, print_function
 
-import math
-
 from bluepy import btle
 from bluepy.btle import UUID, Peripheral, DefaultDelegate, AssignedNumbers
 from bluepy.btle import BTLEException
@@ -18,12 +16,11 @@ from math import floor
 import datetime
 import signal
 import traceback
-import time
 
 WAIT_FOR = 1.0  # timeout for WaitForNotification calls.  Must be > samplePeriod of badge
 PULL_WAIT = 2
 
-RECORDING_TIMEOUT = 10
+RECORDING_TIMEOUT = 3*60 # minutes
 
 # Scan settings. See documentation for more details
 SCAN_WINDOW = 100
@@ -301,17 +298,32 @@ class Badge():
         raise ValueError('Use set_audio_ts to update this property')
 
     def set_audio_ts(self, audio_ts_int, audio_ts_fract):
-        if self.__audio_ts is not None:
-            new_d = audio_ts_int * 1000 + audio_ts_fract
-            old_d = self.last_audio_ts_int * 1000 + self.last_audio_ts_fract
-            if new_d < old_d:
-                raise ValueError('Trying to update last_audio_ts with old value')
+        if not self.is_newer_audio_ts(audio_ts_int, audio_ts_fract):
+            raise ValueError('Trying to update last_audio_ts with old value')
 
         self.__audio_ts = {'last_audio_ts_int': audio_ts_int, 'last_audio_ts_fract': audio_ts_fract}
 
+    def is_newer_audio_ts(self, audio_ts_int, audio_ts_fract):
+        '''
+        Checks whether the given ts is newer than the one held by the badge
+        :param audio_ts_int:
+        :param audio_ts_fract:
+        :return:
+        '''
+        if self.__audio_ts is not None:
+            new_d = audio_ts_int * 1000 + audio_ts_fract
+            old_d = self.last_audio_ts_int * 1000 + self.last_audio_ts_fract
+            if new_d > old_d:
+                return True
+            else:
+                return False
+        else:
+            # no value is set yetyet
+            return True
+
     def __init__(self, addr,logger, key, init_audio_ts_int=None, init_audio_ts_fract=None, init_proximity_ts=None):
-        if self.children.get(key):
-            return self.children.get(key)
+        #if self.children.get(key):
+        #    return self.children.get(key)
         self.children[key] = self
         self.key = key
         self.addr = addr
@@ -602,7 +614,7 @@ def datetime_to_epoch(d):
     """
     epoch_seconds = (d - datetime.datetime(1970, 1, 1)).total_seconds()
     long_epoch_seconds = long(floor(epoch_seconds))
-    ts_fract = d.microsecond / 1000;
+    ts_fract = int(floor(d.microsecond / 1000))
     return (long_epoch_seconds, ts_fract)
 
 
@@ -671,6 +683,8 @@ if __name__ == "__main__":
 
     b = Badge("AAAAA",logger,"ABCDE",100,10,100)
     print(b.last_audio_ts_int,b.last_audio_ts_fract)
+    b.set_audio_ts(110,1)
+    print(b.last_audio_ts_int, b.last_audio_ts_fract)
     b.set_audio_ts(100,1)
     print(b.last_audio_ts_int, b.last_audio_ts_fract)
 

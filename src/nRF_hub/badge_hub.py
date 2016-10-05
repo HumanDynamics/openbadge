@@ -7,13 +7,13 @@ import re
 import shlex
 import subprocess
 
-import requests
 import logging
 
-from server import BADGE, BADGES
+
 from badge import *
 from badge_discoverer import BadgeDiscoverer
-
+from badge_manager_server import BadgeManagerServer
+from badge_manager_standalone import BadgeManagerStandalone
 
 log_file_name = 'server.log'
 scans_file_name = 'scan.txt'
@@ -69,20 +69,6 @@ def get_devices(device_file="device_macs.txt"):
 
     return devices
 
-    # with open(device_file, 'r') as csvfile:
-    #     fil = filter(lambda row: row[0]!='#', csvfile)
-    #     fil = filter(lambda x: not re.match(r'^\s*$', x), fil)
-    #     rdr = csv.reader(fil, delimiter=b' ')
-    #     for row in rdr:
-    #         device = row[0]
-    #         devices.append(device)
-    #
-    #     csvfile.close()
-    #
-    #
-    # return devices
-
-
 def dialogue(bdg):
     """
     Attempts to read data from the device specified by the address. Reading is handled by gatttool.
@@ -132,31 +118,16 @@ def dialogue(bdg):
         else:
             logger.info("No proximity scans ready")
 
-        # TODO: cache the badge mac with timestamp
-        # TODO: send the timestamp to the server
-        try:
-            if len(bdg.dlg.chunks) > 0:
-                last_chunk = bdg.dlg.chunks[-1]
-                logger.debug("Setting last badge audio timestamp to {} {}".format(last_chunk.ts, last_chunk.fract))
-                bdg.set_audio_ts(last_chunk.ts, last_chunk.fract)
+        # update badge object to hold latest timestamps
+        if len(bdg.dlg.chunks) > 0:
+            last_chunk = bdg.dlg.chunks[-1]
+            logger.debug("Setting last badge audio timestamp to {} {}".format(last_chunk.ts, last_chunk.fract))
+            bdg.set_audio_ts(last_chunk.ts, last_chunk.fract)
 
-            if len(bdg.dlg.scans) > 0:
-                last_scan = bdg.dlg.scans[-1]
-                logger.debug("Setting last badge proximity timestamp to {}".format(last_scan.ts))
-                bdg.last_proximity_ts = last_scan.ts
-
-            data = {
-                'last_audio_ts': bdg.last_audio_ts_int,
-                'last_audio_ts_fract': bdg.last_audio_ts_fract,
-                'last_proximity_ts': bdg.last_proximity_ts,
-            }
-            logger.debug("Update server, badge {} : {}".format(bdg.key, data))
-            response = requests.patch(BADGE(bdg.key), data=data)
-            if response.ok is False:
-                raise Exception('Server sent a {} status code instead of 200\n{}'.format(response.status_code,
-                                                                                             response.text))
-        except Exception as e:
-            print('Exception with Requests {}'.format(e))
+        if len(bdg.dlg.scans) > 0:
+            last_scan = bdg.dlg.scans[-1]
+            logger.debug("Setting last badge proximity timestamp to {}".format(last_scan.ts))
+            bdg.last_proximity_ts = last_scan.ts
 
 
 def scan_for_devices(devices_whitelist):
@@ -174,6 +145,8 @@ def scan_for_devices(devices_whitelist):
             scanned_devices.append({'mac':addr,'device_info':device_info})
         else:
             logger.debug("Found {}, but not on whitelist. Device info: {}".format(addr, device_info))
+
+    time.sleep(2)  # requires sometimes to prevent connection from failing
     return scanned_devices
 
 
@@ -185,6 +158,7 @@ def reset():
 
 def add_pull_command_options(subparsers):
     pull_parser = subparsers.add_parser('pull', help='Continuously pull data from badges')
+    pull_parser.add_argument('--m', choices=('server', 'standalone'), required=True)
 
 def add_scan_command_options(subparsers):
     pull_parser = subparsers.add_parser('scan', help='Continuously scan for badges')
@@ -209,68 +183,33 @@ def add_start_all_command_options(subparsers):
     st_parser.add_argument('-w','--use_whitelist', action='store_true', default=False, help="Use whitelist instead of continuously scanning for badges")
 
 
-def pull_devices():
+def pull_devices(mode):
     logger.info('Started')
 
-    conv = lambda x: int(float(x))
-    first = True
-    badges = {}
+    mgr = None
+    if mode == "server":
+        mgr = BadgeManagerServer(logger=logger)
+    else:
+        mgr = BadgeManagerStandalone(logger=logger)
 
     while True:
+        mgr.pull_badges_list()
+
         logger.info("Scanning for devices...")
-        try:
-            logger.debug("Requesting devices from server...")
-            response = requests.get(BADGES)
-            if response.ok:
-                logger.debug("Updating devices list ({})...".format(len(response.json())))
-                for d in response.json():
-                    badges[d.get('badge')] = Badge(d.get('badge'),
-                                                    logger,
-                                                    d.get('key'),
-                                                    init_audio_ts_int=conv(d.get('last_audio_ts')),
-                                                    init_audio_ts_fract=conv(d.get('last_audio_ts_fract')),
-                                                    init_proximity_ts=conv(d.get('last_proximity_ts'))
-                                                   )
-            else:
-                raise Exception('Got a {} from the server'.format(response.status_code))
-
-        except (requests.exceptions.ConnectionError, Exception) as e:
-            logging.error(e)
-            if first:
-                badges = {mac: Badge(mac,
-                                     logger,
-                                     key='randomChars',  # Needs to be fixed
-                                     init_audio_ts_int=0,
-                                     init_audio_ts_fract=0,
-                                     init_proximity_ts=0,
-                                     ) for mac in get_devices()
-                          }
-        first = False
-
-        scanned_devices = scan_for_devices(badges.keys())
-
-        time.sleep(2)  # ignore this sleep
+        scanned_devices = scan_for_devices(mgr.badges.keys())
 
         for device in scanned_devices:
-            # addr = device['mac']
-            # if addr not in badges:
-            #     logger.debug("Unseen device. Adding to dict: %s" % addr)
-            #     # init new badge. set last seen chunk to the time the pull command was called
-            #     new_badge = Badge(addr, logger)
-            #     # TODO: Call backend and ask for the latest timestamp for a specific mac address
-            #     new_badge.set_last_ts(
-            #         init_audio_ts, init_audio_ts_fract, init_proximity_ts)
-            #     badges[addr] = new_badge
-
-            # badge = badges[addr]
-            b = badges.get(device['mac'])
-
-            # TODO: analyze the critical path
+            b = mgr.badges.get(device['mac'])
+            # pull data
             dialogue(b)
+
+            # update timestamps on server
+            mgr.send_badge(device['mac'])
+
             time.sleep(2)  # requires sleep between devices
 
-        logger.info("Sleeping...")
-        time.sleep(6)
+        #logger.info("Sleeping...")
+        #time.sleep(6)
 
 
 def sync_all_devices():
@@ -346,7 +285,7 @@ if __name__ == "__main__":
 
     # pull data from all devices
     if args.mode == "pull":
-        pull_devices()
+        pull_devices(args.m)
 
     if args.mode == "start_all":
         start_all_devices()
