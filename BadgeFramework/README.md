@@ -11,4 +11,6 @@ We currently have:
 
 We also include an example development terminal *terminal.py* that illustrates how one can use these various components to communicate with the badge. 
 
+To try out the terminal, you must first install the [Adafruit Bluefruit library](https://github.com/adafruit/Adafruit_Python_BluefruitLE), and then simply run `python terminal.py` in this directory.
+
 The purpose of this library is to expedite development of many tools (hub, integration test, developer terminal, etc.) that all have to communicate with the badge by forming a common, reusable codebase that all of these tools can use. As such, the framework is designed to be modular.  (E.g. the only portion of this framework that depends on a specific BLE library is BLEBadgeConnection, and one can easily swap out BadgeConnection implementations for say one that uses UART, or one can easily import the badge_protocol definitions into a different project)
