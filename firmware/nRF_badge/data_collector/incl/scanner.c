@@ -319,11 +319,6 @@ bool updateScanner()
                     if(result == NRF_SUCCESS)  {
                         scan_state = SCANNER_SCANNING;
                         debug_log("SCANNER: Started scan.\r\n");
-
-                        for (int i = 0; i < 50; i++) {
-                            ble_gap_evt_adv_report_t adv_report = get_mock_adv_report_for_badge_with_id(i);
-                            BLEonAdvReport(&adv_report);
-                        }
                     }
                     else  {
                         debug_log("ERR: error starting scan, #%u\r\n",(unsigned int)result);
