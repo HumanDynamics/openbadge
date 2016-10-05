@@ -5,7 +5,7 @@ import logging
 from badge import Badge,now_utc_epoch
 
 
-class BadgesManagerStandalone():
+class BadgeManagerStandalone():
     def __init__(self, logger):
         self._badges= None
         self.logger = logger
@@ -68,6 +68,6 @@ if __name__ == "__main__":
     logger = logging.getLogger('badge_server')
     logger.setLevel(logging.DEBUG)
 
-    mgr = BadgesManagerStandalone(logger=logger)
+    mgr = BadgeManagerStandalone(logger=logger)
     mgr.pull_badges_list()
     print(mgr.badges)

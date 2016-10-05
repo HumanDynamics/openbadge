@@ -5,7 +5,7 @@ from badge import *
 from server import BADGE, BADGES
 
 
-class BadgesManagerServer:
+class BadgeManagerServer:
     def __init__(self, logger):
         self._badges = None
         self.logger = logger
@@ -117,7 +117,7 @@ if __name__ == "__main__":
     logger = logging.getLogger('badge_server')
     logger.setLevel(logging.DEBUG)
 
-    mgr = BadgesManagerServer(logger=logger)
+    mgr = BadgeManagerServer(logger=logger)
     mgr.pull_badges_list()
     print(mgr.badges)
     mgr.pull_badges_list()

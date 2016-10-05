@@ -12,7 +12,7 @@ import logging
 
 from badge import *
 from badge_discoverer import BadgeDiscoverer
-from badges_manager_server import BadgesManagerServer
+from badge_manager_server import BadgeManagerServer
 
 log_file_name = 'server.log'
 scans_file_name = 'scan.txt'
@@ -68,18 +68,8 @@ def get_devices(device_file="device_macs.txt"):
 
     return devices
 
-    # with open(device_file, 'r') as csvfile:
-    #     fil = filter(lambda row: row[0]!='#', csvfile)
-    #     fil = filter(lambda x: not re.match(r'^\s*$', x), fil)
-    #     rdr = csv.reader(fil, delimiter=b' ')
-    #     for row in rdr:
-    #         device = row[0]
-    #         devices.append(device)
-    #
-    #     csvfile.close()
-    #
-    #
-    # return devices
+def choose_badge_manager(logger):
+    return BadgeManagerServer(logger=logger)
 
 
 def dialogue(bdg):
@@ -198,7 +188,7 @@ def add_start_all_command_options(subparsers):
 def pull_devices():
     logger.info('Started')
 
-    mgr = BadgesManagerServer(logger=logger)
+    mgr = choose_badge_manager(logger=logger)
 
     while True:
         mgr.pull_badges_list()
