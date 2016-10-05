@@ -197,6 +197,10 @@ struct
     unsigned char buf[20];      // Buffer for BLE sending
     int bufContents;            // Records contents of send buffer
     int bufSize;                // Records length of actual data in send buffer
+
+    int nextLoc;                // The value of send.loc if the curent send.buf is sent successfuly.
+                                // (Used during sending scan data across multiple chunks)
+    int numDevicesSent;         // The number of devices that has been sent.
 } send;
 
 

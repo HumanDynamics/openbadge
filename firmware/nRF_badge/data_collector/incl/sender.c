@@ -5,6 +5,7 @@
 
 
 #include "sender.h"
+#include "scanner.h"
 
 // External chunks will be loaded into this buffer all at once, for quicker access.
 static int extChunkFrom;
@@ -158,6 +159,83 @@ static void setTimeFromCommand(server_command_params_t* command_p)
         updateAdvData();
         dateReceived = true;
     }
+}
+
+scan_chunk_t * getScanChunkPointer(void) {
+    scan_chunk_t * scanChunkPtr;
+    switch (send.source)  {
+        case SRC_SCAN_RAM:
+            scanChunkPtr = &(scanBuffer[send.from]);
+            break;
+        case SRC_EXT:
+            if (extChunkFrom != send.from)  {
+                //debug_log("SENDER: Copying ext chunk %d to RAM\r\n",send.from);
+                getScanChunk(&extChunk,send.from);
+                extChunkFrom = send.from;
+            }
+            scanChunkPtr = &extChunk;
+            break;
+        default:
+            debug_log("invalid source\r\n");
+            while(1);
+            break;
+    }
+
+    return scanChunkPtr;
+}
+
+bool scanCheckAndTimestampValid(unsigned long timestamp, unsigned long check) {
+    return timestampValid(timestamp) && (check == timestamp || check == CHECK_TRUNC || check == CHECK_CONTINUE);
+}
+
+static void advanceToNextScanChunk(void) {
+    switch(send.source)  {
+        case SRC_EXT:
+            // look for another unsent EXT chunk
+            do  {
+                // increment to next EXT chunk
+                send.from = (send.from < EXT_LAST_CHUNK) ? send.from+1 : EXT_FIRST_DATA_CHUNK;
+
+                unsigned long timestamp = getScanTimestamp(send.from);
+                unsigned long check = getScanCheck(send.from);
+                // is it a valid chunk
+                if (scanCheckAndTimestampValid(timestamp, check))  {
+                    break;  // from while(send.from != store.to)
+                }
+                // If chunk isn't valid, we need to keep looking
+            } while (send.from != store.extTo);
+
+            // If we haven't caught up with store.extTo yet, we have more EXT scan chunks to send
+            if (send.from != store.extTo)  {
+                break;  // from switch(send.source)
+            }
+
+            // Else we need to look through RAM next.  Switch to RAM:
+            send.source = SRC_SCAN_RAM;
+            send.from = scan.to;
+            // and advance to first RAM chunk (below)
+            // Fall through:
+        case SRC_SCAN_RAM:
+            // look for another unsent RAM scan chunk
+            do  {
+                // increment to next RAM chunk
+                send.from = (send.from < LAST_SCAN_CHUNK) ? send.from+1: 0;
+
+                unsigned long timestamp = scanBuffer[send.from].timestamp;
+                unsigned long check = scanBuffer[send.from].check;
+
+                // is it a valid chunk
+                //   (check == timestamp and timestamp is valid, OR check is a special value)
+                if (scanCheckAndTimestampValid(timestamp, check))  {
+                    break;  // from switch(send.source)
+                }
+
+                // If chunk isn't valid, we need to keep looking
+            } while (send.from != scan.to);
+            break;  // from switch(send.source)
+        default:
+            break;
+    }  // switch(send.source)
 }
 
 bool updateSender()
@@ -465,7 +543,7 @@ bool updateSender()
                 unsigned long check = scanBuffer[c].check;
                 
                 // Check to see if the candidate chunk is one we should send
-                if ((check == timestamp || check == CHECK_TRUNC || check == CHECK_CONTINUE) && timestampValid(timestamp))  {
+                if (scanCheckAndTimestampValid(timestamp, check))  {
                     if (timestamp < command.timestamp)  {
                         break;  // stop looking if we've reached earlier than the requested time
                     }
@@ -484,7 +562,7 @@ bool updateSender()
                 unsigned long check = getScanCheck(c);
                 
                 // is it a valid chunk (check == timestamp and timestamp is valid or check is a special value)
-                if (timestampValid(timestamp) && (check == timestamp || check == CHECK_TRUNC))  {
+                if (scanCheckAndTimestampValid(timestamp, check))  {
                     if (timestamp < command.timestamp)  {
                         break;  // stop looking if we've reached earlier than the requested time
                     }
@@ -515,70 +593,24 @@ bool updateSender()
                 switch (send.bufContents)  {
                 case SENDBUF_SCANHEADER:
                     send.loc = 0;
+                    send.numDevicesSent = 0;
                     break;
                 case SENDBUF_SCANDEVICES:
-                    send.loc += send.bufSize / sizeof(seenDevice_t);
-                    if (send.loc >= send.num)  {
+                    send.loc = send.nextLoc;
+                    if (send.numDevicesSent >= send.num)  {
                         debug_log("SENDER: sent s:%c c:%d n:%d\r\n",(send.source==SRC_EXT) ? 'P' : 'Q',
                                                                     send.from, send.num);
                         // advance to next chunk
-                        switch(send.source)  {
-                        case SRC_EXT:
-                            // look for another unsent EXT chunk
-                            do  {
-                                // increment to next EXT chunk
-                                send.from = (send.from < EXT_LAST_CHUNK) ? send.from+1 : EXT_FIRST_DATA_CHUNK;
-                        
-                                unsigned long timestamp = getScanTimestamp(send.from);
-                                unsigned long check = getScanCheck(send.from);
-                                // is it a valid chunk 
-                                if (timestampValid(timestamp) && check == timestamp)  {
-                                    break;  // from while(send.from != store.to)
-                                }
-                                // If chunk isn't valid, we need to keep looking
-                            } while (send.from != store.extTo);
-                            
-                            // If we haven't caught up with store.extTo yet, we have more EXT scan chunks to send
-                            if (send.from != store.extTo)  {
-                                break;  // from switch(send.source)
-                            }
-                            
-                            // Else we need to look through RAM next.  Switch to RAM:
-                            send.source = SRC_SCAN_RAM;
-                            send.from = scan.to;
-                            // and advance to first RAM chunk (below)
-                            // Fall through:
-                        case SRC_SCAN_RAM:
-                            // look for another unsent RAM scan chunk
-                            do  {
-                                // increment to next RAM chunk
-                                send.from = (send.from < LAST_SCAN_CHUNK) ? send.from+1: 0;
-                                
-                                unsigned long timestamp = scanBuffer[send.from].timestamp;
-                                unsigned long check = scanBuffer[send.from].check;
-                                
-                                // is it a valid chunk 
-                                //   (check == timestamp and timestamp is valid, OR check is a special value)
-                                if (timestampValid(timestamp) && check == timestamp)  {
-                                    break;  // from switch(send.source)
-                                }
-                                
-                                // If chunk isn't valid, we need to keep looking
-                            } while (send.from != scan.to);
-                            
+                        advanceToNextScanChunk();
+                        if (send.source == SRC_SCAN_RAM && send.from == scan.to) {
                             // If we caught up with scan.to, then we've sent all RAM scan chunks available.  we're done
-                            if (send.from == scan.to)  {
-                                send.from = SEND_FROM_END;
-                            }
-                            break;  // from switch(send.source)
-                        default:
-                            break;
-                        }  // switch(send.source)
+                            send.from = SEND_FROM_END;
+                        }
                         send.loc = SEND_LOC_HEADER;  // need to send header for next chunk
                     }  // if (send.loc >= send.num)
-                    
-                    break;    
-                    
+
+                    break;
+
                 case SENDBUF_END:
                     debug_log("SENDER: sent null header.  REQSCANS complete.\r\n");
                     pendingCommand.cmd = CMD_NONE;  // if we sent the terminating null header, we're done sending data
@@ -607,25 +639,8 @@ bool updateSender()
             // Else there's data to be sent
             else  {
                 // Get pointer to current chunk
-                scan_chunk_t* scanChunkPtr;
-                switch (send.source)  {
-                case SRC_SCAN_RAM:
-                    scanChunkPtr = &(scanBuffer[send.from]);
-                    break;
-                case SRC_EXT:
-                    if (extChunkFrom != send.from)  {
-                        //debug_log("SENDER: Copying ext chunk %d to RAM\r\n",send.from);
-                        getScanChunk(&extChunk,send.from);
-                        extChunkFrom = send.from;
-                    }
-                    scanChunkPtr = &extChunk;
-                    break;
-                default:
-                    debug_log("invalid source\r\n");
-                    while(1);
-                    break;
-                }
-                
+                scan_chunk_t* scanChunkPtr = getScanChunkPointer();
+
                 if (send.loc == SEND_LOC_HEADER)  {
                     // Compose header
                     send.num = scanChunkPtr->num;
@@ -640,13 +655,36 @@ bool updateSender()
                 else  {  // else we're sending data
                     // compose next packet of device data
                     int devicesLeft = send.num - send.loc;
+                    int packetSize;
                     if (devicesLeft > DEVICES_PER_PACKET)  {
-                        send.bufSize = sizeof(seenDevice_t) * DEVICES_PER_PACKET;
+                        packetSize = sizeof(seenDevice_t) * DEVICES_PER_PACKET;
                     }
                     else  {
-                        send.bufSize = sizeof(seenDevice_t) * devicesLeft;
+                        packetSize = sizeof(seenDevice_t) * devicesLeft;
                     }
-                    memcpy(send.buf, &(scanChunkPtr->devices[send.loc]),send.bufSize);
+
+                    send.bufSize = 0;
+                    int i = 0;
+                    while (send.bufSize < packetSize) {
+                        unsigned long kTruncatedChunkMagicValue = CHECK_TRUNC;
+                        bool endOfTruncatedChunk = (memcmp(&scanChunkPtr->devices[send.loc + i],
+                                                          &kTruncatedChunkMagicValue, sizeof(seenDevice_t)) == 0);
+                        if (endOfTruncatedChunk) {
+                            advanceToNextScanChunk();
+                            scanChunkPtr = getScanChunkPointer();
+                            send.loc = 0;
+                            i = 0;
+                            continue;
+                        }
+
+                        seenDevice_t deviceToSend = scanChunkPtr->devices[send.loc + i];
+                        memcpy(&send.buf[send.bufSize], &deviceToSend, sizeof(seenDevice_t));
+                        send.bufSize += sizeof(seenDevice_t);
+                        send.numDevicesSent++;
+                        i++;
+                    }
+
+                    send.nextLoc = send.loc + i;
                     send.bufContents = SENDBUF_SCANDEVICES;
                 }
             }         
