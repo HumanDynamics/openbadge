@@ -181,7 +181,7 @@ volatile scan_state_t scan_state;
 
 
 
-#define MAX_SCAN_RESULTS 28     // maximum number of devices that will be reported in a scan
+#define MAX_SCAN_RESULTS 100     // maximum number of devices that will be reported in a scan
                                 // ^^ temporarily capped to never be more than one chunk's worth
 #define MAX_SCAN_COUNT 127      // maximum number of RSSI readings for one device reported in a scan
 

@@ -39,6 +39,58 @@ void scanner_init()
     //scan_state = SCAN_IDLE;
 }
 
+static ble_gap_evt_adv_report_t get_mock_adv_report_for_badge_with_id(uint8_t id) {
+    // Generate MAC address based on id.
+    uint8_t peer_addr_based_on_id[6] = {0xAA, 0xBB, 0xCC, 0xDD, 0xEE, id};
+
+    ble_gap_evt_adv_report_t mock_adv_report;
+
+    mock_adv_report.peer_addr.addr_type = BLE_GAP_ADDR_TYPE_PUBLIC;
+    memcpy(mock_adv_report.peer_addr.addr, peer_addr_based_on_id, sizeof(mock_adv_report.peer_addr.addr));
+
+    // Our mock reports are used to simulate scanning, so we don't need to include
+    // a report_type.
+    mock_adv_report.scan_rsp = 1;
+    mock_adv_report.rssi = -42;
+
+    // Create a mock device name.
+    typedef struct {
+        uint8_t name_length;
+        uint8_t name_type;
+        char name[sizeof(DEVICE_NAME)];
+    }__attribute__((packed)) badge_name_data_t;
+
+    badge_name_data_t badge_name_data;
+    badge_name_data.name_length = sizeof(DEVICE_NAME);
+    badge_name_data.name_type = BLE_GAP_AD_TYPE_COMPLETE_LOCAL_NAME;
+    memcpy(badge_name_data.name, DEVICE_NAME, sizeof(DEVICE_NAME));
+
+    // Create mock custom manufacturer data for a badge.
+    typedef struct {
+        uint8_t manufacturer_data_len;
+        uint8_t data_type;
+        uint16_t company_id;
+        custom_adv_data_t manufacturer_data;
+    }__attribute__((packed)) manufacturer_adv_data_t;
+
+    manufacturer_adv_data_t mock_manufacturer_adv_data;
+    mock_manufacturer_adv_data.data_type = BLE_GAP_AD_TYPE_MANUFACTURER_SPECIFIC_DATA;
+    mock_manufacturer_adv_data.company_id = 0xFF;
+    mock_manufacturer_adv_data.manufacturer_data_len = 14;
+
+    mock_manufacturer_adv_data.manufacturer_data.battery = 90;
+    mock_manufacturer_adv_data.manufacturer_data.group = badgeAssignment.group;
+    mock_manufacturer_adv_data.manufacturer_data.ID = id;
+    memcpy(mock_manufacturer_adv_data.manufacturer_data.MAC, peer_addr_based_on_id, sizeof(peer_addr_based_on_id));
+    mock_manufacturer_adv_data.manufacturer_data.statusFlags = 0x00;
+
+    // Copy device name and manufacturer data into report advertising data.
+    memcpy(&mock_adv_report.data[0], &badge_name_data, sizeof(badge_name_data_t));
+    memcpy(&mock_adv_report.data[sizeof(badge_name_data)], &mock_manufacturer_adv_data, sizeof(mock_manufacturer_adv_data));
+    mock_adv_report.dlen = sizeof(badge_name_data) + sizeof(mock_manufacturer_adv_data);
+
+    return mock_adv_report;
+}
 
 uint32_t startScan()
 {

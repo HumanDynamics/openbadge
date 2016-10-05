@@ -89,6 +89,10 @@ typedef enum ble_status_t
 
 
 // Structure for organizing custom badge advertising data
+//   This struct is 11 bytes long and is directly converted to stored bytes,
+//   so it should be packed so the compiler does not pad it to word align it.
+//   Be careful though, because you the NRF51's ARM Cortex M0 chip does not support
+//   non-word aligned operations.
 typedef struct
 {
     unsigned char battery;   // scaled so that voltage = 1 + 0.01 * battery
@@ -96,7 +100,7 @@ typedef struct
     unsigned short ID;
     unsigned char group;
     unsigned char MAC[6];
-} custom_adv_data_t;
+}__attribute__((packed)) custom_adv_data_t;
 
 #define CUSTOM_ADV_DATA_LEN 11   // length of above struct (excluding struct padding)
 #define BADGE_MANUF_DATA_LEN (CUSTOM_ADV_DATA_LEN + 2)  // CUSTOM_ADV_DATA_LEN bytes, plus 16-bit company ID

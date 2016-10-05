@@ -19,3 +19,4 @@ data.db
 
 .idea
 env/
+CMakeLists.txt
