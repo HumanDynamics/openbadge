@@ -13,6 +13,7 @@ import logging
 from badge import *
 from badge_discoverer import BadgeDiscoverer
 from badge_manager_server import BadgeManagerServer
+from badge_manager_standalone import BadgeManagerStandalone
 
 log_file_name = 'server.log'
 scans_file_name = 'scan.txt'
@@ -67,10 +68,6 @@ def get_devices(device_file="device_macs.txt"):
         logger.info("    {}".format(d))
 
     return devices
-
-def choose_badge_manager(logger):
-    return BadgeManagerServer(logger=logger)
-
 
 def dialogue(bdg):
     """
@@ -161,6 +158,7 @@ def reset():
 
 def add_pull_command_options(subparsers):
     pull_parser = subparsers.add_parser('pull', help='Continuously pull data from badges')
+    pull_parser.add_argument('--m', choices=('server', 'standalone'), required=True)
 
 def add_scan_command_options(subparsers):
     pull_parser = subparsers.add_parser('scan', help='Continuously scan for badges')
@@ -185,10 +183,14 @@ def add_start_all_command_options(subparsers):
     st_parser.add_argument('-w','--use_whitelist', action='store_true', default=False, help="Use whitelist instead of continuously scanning for badges")
 
 
-def pull_devices():
+def pull_devices(mode):
     logger.info('Started')
 
-    mgr = choose_badge_manager(logger=logger)
+    mgr = None
+    if mode == "server":
+        mgr = BadgeManagerServer(logger=logger)
+    else:
+        mgr = BadgeManagerStandalone(logger=logger)
 
     while True:
         mgr.pull_badges_list()
@@ -283,7 +285,7 @@ if __name__ == "__main__":
 
     # pull data from all devices
     if args.mode == "pull":
-        pull_devices()
+        pull_devices(args.m)
 
     if args.mode == "start_all":
         start_all_devices()

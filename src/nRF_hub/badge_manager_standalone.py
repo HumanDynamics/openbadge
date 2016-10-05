@@ -11,7 +11,7 @@ class BadgeManagerStandalone():
         self.logger = logger
         self._device_file = "device_macs.txt"
 
-        self._init_ts,self._init_ts_fract = now_utc_epoch()
+        self._init_ts, self._init_ts_fract = now_utc_epoch()
         logger.debug("Will request data since {} {}".format(self._init_ts,self._init_ts_fract))
 
     def _read_file(self,device_file):
@@ -36,18 +36,30 @@ class BadgeManagerStandalone():
         for d in devices:
             self.logger.info("    {}".format(d))
 
-        return devices
+        badges = {mac: Badge(mac,
+                                       self.logger,
+                                       key=mac,  # using mac as key since no other key exists
+                                       init_audio_ts_int=self._init_ts,
+                                       init_audio_ts_fract=self._init_ts_fract,
+                                       init_proximity_ts=self._init_ts,
+                                       ) for mac in devices
+                        }
+
+        return badges
 
     def pull_badges_list(self):
-        devices = self._read_file(self._device_file)
-        self._badges = {mac: Badge(mac,
-                             self.logger,
-                             key=mac,  # using mac as key since no other key exists
-                             init_audio_ts_int=self._init_ts,
-                             init_audio_ts_fract=self._init_ts_fract,
-                             init_proximity_ts=self._init_ts,
-                             ) for mac in devices
-                  }
+        # first time we read as is
+        if self._badges is None:
+            file_badges = self._read_file(self._device_file)
+            self._badges = file_badges
+        else:
+            # update list
+            file_badges = self._read_file(self._device_file)
+            for mac in file_badges:
+                if mac not in self._badges:
+                    # new badge
+                    self.logger.debug("Found new badge in file: {}".format(mac))
+                    self._badges[mac] = file_badges[mac]
 
     def send_badge(self, mac):
         """
@@ -69,5 +81,8 @@ if __name__ == "__main__":
     logger.setLevel(logging.DEBUG)
 
     mgr = BadgeManagerStandalone(logger=logger)
+    mgr.pull_badges_list()
+    print(mgr.badges)
+    raw_input('Enter your input:')
     mgr.pull_badges_list()
     print(mgr.badges)

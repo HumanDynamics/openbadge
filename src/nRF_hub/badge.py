@@ -614,7 +614,7 @@ def datetime_to_epoch(d):
     """
     epoch_seconds = (d - datetime.datetime(1970, 1, 1)).total_seconds()
     long_epoch_seconds = long(floor(epoch_seconds))
-    ts_fract = d.microsecond / 1000;
+    ts_fract = int(floor(d.microsecond / 1000))
     return (long_epoch_seconds, ts_fract)
 
 
