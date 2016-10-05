@@ -506,7 +506,7 @@ class Badge():
 
         return retcode
 
-    def pull_data(self):
+    def pull_data(self, activate_audio, activate_proximity):
         """
         Attempts to read data from the device
         """
@@ -517,39 +517,41 @@ class Badge():
 
             self.logger.info("Connected")
 
-            # Starting audio rec
-            self.logger.info("Starting audio recording")
-            with timeout(seconds=5, error_message="StartRec timeout (wrong firmware version?)"):
-                while not self.dlg.gotTimestamp:
-                    self.sendStartRecRequest(RECORDING_TIMEOUT)  # start recording
-                    self.conn.waitForNotifications(WAIT_FOR)  # waiting for time acknowledgement
+            if activate_audio:
+                # Starting audio rec
+                self.logger.info("Starting audio recording")
+                with timeout(seconds=5, error_message="StartRec timeout (wrong firmware version?)"):
+                    while not self.dlg.gotTimestamp:
+                        self.sendStartRecRequest(RECORDING_TIMEOUT)  # start recording
+                        self.conn.waitForNotifications(WAIT_FOR)  # waiting for time acknowledgement
 
-                self.logger.info("Got time ack")
+                    self.logger.info("Got time ack")
 
-                if self.dlg.timestamp_sec != 0:
-                    self.logger.info("Badge datetime was: {},{}".format(self.dlg.timestamp_sec, self.dlg.timestamp_ms))
-                else:
-                    self.logger.info("Badge previously unsynced.")
+                    if self.dlg.timestamp_sec != 0:
+                        self.logger.info("Badge datetime was: {},{}".format(self.dlg.timestamp_sec, self.dlg.timestamp_ms))
+                    else:
+                        self.logger.info("Badge previously unsynced.")
 
             # Reset flag (hacky)
             self.dlg.gotTimestamp = False
 
-            # Starting scans
-            self.logger.info("Starting proximity scans")
-            with timeout(seconds=5, error_message="StartScan timeout (wrong firmware version?)"):
-                while not self.dlg.gotTimestamp:
-                    self.sendStartScanRequest(RECORDING_TIMEOUT, SCAN_WINDOW, SCAN_INTERVAL, SCAN_DURATION, SCAN_PERIOD)
-                    self.conn.waitForNotifications(WAIT_FOR)  # waiting for time acknowledgement
+            if activate_proximity:
+                # Starting scans
+                self.logger.info("Starting proximity scans")
+                with timeout(seconds=5, error_message="StartScan timeout (wrong firmware version?)"):
+                    while not self.dlg.gotTimestamp:
+                        self.sendStartScanRequest(RECORDING_TIMEOUT, SCAN_WINDOW, SCAN_INTERVAL, SCAN_DURATION, SCAN_PERIOD)
+                        self.conn.waitForNotifications(WAIT_FOR)  # waiting for time acknowledgement
 
-                self.logger.info("Got time ack")
+                    self.logger.info("Got time ack")
 
-                if self.dlg.timestamp_sec != 0:
-                    self.logger.info("Badge datetime was: {},{}".format(self.dlg.timestamp_sec, self.dlg.timestamp_ms))
-                else:
-                    self.logger.info("Badge previously unsynced.")
+                    if self.dlg.timestamp_sec != 0:
+                        self.logger.info("Badge datetime was: {},{}".format(self.dlg.timestamp_sec, self.dlg.timestamp_ms))
+                    else:
+                        self.logger.info("Badge previously unsynced.")
 
 
-            # data request using the "r" command - data since time X
+            # audio data data request since time X
             self.logger.info("Requesting data since {} {}".format(self.last_audio_ts_int, self.last_audio_ts_fract))
             self.sendDataRequest(self.last_audio_ts_int, self.last_audio_ts_fract)  # ask for data
             wait_count = 0
@@ -564,7 +566,7 @@ class Badge():
                 if wait_count >= PULL_WAIT: break
             self.logger.info("finished reading data")
 
-            # data request using the "r" command - data since time X
+            # proximity data request since time X
             self.logger.info("Requesting scans since {}".format(self.last_proximity_ts))
             self.sendScanRequest(self.last_proximity_ts)
             wait_count = 0

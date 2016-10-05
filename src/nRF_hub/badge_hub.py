@@ -69,13 +69,13 @@ def get_devices(device_file="device_macs.txt"):
 
     return devices
 
-def dialogue(bdg):
+def dialogue(bdg, activate_audio, activate_proximity):
     """
     Attempts to read data from the device specified by the address. Reading is handled by gatttool.
     :param bdg:
     :return:
     """
-    ret = bdg.pull_data()
+    ret = bdg.pull_data(activate_audio, activate_proximity)
     addr = bdg.addr
     if ret == 0:
         logger.info("Successfully pulled data")
@@ -159,6 +159,8 @@ def reset():
 def add_pull_command_options(subparsers):
     pull_parser = subparsers.add_parser('pull', help='Continuously pull data from badges')
     pull_parser.add_argument('--m', choices=('server', 'standalone'), required=True)
+    pull_parser.add_argument('--d', choices=('audio', 'proximity', 'both'), required=False,
+                             help='data activation option')
 
 def add_scan_command_options(subparsers):
     pull_parser = subparsers.add_parser('scan', help='Continuously scan for badges')
@@ -183,9 +185,19 @@ def add_start_all_command_options(subparsers):
     st_parser.add_argument('-w','--use_whitelist', action='store_true', default=False, help="Use whitelist instead of continuously scanning for badges")
 
 
-def pull_devices(mode):
-    logger.info('Started')
+def pull_devices(mode, data_activation):
+    logger.info('Started pulling')
+    activate_audio = False
+    activate_proximity = False
+    if data_activation is None or data_activation == "both":
+        activate_audio = True
+        activate_proximity = True
+    elif data_activation == "audio":
+        activate_audio = True
+    elif data_activation == "proximity":
+        activate_proximity = True
 
+    logger.info("Data activation: Audio = {}, Proximity = {}".format(activate_audio,activate_proximity))
     mgr = None
     if mode == "server":
         mgr = BadgeManagerServer(logger=logger)
@@ -201,7 +213,7 @@ def pull_devices(mode):
         for device in scanned_devices:
             b = mgr.badges.get(device['mac'])
             # pull data
-            dialogue(b)
+            dialogue(b, activate_audio, activate_proximity)
 
             # update timestamps on server
             mgr.send_badge(device['mac'])
@@ -285,7 +297,7 @@ if __name__ == "__main__":
 
     # pull data from all devices
     if args.mode == "pull":
-        pull_devices(args.m)
+        pull_devices(args.m, args.d)
 
     if args.mode == "start_all":
         start_all_devices()

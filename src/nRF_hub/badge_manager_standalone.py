@@ -34,7 +34,7 @@ class BadgeManagerStandalone():
             devices = [d.upper() for d in devices]
 
         for d in devices:
-            self.logger.info("    {}".format(d))
+            self.logger.debug("    {}".format(d))
 
         badges = {mac: Badge(mac,
                                        self.logger,
