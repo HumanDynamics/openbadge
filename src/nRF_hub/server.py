@@ -1,4 +1,4 @@
-
+# Defining end points for backend-server
 
 SERVER = 'http://localhost:8000/'
 BADGES = '{}badges/'.format(SERVER)

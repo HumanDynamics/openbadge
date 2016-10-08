@@ -13,7 +13,7 @@ class BadgeManagerStandalone():
 
         self._init_ts, self._init_ts_fract = now_utc_epoch()
         self._init_ts -= 5 * 60 # start pulling data from the 5 minutes
-        logger.debug("Will request data since {} {}".format(self._init_ts,self._init_ts_fract))
+        logger.debug("Standalone version. Will request data since {} {}".format(self._init_ts,self._init_ts_fract))
 
     def _read_file(self,device_file):
         """
@@ -61,6 +61,14 @@ class BadgeManagerStandalone():
                     # new badge
                     self.logger.debug("Found new badge in file: {}".format(mac))
                     self._badges[mac] = file_badges[mac]
+
+    def pull_badge(self, mac):
+        """
+        Contacts to server (if responding) and updates the given badge data
+        :param mac:
+        :return:
+        """
+        pass # not implemented
 
     def send_badge(self, mac):
         """

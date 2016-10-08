@@ -212,6 +212,8 @@ def pull_devices(mgr, data_activation):
 
         for device in scanned_devices:
             b = mgr.badges.get(device['mac'])
+            # try to update latest badge timestamps from the server
+            mgr.pull_badge(b.addr)
             # pull data
             dialogue(b, activate_audio, activate_proximity)
 
