@@ -150,6 +150,13 @@ def scan_for_devices(devices_whitelist):
     return scanned_devices
 
 
+def create_badge_manager_instance(mode):
+    if mode == "server":
+        mgr = BadgeManagerServer(logger=logger)
+    else:
+        mgr = BadgeManagerStandalone(logger=logger)
+    return mgr
+
 def reset():
     reset_command = "hciconfig hci0 reset"
     args = shlex.split(reset_command)
@@ -158,7 +165,6 @@ def reset():
 
 def add_pull_command_options(subparsers):
     pull_parser = subparsers.add_parser('pull', help='Continuously pull data from badges')
-    pull_parser.add_argument('--m', choices=('server', 'standalone'), required=True)
     pull_parser.add_argument('--d', choices=('audio', 'proximity', 'both'), required=False,
                              help='data activation option')
 
@@ -185,7 +191,7 @@ def add_start_all_command_options(subparsers):
     st_parser.add_argument('-w','--use_whitelist', action='store_true', default=False, help="Use whitelist instead of continuously scanning for badges")
 
 
-def pull_devices(mode, data_activation):
+def pull_devices(mgr, data_activation):
     logger.info('Started pulling')
     activate_audio = False
     activate_proximity = False
@@ -198,11 +204,6 @@ def pull_devices(mode, data_activation):
         activate_proximity = True
 
     logger.info("Data activation: Audio = {}, Proximity = {}".format(activate_audio,activate_proximity))
-    mgr = None
-    if mode == "server":
-        mgr = BadgeManagerServer(logger=logger)
-    else:
-        mgr = BadgeManagerStandalone(logger=logger)
 
     while True:
         mgr.pull_badges_list()
@@ -220,26 +221,24 @@ def pull_devices(mode, data_activation):
 
             time.sleep(2)  # requires sleep between devices
 
-        #logger.info("Sleeping...")
-        #time.sleep(6)
 
-
-def sync_all_devices():
-    whitelist_devices = get_devices()
-    for addr in whitelist_devices:
-        bdg = Badge(addr, logger)
+def sync_all_devices(mgr):
+    logger.info('Syncing all badges recording.')
+    mgr.pull_badges_list()
+    for mac in mgr.badges:
+        bdg = mgr.badges.get(mac)
         bdg.sync_timestamp()
         time.sleep(2)  # requires sleep between devices
 
-    time.sleep(5)  # allow BLE time to disconnect
+    time.sleep(2)  # allow BLE time to disconnect
 
 
-def devices_scanner():
+def devices_scanner(mgr):
     logger.info('Scanning for badges')
+    mgr.pull_badges_list()
     while True:
-        whitelist_devices = get_devices()
         logger.info("Scanning for devices...")
-        scanned_devices = scan_for_devices(whitelist_devices)
+        scanned_devices = scan_for_devices(mgr.badges.keys())
         with open(scans_file_name, "a") as fout:
             for device in scanned_devices:
                 mac = device['mac']
@@ -251,14 +250,15 @@ def devices_scanner():
         time.sleep(5)  # give time to Ctrl-C
 
 
-def start_all_devices():
+def start_all_devices(mgr):
     logger.info('Starting all badges recording.')
-    whitelist_devices = get_devices()
-    for addr in whitelist_devices:
-        bdg = Badge(addr, logger)
+    mgr.pull_badges_list()
+    for mac in mgr.badges:
+        bdg = mgr.badges.get(mac)
         bdg.start_recording()
         time.sleep(2)  # requires sleep between devices
-    time.sleep(5)  # allow BLE time to disconnect
+
+    time.sleep(2)  # allow BLE time to disconnect
 
 
 if __name__ == "__main__":
@@ -267,6 +267,9 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Run scans, send dates, or continuously pull data")
     parser.add_argument('-dr','--disable_reset_ble', action='store_true', default=False, help="Do not reset BLE")
+    parser.add_argument('--m', choices=('server', 'standalone')
+                        , default='standalone'
+                        , help="Operation mode - standalone (using a configuration file) or a server")
 
     subparsers = parser.add_subparsers(help='Program mode (e.g. Scan, send dates, pull, scan etc.)', dest='mode')
     add_pull_command_options(subparsers)
@@ -276,6 +279,8 @@ if __name__ == "__main__":
     add_start_all_command_options(subparsers)
 
     args = parser.parse_args()
+
+    mgr = create_badge_manager_instance(args.m)
 
     if not args.disable_reset_ble:
         logger.info("Resetting BLE")
@@ -289,17 +294,17 @@ if __name__ == "__main__":
         del badge
 
     if args.mode == "sync_all":
-        sync_all_devices()
+        sync_all_devices(mgr)
 
     # scan for devices
     if args.mode == "scan":
-        devices_scanner()
+        devices_scanner(mgr)
 
     # pull data from all devices
     if args.mode == "pull":
-        pull_devices(args.m, args.d)
+        pull_devices(mgr, args.d)
 
     if args.mode == "start_all":
-        start_all_devices()
+        start_all_devices(mgr)
 
     exit(0)
