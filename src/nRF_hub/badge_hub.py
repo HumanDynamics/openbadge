@@ -79,55 +79,54 @@ def dialogue(bdg, activate_audio, activate_proximity):
     addr = bdg.addr
     if ret == 0:
         logger.info("Successfully pulled data")
+    else:
+        logger.info("Errors pulling data. Saving data is anything was received")
 
-        if bdg.dlg.chunks:
-            logger.info("Chunks received: {}".format(len(bdg.dlg.chunks)))
-            logger.info("saving chunks to file")
+    if bdg.dlg.chunks:
+        logger.info("Chunks received: {}".format(len(bdg.dlg.chunks)))
+        logger.info("saving chunks to file")
 
-            # store in CSV file
-            with open(audio_file_name, "a") as fout:
-                for chunk in bdg.dlg.chunks:
-                    ts_with_ms = '{}.{:03d}'.format(chunk.ts, chunk.fract)
-                    logger.debug("CSV: Chunk timestamp: {}, Voltage: {}, Delay: {}, Samples in chunk: {}".format(
-                        ts_with_ms, chunk.voltage, chunk.sampleDelay, len(chunk.samples)))
-                    fout.write(bytes("{},{},{},{}".format(addr, ts_with_ms, chunk.voltage, chunk.sampleDelay)))
-                    for sample in chunk.samples:
-                        fout.write(",{}".format(sample))
-                    fout.write("\n")
-                logger.info("done writing")
-
-        else:
-            logger.info("No mic data ready")
-
-        if bdg.dlg.scans:
-            logger.info("Proximity scans received: {}".format(len(bdg.dlg.scans)))
-            logger.info("saving proximity scans to file")
-            with open(proximity_file_name, "a") as fout:
-                for scan in bdg.dlg.scans:
-                    ts_with_ms = "%0.3f" % scan.ts
-                    logger.debug("SCAN: scan timestamp: {}, voltage: {}, Devices in scan: {}".format(
-                        ts_with_ms, scan.voltage, scan.numDevices))
-                    if scan.devices:
-                        device_list = ''
-                        for dev in scan.devices:
-                            device_list += "[#{:x},{},{}]".format(dev.ID, dev.rssi, dev.count)
-                            fout.write(bytes("{},{},{},{},{},{}\n".format(addr, scan.voltage, ts_with_ms, dev.ID,
-                                                                          dev.rssi, dev.count)))
-                        logger.info('  >  ' + device_list)
-
-        else:
-            logger.info("No proximity scans ready")
+        # store in CSV file
+        with open(audio_file_name, "a") as fout:
+            for chunk in bdg.dlg.chunks:
+                ts_with_ms = '{}.{:03d}'.format(chunk.ts, chunk.fract)
+                logger.debug("CSV: Chunk timestamp: {}, Voltage: {}, Delay: {}, Samples in chunk: {}".format(
+                    ts_with_ms, chunk.voltage, chunk.sampleDelay, len(chunk.samples)))
+                fout.write(bytes("{},{},{},{}".format(addr, ts_with_ms, chunk.voltage, chunk.sampleDelay)))
+                for sample in chunk.samples:
+                    fout.write(",{}".format(sample))
+                fout.write("\n")
+            logger.info("done writing")
 
         # update badge object to hold latest timestamps
-        if len(bdg.dlg.chunks) > 0:
-            last_chunk = bdg.dlg.chunks[-1]
-            logger.debug("Setting last badge audio timestamp to {} {}".format(last_chunk.ts, last_chunk.fract))
-            bdg.set_audio_ts(last_chunk.ts, last_chunk.fract)
+        last_chunk = bdg.dlg.chunks[-1]
+        logger.debug("Setting last badge audio timestamp to {} {}".format(last_chunk.ts, last_chunk.fract))
+        bdg.set_audio_ts(last_chunk.ts, last_chunk.fract)
+    else:
+        logger.info("No mic data ready")
 
-        if len(bdg.dlg.scans) > 0:
-            last_scan = bdg.dlg.scans[-1]
-            logger.debug("Setting last badge proximity timestamp to {}".format(last_scan.ts))
-            bdg.last_proximity_ts = last_scan.ts
+    if bdg.dlg.scans:
+        logger.info("Proximity scans received: {}".format(len(bdg.dlg.scans)))
+        logger.info("saving proximity scans to file")
+        with open(proximity_file_name, "a") as fout:
+            for scan in bdg.dlg.scans:
+                ts_with_ms = "%0.3f" % scan.ts
+                logger.debug("SCAN: scan timestamp: {}, voltage: {}, Devices in scan: {}".format(
+                    ts_with_ms, scan.voltage, scan.numDevices))
+                if scan.devices:
+                    device_list = ''
+                    for dev in scan.devices:
+                        device_list += "[#{:x},{},{}]".format(dev.ID, dev.rssi, dev.count)
+                        fout.write(bytes("{},{},{},{},{},{}\n".format(addr, scan.voltage, ts_with_ms, dev.ID,
+                                                                      dev.rssi, dev.count)))
+                    logger.info('  >  ' + device_list)
+
+        # update badge object to hold latest timestamps
+        last_scan = bdg.dlg.scans[-1]
+        logger.debug("Setting last badge proximity timestamp to {}".format(last_scan.ts))
+        bdg.last_proximity_ts = last_scan.ts
+    else:
+        logger.info("No proximity scans ready")
 
 
 def scan_for_devices(devices_whitelist):
