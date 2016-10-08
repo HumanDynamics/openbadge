@@ -156,53 +156,30 @@ def create_badge_manager_instance(mode):
         mgr = BadgeManagerStandalone(logger=logger)
     return mgr
 
+
 def reset():
     reset_command = "hciconfig hci0 reset"
     args = shlex.split(reset_command)
     p = subprocess.Popen(args)
 
 
-def add_pull_command_options(subparsers):
-    pull_parser = subparsers.add_parser('pull', help='Continuously pull data from badges')
-    pull_parser.add_argument('--d', choices=('audio', 'proximity', 'both'), required=False,
-                             help='data activation option')
-
-def add_scan_command_options(subparsers):
-    pull_parser = subparsers.add_parser('scan', help='Continuously scan for badges')
-
-
-def add_sync_all_command_options(subparsers):
-    sa_parser = subparsers.add_parser('sync_all', help='Send date to all devices in whitelist')
-
-
-def add_sync_device_command_options(subparsers):
-    sd_parser = subparsers.add_parser('sync_device', help='Send date to a given device')
-    sd_parser.add_argument('-d',
-                           '--device',
-                           required=True,
-                           action='store',
-                           dest='device',
-                           help='device to sync')
-
-
-def add_start_all_command_options(subparsers):
-    st_parser = subparsers.add_parser('start_all', help='Start recording on all devices in whitelist')
-    st_parser.add_argument('-w','--use_whitelist', action='store_true', default=False, help="Use whitelist instead of continuously scanning for badges")
-
-
-def pull_devices(mgr, data_activation):
+def pull_devices(mgr, start_recording):
     logger.info('Started pulling')
     activate_audio = False
     activate_proximity = False
-    if data_activation is None or data_activation == "both":
-        activate_audio = True
-        activate_proximity = True
-    elif data_activation == "audio":
-        activate_audio = True
-    elif data_activation == "proximity":
-        activate_proximity = True
 
-    logger.info("Data activation: Audio = {}, Proximity = {}".format(activate_audio,activate_proximity))
+    if start_recording is None or start_recording == "both":
+        activate_audio = True
+        activate_proximity = True
+    elif start_recording == "audio":
+        activate_audio = True
+    elif start_recording == "proximity":
+        activate_proximity = True
+    elif start_recording == "none":
+        activate_audio = False
+        activate_proximity = False
+
+    logger.info("Start recording: Audio = {}, Proximity = {}".format(activate_audio,activate_proximity))
 
     while True:
         mgr.pull_badges_list()
@@ -262,14 +239,44 @@ def start_all_devices(mgr):
     time.sleep(2)  # allow BLE time to disconnect
 
 
+def add_pull_command_options(subparsers):
+    pull_parser = subparsers.add_parser('pull', help='Continuously pull data from badges')
+    pull_parser.add_argument('-r','--start_recording'
+                             , choices=('audio', 'proximity', 'both','none'), required=False
+                             , default='both'
+                             , dest='start_recording',help='data recording option')
+
+
+def add_scan_command_options(subparsers):
+    pull_parser = subparsers.add_parser('scan', help='Continuously scan for badges')
+
+
+def add_sync_all_command_options(subparsers):
+    sa_parser = subparsers.add_parser('sync_all', help='Send date to all devices in whitelist')
+
+
+def add_sync_device_command_options(subparsers):
+    sd_parser = subparsers.add_parser('sync_device', help='Send date to a given device')
+    sd_parser.add_argument('-d',
+                           '--device',
+                           required=True,
+                           action='store',
+                           dest='device',
+                           help='device to sync')
+
+
+def add_start_all_command_options(subparsers):
+    st_parser = subparsers.add_parser('start_all', help='Start recording on all devices in whitelist')
+
+
 if __name__ == "__main__":
     import time
     import argparse
 
     parser = argparse.ArgumentParser(description="Run scans, send dates, or continuously pull data")
     parser.add_argument('-dr','--disable_reset_ble', action='store_true', default=False, help="Do not reset BLE")
-    parser.add_argument('--m', choices=('server', 'standalone')
-                        , default='standalone'
+    parser.add_argument('-m','--hub_mode', choices=('server', 'standalone')
+                        , default='standalone', dest='hub_mode'
                         , help="Operation mode - standalone (using a configuration file) or a server")
 
     subparsers = parser.add_subparsers(help='Program mode (e.g. Scan, send dates, pull, scan etc.)', dest='mode')
@@ -281,7 +288,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    mgr = create_badge_manager_instance(args.m)
+    mgr = create_badge_manager_instance(args.hub_mode)
 
     if not args.disable_reset_ble:
         logger.info("Resetting BLE")
@@ -303,7 +310,7 @@ if __name__ == "__main__":
 
     # pull data from all devices
     if args.mode == "pull":
-        pull_devices(mgr, args.d)
+        pull_devices(mgr, args.start_recording)
 
     if args.mode == "start_all":
         start_all_devices(mgr)

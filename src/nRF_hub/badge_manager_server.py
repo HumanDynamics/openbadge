@@ -64,7 +64,7 @@ class BadgeManagerServer:
                 self.logger.info("Requesting device {} from server...".format(badge_key))
                 response = requests.get(BADGE(badge_key))
                 if response.ok:
-                    self.logger.debug("Received ({})...".format(response.json()))
+                    #self.logger.debug("Received ({})...".format(response.json()))
                     return self._jason_badge_to_object(response.json())
                 else:
                     raise Exception('Got a {} from the server'.format(response.status_code))
