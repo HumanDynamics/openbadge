@@ -12,6 +12,7 @@ class BadgeManagerStandalone():
         self._device_file = "device_macs.txt"
 
         self._init_ts, self._init_ts_fract = now_utc_epoch()
+        self._init_ts -= 5 * 60 # start pulling data from the 5 minutes
         logger.debug("Will request data since {} {}".format(self._init_ts,self._init_ts_fract))
 
     def _read_file(self,device_file):

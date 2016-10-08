@@ -568,7 +568,10 @@ class Badge():
 
             # proximity data request since time X
             self.logger.info("Requesting scans since {}".format(self.last_proximity_ts))
-            self.sendScanRequest(self.last_proximity_ts)
+            # Proximity "chunks" are always full.Therefore, we do not need ask for the last chunk again. Adding 1 sec
+            # to prevent it
+            proximity_ts = self.last_proximity_ts + 1
+            self.sendScanRequest(proximity_ts)
             wait_count = 0
             while True:
                 if self.dlg.gotEndOfScans == True:

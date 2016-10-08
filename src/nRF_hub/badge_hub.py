@@ -105,7 +105,7 @@ def dialogue(bdg, activate_audio, activate_proximity):
             with open(proximity_file_name, "a") as fout:
                 for scan in bdg.dlg.scans:
                     ts_with_ms = "%0.3f" % scan.ts
-                    logger.debug("SCAN: scan timestamp: {}, voltage: {}, number: {}".format(
+                    logger.debug("SCAN: scan timestamp: {}, voltage: {}, Devices in scan: {}".format(
                         ts_with_ms, scan.voltage, scan.numDevices))
                     if scan.devices:
                         device_list = ''
