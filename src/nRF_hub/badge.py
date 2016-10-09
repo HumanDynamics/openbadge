@@ -268,7 +268,7 @@ class BadgeAddressAdapter(logging.LoggerAdapter):
         return '[%s] %s' % (self.extra['addr'], msg), kwargs
 
 
-class Badge():
+class Badge:
     children = {}
 
     @property

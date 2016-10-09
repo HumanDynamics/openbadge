@@ -8,7 +8,8 @@ import shlex
 import subprocess
 
 import logging
-
+import json
+from time import time
 
 from badge import *
 from badge_discoverer import BadgeDiscoverer
@@ -69,6 +70,11 @@ def get_devices(device_file="device_macs.txt"):
 
     return devices
 
+
+def round_float_for_log(x):
+    return float("{0:.3f}".format(x))
+
+
 def dialogue(bdg, activate_audio, activate_proximity):
     """
     Attempts to read data from the device specified by the address. Reading is handled by gatttool.
@@ -86,16 +92,31 @@ def dialogue(bdg, activate_audio, activate_proximity):
         logger.info("Chunks received: {}".format(len(bdg.dlg.chunks)))
         logger.info("saving chunks to file")
 
-        # store in CSV file
+        # store in JSON file
         with open(audio_file_name, "a") as fout:
             for chunk in bdg.dlg.chunks:
-                ts_with_ms = '{}.{:03d}'.format(chunk.ts, chunk.fract)
-                logger.debug("CSV: Chunk timestamp: {}, Voltage: {}, Delay: {}, Samples in chunk: {}".format(
+                ts_with_ms = round_float_for_log(ts_and_fract_to_float(chunk.ts, chunk.fract))
+                log_line = {
+                    'type': "audio received",
+                    'log_timestamp': round_float_for_log(time.time()),
+                    'log_index': -1,  # need to find a good accumulator.
+                    'data': {
+                        'voltage': round_float_for_log(chunk.voltage),
+                        'timestamp': ts_with_ms,
+                        'sample_period': chunk.sampleDelay,
+                        'num_samples': len(chunk.samples),
+                        'samples': chunk.samples,
+                        'badge_address': addr,
+                        'member': bdg.key
+                    }
+                }
+
+                logger.debug("Chunk timestamp: {0:.3f}, Voltage: {1:.3f}, Delay: {2}, Samples in chunk: {3}".format(
                     ts_with_ms, chunk.voltage, chunk.sampleDelay, len(chunk.samples)))
-                fout.write(bytes("{},{},{},{}".format(addr, ts_with_ms, chunk.voltage, chunk.sampleDelay)))
-                for sample in chunk.samples:
-                    fout.write(",{}".format(sample))
-                fout.write("\n")
+                #logger.debug(json.dumps(log_line))
+                json.dump(log_line, fout)
+                fout.write('\n')
+
             logger.info("done writing")
 
         # update badge object to hold latest timestamps
@@ -110,16 +131,29 @@ def dialogue(bdg, activate_audio, activate_proximity):
         logger.info("saving proximity scans to file")
         with open(proximity_file_name, "a") as fout:
             for scan in bdg.dlg.scans:
-                ts_with_ms = "%0.3f" % scan.ts
-                logger.debug("SCAN: scan timestamp: {}, voltage: {}, Devices in scan: {}".format(
+                ts_with_ms = round_float_for_log(scan.ts)
+                log_line = {
+                    'type': "proximity received",
+                    'log_timestamp': round_float_for_log(time.time()),
+                    'log_index': -1,  # need to find a good accumulator.
+                    'data': {
+                        'voltage': round_float_for_log(scan.voltage),
+                        'timestamp': ts_with_ms,
+                        'badge_address': addr,
+                        'rssi_distances':
+                            {
+                                device.ID: {'rrsi': device.rssi, 'count': device.count} for device in scan.devices
+                                },
+                        'member': bdg.key
+                    }
+                }
+
+                logger.debug("SCAN: scan timestamp: {0:.3f}, voltage: {1:.3f}, Devices in scan: {2}".format(
                     ts_with_ms, scan.voltage, scan.numDevices))
-                if scan.devices:
-                    device_list = ''
-                    for dev in scan.devices:
-                        device_list += "[#{:x},{},{}]".format(dev.ID, dev.rssi, dev.count)
-                        fout.write(bytes("{},{},{},{},{},{}\n".format(addr, scan.voltage, ts_with_ms, dev.ID,
-                                                                      dev.rssi, dev.count)))
-                    logger.info('  >  ' + device_list)
+                #logger.info(json.dumps(log_line))
+
+                json.dump(log_line, fout)
+                fout.write('\n')
 
         # update badge object to hold latest timestamps
         last_scan = bdg.dlg.scans[-1]
@@ -255,16 +289,6 @@ def add_sync_all_command_options(subparsers):
     sa_parser = subparsers.add_parser('sync_all', help='Send date to all devices in whitelist')
 
 
-def add_sync_device_command_options(subparsers):
-    sd_parser = subparsers.add_parser('sync_device', help='Send date to a given device')
-    sd_parser.add_argument('-d',
-                           '--device',
-                           required=True,
-                           action='store',
-                           dest='device',
-                           help='device to sync')
-
-
 def add_start_all_command_options(subparsers):
     st_parser = subparsers.add_parser('start_all', help='Start recording on all devices in whitelist')
 
@@ -283,7 +307,6 @@ if __name__ == "__main__":
     add_pull_command_options(subparsers)
     add_scan_command_options(subparsers)
     add_sync_all_command_options(subparsers)
-    add_sync_device_command_options(subparsers)
     add_start_all_command_options(subparsers)
 
     args = parser.parse_args()
@@ -295,11 +318,6 @@ if __name__ == "__main__":
         reset()
         time.sleep(2)  # requires sleep after reset
         logger.info("Done resetting BLE")
-
-    if args.mode == "sync_device":
-        badge = Badge(args.device, logger)
-        badge.sync_timestamp()
-        del badge
 
     if args.mode == "sync_all":
         sync_all_devices(mgr)
