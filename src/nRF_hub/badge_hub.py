@@ -142,7 +142,7 @@ def dialogue(bdg, activate_audio, activate_proximity):
                         'badge_address': addr,
                         'rssi_distances':
                             {
-                                device.ID: {'rrsi': device.rssi, 'count': device.count} for device in scan.devices
+                                device.ID: {'rssi': device.rssi, 'count': device.count} for device in scan.devices
                                 },
                         'member': bdg.key
                     }
@@ -177,7 +177,8 @@ def scan_for_devices(devices_whitelist):
             logger.debug("\033[1;7m\033[1;32mFound {}, added. Device info: {}\033[0m".format(addr, device_info))
             scanned_devices.append({'mac':addr,'device_info':device_info})
         else:
-            logger.debug("Found {}, but not on whitelist. Device info: {}".format(addr, device_info))
+            #logger.debug("Found {}, but not on whitelist. Device info: {}".format(addr, device_info))
+            pass
 
     time.sleep(2)  # requires sometimes to prevent connection from failing
     return scanned_devices

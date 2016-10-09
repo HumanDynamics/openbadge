@@ -313,7 +313,7 @@ class Badge:
         if self.__audio_ts is not None:
             new_d = audio_ts_int * 1000 + audio_ts_fract
             old_d = self.last_audio_ts_int * 1000 + self.last_audio_ts_fract
-            if new_d > old_d:
+            if new_d >= old_d:
                 return True
             else:
                 return False
