@@ -39,6 +39,58 @@ void scanner_init()
     //scan_state = SCAN_IDLE;
 }
 
+static ble_gap_evt_adv_report_t get_mock_adv_report_for_badge_with_id(uint8_t id) {
+    // Generate MAC address based on id.
+    uint8_t peer_addr_based_on_id[6] = {0xAA, 0xBB, 0xCC, 0xDD, 0xEE, id};
+
+    ble_gap_evt_adv_report_t mock_adv_report;
+
+    mock_adv_report.peer_addr.addr_type = BLE_GAP_ADDR_TYPE_PUBLIC;
+    memcpy(mock_adv_report.peer_addr.addr, peer_addr_based_on_id, sizeof(mock_adv_report.peer_addr.addr));
+
+    // Our mock reports are used to simulate scanning, so we don't need to include
+    // a report_type.
+    mock_adv_report.scan_rsp = 1;
+    mock_adv_report.rssi = -100 + id;
+
+    // Create a mock device name.
+    typedef struct {
+        uint8_t name_length;
+        uint8_t name_type;
+        char name[sizeof(DEVICE_NAME)];
+    }__attribute__((packed)) badge_name_data_t;
+
+    badge_name_data_t badge_name_data;
+    badge_name_data.name_length = sizeof(DEVICE_NAME);
+    badge_name_data.name_type = BLE_GAP_AD_TYPE_COMPLETE_LOCAL_NAME;
+    memcpy(badge_name_data.name, DEVICE_NAME, sizeof(DEVICE_NAME));
+
+    // Create mock custom manufacturer data for a badge.
+    typedef struct {
+        uint8_t manufacturer_data_len;
+        uint8_t data_type;
+        uint16_t company_id;
+        custom_adv_data_t manufacturer_data;
+    }__attribute__((packed)) manufacturer_adv_data_t;
+
+    manufacturer_adv_data_t mock_manufacturer_adv_data;
+    mock_manufacturer_adv_data.data_type = BLE_GAP_AD_TYPE_MANUFACTURER_SPECIFIC_DATA;
+    mock_manufacturer_adv_data.company_id = 0xFF;
+    mock_manufacturer_adv_data.manufacturer_data_len = 14;
+
+    mock_manufacturer_adv_data.manufacturer_data.battery = 90;
+    mock_manufacturer_adv_data.manufacturer_data.group = badgeAssignment.group;
+    mock_manufacturer_adv_data.manufacturer_data.ID = id;
+    memcpy(mock_manufacturer_adv_data.manufacturer_data.MAC, peer_addr_based_on_id, sizeof(peer_addr_based_on_id));
+    mock_manufacturer_adv_data.manufacturer_data.statusFlags = 0x00;
+
+    // Copy device name and manufacturer data into report advertising data.
+    memcpy(&mock_adv_report.data[0], &badge_name_data, sizeof(badge_name_data_t));
+    memcpy(&mock_adv_report.data[sizeof(badge_name_data)], &mock_manufacturer_adv_data, sizeof(mock_manufacturer_adv_data));
+    mock_adv_report.dlen = sizeof(badge_name_data) + sizeof(mock_manufacturer_adv_data);
+
+    return mock_adv_report;
+}
 
 uint32_t startScan()
 {
@@ -93,7 +145,7 @@ void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
             memcpy(&badgeAdvData,&manufDataPtr[2],CUSTOM_ADV_DATA_LEN);  // skip past company ID; ensure data is properly aligned
             ID = badgeAdvData.ID;
             group = badgeAdvData.group;
-            debug_log("---Badge seen: group %d, ID %.4X, rssi %d.\r\n",(int)group,(int)ID,(int)rssi);
+            //debug_log("---Badge seen: group %d, ID %.4X, rssi %d.\r\n",(int)group,(int)ID,(int)rssi);
         }
     }
     else if (manufDataLen == IBEACON_MANUF_DATA_LEN)  {
@@ -110,7 +162,7 @@ void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
         }
     }
     
-    if (ID != BAD_ID && group == badgeAssignment.group)  {
+    if (ID != BAD_ID && group == badgeAssignment.group && scan.num < MAX_SCAN_RESULTS)  {
         bool prevSeen = false;
         for(int i=0; i<scan.num; i++)  {      // check through list of already seen badges
             if(ID == scan.IDs[i])  {
@@ -251,6 +303,48 @@ void BLEonScanTimeout()
     scan_state = SCANNER_SAVE;
 }
 
+// Compare function for stdlib's QuickSort function that will sort a list of seenDevice_t by RSSI descendingly.
+// More information can be found here: http://www.cplusplus.com/reference/cstdlib/qsort/
+static int compareSeenDeviceByRSSI(const void * a, const void * b) {
+    seenDevice_t * seenDeviceA = (seenDevice_t *) a;
+    seenDevice_t * seenDeviceB = (seenDevice_t *) b;
+
+    if (seenDeviceA->rssi > seenDeviceB->rssi) {
+        return -1;
+    } else if (seenDeviceA->rssi == seenDeviceB->rssi) {
+        return 0;
+    } else if (seenDeviceA->rssi < seenDeviceB->rssi) {
+        return 1;
+    }
+
+    // We should never get here?
+    APP_ERROR_CHECK_BOOL(false);
+
+    return -1;
+}
+
+// This function is kind of hacky.
+// It sorts our global scan variable in place descendingly according to RSSI.
+// It's written this way so we can easily put it into the existing codebase with minimal changes.
+static void sortScanByRSSIDescending(void) {
+    seenDevice_t seenDevices[MAX_SCAN_RESULTS];
+
+    // Convert scan into an array of structs for sorting.
+    for (int i = 0; i < scan.num; i++) {
+        seenDevices[i].ID = scan.IDs[i];
+        seenDevices[i].rssi = (scan.rssiSums[i] / scan.counts[i]);
+        seenDevices[i].count = scan.counts[i];
+    }
+
+    // Sort seen devices in place
+    qsort(seenDevices, (size_t) scan.num, sizeof(seenDevice_t), compareSeenDeviceByRSSI);
+
+    for (int i = 0; i < scan.num; i++) {
+        scan.IDs[i] = seenDevices[i].ID;
+        scan.rssiSums[i] = seenDevices[i].rssi * seenDevices[i].count;
+        scan.counts[i] = seenDevices[i].count;
+    }
+}
 
 bool updateScanner()
 {
@@ -267,6 +361,11 @@ bool updateScanner()
                     if(result == NRF_SUCCESS)  {
                         scan_state = SCANNER_SCANNING;
                         debug_log("SCANNER: Started scan.\r\n");
+
+                        for (int i = 0; i < 105; i++) {
+                            ble_gap_evt_adv_report_t adv_report = get_mock_adv_report_for_badge_with_id(i);
+                            BLEonAdvReport(&adv_report);
+                        }
                     }
                     else  {
                         debug_log("ERR: error starting scan, #%u\r\n",(unsigned int)result);
@@ -287,6 +386,16 @@ bool updateScanner()
         
         int numSaved = 0;
         int chunksUsed = 0;
+
+        if (scan.num > SCAN_DEVICES_PER_CHUNK) {
+            // We have scanned more devices than we can store in a chunk, prune off the top SCAN_DEVICES_PER_CHUNK
+            //   devices by RSSI values
+            // This requirement is in place because even though we can currently handle storing > SCAN_DEVICES_PER_CHUNK,
+            //   these chunks break the sender.
+            sortScanByRSSIDescending();
+            debug_log("SCANNER: Pruned %d devices with low RSSI\r\n", scan.num - SCAN_DEVICES_PER_CHUNK);
+            scan.num = SCAN_DEVICES_PER_CHUNK;
+        }
         
         do  {
             // Fill chunk header
