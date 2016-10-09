@@ -39,6 +39,7 @@ void scanner_init()
     //scan_state = SCAN_IDLE;
 }
 
+
 uint32_t startScan()
 {
     sd_ble_gap_scan_stop();  // stop any in-progress scans
@@ -92,7 +93,7 @@ void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
             memcpy(&badgeAdvData,&manufDataPtr[2],CUSTOM_ADV_DATA_LEN);  // skip past company ID; ensure data is properly aligned
             ID = badgeAdvData.ID;
             group = badgeAdvData.group;
-            //debug_log("---Badge seen: group %d, ID %.4X, rssi %d.\r\n",(int)group,(int)ID,(int)rssi);
+            debug_log("---Badge seen: group %d, ID %.4X, rssi %d.\r\n",(int)group,(int)ID,(int)rssi);
         }
     }
     else if (manufDataLen == IBEACON_MANUF_DATA_LEN)  {
