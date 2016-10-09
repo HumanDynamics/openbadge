@@ -258,11 +258,11 @@ static int compareSeenDeviceByRSSI(const void * a, const void * b) {
     seenDevice_t * seenDeviceB = (seenDevice_t *) b;
 
     if (seenDeviceA->rssi > seenDeviceB->rssi) {
-        return -1;
+        return -1; // We want device A before device B in our list.
     } else if (seenDeviceA->rssi == seenDeviceB->rssi) {
-        return 0;
+        return 0; // We don't care whether deviceA or deviceB comes first.
     } else if (seenDeviceA->rssi < seenDeviceB->rssi) {
-        return 1;
+        return 1; // We want device A to come after device B in our list.
     }
 
     // We should never get here?
