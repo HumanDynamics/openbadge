@@ -110,7 +110,7 @@ void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
         }
     }
     
-    if (ID != BAD_ID && group == badgeAssignment.group)  {
+    if (ID != BAD_ID && group == badgeAssignment.group && scan.num < MAX_SCAN_RESULTS)  {
         bool prevSeen = false;
         for(int i=0; i<scan.num; i++)  {      // check through list of already seen badges
             if(ID == scan.IDs[i])  {
@@ -251,6 +251,48 @@ void BLEonScanTimeout()
     scan_state = SCANNER_SAVE;
 }
 
+// Compare function for stdlib's QuickSort function that will sort a list of seenDevice_t by RSSI descendingly.
+// More information can be found here: http://www.cplusplus.com/reference/cstdlib/qsort/
+static int compareSeenDeviceByRSSI(const void * a, const void * b) {
+    seenDevice_t * seenDeviceA = (seenDevice_t *) a;
+    seenDevice_t * seenDeviceB = (seenDevice_t *) b;
+
+    if (seenDeviceA->rssi > seenDeviceB->rssi) {
+        return -1; // We want device A before device B in our list.
+    } else if (seenDeviceA->rssi == seenDeviceB->rssi) {
+        return 0; // We don't care whether deviceA or deviceB comes first.
+    } else if (seenDeviceA->rssi < seenDeviceB->rssi) {
+        return 1; // We want device A to come after device B in our list.
+    }
+
+    // We should never get here?
+    APP_ERROR_CHECK_BOOL(false);
+
+    return -1;
+}
+
+// This function is kind of hacky.
+// It sorts our global scan variable in place descendingly according to RSSI.
+// It's written this way so we can easily put it into the existing codebase with minimal changes.
+static void sortScanByRSSIDescending(void) {
+    seenDevice_t seenDevices[MAX_SCAN_RESULTS];
+
+    // Convert scan into an array of structs for sorting.
+    for (int i = 0; i < scan.num; i++) {
+        seenDevices[i].ID = scan.IDs[i];
+        seenDevices[i].rssi = (scan.rssiSums[i] / scan.counts[i]);
+        seenDevices[i].count = scan.counts[i];
+    }
+
+    // Sort seen devices in place
+    qsort(seenDevices, (size_t) scan.num, sizeof(seenDevice_t), compareSeenDeviceByRSSI);
+
+    for (int i = 0; i < scan.num; i++) {
+        scan.IDs[i] = seenDevices[i].ID;
+        scan.rssiSums[i] = seenDevices[i].rssi * seenDevices[i].count;
+        scan.counts[i] = seenDevices[i].count;
+    }
+}
 
 bool updateScanner()
 {
@@ -287,6 +329,16 @@ bool updateScanner()
         
         int numSaved = 0;
         int chunksUsed = 0;
+
+        if (scan.num > SCAN_DEVICES_PER_CHUNK) {
+            // We have scanned more devices than we can store in a chunk, prune off the top SCAN_DEVICES_PER_CHUNK
+            //   devices by RSSI values
+            // This requirement is in place because even though we can currently handle storing > SCAN_DEVICES_PER_CHUNK,
+            //   these chunks break the sender.
+            sortScanByRSSIDescending();
+            debug_log("SCANNER: Pruned %d devices with low RSSI\r\n", scan.num - SCAN_DEVICES_PER_CHUNK);
+            scan.num = SCAN_DEVICES_PER_CHUNK;
+        }
         
         do  {
             // Fill chunk header
