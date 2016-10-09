@@ -299,7 +299,8 @@ class Badge:
 
     def set_audio_ts(self, audio_ts_int, audio_ts_fract):
         if not self.is_newer_audio_ts(audio_ts_int, audio_ts_fract):
-            raise ValueError('Trying to update last_audio_ts with old value')
+            raise ValueError('Trying to update last_audio_ts ({}.{}) with old value ({}.{})'.format(
+                self.last_audio_ts_int, self.last_audio_ts_fract, audio_ts_int, audio_ts_fract))
 
         self.__audio_ts = {'last_audio_ts_int': audio_ts_int, 'last_audio_ts_fract': audio_ts_fract}
 
@@ -313,7 +314,7 @@ class Badge:
         if self.__audio_ts is not None:
             new_d = audio_ts_int * 1000 + audio_ts_fract
             old_d = self.last_audio_ts_int * 1000 + self.last_audio_ts_fract
-            if new_d >= old_d:
+            if new_d > old_d:
                 return True
             else:
                 return False

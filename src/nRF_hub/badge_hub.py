@@ -122,7 +122,13 @@ def dialogue(bdg, activate_audio, activate_proximity):
         # update badge object to hold latest timestamps
         last_chunk = bdg.dlg.chunks[-1]
         logger.debug("Setting last badge audio timestamp to {} {}".format(last_chunk.ts, last_chunk.fract))
-        bdg.set_audio_ts(last_chunk.ts, last_chunk.fract)
+        if bdg.is_newer_audio_ts(last_chunk.ts, last_chunk.fract):
+            bdg.set_audio_ts(last_chunk.ts, last_chunk.fract)
+        else:
+            logger.debug("Keeping existing timestamp ({}.{}) for {}. Last chunk timestamp was: {}.{}"
+                              .format(bdg.last_audio_ts_int,bdg.last_audio_ts_fract,bdg.addr, last_chunk.ts, last_chunk.fract))
+
+
     else:
         logger.info("No mic data ready")
 
