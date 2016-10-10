@@ -416,6 +416,7 @@ void BLEresume(ble_pauseReq_src source)
         if(pauseRequest[src]) return;  // if any pending pause requests, don't restart advertising
     }
     // If no pending pause requests, restart advertising.
+    if (needAdvDataUpdate) setAdvData();
     BLEstartAdvertising();
 }
 
