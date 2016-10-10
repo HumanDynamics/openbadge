@@ -379,3 +379,9 @@ flashNew: flashUnlock.jlink flashErase.jlink flashS130.jlink flashAPP.jlink
 	$(JLINK) $(OBJECT_DIRECTORY)/flashS130.jlink
 	$(JLINK) $(OBJECT_DIRECTORY)/flashAPP.jlink
 
+#only loads code
+flashCode: flashErase.jlink flashS130.jlink flashAPP.jlink
+	$(JLINK) $(OBJECT_DIRECTORY)/flashErase.jlink
+	$(JLINK) $(OBJECT_DIRECTORY)/flashS130.jlink
+	$(JLINK) $(OBJECT_DIRECTORY)/flashAPP.jlink
+

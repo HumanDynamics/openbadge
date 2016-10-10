@@ -1,18 +1,20 @@
 #!/bin/bash
 
 DEV=/dev/ttyACM0
+COMPILE_CMD=""
+LOAD_CMD=""
 
-flash_tester() {
+load() {
 	pushd .
 	cd ../data_collector
-	make flashNew
+	make ${LOAD_CMD}
 	popd
 }
 
-compile_tester() {
+compile() {
 	pushd .
 	cd ../data_collector
-	make badge_03v4_tester
+	make ${COMPILE_CMD}
 	popd
 }
 
@@ -39,15 +41,44 @@ get_mac() {
 	./getMAC | tail -1 | tee -a macs.log
 }
 
+if [[ $# -ne 1 ]]
+then
+    echo "use: programming_loop.sh [test|prod]"
+    echo "Where test loads the tester code, and prod loads the final code"
+    exit 1
+fi
+
+mode="$1"
+case $mode in
+    test)
+    COMPILE_CMD="badge_03v4_tester"
+    LOAD_CMD="flashNew"
+    shift # past argument
+    ;;
+    prod)
+    COMPILE_CMD="badge_03v4_noDebug"
+    LOAD_CMD="flashCode"
+    shift # past argument
+    ;;
+    *)
+            # unknown option
+            echo "Unknown option"
+            exit 1
+    ;;
+esac
+shift
+echo "Using parameters: ${COMPILE_CMD} ${LOAD_CMD}"
+
 # make code
-compile_tester
+compile
+
 
 while [ 1 == 1 ]
 do
 	echo "########## Starting new device #######"
 	# wait for device to appear
 	wait_while_device_not_exists
-	flash_tester
+	load
 	get_mac
 	wait_while_device_exists
 done
