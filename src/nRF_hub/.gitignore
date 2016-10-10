@@ -5,3 +5,4 @@ log_proximity.txt
 log_audio.txt
 data.db
 *.log
+.env

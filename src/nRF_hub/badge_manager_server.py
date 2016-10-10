@@ -1,8 +1,9 @@
+from __future__ import absolute_import, division, print_function
 import requests
 import time
 
 from badge import *
-from server import BADGE, BADGES
+from server import BADGE_ENDPOINT, BADGES_ENDPOINT
 
 
 class BadgeManagerServer:
@@ -32,7 +33,7 @@ class BadgeManagerServer:
         while not done:
             try:
                 self.logger.info("Requesting devices from server...")
-                response = requests.get(BADGES)
+                response = requests.get(BADGES_ENDPOINT)
                 if response.ok:
                     self.logger.info("Updating devices list ({})...".format(len(response.json())))
                     for d in response.json():
@@ -62,7 +63,7 @@ class BadgeManagerServer:
         while not done:
             try:
                 self.logger.info("Requesting device {} from server...".format(badge_key))
-                response = requests.get(BADGE(badge_key))
+                response = requests.get(BADGE_ENDPOINT(badge_key))
                 if response.ok:
                     #self.logger.debug("Received ({})...".format(response.json()))
                     return self._jason_badge_to_object(response.json())
@@ -157,7 +158,7 @@ class BadgeManagerServer:
             }
 
             self.logger.debug("Sending update badge data to server, badge {} : {}".format(badge.key, data))
-            response = requests.patch(BADGE(badge.key), data=data)
+            response = requests.patch(BADGE_ENDPOINT(badge.key), data=data)
             if response.ok is False:
                 if response.status_code == 400:
                     self.logger.debug("Server had more recent date, badge {} : {}".format(badge.key, response.text))
@@ -188,4 +189,4 @@ if __name__ == "__main__":
         mgr.send_badge(mac)
 
     b1 = mgr.pull_badge(mac)
-    print b1
+    print(b1)

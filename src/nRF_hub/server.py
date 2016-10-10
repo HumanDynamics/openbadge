@@ -1,11 +1,17 @@
 # Defining end points for backend-server
+from __future__ import absolute_import, division, print_function
+import settings
 
-SERVER = 'http://localhost:8000/'
-BADGES = '{}badges/'.format(SERVER)
-# BADGE = lambda x: 'badges/{}/'.format(x)
+SERVER = 'http://'+settings.BADGE_SERVER_ADDR+':'+settings.BADGE_SERVER_PORT+'/'
+BADGES_ENDPOINT = '{}badges/'.format(SERVER)
 
 
 def _badge(x):
-    return '{}{}/'.format(BADGES, x)
+    """
+    Generates endpoint for a given badge
+    :param x:
+    :return:
+    """
+    return '{}{}/'.format(BADGES_ENDPOINT, x)
 
-BADGE = _badge
+BADGE_ENDPOINT = _badge
