@@ -312,6 +312,7 @@ echosize:
 
 clean:
 	$(RM) $(BUILD_DIRECTORIES)
+	mkdir -p $(OBJECT_DIRECTORY)
 
 cleanobj:
 	$(RM) $(BUILD_DIRECTORIES)/*.o
@@ -342,7 +343,7 @@ flashUnlock: clean flashUnlock.jlink
 
 #create flash unlocking script for JLinkExe.
 flashUnlock.jlink:
-	printf "w4 4001e504 2\nw4 4001e50c 1\nexit\n" > $(OBJECT_DIRECTORY)/flashUnlock.jlink	
+	printf "w4 4001e504 2\nw4 4001e50c 1\nSleep 100\nr\ng\nexit\n" > $(OBJECT_DIRECTORY)/flashUnlock.jlink	
 	
 	
 #build and flash firmware
@@ -370,3 +371,17 @@ flashErase: flashErase.jlink
 #create flash erasing for JLinkExe
 flashErase.jlink:
 	printf "erase\nr\ng\nexit\n" > $(OBJECT_DIRECTORY)/flashErase.jlink	
+
+#runs the complete sequence for a new badge
+flashNew: flashUnlock.jlink flashErase.jlink flashS130.jlink flashAPP.jlink
+	$(JLINK) $(OBJECT_DIRECTORY)/flashUnlock.jlink
+	$(JLINK) $(OBJECT_DIRECTORY)/flashErase.jlink
+	$(JLINK) $(OBJECT_DIRECTORY)/flashS130.jlink
+	$(JLINK) $(OBJECT_DIRECTORY)/flashAPP.jlink
+
+#only loads code
+flashCode: flashErase.jlink flashS130.jlink flashAPP.jlink
+	$(JLINK) $(OBJECT_DIRECTORY)/flashErase.jlink
+	$(JLINK) $(OBJECT_DIRECTORY)/flashS130.jlink
+	$(JLINK) $(OBJECT_DIRECTORY)/flashAPP.jlink
+
