@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+
+from __future__ import absolute_import, division, print_function
+
 from bluepy import btle
 from bluepy.btle import UUID, Peripheral, DefaultDelegate, AssignedNumbers
 import struct
@@ -66,7 +70,7 @@ class SimpleDelegate(DefaultDelegate):
         DefaultDelegate.__init__(self)
 
     def handleNotification(self, cHandle, data):
-        print repr(data)
+        print(repr(data))
 
 class Nrf(Peripheral):
     def __init__(self,addr):
@@ -102,7 +106,7 @@ if __name__ == "__main__":
                 address = [result[i] for i in range(6)]  #get address as list
                 strength = result[6]  #get signal strength
                 print address, strength '''
-                print "reading: {}".format(struct.unpack('<L',nrf.NrfReadWrite.read()))
+                print("reading: {}".format(struct.unpack('<L',nrf.NrfReadWrite.read())))
         while 1:
             pass
         '''

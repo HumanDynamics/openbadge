@@ -1,5 +1,6 @@
-from __future__ import division
-from __future__ import print_function
+#!/usr/bin/env python
+
+from __future__ import absolute_import, division, print_function
 
 from bluepy import btle
 from bluepy.btle import UUID, Peripheral, DefaultDelegate, AssignedNumbers
@@ -15,12 +16,11 @@ from math import floor
 import datetime
 import signal
 import traceback
-import time
 
 WAIT_FOR = 1.0  # timeout for WaitForNotification calls.  Must be > samplePeriod of badge
 PULL_WAIT = 2
 
-RECORDING_TIMEOUT = 10
+RECORDING_TIMEOUT = 3*60 # minutes
 
 # Scan settings. See documentation for more details
 SCAN_WINDOW = 100
@@ -199,9 +199,9 @@ class BadgeDelegate(DefaultDelegate):
                 self.expected = Expect.none
                 pass
             else:
-                self.tempChunk.ts = ts_and_fract_to_float(self.tempChunk.ts, self.tempChunk.fract)
-
+                # self.tempChunk.ts = ts_and_fract_to_float(self.tempChunk.ts, self.tempChunk.fract)
                 self.expected = Expect.samples
+
         elif self.expected == Expect.samples: # just samples
             sample_arr = struct.unpack('<%dB' % len(data),data) # Nrfuino bytes are unsigned bytes
             self.tempChunk.addData(sample_arr)
@@ -267,17 +267,78 @@ class BadgeAddressAdapter(logging.LoggerAdapter):
     def process(self, msg, kwargs):
         return '[%s] %s' % (self.extra['addr'], msg), kwargs
 
-class Badge():
-    def __init__(self, addr,logger):
+
+class Badge:
+    children = {}
+
+    @property
+    def last_proximity_ts(self):
+        return self.__last_proximity_ts
+
+    @last_proximity_ts.setter
+    def last_proximity_ts(self, value):
+        if value < self.__last_proximity_ts:
+            raise ValueError('Trying to last_proximity_ts with an old value')
+        self.__last_proximity_ts = value
+
+    @property
+    def last_audio_ts_int(self):
+        return self.__audio_ts['last_audio_ts_int']
+
+    @last_audio_ts_int.setter
+    def last_audio_ts_int(self, value):
+        raise ValueError('Use set_audio_ts to update this property')
+
+    @property
+    def last_audio_ts_fract(self):
+        return self.__audio_ts['last_audio_ts_fract']
+
+    @last_audio_ts_fract.setter
+    def last_audio_ts_fract(self, value):
+        raise ValueError('Use set_audio_ts to update this property')
+
+    def set_audio_ts(self, audio_ts_int, audio_ts_fract):
+        if not self.is_newer_audio_ts(audio_ts_int, audio_ts_fract):
+            msg = 'Badge {} : Trying to update last_audio_ts ({}.{}) with old value ({}.{})'.format(
+                self.addr, self.last_audio_ts_int, self.last_audio_ts_fract, audio_ts_int, audio_ts_fract)
+            self.logger.error(msg)
+            raise ValueError(msg)
+
+        self.__audio_ts = {'last_audio_ts_int': audio_ts_int, 'last_audio_ts_fract': audio_ts_fract}
+
+    def is_newer_audio_ts(self, audio_ts_int, audio_ts_fract):
+        '''
+        Checks whether the given ts is newer than the one held by the badge
+        :param audio_ts_int:
+        :param audio_ts_fract:
+        :return:
+        '''
+        if self.__audio_ts is not None:
+            new_d = audio_ts_int * 1000 + audio_ts_fract
+            old_d = self.last_audio_ts_int * 1000 + self.last_audio_ts_fract
+            if new_d > old_d:
+                return True
+            else:
+                return False
+        else:
+            # no value is set yetyet
+            return True
+
+    def __init__(self, addr,logger, key, init_audio_ts_int=None, init_audio_ts_fract=None, init_proximity_ts=None):
+        #if self.children.get(key):
+        #    return self.children.get(key)
+        self.children[key] = self
+        self.key = key
         self.addr = addr
         self.logger = adapter = BadgeAddressAdapter(logger, {'addr': addr})
         self.dlg = None
         self.conn = None
         self.connDialogue = BadgeDialogue(self)
 
-        self.last_proximity_ts = None
-        self.last_audio_ts = None
-        self.last_audio_ts_fract = None
+        self.__audio_ts = None
+
+        self.set_audio_ts(init_audio_ts_int, init_audio_ts_fract)
+        self.__last_proximity_ts = init_proximity_ts
 
     def connect(self):
         self.logger.info("Connecting to {}".format(self.addr))
@@ -290,11 +351,6 @@ class Badge():
             self.conn.disconnect()
         else:
             self.logger.info("Can't disconnect from {}. Not connected".format(self.addr))
-
-    def set_last_ts(self, init_audio_ts, init_audio_ts_fract, init_proximity_ts):
-        self.last_audio_ts = init_audio_ts
-        self.last_audio_ts_fract = init_audio_ts_fract
-        self.last_proximity_ts = init_proximity_ts
 
     # sends status request with UTC time to the badge
     def sendStatusRequest(self):
@@ -453,7 +509,7 @@ class Badge():
 
         return retcode
 
-    def pull_data(self):
+    def pull_data(self, activate_audio, activate_proximity):
         """
         Attempts to read data from the device
         """
@@ -464,42 +520,43 @@ class Badge():
 
             self.logger.info("Connected")
 
-            # Starting audio rec
-            self.logger.info("Starting audio recording")
-            with timeout(seconds=5, error_message="StartRec timeout (wrong firmware version?)"):
-                while not self.dlg.gotTimestamp:
-                    self.sendStartRecRequest(RECORDING_TIMEOUT)  # start recording
-                    self.conn.waitForNotifications(WAIT_FOR)  # waiting for time acknowledgement
+            if activate_audio:
+                # Starting audio rec
+                self.logger.info("Starting audio recording")
+                with timeout(seconds=5, error_message="StartRec timeout (wrong firmware version?)"):
+                    while not self.dlg.gotTimestamp:
+                        self.sendStartRecRequest(RECORDING_TIMEOUT)  # start recording
+                        self.conn.waitForNotifications(WAIT_FOR)  # waiting for time acknowledgement
 
-                self.logger.info("Got time ack")
+                    self.logger.info("Got time ack")
 
-                if self.dlg.timestamp_sec != 0:
-                    self.logger.info("Badge datetime was: {},{}".format(self.dlg.timestamp_sec, self.dlg.timestamp_ms))
-                else:
-                    self.logger.info("Badge previously unsynced.")
+                    if self.dlg.timestamp_sec != 0:
+                        self.logger.info("Badge datetime was: {},{}".format(self.dlg.timestamp_sec, self.dlg.timestamp_ms))
+                    else:
+                        self.logger.info("Badge previously unsynced.")
 
             # Reset flag (hacky)
             self.dlg.gotTimestamp = False
 
-            # Starting scans
-            self.logger.info("Starting proximity scans")
-            with timeout(seconds=5, error_message="StartScan timeout (wrong firmware version?)"):
-                while not self.dlg.gotTimestamp:
-                    self.sendStartScanRequest(RECORDING_TIMEOUT, SCAN_WINDOW, SCAN_INTERVAL, SCAN_DURATION, SCAN_PERIOD)
-                    self.conn.waitForNotifications(WAIT_FOR)  # waiting for time acknowledgement
+            if activate_proximity:
+                # Starting scans
+                self.logger.info("Starting proximity scans")
+                with timeout(seconds=5, error_message="StartScan timeout (wrong firmware version?)"):
+                    while not self.dlg.gotTimestamp:
+                        self.sendStartScanRequest(RECORDING_TIMEOUT, SCAN_WINDOW, SCAN_INTERVAL, SCAN_DURATION, SCAN_PERIOD)
+                        self.conn.waitForNotifications(WAIT_FOR)  # waiting for time acknowledgement
 
-                self.logger.info("Got time ack")
+                    self.logger.info("Got time ack")
 
-                if self.dlg.timestamp_sec != 0:
-                    self.logger.info("Badge datetime was: {},{}".format(self.dlg.timestamp_sec, self.dlg.timestamp_ms))
-                else:
-                    self.logger.info("Badge previously unsynced.")
+                    if self.dlg.timestamp_sec != 0:
+                        self.logger.info("Badge datetime was: {},{}".format(self.dlg.timestamp_sec, self.dlg.timestamp_ms))
+                    else:
+                        self.logger.info("Badge previously unsynced.")
 
 
-            # data request using the "r" command - data since time X
-            self.logger.info("Requesting data since {} {}".format(self.last_audio_ts, self.last_audio_ts_fract))
-
-            self.sendDataRequest(self.last_audio_ts, self.last_audio_ts_fract)  # ask for data
+            # audio data data request since time X
+            self.logger.info("Requesting data since {} {}".format(self.last_audio_ts_int, self.last_audio_ts_fract))
+            self.sendDataRequest(self.last_audio_ts_int, self.last_audio_ts_fract)  # ask for data
             wait_count = 0
             while True:
                 if self.dlg.gotEndOfData == True:
@@ -512,9 +569,12 @@ class Badge():
                 if wait_count >= PULL_WAIT: break
             self.logger.info("finished reading data")
 
-            # data request using the "r" command - data since time X
+            # proximity data request since time X
             self.logger.info("Requesting scans since {}".format(self.last_proximity_ts))
-            self.sendScanRequest(self.last_proximity_ts)
+            # Proximity "chunks" are always full.Therefore, we do not need ask for the last chunk again. Adding 1 sec
+            # to prevent it
+            proximity_ts = self.last_proximity_ts + 1
+            self.sendScanRequest(proximity_ts)
             wait_count = 0
             while True:
                 if self.dlg.gotEndOfScans == True:
@@ -526,22 +586,6 @@ class Badge():
                 wait_count = wait_count + 1
                 if wait_count >= PULL_WAIT: break
             self.logger.info("finished reading data")
-
-            # update last seen chunks and scans
-            if len(self.dlg.chunks) > 0:
-                last_chunk = self.dlg.chunks[-1]
-                if last_chunk.ts > 0:
-                    last_ts = last_chunk.ts - 1  # minus 1 second to compensate for potential conversion errors from float
-                    last_ts_int, last_ts_fract = split_ts_float(last_ts)
-                    self.logger.debug("Setting last seen audio chunk to {}.{}".format(last_ts_int, last_ts_fract))
-                    self.last_audio_ts = last_ts_int
-                    self.last_audio_ts_fract = last_ts_fract
-
-            if len(self.dlg.scans) > 0:
-                last_scan = self.dlg.scans[-1]
-                last_ts = last_scan.ts
-                self.logger.debug("Setting last seen proximirt scan to {}".format(last_ts))
-                self.last_proximity_ts = last_ts
 
             retcode = 0
 
@@ -578,7 +622,7 @@ def datetime_to_epoch(d):
     """
     epoch_seconds = (d - datetime.datetime(1970, 1, 1)).total_seconds()
     long_epoch_seconds = long(floor(epoch_seconds))
-    ts_fract = d.microsecond / 1000;
+    ts_fract = int(floor(d.microsecond / 1000))
     return (long_epoch_seconds, ts_fract)
 
 
@@ -634,3 +678,21 @@ if __name__ == "__main__":
     new_ts_int, new_ts_fract = split_ts_float(ts_float)
     print("New values: {} {}".format(new_ts_int, new_ts_fract))
     print("{} {}".format(type(new_ts_int),type(new_ts_fract)))
+
+    print("--------------------------")
+    # create logger with 'badge_server'
+    logging.basicConfig()
+    logger = logging.getLogger('badge_server')
+    logger.setLevel(logging.DEBUG)
+    logger.info("LALALA")
+
+    #logger = logging.getLogger("Test")
+    #logger.setLevel(logging.DEBUG)
+
+    b = Badge("AAAAA",logger,"ABCDE",100,10,100)
+    print(b.last_audio_ts_int,b.last_audio_ts_fract)
+    b.set_audio_ts(110,1)
+    print(b.last_audio_ts_int, b.last_audio_ts_fract)
+    b.set_audio_ts(100,1)
+    print(b.last_audio_ts_int, b.last_audio_ts_fract)
+

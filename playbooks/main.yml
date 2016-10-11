@@ -1,0 +1,24 @@
+---
+
+- hosts: pi
+  vars:
+    user: pi
+    repo_url: git://github.com/HumanDynamics/OpenBadge.git
+    dest_location: /home/{{user}}/OpenBadge
+  remote_user: pi
+  tasks:
+  - name: Installing System Packages
+    apt: name={{ item }} state=present update_cache=yes
+    with_items:
+      - git
+      - libglib2.0-dev # From bluepy
+      - python-pip # From bluepy
+    become: true
+
+  - name: Downloading git repo
+    git: repo={{repo_url}}
+         dest={{dest_location}}
+
+  - name: installing PIP Packages
+    pip: requirements={{dest_location}}/requirements.txt
+    become: true
