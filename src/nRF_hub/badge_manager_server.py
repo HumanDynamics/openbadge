@@ -103,7 +103,7 @@ class BadgeManagerServer:
         server_proximity_ts = server_badge.last_proximity_ts
         if server_proximity_ts > badge.last_proximity_ts:
             #self.logger.debug("Updating {} with new proximity timestamp: {}".format(mac, server_proximity_ts))
-            badge.set_audio_ts(server_ts_int, server_ts_fract)
+            badge.last_proximity_ts = server_proximity_ts
 
         else:
             #self.logger.debug("Keeping existing proximity timestamp for {}. Server value was: {}"

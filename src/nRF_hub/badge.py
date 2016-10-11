@@ -299,8 +299,10 @@ class Badge:
 
     def set_audio_ts(self, audio_ts_int, audio_ts_fract):
         if not self.is_newer_audio_ts(audio_ts_int, audio_ts_fract):
-            raise ValueError('Trying to update last_audio_ts ({}.{}) with old value ({}.{})'.format(
-                self.last_audio_ts_int, self.last_audio_ts_fract, audio_ts_int, audio_ts_fract))
+            msg = 'Badge {} : Trying to update last_audio_ts ({}.{}) with old value ({}.{})'.format(
+                self.addr, self.last_audio_ts_int, self.last_audio_ts_fract, audio_ts_int, audio_ts_fract)
+            self.logger.error(msg)
+            raise ValueError(msg)
 
         self.__audio_ts = {'last_audio_ts_int': audio_ts_int, 'last_audio_ts_fract': audio_ts_fract}
 
