@@ -75,16 +75,17 @@ echo " Compiling code- ${COMPILE_CMD}"
 echo " ============================================================"
 compile
 
-
+COUNTER=1
 while [ 1 == 1 ]
 do
 	echo " ============================================================"
-	echo "########## Starting new device #######"
+	echo "########## Starting new device (${COUNTER}) #######"
 	# wait for device to appear
 	wait_while_device_not_exists
 	load
 	get_mac
 	wait_while_device_exists
+	let COUNTER=COUNTER+1
 done
 
 #cd ../data_collector
