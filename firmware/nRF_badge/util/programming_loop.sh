@@ -19,7 +19,7 @@ compile() {
 }
 
 wait_while_device_exists() {
-	echo "Waiting until device does not exit"
+	echo "### Please remove badge (Waiting until device does not exit)"
         echo $DEV
         while [ -e $DEV ]
         do
@@ -28,7 +28,7 @@ wait_while_device_exists() {
 }
 
 wait_while_device_not_exists() {
-	echo "Waiting until device exists"
+	echo "### Place next badge (Waiting until device exists)"
         echo $DEV
         while [ ! -e $DEV ]
         do
@@ -37,7 +37,7 @@ wait_while_device_not_exists() {
 }
 
 get_mac() {
-	echo "Extracting MAC"
+	echo "### Extracting MAC, please wait"
 	./getMAC | tail -1 | tee -a macs.log
 }
 
@@ -70,11 +70,15 @@ shift
 echo "Using parameters: ${COMPILE_CMD} ${LOAD_CMD}"
 
 # make code
+echo " ============================================================"
+echo " Compiling code- ${COMPILE_CMD}"
+echo " ============================================================"
 compile
 
 
 while [ 1 == 1 ]
 do
+	echo " ============================================================"
 	echo "########## Starting new device #######"
 	# wait for device to appear
 	wait_while_device_not_exists
