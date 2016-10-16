@@ -422,6 +422,8 @@ bool updateSender()
                     }
                     else if (chunkPtr->check == CHECK_TRUNC)  {
                         // number of samples in truncated chunk is stored in the last byte of the sample array
+                        // We need this because the compiler doesn't see our APP_ERROR as reseting the system.
+                        #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
                         send.num = chunkPtr->samples[SAMPLES_PER_CHUNK-1];
                     }
                     else  {
@@ -629,6 +631,8 @@ bool updateSender()
                 if (send.loc == SEND_LOC_HEADER)  {
                     // Compose header
                     send.num = scanChunkPtr->num;
+                    // We need this because the compiler doesn't see our APP_ERROR as reseting the system.
+                    #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
                     float batteryVoltage = ((int)scanChunkPtr->batteryLevel + 100) / 100.0;
                     memcpy(send.buf,    &(scanChunkPtr->timestamp),     sizeof(unsigned long));   // timestamp
                     memcpy(send.buf+4,  &batteryVoltage,                sizeof(float));          // battery voltage
