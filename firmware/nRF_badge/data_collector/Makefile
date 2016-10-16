@@ -91,6 +91,7 @@ helpDetailed:
 C_SOURCE_FILES += \
 main.c \
 incl/analog.c \
+incl/app_fifo_util.c \
 incl/rtc_timing.c \
 incl/ble_setup.c \
 incl/debug_log.c \

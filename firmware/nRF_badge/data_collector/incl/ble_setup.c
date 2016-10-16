@@ -1,11 +1,21 @@
+#include <app_fifo.h>
+
+#include "app_fifo_util.h"
 #include "ble_setup.h"
 
+// Size of BLE FIFO, must be power of two.
+#define BLE_FIFO_SIZE 512
 
 static ble_gap_sec_params_t             m_sec_params;                               /**< Security requirements for this application. */
 static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;    /**< Handle of the current connection. */
 
 //static ble_bas_t                        m_bas;      //Struct for Battery Service module
 static ble_nus_t                        m_nus;      //Struct for Nordic UART Service module
+
+
+// Buffer used to allow for sending of long messages (up to 512 bytes) via ble_write_buffered().
+static app_fifo_t m_ble_fifo;
+static uint8_t m_ble_fifo_buffer[BLE_FIFO_SIZE];
 
 volatile bool isConnected = false;
 volatile bool isAdvertising = false;
@@ -87,7 +97,30 @@ static void sec_params_init(void)
     m_sec_params.max_key_size = SEC_PARAM_MAX_KEY_SIZE;
 }
 
+// Sends all buffered bytes that can currently be sent.
+static void send_buffered_bytes(void) {
+    bool tx_buffers_available = true;
+    while (app_fifo_len(&m_ble_fifo) > 0 && tx_buffers_available) {
+        uint8_t nus_packet[BLE_NUS_MAX_DATA_LEN];
+        uint16_t packet_len = app_fifo_get_bytes(&m_ble_fifo, nus_packet, BLE_NUS_MAX_DATA_LEN);
+        uint32_t err_code = ble_nus_string_send(&m_nus, nus_packet, packet_len);
 
+        switch (err_code) {
+            case NRF_SUCCESS:
+                // Yay! We could queue the packet with the SoftDevice.
+                break;
+            case BLE_ERROR_NO_TX_BUFFERS:
+                // Expected failure. The SoftDevice is out of buffers to take our packet with.
+                // Recover by rewinding our buffer packet_len bytes so we send it next time.
+                tx_buffers_available = false;
+                app_fifo_rewind(&m_ble_fifo, packet_len);
+                break;
+            default:
+                // Some unexpected error occurred. Reset!
+                APP_ERROR_CHECK(err_code);
+        }
+    }
+}
 
 static void on_ble_evt(ble_evt_t * p_ble_evt)
 {
@@ -108,6 +141,9 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 
     switch (p_ble_evt->header.evt_id)
     {
+        case BLE_EVT_TX_COMPLETE:
+            send_buffered_bytes();
+            break;
         case BLE_GAP_EVT_CONNECTED:  //on BLE connect event
             m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
             BLEonConnect();
@@ -374,6 +410,8 @@ void BLE_init()
     for(int i = 0; i <= 5; i++)  { 
         customAdvData.MAC[i] = MAC.addr[i];
     }
+
+    app_fifo_init(&m_ble_fifo, m_ble_fifo_buffer, sizeof(m_ble_fifo_buffer));
     
     //advertising_init();
     //uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
@@ -453,6 +491,33 @@ bool notificationEnabled()
     return m_nus.is_notification_enabled;
 }
 
+// Queues the len bytes at data to be sent over the BLE UART Service.
+//   As much data as possible will also be immediately be queued with the SoftDevice for sending.
+//   The other data will be sent as room becomes available with the SoftDevice.
+// Returns the number of bytes that could be queued for transmission.
+uint16_t ble_write_buffered(uint8_t * data, uint16_t len) {
+    APP_ERROR_CHECK_BOOL(data != NULL);
+
+    uint16_t num_bytes_queued = app_fifo_put_bytes(&m_ble_fifo, data, len);
+    send_buffered_bytes();
+    return num_bytes_queued;
+}
+
+// Queues the len bytes at data to be sent over the BLE UART Service.
+// Functions similarly to ble_write_buffered, except if the entire message cannot be written, then no bytes
+//  are buffered to be sent.
+// Returns NRF_SUCCESS if sucessful or NRF_ERROR_NO_MEM if the message could be queued.
+uint32_t ble_write_buffered_atomic(uint8_t * data, uint16_t len) {
+    if (BLE_FIFO_SIZE - app_fifo_len(&m_ble_fifo) < len) {
+        return NRF_ERROR_NO_MEM;
+    }
+
+    uint16_t bytesWritten = ble_write_buffered(data, len);
+
+    APP_ERROR_CHECK_BOOL(bytesWritten == len);
+
+    return NRF_SUCCESS;
+}
 
 bool BLEwrite(uint8_t* data, uint16_t len)  {
     uint32_t err_code = ble_nus_string_send(&m_nus, data, len);
