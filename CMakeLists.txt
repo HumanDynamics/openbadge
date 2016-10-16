@@ -8,8 +8,6 @@ set(SOURCE_FILES
     firmware/nRF_badge/data_collector/config/pstorage_platform.h
     firmware/nRF_badge/data_collector/incl/analog.c
     firmware/nRF_badge/data_collector/incl/analog.h
-    firmware/nRF_badge/data_collector/incl/app_fifo_util.c
-    firmware/nRF_badge/data_collector/incl/app_fifo_util.h
     firmware/nRF_badge/data_collector/incl/badge_03.h
     firmware/nRF_badge/data_collector/incl/badge_03v2_dynastream.h
     firmware/nRF_badge/data_collector/incl/badge_03v2_rigado.h
