@@ -405,7 +405,7 @@ bool updateSender()
                     break;
                 default:
                     debug_log("invalid source?\r\n");
-                    while(1);
+                    APP_ERROR_CHECK_BOOL(false);
                     break;
                 }
                 
@@ -622,7 +622,7 @@ bool updateSender()
                     break;
                 default:
                     debug_log("invalid source\r\n");
-                    while(1);
+                    APP_ERROR_CHECK_BOOL(false);
                     break;
                 }
                 

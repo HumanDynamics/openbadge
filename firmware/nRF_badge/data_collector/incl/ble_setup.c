@@ -41,11 +41,11 @@ static void gap_params_init(void)
 
     //set BLE name
     err_code = sd_ble_gap_device_name_set(&sec_mode,(const uint8_t *)DEVICE_NAME,strlen(DEVICE_NAME));
-    BLE_ERROR_CHECK(err_code);
+    APP_ERROR_CHECK(err_code);
 
     //set BLE appearance
     err_code = sd_ble_gap_appearance_set(BLE_APPEARANCE_GENERIC_TAG);
-    BLE_ERROR_CHECK(err_code);
+    APP_ERROR_CHECK(err_code);
 }
 
 
@@ -58,7 +58,7 @@ static void services_init(void)
     nus_init.data_handler = BLEonReceive;
     
     err_code = ble_nus_init(&m_nus, &nus_init);
-    BLE_ERROR_CHECK(err_code);
+    APP_ERROR_CHECK(err_code);
     
     
     /*
@@ -136,14 +136,14 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
                                                    BLE_GAP_SEC_STATUS_SUCCESS,
                                                    &m_sec_params,
                                                    &m_keys);
-            BLE_ERROR_CHECK(err_code);
+            APP_ERROR_CHECK(err_code);
             break;
         case BLE_GATTS_EVT_SYS_ATTR_MISSING:
             err_code = sd_ble_gatts_sys_attr_set(m_conn_handle,
                                                  NULL,
                                                  0,
                                                  BLE_GATTS_SYS_ATTR_FLAG_SYS_SRVCS | BLE_GATTS_SYS_ATTR_FLAG_USR_SRVCS);
-            BLE_ERROR_CHECK(err_code);
+            APP_ERROR_CHECK(err_code);
             break;
         case BLE_GAP_EVT_AUTH_STATUS:
             m_auth_status = p_ble_evt->evt.gap_evt.params.auth_status;
@@ -159,7 +159,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
             p_sign_info = (p_distributed_keys->sign && master_id_matches) ? &m_sign_key         : NULL;
 
             err_code = sd_ble_gap_sec_info_reply(m_conn_handle, p_enc_info, p_id_info, p_sign_info);
-                BLE_ERROR_CHECK(err_code);
+            APP_ERROR_CHECK(err_code);
             break;
 
         default:
@@ -220,7 +220,7 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
                 
             //debug_log("ADV: advertising REstarted\r\n");
             uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);  // restart advertising
-            BLE_ERROR_CHECK(err_code);
+            APP_ERROR_CHECK(err_code);
         }
     }
     else
@@ -254,15 +254,15 @@ static void ble_stack_init(void)
     ble_enable_params.gatts_enable_params.service_changed = IS_SRVC_CHANGED_CHARACT_PRESENT;
     
     err_code = sd_ble_enable(&ble_enable_params);
-    BLE_ERROR_CHECK(err_code);
+    APP_ERROR_CHECK(err_code);
     
     // Register with the SoftDevice handler module for BLE events.
     err_code = softdevice_ble_evt_handler_set(ble_evt_dispatch);
-    BLE_ERROR_CHECK(err_code);
+    APP_ERROR_CHECK(err_code);
     
     // Register with the SoftDevice handler module for system events.
     err_code = softdevice_sys_evt_handler_set(sys_evt_dispatch);
-    BLE_ERROR_CHECK(err_code);
+    APP_ERROR_CHECK(err_code);
 }
 
 void advertising_init(void)
@@ -287,7 +287,7 @@ void advertising_init(void)
     options.ble_adv_whitelist_enabled = BLE_ADV_WHITELIST_DISABLED;
 
     err_code = ble_advertising_init(&advdata, NULL, &options, NULL /*on_adv_evt*/, NULL);
-    BLE_ERROR_CHECK(err_code);
+    APP_ERROR_CHECK(err_code);
     setAdvData();
 }
 
@@ -389,7 +389,7 @@ void BLEstartAdvertising()
             isAdvertising = true;
             return;
         }
-        BLE_ERROR_CHECK(err_code);
+        APP_ERROR_CHECK(err_code);
     }
 }
 
@@ -397,7 +397,7 @@ void BLEstartAdvertising()
 void BLEdisable()
 {
     uint32_t err_code = softdevice_handler_sd_disable();
-    BLE_ERROR_CHECK(err_code);
+    APP_ERROR_CHECK(err_code);
 }
 
 

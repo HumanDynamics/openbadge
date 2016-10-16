@@ -101,7 +101,6 @@ incl/sender.c \
 incl/self_test.c \
 incl/scanner.c \
 $(SDK_PATH)/components/libraries/crc16/crc16.c \
-$(SDK_PATH)/components/libraries/util/app_error.c \
 $(SDK_PATH)/components/libraries/util/nrf_assert.c \
 $(SDK_PATH)/components/libraries/uart/retarget.c \
 $(SDK_PATH)/components/drivers_nrf/hal/nrf_adc.c \
@@ -214,7 +213,7 @@ CFLAGS += -fno-builtin --short-enums
 #enable SPI
 CFLAGS += -DSPI_MASTER_0_ENABLE
 
-
+CFLAGS += -DDEBUG
 
 # keep every function in separate section. This will allow linker to dump unused functions
 LDFLAGS += -Xlinker -Map=$(LISTING_DIRECTORY)/$(OUTPUT_FILENAME).map
