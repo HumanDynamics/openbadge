@@ -27,6 +27,9 @@ def short_field(attribute, optional=False):
 def float_field(attribute, optional=False):
 	return (attribute, 4, optional, lambda x: pack("<f", x), lambda x: unpack("<f", x)[0])
 
+def bool_field(attribute, optional=False):
+	return (attribute, 1, optional, lambda x: chr(x), lambda x: not x == chr(False))
+
 # BadgeMessage represents a message sent to/recieved from the badge.
 #  The badge communicates by sending messages in a special binary format. 
 #  BadgeMessage allows us to manipulate these messages as Python objects and then serialize them into 
@@ -103,7 +106,7 @@ class StatusRequest(BadgeMessage):
 		BadgeMessage.__init__(self)
 
 class StatusResponse(BadgeMessage):
-	message_fields = [char_field("clock_status"), char_field("scanner_status"), char_field("collector_status"), 
+	message_fields = [char_field("clock_status"), bool_field("scanner_status"), bool_field("collector_status"), 
 	long_field("timestamp_seconds"), short_field("timestamp_miliseconds"), float_field("battery_voltage")]
 
 	def __init__(self, clock_status, scanner_status, collector_status, timestamp_seconds, 
