@@ -2,16 +2,16 @@ import time
 from integration_test import *
 
 class SyncStartStopTestCase(IntegrationTest):
-	def testCase(self, badge):
+	def testCase(self, badge, logger):
 		# Sync time
-		print "Syncing time {}".format(time.time())
+		logger.info("Syncing time %f", time.time())
 		status = badge.get_status()
-		print status
 		time.sleep(.25)
 
 		# Check that badge now has correct time.
 		status = badge.get_status()
-		print "Check Status:", status
+		logger.info("Status after time set: {}".format(status))
+		# FIRMWARE BUG: Badge time is always off by four seconds. (Why?)
 		self.assertAlmostEqual(status.timestamp_seconds, int(time.time() - 4), delta=1)
 
 		# Start collector, check that status changes.
