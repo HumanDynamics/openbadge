@@ -183,8 +183,6 @@ int main(void)
     cycleStart = millis();
     
     nrf_delay_ms(2);
-
-    ble_timeout_cancel();
     
     
     // Enter main loop

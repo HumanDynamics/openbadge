@@ -17,6 +17,9 @@ stdout_handler = logging.StreamHandler(sys.stdout)
 stdout_handler.setLevel(logging.DEBUG)
 logger.addHandler(stdout_handler)
 
+# Uncomment this line to make logging very verbose.
+# logging.getLogger().addHandler(stdout_handler)
+
 class IntegrationTest(unittest.TestCase):
 	def __init__(self):
 		unittest.TestCase.__init__(self)
