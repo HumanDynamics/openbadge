@@ -49,7 +49,7 @@
 #include "storer.h"
 #include "sender.h"
 
-
+#include <app_timer.h>
 
 enum cycleStates {SLEEP, SAMPLE, SCAN, STORE, SEND};
 unsigned long cycleStart;       // start of main loop cycle (e.g. sampling cycle)
@@ -183,6 +183,10 @@ int main(void)
     cycleStart = millis();
     
     nrf_delay_ms(2);
+
+    APP_TIMER_INIT(15, 1, 3, false);
+
+
     
     
     // Enter main loop
