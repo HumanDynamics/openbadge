@@ -201,6 +201,10 @@ int main(void)
             nrf_gpio_pin_write(LED_2,LED_OFF);
             led_timeout = false;
         }
+
+        if (millis() % 1000) {
+            debug_log("Millis: %lu\r\n", millis());
+        }
         
         switch (cycleState)  {
             
