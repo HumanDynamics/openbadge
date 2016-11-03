@@ -13,7 +13,7 @@
 //
 // So, we set a timer that ticks every 100 (<=512) seconds, and then we calculate the current time based on time
 // since last clock tick using our RTC timer through app_timer_cnt_get().
-#define CLOCK_TICK_MILLIS  100
+#define CLOCK_TICK_MILLIS  (100 * 1000)
 
 volatile uint64_t extTicks = 0;  //extension of the rtc1 24-bit timer, for millis() etc
                                  // i.e. extTicks+rtcTicks is the number of ticks elapsed since counter initiation
