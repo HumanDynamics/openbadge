@@ -1,17 +1,24 @@
+# -*- coding: utf-8 -*-
+
 from fnmatch import fnmatch
 from importlib import import_module
 from integration_test import IntegrationTest
 import inspect
 import os
+import sys
+import subprocess
 
-def is_integration_test(test_class):
-	return inspect.isclass(test_class) and issubclass(test_class, IntegrationTest)
+os.system("rm -rf testResults")
+os.system("mkdir testResults")
 
 for file in os.listdir("."):
 	if fnmatch(file, "test_*.py"):
-		test_case_module_name = file.replace(".py", "")
-		test_case_module = __import__(test_case_module_name)
-		classed_defined_in_module = inspect.getmembers(test_case_module, is_integration_test)
-		test_case_name, test_case = next(defined_class for defined_class in classed_defined_in_module if defined_class is not IntegrationTest)
-		print "Running:", test_case_name
-		test_case().runTest()
+		test_case_name = file.replace(".py", "")
+		print "Running", test_case_name + "..."
+		test_status = os.system("python {}.py  > testResults/{}.log".format(test_case_name, test_case_name))
+		if not test_status == 0:
+			raise AssertionError("Test {} Failed!".format(test_case_name))
+		else:
+			print "  Test", test_case_name, "PASSED! :)"
+
+print "All integration tests passed! :) ✅"
