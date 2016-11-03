@@ -30,6 +30,9 @@ def float_field(attribute, optional=False):
 def bool_field(attribute, optional=False):
 	return (attribute, 1, optional, lambda x: chr(x), lambda x: not x == chr(False))
 
+def uint8_field(attribute, optional=False):
+	return (attribute, 1, optional, lambda x: chr(x), lambda x: ord(x))
+
 # BadgeMessage represents a message sent to/recieved from the badge.
 #  The badge communicates by sending messages in a special binary format. 
 #  BadgeMessage allows us to manipulate these messages as Python objects and then serialize them into 
@@ -205,7 +208,7 @@ class MicrophoneDataRequest(BadgeMessage):
 class MicrophoneDataHeader(BadgeMessage):
 	message_fields = [long_field("timestamp_seconds"), short_field("timestamp_miliseconds"), 
 	   float_field("battery_voltage"), short_field("sample_period_miliseconds"), 
-	   char_field("num_samples_in_chunk")]
+	   uint8_field("num_samples_in_chunk")]
 
 	def __init__(self, timestamp_seconds, timestamp_miliseconds, battery_voltage, 
 		sample_period_miliseconds, num_samples_in_chunk):
@@ -227,7 +230,7 @@ class ScanDataRequest(BadgeMessage):
 		BadgeMessage.__init__(self)
 
 class ScanDataHeader(BadgeMessage):
-	message_fields = [long_field("timestamp_seconds"), float_field("battery_voltage"), char_field("num_devices_seen")]
+	message_fields = [long_field("timestamp_seconds"), float_field("battery_voltage"), uint8_field("num_devices_seen")]
 
 	def __init__(self, timestamp_seconds, battery_voltage, num_devices_seen):
 		self.timestamp_seconds = timestamp_seconds
@@ -237,7 +240,7 @@ class ScanDataHeader(BadgeMessage):
 		BadgeMessage.__init__(self)
 
 class ScanDataDevice(BadgeMessage):
-	message_fields = [short_field("device_id"), char_field("average_rssi"), char_field("num_times_seen")]
+	message_fields = [short_field("device_id"), char_field("average_rssi"), uint8_field("num_times_seen")]
 
 	def __init__(self, device_id, average_rssi, num_times_seen):
 		self.device_id = device_id

@@ -22,6 +22,10 @@ def get_timestamp_miliseconds():
 	timestamp_miliseconds = int(1000 * timestamp_fraction_of_second)
 	return timestamp_miliseconds
 
+# Convert badge timestamp representation to python representation
+def timestamps_to_time(timestamp_seconds, timestamp_miliseconds):
+	return float(timestamp_seconds) + (float(timestamp_miliseconds) / 1000.0)
+
 # Returns true if a given header message indicates end of stream. (i.e. last chunk)
 # See badge communication protocols for more information.
 def is_end_header(header_message):
@@ -126,7 +130,7 @@ class OpenBadge(object):
 		chunks_and_headers = []
 
 		while not is_end_header(header):
-			bytes_awaited = ord(header.num_samples_in_chunk)
+			bytes_awaited = header.num_samples_in_chunk
 			logger.debug("Awaiting {} bytes.".format(bytes_awaited))
 			data = self.connection.await_data(bytes_awaited)
 
@@ -149,7 +153,7 @@ class OpenBadge(object):
 		scan_headers_and_devices_seen = []
 
 		while not is_end_header(header):
-			bytes_awaited = ord(header.num_devices_seen) * ScanDataDevice.length()
+			bytes_awaited = header.num_devices_seen * ScanDataDevice.length()
 			logger.debug("Awaiting {} bytes".format(bytes_awaited))
 			data = self.connection.await_data(bytes_awaited)
 
