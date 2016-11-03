@@ -15,8 +15,6 @@
 // since last clock tick using our RTC timer through app_timer_cnt_get().
 #define CLOCK_TICK_MILLIS  (100 * 1000)
 
-volatile uint64_t extTicks = 0;  //extension of the rtc1 24-bit timer, for millis() etc
-                                 // i.e. extTicks+rtcTicks is the number of ticks elapsed since counter initiation
 volatile bool countdownOver = false;  //used to give rtc_timing access to sleep from main loop
 
 static uint32_t mCountdownTimer;
