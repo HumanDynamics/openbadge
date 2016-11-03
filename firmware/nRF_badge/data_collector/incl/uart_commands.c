@@ -22,8 +22,8 @@ static void on_restart_command(void) {
 // Command lookup table, maps textual string commands to methods executed when they're received.
 static uart_command_t mUARTCommands[] = {
         {
-                "restart",
-                on_restart_command,
+                .command = "restart",
+                .handler = on_restart_command,
         },
 };
 
