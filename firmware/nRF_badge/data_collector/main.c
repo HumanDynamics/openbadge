@@ -85,6 +85,9 @@ void goToSleep(long ms)
 }
 
 
+static void measure_battery(void * p_context) {
+    debug_log("Got measure battery!");
+}
 
 
  
@@ -183,11 +186,6 @@ int main(void)
     cycleStart = millis();
     
     nrf_delay_ms(2);
-
-    APP_TIMER_INIT(15, 1, 3, false);
-
-
-    
     
     // Enter main loop
     for (;;)  {

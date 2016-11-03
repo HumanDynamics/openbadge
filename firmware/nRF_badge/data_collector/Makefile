@@ -111,7 +111,6 @@ $(SDK_PATH)/components/drivers_nrf/uart/app_uart_fifo.c \
 $(SDK_PATH)/components/libraries/fifo/app_fifo.c \
 $(SDK_PATH)/components/drivers_nrf/common/nrf_drv_common.c \
 $(SDK_PATH)/components/drivers_nrf/gpiote/nrf_drv_gpiote.c \
-$(SDK_PATH)/components/drivers_nrf/rtc/nrf_drv_rtc.c \
 $(SDK_PATH)/components/drivers_nrf/ble_flash/ble_flash.c \
 $(SDK_PATH)/components/drivers_nrf/spi_master/spi_master.c \
 $(SDK_PATH)/components/drivers_nrf/pstorage/pstorage.c \

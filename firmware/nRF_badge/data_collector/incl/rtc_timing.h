@@ -5,7 +5,6 @@
 
 #include "nrf_drv_config.h"
 #include "nrf_soc.h"
-#include "nrf_drv_rtc.h"
 #include "app_error.h"
 
 #include "debug_log.h"
@@ -18,13 +17,6 @@ volatile bool ble_timeout;
 //#define CONNECTION_TIMEOUT_MS 6000000UL
 
 volatile bool led_timeout;
-
-/**
- * rtc event handler function
- * For extending the 24-bit hardware clock, by incrementing a larger number every time it overflows
- * And handling countdown timer end events
- */
-void rtc_handler(nrf_drv_rtc_int_type_t int_type);
  
 /**
  * initialize rtc
