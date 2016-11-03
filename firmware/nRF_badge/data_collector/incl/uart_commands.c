@@ -10,11 +10,16 @@
 
 #define MAX_COMMAND_LEN   32
 #define COMMAND_BUF_SIZE  (MAX_COMMAND_LEN + 1)
-#define MAX_NUM_ARGUMENTS 6
 
 static char mCommandBuffer[COMMAND_BUF_SIZE];
 static int mCommandBufferPos = 0;
 
+// Command Handlers
+static void on_restart_command(void) {
+    NVIC_SystemReset();
+}
+
+// Command lookup table, maps textual string commands to methods executed when they're received.
 static uart_command_t mUARTCommands[] = {
         {
                 "restart",
@@ -22,31 +27,29 @@ static uart_command_t mUARTCommands[] = {
         },
 };
 
-static void on_restart_command(void) {
-    debug_log("Got restart command!\r\n");
-}
-
-// command should be null terminated
+// Dispatches appropriate handler for matching command.
+// 'command' should be null terminated string <= MAX_COMMAND_LEN
 static void on_command_received(const char * command) {
     int numCommands = sizeof(mUARTCommands) / sizeof(mUARTCommands[0]);
     for (int i = 0; i < numCommands; i++) {
-        debug_log("Checking command %d:%s\r\n", i, mUARTCommands[i].command);
         if (strcmp(command, mUARTCommands[i].command) == 0) {
             mUARTCommands[i].handler();
             return;
         }
     }
 
-    debug_log("Could not recognize command %s\r\n", command);
+    debug_log("Unknown command: %s\n", command);
 }
 
 void UARTCommands_ProcessChar(char commandChar) {
     app_uart_put(commandChar);
 
-    if (commandChar == '\n') {
-        on_command_received(mCommandBuffer);
-        memset(mCommandBuffer, 0, sizeof(mCommandBuffer));
-        mCommandBufferPos = 0;
+    if (commandChar == '\n' || commandChar == '\r') {
+        if (mCommandBufferPos != 0) {
+            on_command_received(mCommandBuffer);
+            memset(mCommandBuffer, 0, sizeof(mCommandBuffer));
+            mCommandBufferPos = 0;
+        }
     } else {
         if (mCommandBufferPos < MAX_COMMAND_LEN) {
             mCommandBuffer[mCommandBufferPos] = commandChar;

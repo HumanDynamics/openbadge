@@ -15,9 +15,12 @@ typedef struct {
     uart_command_handler_t handler;
 } uart_command_t;
 
-static void on_restart_command(void);
-
+/**
+ * This method should be called when a char is recieved that is to be processed by the UART Command Handler.
+ * Internally buffers the characters and and calls the necessary command handlers.
+ *
+ * @param commandChar char recieved over UART
+ */
 void UARTCommands_ProcessChar(char commandChar);
-
 
 #endif //OPENBADGE_UART_COMMANDS_H
