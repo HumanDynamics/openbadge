@@ -100,6 +100,7 @@ incl/storer.c \
 incl/sender.c \
 incl/self_test.c \
 incl/scanner.c \
+incl/uart_commands.c \
 $(SDK_PATH)/components/libraries/crc16/crc16.c \
 $(SDK_PATH)/components/libraries/util/app_error.c \
 $(SDK_PATH)/components/libraries/util/nrf_assert.c \
