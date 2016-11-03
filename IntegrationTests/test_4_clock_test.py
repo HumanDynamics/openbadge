@@ -18,6 +18,6 @@ class ClockTestCase(IntegrationTest):
 
 		self.assertAlmostEqual(end_time, start_time + 5, delta=1)
 
-
-testCase = ClockTestCase()
-testCase.runTest()
+if __name__ == "__main__":
+	testCase = ClockTestCase()
+	testCase.runTest()

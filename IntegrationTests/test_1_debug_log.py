@@ -5,5 +5,6 @@ class DebugLogTestCase(IntegrationTest):
 		debug_log = badge.get_debug_log()
 		self.assertEqual(debug_log, "Andrew Rulez!\x00")
 
-testCase = DebugLogTestCase()
-testCase.runTest()
+if __name__ == '__main__':
+	testCase = DebugLogTestCase()
+	testCase.runTest()

@@ -39,6 +39,6 @@ class SyncStartStopTestCase(IntegrationTest):
 		status = badge.get_status()
 		self.assertFalse(status.collector_status)
 
-
-testCase = SyncStartStopTestCase()
-testCase.runTest()
+if __name__ == "__main__":
+	testCase = SyncStartStopTestCase()
+	testCase.runTest()

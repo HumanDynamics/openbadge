@@ -17,6 +17,6 @@ class ScanRecordTimeoutTestCase(IntegrationTest):
 		self.assertFalse(status.collector_status)
 		self.assertFalse(status.scanner_status)
 
-
-testCase = ScanRecordTimeoutTestCase()
-testCase.runTest()
+if __name__ == "__main__":
+	testCase = ScanRecordTimeoutTestCase()
+	testCase.runTest()
