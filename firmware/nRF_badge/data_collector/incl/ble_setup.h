@@ -283,6 +283,18 @@ void BLEonScanTimeout();
  */
 bool notificationEnabled();
 
+/** Queues the len bytes at data to be sent over the BLE UART Service.
+ *   As much data as possible will also be immediately be queued with the SoftDevice for sending.
+ *   The other data will be sent as room becomes available with the SoftDevice.
+ *  Returns the number of bytes that could be queued for transmission. */
+uint16_t ble_write_buffered(uint8_t * data, uint16_t len);
+
+/** Queues the len bytes at data to be sent over the BLE UART Service.
+ * Functions similarly to ble_write_buffered, except if the entire message cannot be written, then no bytes
+ *  are buffered to be sent.
+ * Returns NRF_SUCCESS if sucessful or NRF_ERROR_NO_MEM if the message could be queued. */
+uint32_t ble_write_buffered_atomic(uint8_t * data, uint16_t len);
+
 /** Function to wrap ble_nus_string_send, for convenience
  */
 bool BLEwrite(uint8_t* data, uint16_t len);
