@@ -31,6 +31,8 @@ set(SOURCE_FILES
     firmware/nRF_badge/data_collector/incl/sender.h
     firmware/nRF_badge/data_collector/incl/storer.c
     firmware/nRF_badge/data_collector/incl/storer.h
+    firmware/nRF_badge/data_collector/incl/uart_commands.c
+    firmware/nRF_badge/data_collector/incl/uart_commands.h
     firmware/nRF_badge/data_collector/main.c)
 
 include_directories(

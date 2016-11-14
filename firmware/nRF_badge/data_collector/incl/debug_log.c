@@ -18,7 +18,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdarg.h>
-
+#include <app_uart.h>
 
 #ifdef DEBUG_LOG_ENABLE
 #include "app_uart.h"
@@ -26,12 +26,13 @@
 #include "boards.h"
 #include "debug_log.h"
 #include "app_error.h"
+#include "uart_commands.h"
 
 #ifndef UART_TX_BUF_SIZE
     #define UART_TX_BUF_SIZE 256                         /**< UART TX buffer size. */
 #endif
 #ifndef UART_RX_BUF_SIZE
-    #define UART_RX_BUF_SIZE 1                           /**< UART RX buffer size. */
+    #define UART_RX_BUF_SIZE 32                           /**< UART RX buffer size. */
 #endif
 
 void uart_error_handle(app_uart_evt_t * p_event)
@@ -44,6 +45,17 @@ void uart_error_handle(app_uart_evt_t * p_event)
     {
         APP_ERROR_HANDLER(p_event->data.error_code);
     }*/
+}
+
+void uart_event_handle(app_uart_evt_t * p_event) {
+    if (p_event->evt_type == APP_UART_DATA_READY) {
+        uint8_t rx_byte;
+        while (app_uart_get(&rx_byte) == NRF_SUCCESS) {
+            UARTCommands_ProcessChar(rx_byte);
+        }
+    } else {
+        uart_error_handle(p_event);
+    }
 }
 
 void debug_log_init(void)
@@ -61,10 +73,11 @@ void debug_log_init(void)
         
     APP_UART_FIFO_INIT(&comm_params, 
                        UART_RX_BUF_SIZE, 
-                       UART_TX_BUF_SIZE, 
-                       uart_error_handle, 
+                       UART_TX_BUF_SIZE,
+                       uart_event_handle,
                        APP_IRQ_PRIORITY_LOW,
                        err_code);
+
     UNUSED_VARIABLE(err_code);
 }
 

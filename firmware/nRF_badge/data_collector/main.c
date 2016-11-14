@@ -325,7 +325,7 @@ void BLEonConnect()
         nrf_gpio_pin_write(LED_1,LED_ON);
     #endif
     
-    ble_timeout_set(CONNECTION_TIMEOUT_MS);
+    //ble_timeout_set(CONNECTION_TIMEOUT_MS);
 }
 
 void BLEonDisconnect()
@@ -351,7 +351,7 @@ void BLEonReceive(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)
     }
     sleep = false;
     
-    ble_timeout_set(CONNECTION_TIMEOUT_MS);
+    //ble_timeout_set(CONNECTION_TIMEOUT_MS);
 }
 
 
