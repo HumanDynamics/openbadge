@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <nrf51.h>
 
 /**
  * From Nordic SDK
@@ -16,6 +17,8 @@
 #include "nrf_gpio.h"           //abstraction for dealing with gpio
 #include "nrf_adc.h"            //abstraction for dealing with adc
 #include "ble_flash.h"          //for writing to flash
+
+#include "app_error.h"
 
 #include "ble_gap.h"            //basic ble functions (advertising, scans, connecting)
 
@@ -49,7 +52,23 @@
 #include "storer.h"
 #include "sender.h"
 
+typedef struct {
+    bool error_occured;
+    uint32_t error_code;
+    uint32_t line_num;
+    char file_name[32];
+} AppErrorData_t;
 
+static AppErrorData_t mAppErrorData __attribute((section (".noinit")));
+
+void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name) {
+    mAppErrorData.error_occured = true;
+    mAppErrorData.error_code = error_code;
+    mAppErrorData.line_num = line_num;
+    strncpy(mAppErrorData.file_name, (char *) p_file_name, sizeof(mAppErrorData.file_name));
+
+    NVIC_SystemReset();
+}
 
 enum cycleStates {SLEEP, SAMPLE, SCAN, STORE, SEND};
 unsigned long cycleStart;       // start of main loop cycle (e.g. sampling cycle)
@@ -107,6 +126,14 @@ int main(void)
     
     debug_log_init();
     debug_log("\r\n\r\n\r\n\r\nUART trace initialized.\r\n\r\n");
+
+    // TODO: Check the reset reason to make sure our noinit RAM is valid
+    if (mAppErrorData.error_occured) {
+        debug_log("CRASH! APP ERROR %lu @ %s:%lu\r\n", mAppErrorData.error_code,
+                  mAppErrorData.file_name, mAppErrorData.line_num);
+        mAppErrorData.error_occured = false;
+    }
+
     debug_log("Name: %.5s\r\n",DEVICE_NAME);
 
 
