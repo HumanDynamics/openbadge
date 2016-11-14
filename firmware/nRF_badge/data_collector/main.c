@@ -49,7 +49,7 @@
 #include "storer.h"
 #include "sender.h"
 
-#include <app_timer.h>
+
 
 enum cycleStates {SLEEP, SAMPLE, SCAN, STORE, SEND};
 unsigned long cycleStart;       // start of main loop cycle (e.g. sampling cycle)
@@ -85,9 +85,6 @@ void goToSleep(long ms)
 }
 
 
-static void measure_battery(void * p_context) {
-    debug_log("Got measure battery!");
-}
 
 
  
@@ -187,6 +184,7 @@ int main(void)
     
     nrf_delay_ms(2);
     
+    
     // Enter main loop
     for (;;)  {
         //================ Sampling/Sleep handler ================
@@ -200,10 +198,6 @@ int main(void)
         if (led_timeout)  {
             nrf_gpio_pin_write(LED_2,LED_OFF);
             led_timeout = false;
-        }
-
-        if (millis() % 1000) {
-            debug_log("Millis: %lu\r\n", millis());
         }
         
         switch (cycleState)  {
