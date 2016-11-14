@@ -22,6 +22,10 @@ def get_timestamp_miliseconds():
 	timestamp_miliseconds = int(1000 * timestamp_fraction_of_second)
 	return timestamp_miliseconds
 
+# Convert badge timestamp representation to python representation
+def timestamps_to_time(timestamp_seconds, timestamp_miliseconds):
+	return float(timestamp_seconds) + (float(timestamp_miliseconds) / 1000.0)
+
 # Returns true if a given header message indicates end of stream. (i.e. last chunk)
 # See badge communication protocols for more information.
 def is_end_header(header_message):
@@ -56,16 +60,24 @@ class OpenBadge(object):
 	#   Optional fields new_id and new_group number will set the badge's id
 	#     and group number. They must be sent together. 
 	# Returns a StatusResponse() representing badge's response.
-	def get_status(self, timestamp_seconds=get_timestamp_seconds(), timestamp_miliseconds=get_timestamp_miliseconds(), new_id=None, new_group_number=None):
+	def get_status(self, timestamp_seconds=None, timestamp_miliseconds=None, new_id=None, new_group_number=None):
+		if timestamp_seconds == None: timestamp_seconds = get_timestamp_seconds()
+		if timestamp_miliseconds == None: timestamp_miliseconds = get_timestamp_miliseconds()
+
 		status_request = StatusRequest(timestamp_seconds, timestamp_miliseconds, badge_id=new_id, group_number=new_group_number)
+
 		return self.send_command(status_request, StatusResponse)
 
 	# Sends a request to the badge to start recording microphone data.
 	#  timeout_minutes is the number of minutes the badge is to record, 
 	#    or 0 if the badge is to scan indefinetely.
 	# Returns a StartRecordResponse() representing the badges response.
-	def start_recording(self, timestamp_seconds=get_timestamp_seconds(), timestamp_miliseconds=get_timestamp_miliseconds(), timeout_minutes=0):
+	def start_recording(self, timestamp_seconds=None, timestamp_miliseconds=None, timeout_minutes=0):
+		if timestamp_seconds == None: timestamp_seconds = get_timestamp_seconds()
+		if timestamp_miliseconds == None: timestamp_miliseconds = get_timestamp_miliseconds()
+
 		start_record_request = StartRecordRequest(timestamp_seconds, timestamp_miliseconds, timeout_minutes)
+
 		return self.send_command(start_record_request, StartRecordResponse)
 
 	# Sends a request to the badge to stop recording.
@@ -82,10 +94,14 @@ class OpenBadge(object):
 	#   window_miliseconds and interval_miliseconds controls radio duty cycle during scanning (0 for firmware default)
 	#     radio is active for [window_miliseconds] every [interval_miliseconds]
 	# Returns a StartScanningResponse() representing the badge's response.
-	def start_scanning(self, timestamp_seconds=get_timestamp_seconds(), timestamp_miliseconds=get_timestamp_miliseconds(),
+	def start_scanning(self, timestamp_seconds=None, timestamp_miliseconds=None,
 	   timeout_minutes=0, window_miliseconds=0, interval_miliseconds=0, duration_seconds=0, period_seconds=0):
+		if timestamp_seconds == None: timestamp_seconds = get_timestamp_seconds()
+		if timestamp_miliseconds == None: timestamp_miliseconds = get_timestamp_miliseconds()
+		
 		start_scanning_request = StartScanningRequest(timestamp_seconds, timestamp_miliseconds, timeout_minutes, 
 			window_miliseconds, interval_miliseconds, duration_seconds, period_seconds)
+
 		return self.send_command(start_scanning_request, StartScanningResponse)
 
 	# Sends a request to the badge to stop scanning.
@@ -104,14 +120,17 @@ class OpenBadge(object):
 	# Send a request to the badge for recorded microphone data starting at the given timestamp.
 	# Returns a list of tuples of (MicrophoneDataHeader(), microphone_sample_chunk_data), where each tuple
 	#   contains one chunk of microphone data. 
-	def get_mic_data(self, timestamp_seconds=get_timestamp_seconds(), timestamp_miliseconds=get_timestamp_miliseconds()):
+	def get_mic_data(self, timestamp_seconds=None, timestamp_miliseconds=None):
+		if timestamp_seconds == None: timestamp_seconds = get_timestamp_seconds()
+		if timestamp_miliseconds == None: timestamp_miliseconds = get_timestamp_miliseconds()
+
 		mic_data_request = MicrophoneDataRequest(timestamp_seconds, timestamp_miliseconds)
 		header = self.send_command(mic_data_request, MicrophoneDataHeader)
 
 		chunks_and_headers = []
 
 		while not is_end_header(header):
-			bytes_awaited = ord(header.num_samples_in_chunk)
+			bytes_awaited = header.num_samples_in_chunk
 			logger.debug("Awaiting {} bytes.".format(bytes_awaited))
 			data = self.connection.await_data(bytes_awaited)
 
@@ -125,14 +144,16 @@ class OpenBadge(object):
 	# Sends a request to the badge for recorded scan data starting at the the given timestamp.
 	# Returns a list of tuples of (ScanDataHeader(), [ScanDataDevice(), ScanDataDevice(), ...])
 	#   where each tuple contains a header and a list of devices seen from one scan. 
-	def get_scan_data(self, timestamp_seconds=get_timestamp_seconds()):
+	def get_scan_data(self, timestamp_seconds=None):
+		if timestamp_seconds == None: timestamp_seconds = get_timestamp_seconds()
+
 		scan_data_request = ScanDataRequest(timestamp_seconds)
 		header = self.send_command(scan_data_request, ScanDataHeader)
 
 		scan_headers_and_devices_seen = []
 
 		while not is_end_header(header):
-			bytes_awaited = ord(header.num_devices_seen) * ScanDataDevice.length()
+			bytes_awaited = header.num_devices_seen * ScanDataDevice.length()
 			logger.debug("Awaiting {} bytes".format(bytes_awaited))
 			data = self.connection.await_data(bytes_awaited)
 

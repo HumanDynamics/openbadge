@@ -1,11 +1,21 @@
+#include <app_fifo.h>
+
+#include "app_fifo_util.h"
 #include "ble_setup.h"
 
+// Size of BLE FIFO, must be power of two.
+#define BLE_FIFO_SIZE 512
 
 static ble_gap_sec_params_t             m_sec_params;                               /**< Security requirements for this application. */
 static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;    /**< Handle of the current connection. */
 
 //static ble_bas_t                        m_bas;      //Struct for Battery Service module
 static ble_nus_t                        m_nus;      //Struct for Nordic UART Service module
+
+
+// Buffer used to allow for sending of long messages (up to 512 bytes) via ble_write_buffered().
+static app_fifo_t m_ble_fifo;
+static uint8_t m_ble_fifo_buffer[BLE_FIFO_SIZE];
 
 volatile bool isConnected = false;
 volatile bool isAdvertising = false;
@@ -41,11 +51,11 @@ static void gap_params_init(void)
 
     //set BLE name
     err_code = sd_ble_gap_device_name_set(&sec_mode,(const uint8_t *)DEVICE_NAME,strlen(DEVICE_NAME));
-    BLE_ERROR_CHECK(err_code);
+    APP_ERROR_CHECK(err_code);
 
     //set BLE appearance
     err_code = sd_ble_gap_appearance_set(BLE_APPEARANCE_GENERIC_TAG);
-    BLE_ERROR_CHECK(err_code);
+    APP_ERROR_CHECK(err_code);
 }
 
 
@@ -58,7 +68,7 @@ static void services_init(void)
     nus_init.data_handler = BLEonReceive;
     
     err_code = ble_nus_init(&m_nus, &nus_init);
-    BLE_ERROR_CHECK(err_code);
+    APP_ERROR_CHECK(err_code);
     
     
     /*
@@ -87,7 +97,30 @@ static void sec_params_init(void)
     m_sec_params.max_key_size = SEC_PARAM_MAX_KEY_SIZE;
 }
 
+// Sends all buffered bytes that can currently be sent.
+static void send_buffered_bytes(void) {
+    bool tx_buffers_available = true;
+    while (app_fifo_len(&m_ble_fifo) > 0 && tx_buffers_available) {
+        uint8_t nus_packet[BLE_NUS_MAX_DATA_LEN];
+        uint16_t packet_len = app_fifo_get_bytes(&m_ble_fifo, nus_packet, BLE_NUS_MAX_DATA_LEN);
+        uint32_t err_code = ble_nus_string_send(&m_nus, nus_packet, packet_len);
 
+        switch (err_code) {
+            case NRF_SUCCESS:
+                // Yay! We could queue the packet with the SoftDevice.
+                break;
+            case BLE_ERROR_NO_TX_BUFFERS:
+                // Expected failure. The SoftDevice is out of buffers to take our packet with.
+                // Recover by rewinding our buffer packet_len bytes so we send it next time.
+                tx_buffers_available = false;
+                app_fifo_rewind(&m_ble_fifo, packet_len);
+                break;
+            default:
+                // Some unexpected error occurred. Reset!
+                APP_ERROR_CHECK(err_code);
+        }
+    }
+}
 
 static void on_ble_evt(ble_evt_t * p_ble_evt)
 {
@@ -108,6 +141,9 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 
     switch (p_ble_evt->header.evt_id)
     {
+        case BLE_EVT_TX_COMPLETE:
+            send_buffered_bytes();
+            break;
         case BLE_GAP_EVT_CONNECTED:  //on BLE connect event
             m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
             BLEonConnect();
@@ -136,14 +172,14 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
                                                    BLE_GAP_SEC_STATUS_SUCCESS,
                                                    &m_sec_params,
                                                    &m_keys);
-            BLE_ERROR_CHECK(err_code);
+            APP_ERROR_CHECK(err_code);
             break;
         case BLE_GATTS_EVT_SYS_ATTR_MISSING:
             err_code = sd_ble_gatts_sys_attr_set(m_conn_handle,
                                                  NULL,
                                                  0,
                                                  BLE_GATTS_SYS_ATTR_FLAG_SYS_SRVCS | BLE_GATTS_SYS_ATTR_FLAG_USR_SRVCS);
-            BLE_ERROR_CHECK(err_code);
+            APP_ERROR_CHECK(err_code);
             break;
         case BLE_GAP_EVT_AUTH_STATUS:
             m_auth_status = p_ble_evt->evt.gap_evt.params.auth_status;
@@ -159,7 +195,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
             p_sign_info = (p_distributed_keys->sign && master_id_matches) ? &m_sign_key         : NULL;
 
             err_code = sd_ble_gap_sec_info_reply(m_conn_handle, p_enc_info, p_id_info, p_sign_info);
-                BLE_ERROR_CHECK(err_code);
+            APP_ERROR_CHECK(err_code);
             break;
 
         default:
@@ -220,7 +256,7 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
                 
             //debug_log("ADV: advertising REstarted\r\n");
             uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);  // restart advertising
-            BLE_ERROR_CHECK(err_code);
+            APP_ERROR_CHECK(err_code);
         }
     }
     else
@@ -254,15 +290,15 @@ static void ble_stack_init(void)
     ble_enable_params.gatts_enable_params.service_changed = IS_SRVC_CHANGED_CHARACT_PRESENT;
     
     err_code = sd_ble_enable(&ble_enable_params);
-    BLE_ERROR_CHECK(err_code);
+    APP_ERROR_CHECK(err_code);
     
     // Register with the SoftDevice handler module for BLE events.
     err_code = softdevice_ble_evt_handler_set(ble_evt_dispatch);
-    BLE_ERROR_CHECK(err_code);
+    APP_ERROR_CHECK(err_code);
     
     // Register with the SoftDevice handler module for system events.
     err_code = softdevice_sys_evt_handler_set(sys_evt_dispatch);
-    BLE_ERROR_CHECK(err_code);
+    APP_ERROR_CHECK(err_code);
 }
 
 void advertising_init(void)
@@ -287,7 +323,7 @@ void advertising_init(void)
     options.ble_adv_whitelist_enabled = BLE_ADV_WHITELIST_DISABLED;
 
     err_code = ble_advertising_init(&advdata, NULL, &options, NULL /*on_adv_evt*/, NULL);
-    BLE_ERROR_CHECK(err_code);
+    APP_ERROR_CHECK(err_code);
     setAdvData();
 }
 
@@ -374,6 +410,8 @@ void BLE_init()
     for(int i = 0; i <= 5; i++)  { 
         customAdvData.MAC[i] = MAC.addr[i];
     }
+
+    app_fifo_init(&m_ble_fifo, m_ble_fifo_buffer, sizeof(m_ble_fifo_buffer));
     
     //advertising_init();
     //uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
@@ -389,7 +427,7 @@ void BLEstartAdvertising()
             isAdvertising = true;
             return;
         }
-        BLE_ERROR_CHECK(err_code);
+        APP_ERROR_CHECK(err_code);
     }
 }
 
@@ -397,7 +435,7 @@ void BLEstartAdvertising()
 void BLEdisable()
 {
     uint32_t err_code = softdevice_handler_sd_disable();
-    BLE_ERROR_CHECK(err_code);
+    APP_ERROR_CHECK(err_code);
 }
 
 
@@ -453,6 +491,33 @@ bool notificationEnabled()
     return m_nus.is_notification_enabled;
 }
 
+// Queues the len bytes at data to be sent over the BLE UART Service.
+//   As much data as possible will also be immediately be queued with the SoftDevice for sending.
+//   The other data will be sent as room becomes available with the SoftDevice.
+// Returns the number of bytes that could be queued for transmission.
+uint16_t ble_write_buffered(uint8_t * data, uint16_t len) {
+    APP_ERROR_CHECK_BOOL(data != NULL);
+
+    uint16_t num_bytes_queued = app_fifo_put_bytes(&m_ble_fifo, data, len);
+    send_buffered_bytes();
+    return num_bytes_queued;
+}
+
+// Queues the len bytes at data to be sent over the BLE UART Service.
+// Functions similarly to ble_write_buffered, except if the entire message cannot be written, then no bytes
+//  are buffered to be sent.
+// Returns NRF_SUCCESS if sucessful or NRF_ERROR_NO_MEM if the message could be queued.
+uint32_t ble_write_buffered_atomic(uint8_t * data, uint16_t len) {
+    if (BLE_FIFO_SIZE - app_fifo_len(&m_ble_fifo) < len) {
+        return NRF_ERROR_NO_MEM;
+    }
+
+    uint16_t bytesWritten = ble_write_buffered(data, len);
+
+    APP_ERROR_CHECK_BOOL(bytesWritten == len);
+
+    return NRF_SUCCESS;
+}
 
 bool BLEwrite(uint8_t* data, uint16_t len)  {
     uint32_t err_code = ble_nus_string_send(&m_nus, data, len);
@@ -463,7 +528,7 @@ bool BLEwrite(uint8_t* data, uint16_t len)  {
         return false;
     }
     
-    ble_timeout_set(CONNECTION_TIMEOUT_MS);  // refresh connection timeout
+    //ble_timeout_set(CONNECTION_TIMEOUT_MS);  // refresh connection timeout
     
     return true;
 }

@@ -91,6 +91,7 @@ helpDetailed:
 C_SOURCE_FILES += \
 main.c \
 incl/analog.c \
+incl/app_fifo_util.c \
 incl/rtc_timing.c \
 incl/ble_setup.c \
 incl/debug_log.c \
@@ -100,6 +101,7 @@ incl/storer.c \
 incl/sender.c \
 incl/self_test.c \
 incl/scanner.c \
+incl/uart_commands.c \
 $(SDK_PATH)/components/libraries/crc16/crc16.c \
 $(SDK_PATH)/components/libraries/timer/app_timer.c \
 $(SDK_PATH)/components/libraries/util/app_error.c \
@@ -215,7 +217,7 @@ CFLAGS += -fno-builtin --short-enums
 #enable SPI
 CFLAGS += -DSPI_MASTER_0_ENABLE
 
-
+CFLAGS += -DDEBUG
 
 # keep every function in separate section. This will allow linker to dump unused functions
 LDFLAGS += -Xlinker -Map=$(LISTING_DIRECTORY)/$(OUTPUT_FILENAME).map

@@ -385,7 +385,7 @@ void writeBlockToFlash(uint32_t* to, uint32_t* from, int numWords)
     uint8_t page = PAGE_FROM_ADDRESS(to);
     if (page > LAST_PAGE || page < FIRST_PAGE)  {
         debug_log("Invalid block write address\r\n");
-        while(1);
+        APP_ERROR_CHECK_BOOL(false);
     }
     else  {
         flashWorking = true;
@@ -397,7 +397,7 @@ void erasePageOfFlash(uint8_t page)
 {
     if (page > LAST_PAGE || page < FIRST_PAGE)  {
         debug_log("Invalid flash erase address\r\n");
-        while(1);
+        APP_ERROR_CHECK_BOOL(false);
     }
     else  {
         flashWorking = true;
