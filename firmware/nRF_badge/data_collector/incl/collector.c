@@ -8,9 +8,36 @@
 
 
 
+#include <app_timer.h>
 #include "collector.h"
 
+#define SAMPLES_PER_WINDOW 100
 
+static uint32_t mCollectorTaskTimer;
+static uint32_t mCollectorTaskTimeoutTimer;
+static uint32_t mCollectorTaskOperationTimer;
+
+static volatile bool mCollectorTimeout = false;
+
+static void collector_task(void * p_context) {
+    debug_log("Collector Task\r\n");
+    if (isCollecting) {
+        app_timer_start(mCollectorTaskTimeoutTimer, APP_TIMER_TICKS(SAMPLE_WINDOW, 0), NULL);
+        for (int i = 0; i < SAMPLES_PER_WINDOW; i++) {
+            takeMicReading();
+        }
+    }
+}
+
+static void collector_task_operation(void * p_context) {
+    debug_log("Collector Task Operation\r\n");
+    takeMicReading();
+}
+
+static void on_collector_task_timeout(void * p_context) {
+    debug_log("Collector timeout\r\n");
+    collectSample();
+}
 
 void collector_init()
 {
@@ -29,8 +56,11 @@ void collector_init()
     sampleStartms = 0;
     
     isCollecting = false;
-}
 
+    app_timer_create(&mCollectorTaskTimer, APP_TIMER_MODE_REPEATED, collector_task);
+    app_timer_create(&mCollectorTaskOperationTimer, APP_TIMER_MODE_REPEATED, collector_task_operation);
+    app_timer_create(&mCollectorTaskTimeoutTimer, APP_TIMER_MODE_SINGLE_SHOT, on_collector_task_timeout);
+}
 
 /**
  * Take a reading from the mic (and add to total for averaging later)
@@ -88,6 +118,8 @@ void collectSample()
         micBuffer[collect.to].check = micBuffer[collect.to].timestamp;  // mark chunk as complete
         collect.to = (collect.to < LAST_RAM_CHUNK) ? collect.to+1 : 0;
         collect.loc = 0;
+
+        triggerStorer();
     }
     
     takingReadings = false;  // we finished taking readings for that sample
@@ -98,6 +130,7 @@ void startCollector()
     if(!isCollecting)  {
         isCollecting = true;
         debug_log("  Collector started\r\n");
+        app_timer_start(mCollectorTaskTimer, APP_TIMER_TICKS(SAMPLE_PERIOD, 0), NULL);
         updateAdvData();
     }
 }
@@ -122,6 +155,8 @@ void stopCollector()
         collect.loc = 0;
     
         isCollecting = false;   // Disable collector
+        app_timer_stop(mCollectorTaskTimer);
+        triggerStorer();
         updateAdvData();
     }
 }

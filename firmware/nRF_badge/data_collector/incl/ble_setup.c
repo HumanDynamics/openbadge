@@ -6,6 +6,8 @@
 // Size of BLE FIFO, must be power of two.
 #define BLE_FIFO_SIZE 512
 
+#define BLE_ADV_PAUSE_CALLBACK_QUEUE_SIZE 3
+
 static ble_gap_sec_params_t             m_sec_params;                               /**< Security requirements for this application. */
 static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;    /**< Handle of the current connection. */
 
@@ -16,6 +18,8 @@ static ble_nus_t                        m_nus;      //Struct for Nordic UART Ser
 // Buffer used to allow for sending of long messages (up to 512 bytes) via ble_write_buffered().
 static app_fifo_t m_ble_fifo;
 static uint8_t m_ble_fifo_buffer[BLE_FIFO_SIZE];
+
+static adv_paused_callback_t m_adv_pause_callback_queue[BLE_ADV_PAUSE_CALLBACK_QUEUE_SIZE] = {0};
 
 volatile bool isConnected = false;
 volatile bool isAdvertising = false;
@@ -41,6 +45,26 @@ static void ble_error_handler(uint32_t error_code, uint32_t line_num)
     while(1);
 }
 
+
+void ble_queue_adv_paused_callback(adv_paused_callback_t callback) {
+    for (int i = 0; i < BLE_ADV_PAUSE_CALLBACK_QUEUE_SIZE; i++) {
+        if (m_adv_pause_callback_queue[i] == NULL || m_adv_pause_callback_queue[i] == callback) {
+            m_adv_pause_callback_queue[i] = callback;
+            return;
+        }
+    }
+    // No room for this callback.
+    APP_ERROR_CHECK(NRF_ERROR_NO_MEM);
+}
+
+static void ble_adv_paused_call_callbacks(void) {
+    for (int i = 0; i < BLE_ADV_PAUSE_CALLBACK_QUEUE_SIZE; i++) {
+        if (m_adv_pause_callback_queue[i] != NULL) {
+            m_adv_pause_callback_queue[i]();
+            m_adv_pause_callback_queue[i] = NULL;
+        }
+    }
+}
 
 static void gap_params_init(void)
 {
@@ -229,8 +253,9 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
         if(pauseReqSrc != PAUSE_REQ_NONE)
         {
             isAdvertising = false;
-            sleep = false;  // wake so that modules waiting for pause can act.
             debug_log("ADV: advertising paused, src %d.\r\n",pauseReqSrc);
+
+            ble_adv_paused_call_callbacks();
         }
         
         // Otherwise restart advertising, for infinite advertising.
@@ -254,7 +279,7 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
                 needAdvDataUpdate = false;
             }
                 
-            //debug_log("ADV: advertising REstarted\r\n");
+            //debug_log("ADV: advertising Restarted\r\n");
             uint32_t err_code = ble_advertising_start(BLE_ADV_MODE_FAST);  // restart advertising
             APP_ERROR_CHECK(err_code);
         }
@@ -443,6 +468,7 @@ bool BLEpause(ble_pauseReq_src source)
 {
     pauseRequest[source] = true;
     bool isScanning = (getScanState() == SCANNER_SCANNING);
+    //debug_log("%d %d %d\r\n", isConnected, isAdvertising, isScanning);
     if(isConnected || isAdvertising || isScanning)  return false;  // return false if BLE active.
     else return true;
 }

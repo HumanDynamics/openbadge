@@ -1,6 +1,21 @@
+#include <app_scheduler.h>
+#include <app_timer.h>
+
 #include "scanner.h"
 
+static uint32_t mScanTimer;
 
+static void scan_task(void * p_context) {
+    if (scanner_enable) {
+        // don't start scans if BLE is inactive (paused)
+        if(BLEgetStatus() != BLE_INACTIVE)  {
+            uint32_t result = startScan();
+            APP_ERROR_CHECK(result);
+            debug_log("SCANNER: Started scan.\r\n");
+            lastScanTime = millis();
+        }
+    }
+}
 
 static unsigned short hexStringToShort(unsigned char * string)
 {
@@ -37,6 +52,8 @@ void scanner_init()
     scanPeriod_ms = 1000UL * SCAN_PERIOD;
     
     //scan_state = SCAN_IDLE;
+
+    app_timer_create(&mScanTimer, APP_TIMER_MODE_REPEATED, scan_task);
 }
 
 
@@ -46,6 +63,8 @@ uint32_t startScan()
     
     scan.num = 0;
     scan.timestamp = now();
+
+    scan_state = SCANNER_SCANNING;
     
     return sd_ble_gap_scan_start(&scan_params);
 }
@@ -246,9 +265,19 @@ void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
         
 }
 
+static void save_scan_results(void * p_event_data, uint16_t event_size) {
+    debug_log("Saving scan results\r\n");
+    updateScanner();
+    scan_state = SCANNER_IDLE;
+
+    triggerStorer();
+}
+
 void BLEonScanTimeout()
 {   
     scan_state = SCANNER_SAVE;
+    app_sched_event_put(NULL, 0, save_scan_results);
+
 }
 
 // Compare function for stdlib's QuickSort function that will sort a list of seenDevice_t by RSSI descendingly.
@@ -298,33 +327,6 @@ bool updateScanner()
 {
     bool scannerActive = true;
 
-    switch(scan_state)
-    {
-    case SCANNER_IDLE:   // nothing to do, but check whether it's time to scan again.
-        if(scanner_enable)  {  // don't re-start scans if scanning is disabled
-            if(millis() - lastScanTime >= scanPeriod_ms)  {  // start scanning if it's time to scan
-                // don't start scans if BLE is inactive (paused)
-                if(BLEgetStatus() != BLE_INACTIVE)  {
-                    uint32_t result = startScan();
-                    if(result == NRF_SUCCESS)  {
-                        scan_state = SCANNER_SCANNING;
-                        debug_log("SCANNER: Started scan.\r\n");
-                    }
-                    else  {
-                        debug_log("ERR: error starting scan, #%u\r\n",(unsigned int)result);
-                    }
-                    lastScanTime = millis();
-                }
-            }
-        }
-        else  {
-            scannerActive = false;
-        }
-        break;
-    case SCANNER_SCANNING:
-        // Scan timeout callback will exit scanning state.
-        break;
-    case SCANNER_SAVE:
         debug_log("SCANNER: Saving scan results. %d devices seen\r\n",scan.num);
         
         int numSaved = 0;
@@ -381,14 +383,9 @@ bool updateScanner()
         } while(numSaved < scan.num);
         
         debug_log("SCANNER: Done saving results.  used %d chunks.\r\n",chunksUsed);
-        
-        scan_state = SCANNER_IDLE;
-        
-        break;
-    default:
-        break;
-    }  // switch(scan_state)
-    
+
+        triggerStorer();
+
     return scannerActive;
     
 }
@@ -403,11 +400,17 @@ void startScanner(unsigned short window_ms,unsigned short interval_ms,unsigned s
     scanPeriod_ms = 1000UL * period_s;
     
     scanner_enable = true;
+
+    app_timer_start(mScanTimer, APP_TIMER_TICKS(scanPeriod_ms, 0), NULL);
 }
 
 void stopScanner()
 {
     scanner_enable = false;
+
+    app_timer_stop(mScanTimer);
+
+    triggerStorer();
 }
 
 

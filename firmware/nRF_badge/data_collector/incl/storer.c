@@ -6,6 +6,8 @@
 
 #include "storer.h"
 
+#include <app_scheduler.h>
+
 
 volatile bool flashWorking;
 volatile storer_mode_t storerMode = STORER_IDLE;
@@ -183,7 +185,20 @@ bool storer_test()
     }
     return true;
 }
-    
+
+static void data_storage_handler(void * p_event_data, uint16_t event_size) {
+    //debug_log("Handling data storage....");
+    bool storageOperationsRemaining = updateStorer();
+    if (storageOperationsRemaining) {
+        app_sched_event_put(NULL, 0, data_storage_handler);
+    } else {
+        debug_log(" done.\r\n");
+    }
+}
+
+void triggerStorer(void) {
+    app_sched_event_put(NULL, 0, data_storage_handler);
+}
 
 
 bool updateStorer()
@@ -197,6 +212,7 @@ bool updateStorer()
         switch(modeLocal){
         
         case STORER_IDLE:
+            //debug_log("Storer is idle.\r\n");
             if (lastStoredAssignment.ID != badgeAssignment.ID || lastStoredAssignment.group != badgeAssignment.group)  {
                 storerMode = STORER_STORE_ASSIGNMENT;
             }
@@ -205,6 +221,11 @@ bool updateStorer()
                     // Storable chunk in collector RAM.
                     if(BLEpause(PAUSE_REQ_STORER))  {
                         storerMode = STORER_STORE;
+                        debug_log("Found and storing collector chunk.");
+                    } else {
+                        debug_log("Found collector chunk, waiting for ble pause to save...");
+                        ble_queue_adv_paused_callback((void *) updateStorer);
+                        storerActive = false;
                     }
                 }
                 else  {
@@ -219,6 +240,11 @@ bool updateStorer()
                     // Storable chunk in scanner RAM
                     if(BLEpause(PAUSE_REQ_STORER))  {
                         storerMode = STORER_STORE_EXT;
+                        debug_log("Found and storing scan chunk");
+                    } else {
+                        debug_log("Found scan chunk, waiting for ble pause to save...");
+                        ble_queue_adv_paused_callback((void *) updateStorer);
+                        storerActive = false;
                     }
                 }
                 else  {
@@ -233,7 +259,7 @@ bool updateStorer()
             break;
             
         case STORER_STORE:
-            //debug_log("STORER: writing RAM chunk %d to FLASH chunk %d\r\n",store.from,store.to);
+            debug_log("STORER: writing RAM chunk %d to FLASH chunk %d\r\n",store.from,store.to);
             //printCollectorChunk(store.from);
             writeBlockToFlash(ADDRESS_OF_CHUNK(store.to),micBuffer[store.from].wordBuf,WORDS_PER_CHUNK);
             break;

@@ -46,6 +46,7 @@ include_directories(
         ~/nrf_sdk/components/libraries/crc16/
         ~/nrf_sdk/components/libraries/util
         ~/nrf_sdk/components/libraries/fifo
+        ~/nrf_sdk/components/libraries/scheduler
         ~/nrf_sdk/components/libraries/trace
         ~/nrf_sdk/components/libraries/timer
         ~/nrf_sdk/components/drivers_nrf/common

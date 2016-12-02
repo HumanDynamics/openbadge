@@ -1,10 +1,12 @@
 #include <app_timer.h>
 
 #include "rtc_timing.h"
+#include "ble_setup.h"
+#include "custom_board.h"
 
 
 #define PRESCALER          0
-#define MAX_TIMERS         6
+#define MAX_TIMERS         12
 #define OP_QUEUE_SIZE      6
 
 // This is a slight optimization. Our timer wakes our chip whenever the timer goes off,
@@ -30,11 +32,12 @@ static void on_countdown_timeout(void * p_context) {
 }
 
 static void on_ble_timeout(void * p_context) {
-    ble_timeout = true;
+    debug_log("Connection timeout.  Disconnecting...\r\n");
+    BLEforceDisconnect();
 }
 
 static void on_led_timeout(void * p_context) {
-    led_timeout = true;
+    nrf_gpio_pin_write(LED_2,LED_OFF);
 }
 
 static void on_clock_timeout(void * p_context) {
@@ -72,7 +75,6 @@ void countdown_set(unsigned long ms)
 
 void ble_timeout_set(unsigned long ms)
 {
-    ble_timeout = false;
     start_singleshot_timer(mBLETimeoutTimer, ms);
 }
 
@@ -83,7 +85,6 @@ void ble_timeout_cancel()
 
 void led_timeout_set(unsigned long ms)
 {
-    led_timeout = false;
     start_singleshot_timer(mLEDTimeoutTimer, ms);
 }
 

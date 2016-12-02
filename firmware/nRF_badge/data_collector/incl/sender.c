@@ -2,8 +2,6 @@
  * INFORMATION ****************************************************
  */
 
-
-
 #include "sender.h"
 
 // External chunks will be loaded into this buffer all at once, for quicker access.
@@ -722,16 +720,14 @@ bool updateSender()
             led_timeout_cancel();
             nrf_gpio_pin_write(LED_2,0);   // clunky - sender.c doesn't see LED_OFF define
             debug_log("SENDER: LED off.\r\n");
-        }
-    
-        else  {
+        } else  {
             if (command.timeout > 30) command.timeout = 30;  // clip to 30seconds
             unsigned long timeout_ms = ((unsigned long)command.timeout) * 1000UL;
             led_timeout_set(timeout_ms);
             nrf_gpio_pin_write(LED_2,1); // clunky - sender.c doesn't see LED_ON define
             debug_log("SENDER: LED on for %ds.\r\n",command.timeout);
         }
-        pendingCommand.cmd = CMD_NONE;
+            pendingCommand.cmd = CMD_NONE;
         break;  // switch (command.cmd)
     
     case CMD_NONE:

@@ -103,6 +103,7 @@ incl/self_test.c \
 incl/scanner.c \
 incl/uart_commands.c \
 $(SDK_PATH)/components/libraries/crc16/crc16.c \
+$(SDK_PATH)/components/libraries/scheduler/app_scheduler.c \
 $(SDK_PATH)/components/libraries/timer/app_timer.c \
 $(SDK_PATH)/components/libraries/util/app_error.c \
 $(SDK_PATH)/components/libraries/util/nrf_assert.c \
@@ -139,6 +140,7 @@ INC_PATHS += -I$(SDK_PATH)/components/softdevice/common/softdevice_handler
 INC_PATHS += -I$(SDK_PATH)/components/libraries/crc16/
 INC_PATHS += -I$(SDK_PATH)/components/libraries/util
 INC_PATHS += -I$(SDK_PATH)/components/libraries/fifo
+INC_PATHS += -I$(SDK_PATH)/components/libraries/scheduler
 INC_PATHS += -I$(SDK_PATH)/components/libraries/trace
 INC_PATHS += -I$(SDK_PATH)/components/libraries/timer
 INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/common

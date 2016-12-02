@@ -101,14 +101,14 @@ typedef struct
 #define CUSTOM_ADV_DATA_LEN 11   // length of above struct (excluding struct padding)
 #define BADGE_MANUF_DATA_LEN (CUSTOM_ADV_DATA_LEN + 2)  // CUSTOM_ADV_DATA_LEN bytes, plus 16-bit company ID
 
+typedef void (*adv_paused_callback_t)(void);
 
 volatile custom_adv_data_t customAdvData;
 volatile bool needAdvDataUpdate;
 
 
 #include "scanner.h"
-#include "storer.h" 
-
+#include "storer.h"
 
 /**
  * Callback function for asserts in the SoftDevice; called in case of SoftDevice assert.
@@ -125,18 +125,10 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name);
 static void ble_error_handler(uint32_t error_code, uint32_t line_num);
 
 /**
- * Macro for checking error codes.  Defined as a macro so we can report the line number.
- * Calls ble_error_handler if ERR_CODE is not NRF_SUCCESS (i.e. 0)
+ * Queues the given callback to be called after advertising has been paused.
+ * @param callback The function to be called once immediately following the next time advertising is paused.
  */
-#define BLE_ERROR_CHECK(ERR_CODE)                           \
-    do                                                      \
-    {                                                       \
-        const uint32_t LOCAL_ERR_CODE = (ERR_CODE);         \
-        if (LOCAL_ERR_CODE != NRF_SUCCESS)                  \
-        {                                                   \
-            ble_error_handler(LOCAL_ERR_CODE,__LINE__);     \
-        }                                                   \
-    } while (0)
+void ble_queue_adv_paused_callback(adv_paused_callback_t callback);
 
 /**@brief Function for the GAP initialization.
  *

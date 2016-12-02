@@ -136,6 +136,8 @@ stored_assignment_t lastStoredAssignment;
 
 badge_assignment_t getStoredBadgeAssignment();
 
+void triggerStorer(void);
+
 
 // Functions for dealing with flash.  Protect from invalid writes/erases.
 void writeWordToFlash(uint32_t* addr, uint32_t val);
