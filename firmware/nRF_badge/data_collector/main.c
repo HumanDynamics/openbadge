@@ -211,12 +211,9 @@ void BLEonDisconnect()
 }
 
 static void processPendingCommand(void * p_event_data, uint16_t event_size) {
-    debug_log("Processing command...");
     bool sendOperationsRemaining = updateSender();
     if (sendOperationsRemaining) {
         app_sched_event_put(NULL, 0, processPendingCommand);
-    } else {
-        debug_log(" processing complete!\r\n");
     }
 }
 
