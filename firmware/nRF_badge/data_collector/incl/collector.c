@@ -11,32 +11,18 @@
 #include <app_timer.h>
 #include "collector.h"
 
-#define SAMPLES_PER_WINDOW 100
-
 static uint32_t mCollectorTaskTimer;
-static uint32_t mCollectorTaskTimeoutTimer;
-static uint32_t mCollectorTaskOperationTimer;
-
-static volatile bool mCollectorTimeout = false;
 
 static void collector_task(void * p_context) {
-    debug_log("Collector Task\r\n");
     if (isCollecting) {
-        app_timer_start(mCollectorTaskTimeoutTimer, APP_TIMER_TICKS(SAMPLE_WINDOW, 0), NULL);
-        for (int i = 0; i < SAMPLES_PER_WINDOW; i++) {
+        uint32_t collection_start = timer_comparison_ticks_now();
+
+        while(timer_comparison_millis_since_start(collection_start) < SAMPLE_WINDOW) {
             takeMicReading();
         }
+
+        collectSample();
     }
-}
-
-static void collector_task_operation(void * p_context) {
-    debug_log("Collector Task Operation\r\n");
-    takeMicReading();
-}
-
-static void on_collector_task_timeout(void * p_context) {
-    debug_log("Collector timeout\r\n");
-    collectSample();
 }
 
 void collector_init()
@@ -58,8 +44,6 @@ void collector_init()
     isCollecting = false;
 
     app_timer_create(&mCollectorTaskTimer, APP_TIMER_MODE_REPEATED, collector_task);
-    app_timer_create(&mCollectorTaskOperationTimer, APP_TIMER_MODE_REPEATED, collector_task_operation);
-    app_timer_create(&mCollectorTaskTimeoutTimer, APP_TIMER_MODE_SINGLE_SHOT, on_collector_task_timeout);
 }
 
 /**
@@ -130,7 +114,7 @@ void startCollector()
     if(!isCollecting)  {
         isCollecting = true;
         debug_log("  Collector started\r\n");
-        app_timer_start(mCollectorTaskTimer, APP_TIMER_TICKS(SAMPLE_PERIOD, 0), NULL);
+        app_timer_start(mCollectorTaskTimer, APP_TIMER_TICKS(SAMPLE_PERIOD, APP_PRESCALER), NULL);
         updateAdvData();
     }
 }

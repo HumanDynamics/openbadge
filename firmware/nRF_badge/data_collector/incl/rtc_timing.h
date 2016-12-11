@@ -3,6 +3,10 @@
 #ifndef RTC_TIMING_H
 #define RTC_TIMING_H
 
+#define APP_PRESCALER          0
+#define APP_MAX_TIMERS         12
+#define APP_OP_QUEUE_SIZE      6
+
 #include "nrf_drv_config.h"
 #include "nrf_soc.h"
 #include "app_error.h"
@@ -62,10 +66,22 @@ unsigned long long ticks(void);
 unsigned long millis(void);
 
 /**
- * emulate functionality of micros() in arduino
+ * Returns a timer tick starting point for timer_comparison_millis_since_start comparisons that start at
+ *   the current time.
+ *  Safe to use from interupt context.
+ *
+ * @return the current time as a value that can be used as an argument for timer_comparison_millis_since_start
  */
-unsigned long micros(void);
+uint32_t timer_comparison_ticks_now(void);
 
+/**
+ * Returns the number of millis since the starting point ticks_start (from timer_comparison_ticks_now).
+ *   Has percision down to 1/APP_TIMER_FREQS seconds. Can be used for comparisons up to ~512 ms long.
+ *  Safe to use from interupt context
+ *
+ *  @return the number of milliseconds since ticks_start as a float
+ */
+float timer_comparison_millis_since_start(uint32_t ticks_start);
 
 /**
  * get current timestamp (set with setTime) in seconds (most likely epoch time)

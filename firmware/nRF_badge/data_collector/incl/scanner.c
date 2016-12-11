@@ -401,7 +401,7 @@ void startScanner(unsigned short window_ms,unsigned short interval_ms,unsigned s
     
     scanner_enable = true;
 
-    app_timer_start(mScanTimer, APP_TIMER_TICKS(scanPeriod_ms, 0), NULL);
+    app_timer_start(mScanTimer, APP_TIMER_TICKS(scanPeriod_ms, APP_PRESCALER), NULL);
 }
 
 void stopScanner()

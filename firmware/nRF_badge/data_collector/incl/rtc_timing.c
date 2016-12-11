@@ -4,11 +4,6 @@
 #include "ble_setup.h"
 #include "custom_board.h"
 
-
-#define PRESCALER          0
-#define MAX_TIMERS         12
-#define OP_QUEUE_SIZE      6
-
 // This is a slight optimization. Our timer wakes our chip whenever the timer goes off,
 // so we want to wake it as little as necessary. Thus, we want out clock timer to rarely tick, but we needs millisecond
 // precision. This is tricky, because the RTC timer only has 24 bits and app timers can only last <= 512 seconds.
@@ -47,14 +42,14 @@ static void on_clock_timeout(void * p_context) {
 
 void rtc_config(void)
 {
-    APP_TIMER_INIT(PRESCALER, MAX_TIMERS, OP_QUEUE_SIZE, false);
+    APP_TIMER_INIT(APP_PRESCALER, APP_MAX_TIMERS, APP_OP_QUEUE_SIZE, false);
 
     app_timer_create(&mCountdownTimer, APP_TIMER_MODE_SINGLE_SHOT, on_countdown_timeout);
     app_timer_create(&mBLETimeoutTimer, APP_TIMER_MODE_SINGLE_SHOT, on_ble_timeout);
     app_timer_create(&mLEDTimeoutTimer, APP_TIMER_MODE_SINGLE_SHOT, on_led_timeout);
 
     app_timer_create(&mClock, APP_TIMER_MODE_REPEATED, on_clock_timeout);
-    app_timer_start(mClock, APP_TIMER_TICKS(CLOCK_TICK_MILLIS, PRESCALER), NULL);
+    app_timer_start(mClock, APP_TIMER_TICKS(CLOCK_TICK_MILLIS, APP_PRESCALER), NULL);
 }
 
 static void start_singleshot_timer(uint32_t timer_id, unsigned long ms) {
@@ -63,7 +58,7 @@ static void start_singleshot_timer(uint32_t timer_id, unsigned long ms) {
     }
 
     app_timer_stop(timer_id); // Stop the timer if running, new timers preempt old ones.
-    app_timer_start(timer_id, APP_TIMER_TICKS(ms, PRESCALER), NULL);
+    app_timer_start(timer_id, APP_TIMER_TICKS(ms, APP_PRESCALER), NULL);
 }
 
 void countdown_set(unsigned long ms)
@@ -93,15 +88,26 @@ void led_timeout_cancel()
     app_timer_stop(mLEDTimeoutTimer);
 }
 
-unsigned long millis(void)  {
-    uint32_t currentTime;
-    app_timer_cnt_get(&currentTime);
-
-    uint32_t ticksSinceLastClockTick;
-    app_timer_cnt_diff_compute(currentTime, mLastClockTickTimerCount, &ticksSinceLastClockTick);
-
-    return mClockInMillis + (ticksSinceLastClockTick / APP_TIMER_TICKS(1, PRESCALER));
+uint32_t timer_comparison_ticks_now(void) {
+    uint32_t timer_ticks;
+    app_timer_cnt_get(&timer_ticks);
+    return timer_ticks;
 }
+
+float timer_comparison_millis_since_start(uint32_t ticks_start) {
+    uint32_t current_time;
+    app_timer_cnt_get(&current_time);
+
+    uint32_t ticks_since_start;
+    app_timer_cnt_diff_compute(current_time, ticks_start, &ticks_since_start);
+
+    return ticks_since_start / APP_TIMER_TICKS(1, APP_PRESCALER);
+}
+
+unsigned long millis(void)  {
+    return mClockInMillis + (unsigned long) timer_comparison_millis_since_start(mLastClockTickTimerCount);
+}
+
 
 unsigned long lastMillis;  //last time now() was called
 
