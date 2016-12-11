@@ -187,12 +187,9 @@ bool storer_test()
 }
 
 static void data_storage_handler(void * p_event_data, uint16_t event_size) {
-    //debug_log("Handling data storage....");
     bool storageOperationsRemaining = updateStorer();
     if (storageOperationsRemaining) {
         app_sched_event_put(NULL, 0, data_storage_handler);
-    } else {
-        debug_log(" done.\r\n");
     }
 }
 
