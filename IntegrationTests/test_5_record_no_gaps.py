@@ -2,7 +2,7 @@ import time
 from integration_test import *
 from BadgeFramework.badge import timestamps_to_time
 
-TEST_LENGTH_SECONDS = 5 * 60;
+TEST_LENGTH_SECONDS = 3 * 60;
 SAMPLE_PERIOD_MS = 50
 SAMPLES_PER_SECOND = 1000 / SAMPLE_PERIOD_MS
 
