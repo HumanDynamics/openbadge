@@ -219,14 +219,7 @@ bool updateStorer()
             else if (store.from != collect.to)  {
                 if(micBuffer[store.from].check == micBuffer[store.from].timestamp || micBuffer[store.from].check == CHECK_TRUNC)  {
                     // Storable chunk in collector RAM.
-                    if(BLEpause(PAUSE_REQ_STORER))  {
-                        storerMode = STORER_STORE;
-                        debug_log("Found and storing collector chunk.");
-                    } else {
-                        debug_log("Found collector chunk, waiting for ble pause to save...");
-                        ble_queue_adv_paused_callback((void *) updateStorer);
-                        storerActive = false;
-                    }
+                    storerMode = STORER_STORE;
                 }
                 else  {
                     store.from = (store.from < LAST_RAM_CHUNK) ? store.from+1 : 0;   // somehow an invalid RAM chunk - move on
@@ -238,14 +231,7 @@ bool updateStorer()
                   || scanBuffer[store.extFrom].check == CHECK_CONTINUE)  
                 {
                     // Storable chunk in scanner RAM
-                    if(BLEpause(PAUSE_REQ_STORER))  {
-                        storerMode = STORER_STORE_EXT;
-                        debug_log("Found and storing scan chunk");
-                    } else {
-                        debug_log("Found scan chunk, waiting for ble pause to save...");
-                        ble_queue_adv_paused_callback((void *) updateStorer);
-                        storerActive = false;
-                    }
+                    storerMode = STORER_STORE_EXT;
                 }
                 else  {
                     // else invalid chunk, move on
