@@ -13,6 +13,8 @@
 // since last clock tick using our RTC timer through app_timer_cnt_get().
 #define CLOCK_TICK_MILLIS  (100 * 1000)
 
+#define MILLIS_PER_TICK    (1000.f / ((APP_PRESCALER + 1) * APP_TIMER_CLOCK_FREQ))
+
 volatile bool countdownOver = false;  //used to give rtc_timing access to sleep from main loop
 
 static uint32_t mCountdownTimer;
@@ -102,7 +104,7 @@ float timer_comparison_millis_since_start(uint32_t ticks_start) {
     uint32_t ticks_since_start;
     app_timer_cnt_diff_compute(current_time, ticks_start, &ticks_since_start);
 
-    return (float) ticks_since_start * (float) (1000.0 / ((APP_PRESCALER + 1) * APP_TIMER_CLOCK_FREQ));
+    return ticks_since_start * MILLIS_PER_TICK;
 }
 
 unsigned long millis(void)  {

@@ -17,7 +17,7 @@ static uint32_t mCollectorCollectTaskTimer;
 static void collector_sample_task(void * p_context) {
     if (isCollecting) {
         uint32_t collection_start = timer_comparison_ticks_now();
-        while(timer_comparison_millis_since_start(collection_start) < SAMPLE_WINDOW) {
+        while (timer_comparison_millis_since_start(collection_start) < READING_WINDOW_MS) {
             takeMicReading();
         }
     }
@@ -31,8 +31,9 @@ static void collector_collect_task(void * p_context) {
 
 void collector_init()
 {
+    debug_log("Reading window: %lu %lu", (uint32_t) (1000*READING_WINDOW_MS), (uint32_t) (1000*READING_PERIOD_MS));
+
     // Set sampling timing parameters to defaults
-    sampleWindow = SAMPLE_WINDOW;
     samplePeriod = SAMPLE_PERIOD;
 
     collect.to = 0;
@@ -119,8 +120,7 @@ void startCollector()
     if(!isCollecting)  {
         isCollecting = true;
         debug_log("  Collector started\r\n");
-        debug_log("  ticks: %lu\r\n", APP_TIMER_TICKS(SAMPLE_PERIOD, APP_PRESCALER));
-        app_timer_start(mCollectorSampleTaskTimer, APP_TIMER_TICKS(SAMPLE_PERIOD, APP_PRESCALER), NULL);
+        app_timer_start(mCollectorSampleTaskTimer, APP_TIMER_TICKS(READING_PERIOD_MS, APP_PRESCALER), NULL);
         app_timer_start(mCollectorCollectTaskTimer, APP_TIMER_TICKS(SAMPLE_PERIOD, APP_PRESCALER), NULL);
         updateAdvData();
     }

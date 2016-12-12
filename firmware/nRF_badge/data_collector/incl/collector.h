@@ -47,8 +47,11 @@ unsigned long samplePeriod;   // time between samples - must exceed SAMPLE_WINDO
 // vvv Default values
 //#define SAMPLE_PERIOD 250UL
 //#define SAMPLE_WINDOW 100UL
-#define SAMPLE_PERIOD 50UL
-#define SAMPLE_WINDOW 20UL
+#define SAMPLE_PERIOD                 50UL
+#define SAMPLE_SLEEP_RATIO            0.4
+#define READING_PERIODS_PER_SECOND    700.0
+#define READING_PERIOD_MS             (1000.0 / READING_PERIODS_PER_SECOND)
+#define READING_WINDOW_MS             (READING_PERIOD_MS * SAMPLE_SLEEP_RATIO)
 
 
 
