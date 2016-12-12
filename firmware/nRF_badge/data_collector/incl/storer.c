@@ -10,8 +10,11 @@
 
 
 volatile bool flashWorking;
-volatile storer_mode_t storerMode = STORER_IDLE;
 
+typedef enum {FLASH_WRITE, FLASH_ERASE} flash_operation_t;
+
+static flash_operation_t mPendingFlashOperation;
+static bool mStorerScheduled = false;
 
 // this is the last chunk before we enter program memory space
 // const int LAST_CHUNK = ((int)(LAST_PAGE - FIRST_PAGE) << 3) + 7;  // = numberOfPages*8 + 7
@@ -19,8 +22,6 @@ volatile storer_mode_t storerMode = STORER_IDLE;
 
 void storer_init()
 {
-    
-    storerMode = STORER_INIT;
     store.from = 0;
     store.to = 0;
     
@@ -152,16 +153,10 @@ void storer_init()
     //store.extTo = EXT_FIRST_DATA_CHUNK;
     ext_eeprom_global_unprotect();
     ext_eeprom_wait();
-    
-    
-    
-    storerMode = STORER_IDLE;
-    
 }
 
 bool storer_test()
 {    
-    storerMode = STORER_INIT;
     debug_log("Erasing first page...\r\n");
     erasePageOfFlash(FIRST_PAGE);
     while (flashWorking);
@@ -186,126 +181,95 @@ bool storer_test()
     return true;
 }
 
-static void data_storage_handler(void * p_event_data, uint16_t event_size) {
-    bool storageOperationsRemaining = updateStorer();
-    if (storageOperationsRemaining) {
-        app_sched_event_put(NULL, 0, data_storage_handler);
+static void Storer_StoreAssignment(void) {
+    lastStoredAssignment.ID = badgeAssignment.ID;
+    lastStoredAssignment.group = badgeAssignment.group;
+    lastStoredAssignment.magicNumber = STORED_ASSIGNMENT_MAGIC_NUMBER;
+    ext_eeprom_write(STORED_ASSIGNMENT_ADDRESS,lastStoredAssignment.buf,sizeof(lastStoredAssignment.buf));
+    ext_eeprom_wait();
+    debug_log("STORER: stored assignment ID:0x%hX group:%d.\r\n", lastStoredAssignment.ID, lastStoredAssignment.group);
+}
+
+static void Storer_AdvanceToNextMicrophoneChunk(void) {
+    unsigned char oldPage = PAGE_OF_CHUNK(store.to);          // get page of just finished chunk
+    int newChunk = (store.to < LAST_FLASH_CHUNK) ? store.to+1 : 0;     // advance to next chunk
+    unsigned char newPage = PAGE_OF_CHUNK(newChunk);          // get page of next chunk
+
+    if (oldPage != newPage)  {
+        store.to = newChunk;
+        store.from = (store.from < LAST_RAM_CHUNK) ? store.from+1 : 0;  // advance to next RAM chunk
+        erasePageOfFlash(newPage);      // Erase the page.  FLASH success system event will schedule next steps.
+    } else  {
+        store.to = newChunk;
+        store.from = (store.from < LAST_RAM_CHUNK) ? store.from+1 : 0;  // advance to next RAM chunk
+        Storer_ScheduleBufferedDataStorage();         // If we don't need to erase, schedule next steps ourselves.
     }
 }
 
-void triggerStorer(void) {
-    app_sched_event_put(NULL, 0, data_storage_handler);
+static void Storer_AdvanceToNextScanChunk(void) {
+    store.extTo = (store.extTo < EXT_LAST_CHUNK) ? store.extTo+1 : EXT_FIRST_DATA_CHUNK;
+    store.extFrom = (store.extFrom < LAST_SCAN_CHUNK) ? store.extFrom+1 : 0;  // advance to next RAM chunk
+    Storer_ScheduleBufferedDataStorage(); // Schedule next scan chunk to be stored.
 }
 
-
-bool updateStorer()
-{
-    // This will be the function return value.  if there is no storage actions to be completed, this will be set to false.
-    //   if not, it will return true.
-    bool storerActive = true;
-    
-    if (!flashWorking)  {  // Can't do storage work if flash operation pending
-        storer_mode_t modeLocal = storerMode;  // local copy, in case interrupt somehow changes it in the middle of this switch
-        switch(modeLocal){
-        
-        case STORER_IDLE:
-            //debug_log("Storer is idle.\r\n");
-            if (lastStoredAssignment.ID != badgeAssignment.ID || lastStoredAssignment.group != badgeAssignment.group)  {
-                storerMode = STORER_STORE_ASSIGNMENT;
-            }
-            else if (store.from != collect.to)  {
-                if(micBuffer[store.from].check == micBuffer[store.from].timestamp || micBuffer[store.from].check == CHECK_TRUNC)  {
-                    // Storable chunk in collector RAM.
-                    storerMode = STORER_STORE;
-                }
-                else  {
-                    store.from = (store.from < LAST_RAM_CHUNK) ? store.from+1 : 0;   // somehow an invalid RAM chunk - move on
-                }
-            }
-            else if (store.extFrom != scan.to)  {
-                if (scanBuffer[store.extFrom].check == scanBuffer[store.extFrom].timestamp
-                  || scanBuffer[store.extFrom].check == CHECK_TRUNC
-                  || scanBuffer[store.extFrom].check == CHECK_CONTINUE)  
-                {
-                    // Storable chunk in scanner RAM
-                    storerMode = STORER_STORE_EXT;
-                }
-                else  {
-                    // else invalid chunk, move on
-                    store.extFrom = (store.extFrom < LAST_SCAN_CHUNK) ? store.extFrom+1 : 0;
-                }
-            }
-            else  {
-                BLEresume(PAUSE_REQ_STORER);
-                storerActive = false;
-            }
-            break;
-            
-        case STORER_STORE:
-            debug_log("STORER: writing RAM chunk %d to FLASH chunk %d\r\n",store.from,store.to);
-            //printCollectorChunk(store.from);
-            writeBlockToFlash(ADDRESS_OF_CHUNK(store.to),micBuffer[store.from].wordBuf,WORDS_PER_CHUNK);
-            break;
-            
-        case STORER_ADVANCE:
-            ;  // can't have declaration directly after switch case label
-            //printStorerChunk(store.to);
-            unsigned char oldPage = PAGE_OF_CHUNK(store.to);          // get page of just finished chunk
-            int newChunk = (store.to < LAST_FLASH_CHUNK) ? store.to+1 : 0;     // advance to next chunk
-            unsigned char newPage = PAGE_OF_CHUNK(newChunk);          // get page of next chunk
-            if (oldPage != newPage)  {
-                if (BLEpause(PAUSE_REQ_STORER))  {
-                    store.to = newChunk;
-                    store.from = (store.from < LAST_RAM_CHUNK) ? store.from+1 : 0;  // advance to next RAM chunk
-                    erasePageOfFlash(newPage);      // Erase the page.  FLASH success system event will switch to idle mode
-                }
-            }
-            else  {
-                store.to = newChunk;
-                store.from = (store.from < LAST_RAM_CHUNK) ? store.from+1 : 0;  // advance to next RAM chunk
-                storerMode = STORER_IDLE;         // If we don't need to erase, we can just go straight to idle mode
-            }
-            break;
-            
-        case STORER_STORE_EXT:
-            debug_log("STORER: writing SCAN chunk %d to EXT chunk %d\r\n",store.extFrom,store.extTo);
-            //printScanResult(&scanBuffer[store.extFrom]);
-            ext_eeprom_write(EXT_ADDRESS_OF_CHUNK(store.extTo),scanBuffer[store.extFrom].buf,
-                                                              sizeof(scanBuffer[store.extFrom].buf));
-            storerMode = STORER_STORE_EXT_WAIT;
-            break;
-        
-        case STORER_STORE_EXT_WAIT:
-            if (ext_eeprom_get_status() == EXT_EEPROM_ALL_IDLE)  {
-                scanBuffer[store.extFrom].check = CHECK_STORED;
-                storerMode = STORER_ADVANCE_EXT;
-            }
-            break;
-            
-        case STORER_ADVANCE_EXT:
-            ;
-            store.extTo = (store.extTo < EXT_LAST_CHUNK) ? store.extTo+1 : EXT_FIRST_DATA_CHUNK;
-            store.extFrom = (store.extFrom < LAST_SCAN_CHUNK) ? store.extFrom+1 : 0;  // advance to next RAM chunk
-            storerMode = STORER_IDLE;
-            break;
-        
-        case STORER_STORE_ASSIGNMENT:
-            lastStoredAssignment.ID = badgeAssignment.ID;
-            lastStoredAssignment.group = badgeAssignment.group;
-            lastStoredAssignment.magicNumber = STORED_ASSIGNMENT_MAGIC_NUMBER;
-            ext_eeprom_write(STORED_ASSIGNMENT_ADDRESS,lastStoredAssignment.buf,sizeof(lastStoredAssignment.buf));
-            ext_eeprom_wait();
-            debug_log("STORER: stored assignment ID:0x%hX group:%d.\r\n",   lastStoredAssignment.ID, 
-                                                                        (int)lastStoredAssignment.group);
-            storerMode = STORER_IDLE;
-        default:
-            break;
-        }   // switch(modeLocal)
-    }    // if(!flashWorking)
-    
-    return storerActive;  // If flash is working, storer is still active.
+static void Storer_StoreMicrophoneChunk(int dst_in_flash, int src_in_ram) {
+    debug_log("STORER: writing RAM chunk %d to FLASH chunk %d\r\n", src_in_ram, dst_in_flash);
+    //printCollectorChunk(store.from);
+    writeBlockToFlash(ADDRESS_OF_CHUNK(dst_in_flash), micBuffer[src_in_ram].wordBuf, WORDS_PER_CHUNK);
+    // The flash success event handler will queue the next events.
 }
 
+static void Storer_StoreScanChunk(int dst_in_flash, int src_in_ram) {
+    debug_log("STORER: writing SCAN chunk %d to EXT chunk %d\r\n", src_in_ram, dst_in_flash);
+    //printScanResult(&scanBuffer[store.extFrom]);
+    ext_eeprom_write(EXT_ADDRESS_OF_CHUNK(dst_in_flash),scanBuffer[src_in_ram].buf, sizeof(scanBuffer[src_in_ram].buf));
+    ext_eeprom_wait();
+    Storer_AdvanceToNextScanChunk();
+}
+
+// Scans RAM for any data that has not been stored to flash and stores it to flash.
+// Schedules any follow-up calls if needed based upon callbacks.
+static void Storer_StoreBufferedData(void) {
+    if (flashWorking) {
+        // Can't do storage work if flash operation pending
+        return;
+    }
+
+    if (lastStoredAssignment.ID != badgeAssignment.ID || lastStoredAssignment.group != badgeAssignment.group) {
+        Storer_StoreAssignment();
+    } else if (store.from != collect.to) {
+        if (micBuffer[store.from].check == micBuffer[store.from].timestamp ||
+            micBuffer[store.from].check == CHECK_TRUNC) {
+            // Storable chunk in collector RAM.
+            Storer_StoreMicrophoneChunk(store.to, store.from);
+        } else {
+            store.from = (store.from < LAST_RAM_CHUNK) ? store.from + 1 : 0;   // somehow an invalid RAM chunk - move on
+        }
+    } else if (store.extFrom != scan.to) {
+        if (scanBuffer[store.extFrom].check == scanBuffer[store.extFrom].timestamp
+            || scanBuffer[store.extFrom].check == CHECK_TRUNC
+            || scanBuffer[store.extFrom].check == CHECK_CONTINUE) {
+                Storer_StoreScanChunk(store.extTo, store.extFrom);
+        } else {
+            // else invalid chunk, move on
+            store.extFrom = (store.extFrom < LAST_SCAN_CHUNK) ? store.extFrom + 1 : 0;
+        }
+    }
+}
+
+static void StorerSchedulerCallbackHandler_StoreBufferedData(void *p_event_data, uint16_t event_size) {
+    Storer_StoreBufferedData();
+    mStorerScheduled = false;
+}
+
+void Storer_ScheduleBufferedDataStorage(void) {
+    if (mStorerScheduled == false) {
+        uint32_t err_code = app_sched_event_put(NULL, 0, StorerSchedulerCallbackHandler_StoreBufferedData);
+        APP_ERROR_CHECK(err_code);
+
+        mStorerScheduled = true;
+    }
+}
 
 void storer_on_sys_evt(uint32_t sys_evt)
 {
@@ -316,26 +280,17 @@ void storer_on_sys_evt(uint32_t sys_evt)
         break;
     case NRF_EVT_FLASH_OPERATION_SUCCESS:
         flashWorking = false;
-        storer_mode_t modeLocal = storerMode;
-        switch(modeLocal)  {
-        case STORER_STORE:     // just completed a store
-            debug_log("STORER: stored RAM chunk %d to FLASH chunk %d\r\n",store.from,store.to);
-            micBuffer[store.from].check = CHECK_STORED;  // mark RAM chunk as stored (don't need to keep track of it in RAM)
-            storerMode = STORER_ADVANCE;    // Advance to the next chunk (may require erasing new page)
-            break;
-        case STORER_ADVANCE:   // just completed erasing for advancing to new chunk
-            debug_log("STORER: erased page %d\r\n",(int)PAGE_OF_CHUNK(store.to));
-            storerMode = STORER_IDLE;       // Finished erasing new page.  Idle till new chunk ready.
-            break;
-        case STORER_INIT:
-            //debug_log("  flash operation complete.\r\n");
-            break;
-        case STORER_IDLE:
-        default:
-            debug_log("ERR: unexpected flash operation success?\r\n");
-            break;
+        switch (mPendingFlashOperation) {
+            case FLASH_WRITE:
+                debug_log("STORER: stored RAM chunk %d to FLASH chunk %d\r\n",store.from,store.to);
+                micBuffer[store.from].check = CHECK_STORED;  // mark RAM chunk as stored (don't need to keep track of it in RAM)
+                Storer_AdvanceToNextMicrophoneChunk();   // Advance to the next chunk (may require erasing new page)
+                break;
+            case FLASH_ERASE:
+                debug_log("STORER: erased page %d\r\n",(int)PAGE_OF_CHUNK(store.to));
+                Storer_ScheduleBufferedDataStorage();
+                break;
         }
-        break;
     default:
         break;
     }
@@ -398,6 +353,7 @@ void writeBlockToFlash(uint32_t* to, uint32_t* from, int numWords)
     }
     else  {
         flashWorking = true;
+        mPendingFlashOperation = FLASH_WRITE;
         sd_flash_write(to, from, numWords);
     }
 }
@@ -410,6 +366,7 @@ void erasePageOfFlash(uint8_t page)
     }
     else  {
         flashWorking = true;
+        mPendingFlashOperation = FLASH_ERASE;
         sd_flash_page_erase(page);
     }
 }

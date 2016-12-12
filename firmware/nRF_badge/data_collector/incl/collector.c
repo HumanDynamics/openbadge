@@ -108,7 +108,7 @@ void collectSample()
         collect.to = (collect.to < LAST_RAM_CHUNK) ? collect.to+1 : 0;
         collect.loc = 0;
 
-        triggerStorer();
+        Storer_ScheduleBufferedDataStorage();
     }
     
     takingReadings = false;  // we finished taking readings for that sample
@@ -148,7 +148,7 @@ void stopCollector()
         isCollecting = false;   // Disable collector
         app_timer_stop(mCollectorSampleTaskTimer);
         app_timer_stop(mCollectorCollectTaskTimer);
-        triggerStorer();
+        Storer_ScheduleBufferedDataStorage();
         updateAdvData();
     }
 }

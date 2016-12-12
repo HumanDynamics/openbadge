@@ -142,8 +142,9 @@ int main(void)
     nrf_gpio_pin_write(LED_2,LED_ON);
     while (1);
     */
-    
-    
+
+    APP_SCHED_INIT(SCHED_MAX_EVENT_DATA_SIZE, SCHED_QUEUE_SIZE);
+
     collector_init();
     storer_init();
     sender_init();
@@ -174,8 +175,6 @@ int main(void)
     app_timer_start(mBatterySampleTimer, MIN_BATTERY_READ_INTERVAL, NULL);
 
     nrf_delay_ms(2);
-
-    APP_SCHED_INIT(SCHED_MAX_EVENT_DATA_SIZE, SCHED_QUEUE_SIZE);
 
     while (true) {
         app_sched_execute();

@@ -270,7 +270,7 @@ static void save_scan_results(void * p_event_data, uint16_t event_size) {
     updateScanner();
     scan_state = SCANNER_IDLE;
 
-    triggerStorer();
+    Storer_ScheduleBufferedDataStorage();
 }
 
 void BLEonScanTimeout()
@@ -384,7 +384,7 @@ bool updateScanner()
         
         debug_log("SCANNER: Done saving results.  used %d chunks.\r\n",chunksUsed);
 
-        triggerStorer();
+    Storer_ScheduleBufferedDataStorage();
 
     return scannerActive;
     
@@ -410,7 +410,7 @@ void stopScanner()
 
     app_timer_stop(mScanTimer);
 
-    triggerStorer();
+    Storer_ScheduleBufferedDataStorage();
 }
 
 
