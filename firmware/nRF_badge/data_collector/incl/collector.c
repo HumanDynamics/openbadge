@@ -14,13 +14,20 @@
 static uint32_t mCollectorSampleTaskTimer;
 static uint32_t mCollectorCollectTaskTimer;
 
+static uint32_t collection_ticks;
+
 static void collector_sample_task(void * p_context) {
+    uint32_t collection_start = timer_comparison_ticks_now();
+
     if (isCollecting) {
-        uint32_t collection_start = timer_comparison_ticks_now();
         while (timer_comparison_ticks_since_start(collection_start) < APP_TIMER_TICKS(READING_WINDOW_MS, APP_PRESCALER)) {
             takeMicReading();
         }
     }
+
+    collection_ticks += timer_comparison_ticks_since_start(collection_start);
+
+    debug_log("t:%lu\r\n", collection_ticks);
 }
 
 static void collector_collect_task(void * p_context) {
