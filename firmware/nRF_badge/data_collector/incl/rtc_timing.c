@@ -97,14 +97,18 @@ uint32_t timer_comparison_ticks_now(void) {
     return timer_ticks;
 }
 
-float timer_comparison_millis_since_start(uint32_t ticks_start) {
+uint32_t timer_comparison_ticks_since_start(uint32_t ticks_start) {
     uint32_t current_time;
     app_timer_cnt_get(&current_time);
 
     uint32_t ticks_since_start;
     app_timer_cnt_diff_compute(current_time, ticks_start, &ticks_since_start);
 
-    return ticks_since_start * MILLIS_PER_TICK;
+    return ticks_since_start;
+}
+
+float timer_comparison_millis_since_start(uint32_t ticks_start) {
+    return timer_comparison_ticks_since_start(ticks_start) * MILLIS_PER_TICK;
 }
 
 unsigned long millis(void)  {

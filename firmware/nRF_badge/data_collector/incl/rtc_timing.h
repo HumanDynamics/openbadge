@@ -75,6 +75,14 @@ unsigned long millis(void);
 uint32_t timer_comparison_ticks_now(void);
 
 /**
+ * Returns the number of timer ticks (in terms of TIMER_TICKS_MS with APP_PRESCALER) since the given timer ticks time.
+ *
+ * Used to optimize code as the NRF lacks an FPU, so float operations are slow. Generally, only use when profiling
+ *   indicates a performance reason to do so. Otherwise, use timer_comparison_millis_since_start.
+ */
+uint32_t timer_comparison_ticks_since_start(uint32_t ticks_start);
+
+/**
  * Returns the number of millis since the starting point ticks_start (from timer_comparison_ticks_now).
  *   Has percision down to 1/APP_TIMER_FREQS seconds. Can be used for comparisons up to ~512 ms long.
  *  Safe to use from interupt context

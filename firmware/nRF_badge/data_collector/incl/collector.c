@@ -17,7 +17,7 @@ static uint32_t mCollectorCollectTaskTimer;
 static void collector_sample_task(void * p_context) {
     if (isCollecting) {
         uint32_t collection_start = timer_comparison_ticks_now();
-        while (timer_comparison_millis_since_start(collection_start) < READING_WINDOW_MS) {
+        while (timer_comparison_ticks_since_start(collection_start) < APP_TIMER_TICKS(READING_WINDOW_MS, APP_PRESCALER)) {
             takeMicReading();
         }
     }
