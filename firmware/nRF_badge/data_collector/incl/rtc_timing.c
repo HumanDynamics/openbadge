@@ -1,4 +1,5 @@
 #include <app_timer.h>
+#include <nrf51.h>
 
 #include "rtc_timing.h"
 #include "ble_setup.h"
@@ -101,7 +102,7 @@ float timer_comparison_millis_since_start(uint32_t ticks_start) {
     uint32_t ticks_since_start;
     app_timer_cnt_diff_compute(current_time, ticks_start, &ticks_since_start);
 
-    return ticks_since_start / APP_TIMER_TICKS(1, APP_PRESCALER);
+    return (float) ticks_since_start * (float) (1000.0 / ((APP_PRESCALER + 1) * APP_TIMER_CLOCK_FREQ));
 }
 
 unsigned long millis(void)  {

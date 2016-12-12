@@ -68,7 +68,7 @@ static void on_battery_sample(void * p_context) {
 }
 
 #define SCHED_MAX_EVENT_DATA_SIZE sizeof(uint32_t)
-#define SCHED_QUEUE_SIZE 10
+#define SCHED_QUEUE_SIZE 100
  
 /**
  * ============================================== MAIN ====================================================
@@ -178,7 +178,6 @@ int main(void)
     APP_SCHED_INIT(SCHED_MAX_EVENT_DATA_SIZE, SCHED_QUEUE_SIZE);
 
     while (true) {
-        //debug_log("Executing from scheduler...");
         app_sched_execute();
         sd_app_evt_wait();
     }

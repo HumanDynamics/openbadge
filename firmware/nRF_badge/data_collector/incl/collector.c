@@ -11,16 +11,20 @@
 #include <app_timer.h>
 #include "collector.h"
 
-static uint32_t mCollectorTaskTimer;
+static uint32_t mCollectorSampleTaskTimer;
+static uint32_t mCollectorCollectTaskTimer;
 
-static void collector_task(void * p_context) {
+static void collector_sample_task(void * p_context) {
     if (isCollecting) {
         uint32_t collection_start = timer_comparison_ticks_now();
-
         while(timer_comparison_millis_since_start(collection_start) < SAMPLE_WINDOW) {
             takeMicReading();
         }
+    }
+}
 
+static void collector_collect_task(void * p_context) {
+    if (isCollecting && readingsCount > 0) {
         collectSample();
     }
 }
@@ -43,7 +47,8 @@ void collector_init()
     
     isCollecting = false;
 
-    app_timer_create(&mCollectorTaskTimer, APP_TIMER_MODE_REPEATED, collector_task);
+    app_timer_create(&mCollectorSampleTaskTimer, APP_TIMER_MODE_REPEATED, collector_sample_task);
+    app_timer_create(&mCollectorCollectTaskTimer, APP_TIMER_MODE_REPEATED, collector_collect_task);
 }
 
 /**
@@ -91,7 +96,7 @@ void collectSample()
     
     if(collect.loc == 0)  {  // are we at start of a new chunk
         setupChunk(collect.to,sampleStart,sampleStartms);
-        debug_log("COLLECTOR: Started RAM chunk %d.\r\n",collect.to);
+        debug_log("COLLECTOR: Started RAM chunk %d. %lu %lu\r\n",collect.to, sampleStart, sampleStartms);
         //printCollectorChunk(collect.to);
     }
     
@@ -114,7 +119,9 @@ void startCollector()
     if(!isCollecting)  {
         isCollecting = true;
         debug_log("  Collector started\r\n");
-        app_timer_start(mCollectorTaskTimer, APP_TIMER_TICKS(SAMPLE_PERIOD, APP_PRESCALER), NULL);
+        debug_log("  ticks: %lu\r\n", APP_TIMER_TICKS(SAMPLE_PERIOD, APP_PRESCALER));
+        app_timer_start(mCollectorSampleTaskTimer, APP_TIMER_TICKS(SAMPLE_PERIOD, APP_PRESCALER), NULL);
+        app_timer_start(mCollectorCollectTaskTimer, APP_TIMER_TICKS(SAMPLE_PERIOD, APP_PRESCALER), NULL);
         updateAdvData();
     }
 }
@@ -139,7 +146,8 @@ void stopCollector()
         collect.loc = 0;
     
         isCollecting = false;   // Disable collector
-        app_timer_stop(mCollectorTaskTimer);
+        app_timer_stop(mCollectorSampleTaskTimer);
+        app_timer_stop(mCollectorCollectTaskTimer);
         triggerStorer();
         updateAdvData();
     }
