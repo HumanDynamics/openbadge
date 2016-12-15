@@ -275,7 +275,7 @@ void storer_on_sys_evt(uint32_t sys_evt)
 {
     switch(sys_evt)  {
     case NRF_EVT_FLASH_OPERATION_ERROR:
-        // TODO Add retry logic here, needed according to SoftDevice specification in case of timeout.
+        // TODO CRITICAL: Add retry logic here, needed according to SoftDevice specification in case of timeout.
         debug_log("STORER: flash error?\r\n");
         flashWorking = false;
         break;
