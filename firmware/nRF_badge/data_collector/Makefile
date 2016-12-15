@@ -217,6 +217,13 @@ CFLAGS += -mfloat-abi=soft
 CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing
 CFLAGS += -fno-builtin --short-enums
 
+GIT_TAG += $(shell git describe --tags)
+GIT_BRANCH += $(shell git rev-parse --abbrev-ref HEAD)
+GIT_COMMIT += $(shell git rev-parse --short HEAD)
+CFLAGS += -DGIT_COMMIT='"$(GIT_COMMIT)"'
+CFLAGS += -DGIT_BRANCH='"$(GIT_BRANCH)"'
+CFLAGS += -DGIT_TAG='"$(GIT_TAG)"'
+
 #enable SPI
 CFLAGS += -DSPI_MASTER_0_ENABLE
 

@@ -90,6 +90,7 @@ int main(void)
     }
 
     debug_log("Name: %.5s\r\n",DEVICE_NAME);
+    debug_log("Firmware Version: %s, Branch: %s, Commit: %s\r\n", GIT_TAG, GIT_BRANCH, GIT_COMMIT);
 
 
     // Define and set LEDs
