@@ -1,6 +1,7 @@
 #include <app_scheduler.h>
 #include <app_timer.h>
 
+#include "battery.h"
 #include "scanner.h"
 
 static uint32_t mScanTimer;
@@ -346,7 +347,7 @@ bool updateScanner()
             // Fill chunk header
             scanBuffer[scan.to].timestamp = scan.timestamp;
             scanBuffer[scan.to].num = scan.num;
-            int scaledBatteryLevel = (int)(100.0*getBatteryVoltage()) - 100;
+            int scaledBatteryLevel = (int)(100.0*BatteryMonitor_getBatteryVoltage()) - 100;
             scanBuffer[scan.to].batteryLevel =  (scaledBatteryLevel <= 255) ? scaledBatteryLevel : 255;  // clip scaled level
             
             debug_log("  C:%d\r\n",scan.to);

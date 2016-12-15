@@ -30,14 +30,6 @@
                                 NRF_ADC_CONFIG_SCALING_SUPPLY_ONE_THIRD,    \
                                 NRF_ADC_CONFIG_REF_VBG }
 
-float currentBatteryVoltage;
-//unsigned char currentBatteryLevel;  // battery voltage is (1V + 0.01V*batteryLevel)
-unsigned long lastBatteryUpdate;
-#define MIN_BATTERY_READ_INTERVAL 180000UL  // minimum time between supply analogReads.  We don't need to do this often.
-#define MAX_BATTERY_READ_INTERVAL 300000UL  // time after lastBatteryUpdate to consider currentBatteryVoltage invalid
-
-
-
 //Configure ADC to read analog input pins, with MIC_VCC AREF
 void adc_config(void);
 
@@ -47,26 +39,14 @@ void adc_config(void);
  */
 int analogRead(nrf_adc_config_input_t input);
 
-// Read battery voltage
-//float readBattery();
-
 /**
- * Get buffered battery voltage.  If buffered value is outdated, do an analogRead of battery.
- *   updateBatteryVoltage must be called periodically to keep this result current.  (ideally when radio is inactive)
+ * Reads the battery voltage (VDD) using the ADC.
+ * This requires a special ADC configuration so it cannot be done with analogRead().
+ * Note for most usages, BatteryMonitor_getBatteryVoltage is perfered, as that number is a running average and is
+ *   much more stable.
+ *
+ * @return the battery voltage (VDD) as a float
  */
-float getBatteryVoltage();
-
-/**
- * Do a reading of the battery, update the buffered voltage value.
- */
-void updateBatteryVoltage();
-
-/**
- * Get actual battery voltage (performs analogRead)
- *   Use with caution - may return inaccurate results if performed during a spike in power usage
- */
-//float getBatteryVoltage();
-
-
+float readVDD(void);
 
 #endif //TIMING_H

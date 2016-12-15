@@ -2,6 +2,7 @@
  * INFORMATION ****************************************************
  */
 
+#include "battery.h"
 #include "sender.h"
 
 // External chunks will be loaded into this buffer all at once, for quicker access.
@@ -210,7 +211,7 @@ bool updateSender()
             memcpy(send.buf+3,&timestamp,sizeof(unsigned long));
             memcpy(send.buf+7,&ms,sizeof(unsigned short));
             
-            float voltage = getBatteryVoltage();
+            float voltage = BatteryMonitor_getBatteryVoltage();
             memcpy(send.buf+9,&voltage,sizeof(float));
             
             send.bufContents = SENDBUF_STATUS;

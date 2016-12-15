@@ -1,30 +1,24 @@
 
 #include "analog.h"
 
-static float readBattery()
+#define V_REF_BATTERY             3.6f
+#define BATTERY_READ_RESOLUTION   1024 //Set to 2^10 because ANALOG_CONFIG_VBAT configures ADC to 10-bit resolution.
+
+float readVDD(void)
 {
     // Configure ADC for measuring supply voltage
     nrf_adc_config_t nrf_adc_config_bat = ANALOG_CONFIG_VBAT;
-    nrf_adc_configure( (nrf_adc_config_t *)&nrf_adc_config_bat);
+    nrf_adc_configure(&nrf_adc_config_bat);
 
-    nrf_adc_start();  //start conversion
-    while(!nrf_adc_conversion_finished());  //wait till conversion complete.
-    int reading = nrf_adc_result_get();  //get reading
-    //reset adc
-    nrf_adc_conversion_event_clean();
-    nrf_adc_stop();
-
+    // INPUT_DISABLED as we configure the CONFIG.INPSEL mux to use VDD in our struct above, so we don't need
+    //   an input for the CONFIG.PSEL mux here. (See Figure 71 in NRF51 Reference Guide, Page 165)
+    int32_t reading = analogRead(NRF_ADC_CONFIG_INPUT_DISABLED);
 
     nrf_adc_config_t nrf_adc_config_mic = ANALOG_CONFIG_MIC;
-    nrf_adc_configure( (nrf_adc_config_t *)&nrf_adc_config_mic);
+    nrf_adc_configure(&nrf_adc_config_mic);
 
-    return reading * (3.6 / 1023.0); // convert value to voltage
-    
-    // Rescale reading so that voltage = 1 + 0.01 * reading
-    //reading = (reading * 100 / 284);  // ((reading * 3.6 / 1023) - 1) * 100
-    //return (unsigned char)((reading <= 255) ? reading : 255);  // clip reading to unsigned char
+    return reading * (V_REF_BATTERY / ((float) BATTERY_READ_RESOLUTION));
 }
-
 
 // ADC initialization.
 void adc_config(void)  
@@ -35,9 +29,6 @@ void adc_config(void)
     // Initialize and configure ADC
     nrf_adc_configure( (nrf_adc_config_t *)&nrf_adc_config);
     nrf_adc_input_select(NRF_ADC_CONFIG_INPUT_DISABLED);
-    
-    currentBatteryVoltage = readBattery();
-    debug_log("Battery: %dmV.\r\n",(int)(1000.0*currentBatteryVoltage));
     
 }
 
@@ -53,31 +44,3 @@ int analogRead(nrf_adc_config_input_t input)
     nrf_adc_stop();
     return reading;
 }
-
-float getBatteryVoltage()
-{
-    if(millis() - lastBatteryUpdate >= MAX_BATTERY_READ_INTERVAL)  {
-        debug_log("  Forced battery reading.\r\n");
-        return readBattery();
-    }
-    else  {
-        return currentBatteryVoltage;
-    }
-}
-
-float getRealBatteryVoltage()
-{
-    return readBattery();
-}
-
-void updateBatteryVoltage() 
-{
-    //if(millis() - lastBatteryUpdate >= MIN_BATTERY_READ_INTERVAL)
-    //{
-        currentBatteryVoltage = readBattery();
-        debug_log("  Read battery: %dmV.\r\n",(int)(1000.0*currentBatteryVoltage));
-        lastBatteryUpdate = millis();
-        updateAdvData();
-    //}
-}
-

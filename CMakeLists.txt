@@ -12,6 +12,8 @@ set(SOURCE_FILES
     firmware/nRF_badge/data_collector/incl/badge_03v2_dynastream.h
     firmware/nRF_badge/data_collector/incl/badge_03v2_rigado.h
     firmware/nRF_badge/data_collector/incl/badge_03v4.h
+    firmware/nRF_badge/data_collector/incl/battery.c
+    firmware/nRF_badge/data_collector/incl/battery.h
     firmware/nRF_badge/data_collector/incl/ble_setup.c
     firmware/nRF_badge/data_collector/incl/ble_setup.h
     firmware/nRF_badge/data_collector/incl/collector.c

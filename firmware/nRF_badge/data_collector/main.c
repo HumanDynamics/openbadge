@@ -33,6 +33,7 @@
  * Custom libraries/abstractions
  */
 #include "analog.h"     //analog inputs, battery reading
+#include "battery.h"
 //#include "external_flash.h"  //for interfacing to external SPI flash
 #include "scanner.h"       //for performing scans and storing scan data
 #include "self_test.h"   // for built-in tests
@@ -57,15 +58,6 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 
 //=========================== Global function definitions ==================================
 //==========================================================================================
-
-static uint32_t mBatterySampleTimer;
-
-static void on_battery_sample(void * p_context) {
-    if(BLEpause(PAUSE_REQ_COLLECTOR))  {
-        updateBatteryVoltage();
-        BLEresume(PAUSE_REQ_COLLECTOR);
-    }
-}
 
 #define SCHED_MAX_EVENT_DATA_SIZE sizeof(uint32_t)
 #define SCHED_QUEUE_SIZE 100
@@ -149,6 +141,7 @@ int main(void)
     storer_init();
     sender_init();
     scanner_init();
+    BatteryMonitor_init();
     
     BLEsetBadgeAssignment(getStoredBadgeAssignment());
     advertising_init();
@@ -170,9 +163,6 @@ int main(void)
     debug_log("Done with setup.  Entering main loop.\r\n\r\n");
     
     BLEstartAdvertising();
-
-    app_timer_create(&mBatterySampleTimer, APP_TIMER_MODE_REPEATED, on_battery_sample);
-    app_timer_start(mBatterySampleTimer, MIN_BATTERY_READ_INTERVAL, NULL);
 
     nrf_delay_ms(2);
 

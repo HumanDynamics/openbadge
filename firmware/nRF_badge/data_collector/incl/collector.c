@@ -9,6 +9,8 @@
 
 
 #include <app_timer.h>
+
+#include "battery.h"
 #include "collector.h"
 
 static uint32_t mCollectorSampleTaskTimer;
@@ -77,7 +79,7 @@ static void setupChunk(int chunk, unsigned long timestamp, unsigned long msTimes
     }
         
     memset(micBuffer[chunk].samples, INVALID_SAMPLE, sizeof(micBuffer[chunk].samples));  // reset sample array
-    micBuffer[chunk].battery = getBatteryVoltage();
+    micBuffer[chunk].battery = BatteryMonitor_getBatteryVoltage();
     micBuffer[chunk].timestamp = timestamp;     // record timestamp for chunk
     micBuffer[chunk].msTimestamp = msTimestamp;  // record fractional part of timestamp
     micBuffer[chunk].check = CHECK_INCOMPLETE;  // denote that chunk is incomplete

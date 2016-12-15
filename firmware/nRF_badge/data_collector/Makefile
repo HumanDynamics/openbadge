@@ -93,6 +93,7 @@ main.c \
 incl/analog.c \
 incl/app_fifo_util.c \
 incl/rtc_timing.c \
+incl/battery.c \
 incl/ble_setup.c \
 incl/debug_log.c \
 incl/ext_eeprom.c \

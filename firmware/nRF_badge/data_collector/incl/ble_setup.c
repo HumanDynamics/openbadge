@@ -3,6 +3,8 @@
 #include "app_fifo_util.h"
 #include "ble_setup.h"
 
+#include "battery.h"
+
 // Size of BLE FIFO, must be power of two.
 #define BLE_FIFO_SIZE 512
 
@@ -360,7 +362,7 @@ void updateAdvData()
 void setAdvData()
 {
 
-    int scaledBatteryLevel = (int)(100.0*getBatteryVoltage()) - 100;
+    int scaledBatteryLevel = (int)(100.0*BatteryMonitor_getBatteryVoltage()) - 100;
     customAdvData.battery = (scaledBatteryLevel <= 255) ? scaledBatteryLevel : 255;  // clip scaled level
     customAdvData.statusFlags = 0;
     customAdvData.statusFlags |= (dateReceived) ? 0x01 : 0x00;  // set sync status bit
