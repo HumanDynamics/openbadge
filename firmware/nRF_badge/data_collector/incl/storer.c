@@ -8,12 +8,38 @@
 
 #include <app_scheduler.h>
 
-
 volatile bool flashWorking;
 
-typedef enum {FLASH_WRITE, FLASH_ERASE} flash_operation_t;
+
+typedef enum {
+    FLASH_WRITE,
+    FLASH_ERASE,
+} flash_operation_type_t;
+
+typedef struct {
+    uint32_t * p_dest;
+    uint32_t * p_src;
+    uint32_t size;
+} flash_write_operation_t;
+
+typedef struct {
+    uint32_t page_number;
+} flash_erase_operation_t;
+
+typedef struct {
+    flash_operation_type_t operation_type;
+
+    // Only valid if operation_type == FLASH_WRITE
+    flash_write_operation_t write;
+
+    // Only valid if operation_type == FLASH_ERASE
+    flash_erase_operation_t erase;
+
+} flash_operation_t;
 
 static flash_operation_t mPendingFlashOperation;
+
+
 static bool mStorerScheduled = false;
 
 // this is the last chunk before we enter program memory space
@@ -231,6 +257,7 @@ static void Storer_StoreScanChunk(int dst_in_flash, int src_in_ram) {
 // Schedules any follow-up calls if needed based upon callbacks.
 static void Storer_StoreBufferedData(void) {
     if (flashWorking) {
+        debug_log("StoreBufferedData called but flash operation is pending, will retry.\r\n");
         // Can't do storage work if flash operation pending
         return;
     }
@@ -271,29 +298,56 @@ void Storer_ScheduleBufferedDataStorage(void) {
     }
 }
 
-void storer_on_sys_evt(uint32_t sys_evt)
-{
-    switch(sys_evt)  {
-    case NRF_EVT_FLASH_OPERATION_ERROR:
-        // TODO CRITICAL: Add retry logic here, needed according to SoftDevice specification in case of timeout.
-        debug_log("STORER: flash error?\r\n");
-        flashWorking = false;
-        break;
-    case NRF_EVT_FLASH_OPERATION_SUCCESS:
-        flashWorking = false;
-        switch (mPendingFlashOperation) {
+// TODO: This should be decoupled from the store struct
+static void flash_write_success_callback(void) {
+    debug_log("STORER: stored RAM chunk %d to FLASH chunk %d\r\n", store.from, store.to);
+
+    flashWorking = false;
+    micBuffer[store.from].check = CHECK_STORED;  // mark RAM chunk as stored (don't need to keep track of it in RAM)
+    Storer_AdvanceToNextMicrophoneChunk();   // Advance to the next chunk (may require erasing new page)
+}
+
+// TODO: This should be decoupled from the store struct
+static void flash_erase_success_callback(void) {
+    debug_log("STORER: erased page %d\r\n", (int) PAGE_OF_CHUNK(store.to));
+
+    flashWorking = false;
+    Storer_ScheduleBufferedDataStorage();
+}
+
+// On flash write/erase timeouts, we should retry, according to Page 21 of the S130 Specification.
+static void flash_write_timeout_callback(flash_write_operation_t operation) {
+    debug_log("STORER: Flash write timeout, retrying...");
+    sd_flash_write(operation.p_dest, operation.p_src, operation.size);
+}
+
+static void flash_erase_timeout_callback(flash_erase_operation_t operation) {
+    debug_log("STORER: Flash erase timeout, retrying...");
+    sd_flash_page_erase(operation.page_number);
+}
+
+void storer_on_sys_evt(uint32_t sys_evt)  {
+    // TODO this can probably be done much better if we switch to the PStorage SDK API.
+    if (sys_evt == NRF_EVT_FLASH_OPERATION_ERROR) {
+        switch (mPendingFlashOperation.operation_type) {
             case FLASH_WRITE:
-                debug_log("STORER: stored RAM chunk %d to FLASH chunk %d\r\n",store.from,store.to);
-                micBuffer[store.from].check = CHECK_STORED;  // mark RAM chunk as stored (don't need to keep track of it in RAM)
-                Storer_AdvanceToNextMicrophoneChunk();   // Advance to the next chunk (may require erasing new page)
+                flash_write_timeout_callback(mPendingFlashOperation.write);
                 break;
             case FLASH_ERASE:
-                debug_log("STORER: erased page %d\r\n",(int)PAGE_OF_CHUNK(store.to));
-                Storer_ScheduleBufferedDataStorage();
+                flash_erase_timeout_callback(mPendingFlashOperation.erase);
                 break;
         }
-    default:
-        break;
+    }
+
+    if (sys_evt == NRF_EVT_FLASH_OPERATION_SUCCESS) {
+        switch (mPendingFlashOperation.operation_type) {
+            case FLASH_WRITE:
+                flash_write_success_callback();
+                break;
+            case FLASH_ERASE:
+                flash_erase_success_callback();
+                break;
+        }
     }
 }
 
@@ -343,19 +397,19 @@ badge_assignment_t getStoredBadgeAssignment()
 }
 
 
-// If we try an illegal flash write, something's very wrong, so we should not continue.
 
-void writeBlockToFlash(uint32_t* to, uint32_t* from, int numWords)  
-{
+// If we try an illegal flash write, something's very wrong, so we should not continue.
+void writeBlockToFlash(uint32_t* to, uint32_t* from, int numWords)  {
     uint8_t page = PAGE_FROM_ADDRESS(to);
     if (page > LAST_PAGE || page < FIRST_PAGE)  {
         debug_log("Invalid block write address\r\n");
         APP_ERROR_CHECK_BOOL(false);
-    }
-    else  {
+    }  else  {
         flashWorking = true;
-        mPendingFlashOperation = FLASH_WRITE;
-        sd_flash_write(to, from, numWords);
+        flash_operation_t op = {FLASH_WRITE, {to, from, (uint32_t) numWords}, {0}};
+        mPendingFlashOperation = op;
+
+        sd_flash_write(to, from, (uint32_t) numWords);
     }
 }
 
@@ -367,7 +421,9 @@ void erasePageOfFlash(uint8_t page)
     }
     else  {
         flashWorking = true;
-        mPendingFlashOperation = FLASH_ERASE;
+        flash_operation_t op = {FLASH_ERASE, {0}, {page}};
+        mPendingFlashOperation = op;
+
         sd_flash_page_erase(page);
     }
 }
