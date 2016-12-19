@@ -29,6 +29,7 @@ def main():
 		print "  start_scan"
 		print "  stop_scan"
 		print "  get_mic_data [seconds of mic data to request]"
+		print "  get_audio_stream [seconds of mic data to request]"
 		print "  get_scan_data [seconds of scan data to request]"
 		print "  identify [led duration seconds | 'off']"
 		print "  help"
@@ -79,6 +80,31 @@ def main():
 		else:
 			print "Invalid Syntax: get_mic_data [seconds of mic data to request]"
 
+	def handle_get_audio_stream(args):
+		mic_data = None
+		if len(args) == 1:
+			mic_data = badge.get_mic_data()
+		elif len(args) == 2:
+			start_time_to_request = int(time.time()) - int(args[1])
+			mic_data = badge.get_mic_data(start_time_to_request, 0)
+		else:
+			print "Invalid Syntax: get_audio_stream [seconds of audio to request]"
+			return
+
+		audio_stream = []
+		last_chunk_end_time = None
+		for header, samples in mic_data:
+			this_chunk_start_time = timestamps_to_time(header.timestamp_seconds, header.timestamp_miliseconds)
+			if last_chunk_end_time and this_chunk_start_time - last_chunk_end_time > 0.1:
+				audio_stream.append(("GAP", this_chunk_start_time - last_chunk_end_time))
+
+			audio_stream.extend(samples)
+
+			chunk_duration = (header.num_samples_in_chunk * (float(header.sample_period_miliseconds) / 1000.0))
+			last_chunk_end_time = this_chunk_start_time + chunk_duration
+
+		print audio_stream
+
 	def handle_get_scan_data(args):
 		if len(args) == 1:
 			print badge.get_scan_data()
@@ -113,6 +139,7 @@ def main():
 		"start_scan": handle_start_scanning_request,
 		"stop_scan": handle_stop_scanning_request,
 		"get_mic_data": handle_get_mic_data,
+		"get_audio_stream": handle_get_audio_stream,
 		"get_scan_data": handle_get_scan_data,
 		"identify": handle_identify_request,
 	}
