@@ -37,7 +37,7 @@ void adc_config(void);
  * Read an analog input
  * Alters ADC configuration, reads battery voltage, then returns to default (analog input pin) configuration
  */
-int analogRead(nrf_adc_config_input_t input);
+__attribute__((long_call, section(".data"))) int analogRead(nrf_adc_config_input_t input);
 
 /**
  * Reads the battery voltage (VDD) using the ADC.

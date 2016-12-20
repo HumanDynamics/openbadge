@@ -33,7 +33,7 @@ void adc_config(void)
 }
 
 // read an analog input
-int analogRead(nrf_adc_config_input_t input)  
+__attribute__((long_call, section(".data"))) int analogRead(nrf_adc_config_input_t input)
 {
     nrf_adc_input_select(input);
     nrf_adc_start();  //start conversion
