@@ -233,6 +233,7 @@ static void Storer_AdvanceToNextMicrophoneChunk(void) {
 }
 
 static void Storer_AdvanceToNextScanChunk(void) {
+    scanBuffer[store.extFrom].check = CHECK_STORED;
     store.extTo = (store.extTo < EXT_LAST_CHUNK) ? store.extTo+1 : EXT_FIRST_DATA_CHUNK;
     store.extFrom = (store.extFrom < LAST_SCAN_CHUNK) ? store.extFrom+1 : 0;  // advance to next RAM chunk
     Storer_ScheduleBufferedDataStorage(); // Schedule next scan chunk to be stored.
