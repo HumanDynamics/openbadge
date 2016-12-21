@@ -73,7 +73,9 @@ void countdown_set(unsigned long ms)
 
 void ble_timeout_set(unsigned long ms)
 {
+#ifndef DEBUG_LOG_ENABLE
     start_singleshot_timer(mBLETimeoutTimer, ms);
+#endif
 }
 
 void ble_timeout_cancel()
