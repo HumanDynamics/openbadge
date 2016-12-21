@@ -2,6 +2,12 @@ import time
 import logging
 import sys
 
+# Default scan settings from openbadge-hub-py.
+DEFAULT_SCAN_WINDOW = 100
+DEFAULT_SCAN_INTERVAL = 300
+DEFAULT_SCAN_DURATION = 5
+DEFAULT_SCAN_PERIOD = 60
+
 from badge_protocol import *
 
 logger = logging.getLogger(__name__)
@@ -95,7 +101,8 @@ class OpenBadge(object):
 	#     radio is active for [window_miliseconds] every [interval_miliseconds]
 	# Returns a StartScanningResponse() representing the badge's response.
 	def start_scanning(self, timestamp_seconds=None, timestamp_miliseconds=None,
-	   timeout_minutes=0, window_miliseconds=0, interval_miliseconds=0, duration_seconds=0, period_seconds=0):
+	   timeout_minutes=0, window_miliseconds=DEFAULT_SCAN_WINDOW, interval_miliseconds=DEFAULT_SCAN_INTERVAL,
+	    duration_seconds=DEFAULT_SCAN_DURATION, period_seconds=DEFAULT_SCAN_PERIOD):
 		if timestamp_seconds == None: timestamp_seconds = get_timestamp_seconds()
 		if timestamp_miliseconds == None: timestamp_miliseconds = get_timestamp_miliseconds()
 		
