@@ -68,7 +68,7 @@ class IntegrationTest(unittest.TestCase):
 			print "Test Passed! :)"
 		except Exception as e:
 			self.onTestFailure(badge, logger)
-			print "Test Failed!!! :("
+			raise AssertionError("Test Failure")
 
 	def onTestFailure(self, badge, logger):
 		logger.exception("Exception during test!")
