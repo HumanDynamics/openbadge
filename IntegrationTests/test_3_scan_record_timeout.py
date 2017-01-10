@@ -10,10 +10,13 @@ class ScanRecordTimeoutTestCase(IntegrationTest):
 		self.assertTrue(status.collector_status)
 		self.assertTrue(status.scanner_status)
 
-		time.sleep(65)
-
+		time.sleep(59)
 		status = badge.get_status()
+		self.assertTrue(status.collector_status)
+		self.assertTrue(status.scanner_status)
 
+		time.sleep(121)
+		status = badge.get_status()
 		self.assertFalse(status.collector_status)
 		self.assertFalse(status.scanner_status)
 

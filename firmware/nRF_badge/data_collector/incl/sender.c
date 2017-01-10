@@ -2,12 +2,32 @@
  * INFORMATION ****************************************************
  */
 
+#include <app_timer.h>
 #include "battery.h"
 #include "sender.h"
 
 // External chunks will be loaded into this buffer all at once, for quicker access.
 static int extChunkFrom;
 static scan_chunk_t extChunk;
+
+static uint32_t mTimeoutCheckTimer;
+
+static void on_check_timeouts(void * p_context) {
+    // Collector timeout.  Stop collector if server is unseen for a long time
+    if (collectorTimeout > 0)  {  // 0 means timeout disabled
+        if (isCollecting && (millis() - lastReceipt >= collectorTimeout))  {
+            debug_log("SENDER: collector timeout.  Stopping collector...\r\n");
+            stopCollector();
+        }
+    }
+
+    if (scannerTimeout > 0)  {  // 0 means timeout disabled
+        if (scanner_enable && (millis() - lastReceipt >= scannerTimeout))  {
+            debug_log("SENDER: scanner timeout.  Stopping scanner...\r\n");
+            stopScanner();
+        }
+    }
+}
 
 server_command_params_t unpackCommand(uint8_t* pkt, unsigned char len)
 {        
@@ -137,7 +157,10 @@ void sender_init()
     send.num = 0;    
     
     dateReceived = false;
-    pendingCommand.cmd = CMD_NONE;   
+    pendingCommand.cmd = CMD_NONE;
+
+    app_timer_create(&mTimeoutCheckTimer, APP_TIMER_MODE_REPEATED, on_check_timeouts);
+    app_timer_start(mTimeoutCheckTimer, APP_TIMER_TICKS(60 * 1000, APP_PRESCALER), NULL);
 }
 
 
@@ -740,22 +763,6 @@ bool updateSender()
         break;  // switch (command.cmd)
         
     }  // switch (command.cmd)
-    
-    
-    // Collector timeout.  Stop collector if server is unseen for a long time
-    if (collectorTimeout > 0)  {  // 0 means timeout disabled
-        if (isCollecting && (millis() - lastReceipt >= collectorTimeout))  {
-            debug_log("SENDER: collector timeout.  Stopping collector...\r\n");
-            stopCollector();
-        }
-    }
-    
-    if (scannerTimeout > 0)  {  // 0 means timeout disabled
-        if (scanner_enable && (millis() - lastReceipt >= scannerTimeout))  {
-            debug_log("SENDER: scanner timeout.  Stopping scanner...\r\n");
-            stopScanner();
-        }
-    }
     
     return senderActive;
 }
