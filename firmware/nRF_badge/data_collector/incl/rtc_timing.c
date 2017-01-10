@@ -114,7 +114,15 @@ float timer_comparison_millis_since_start(uint32_t ticks_start) {
 }
 
 unsigned long millis(void)  {
-    return mClockInMillis + (unsigned long) timer_comparison_millis_since_start(mLastClockTickTimerCount);
+    // We ensure that millis() calls are atomic operations, so that the clock does not tick during out calculations.
+    //   If we do not ensure this, in rare cases, a clock tick interrupt will cause mClockInMillis and
+    //   mLastClockTickTimerCount to be mismatched.
+    unsigned long millis;
+    CRITICAL_REGION_ENTER();
+    millis = mClockInMillis + (unsigned long) timer_comparison_millis_since_start(mLastClockTickTimerCount);
+    CRITICAL_REGION_EXIT();
+
+    return millis;
 }
 
 
