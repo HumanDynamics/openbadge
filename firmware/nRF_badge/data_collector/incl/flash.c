@@ -14,7 +14,7 @@ static pstorage_handle_t mPStorageHandle;
 
 static void pstorage_cb_handler(pstorage_handle_t * handle, uint8_t op_code, uint32_t result, uint8_t * p_data,
                                 uint32_t data_len) {
-    debug_log("Got PStorage Callback!\r\n");
+    //debug_log("Got PStorage Callback!\r\n");
 }
 
 
@@ -32,7 +32,7 @@ void flash_init(void) {
     APP_ERROR_CHECK(pstorage_register(&params, &mPStorageHandle));
 }
 
-uint32_t flash_write(uint8_t * src, uint32_t dst, uint32_t len) {
+uint32_t flash_write(uint32_t dst, uint8_t * src, uint32_t len) {
     if (!FLASH_RANGE_VALID(dst, len)) return NRF_ERROR_INVALID_PARAM;
     if (!is_word_aligned(src) || (dst % 4) != 0 || (len % 4) != 0) return NRF_ERROR_INVALID_ADDR;
 
@@ -67,4 +67,44 @@ uint32_t flash_write(uint8_t * src, uint32_t dst, uint32_t len) {
             bytes_written += page_write_len;
         }
     }
+
+    return NRF_SUCCESS;
+}
+
+uint32_t flash_read(uint8_t * dst, uint32_t src, uint32_t len) {
+    if (!FLASH_RANGE_VALID(src, len)) return NRF_ERROR_INVALID_PARAM;
+    if (!is_word_aligned(dst) || (src % 4) != 0 || (len % 4) != 0) return NRF_ERROR_INVALID_ADDR;
+
+    if (region_contains_ext_flash(src, len)) {
+        uint32_t ext_len = clip_region_len_to_ext_flash(src, len);
+
+        ext_eeprom_read(src, dst, ext_len);
+        ext_eeprom_wait();
+    }
+
+    if (region_contains_nrf_flash(src, len)) {
+        uint32_t nrf_src_offset = clip_region_start_to_nrf_flash(src, len) - src;
+
+        uint8_t * nrf_dst = &dst[nrf_src_offset];
+        uint32_t nrf_src = flash_addr_to_nrf_addr(clip_region_start_to_nrf_flash(src, len));
+        uint32_t nrf_len = clip_region_len_to_nrf_flash(src, len);
+
+        uint32_t bytes_read = 0;
+        while (bytes_read < nrf_len) {
+            pstorage_size_t page = (pstorage_size_t) ((nrf_src + bytes_read) / FLASH_PAGE_SIZE);
+            pstorage_size_t page_read_len = (pstorage_size_t) clip_to_page_size(nrf_len - bytes_read);
+            pstorage_size_t page_offset = (pstorage_size_t) ((nrf_src + bytes_read) % FLASH_PAGE_SIZE);
+
+            pstorage_handle_t block_handle;
+            uint32_t err_code = pstorage_block_identifier_get(&mPStorageHandle, page, &block_handle);
+            APP_ERROR_CHECK(err_code);
+
+            err_code = pstorage_load(&nrf_dst[bytes_read], &block_handle, page_read_len, page_offset);
+            APP_ERROR_CHECK(err_code);
+
+            bytes_read += page_read_len;
+        }
+    }
+
+    return NRF_SUCCESS;
 }

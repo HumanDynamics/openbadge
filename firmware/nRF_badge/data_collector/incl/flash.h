@@ -24,27 +24,27 @@ void flash_init(void);
  * Writes 'len' bytes from 'src' to 'dst' in flash. Data currently in flash will be over written if neccesary.
  * Method does not block until data is written, but data is gauranteed to be written in FIFO manner.
  *
+ * @param dst Flash address of destination. Must be FLASH_START <= dst <= FLASH_END. Must be word aligned.
  * @param src Byte stream to write to flash.
  *     Buffer must be at least 'len' bytes long.
  *     Buffer can be freed after method returns
  *     Buffer must be word aligned.
- * @param dst Flash address of destination. Must be FLASH_START <= dst <= FLASH_END. Must be word aligned.
  * @param len Number of bytes to write. Must be 0 <= len <= (FLASH_SIZE - dst). Must be word aligned.
  *
  * @return NRF_SUCCESS iff successful (gaurantees data will eventually be written to flash). NRF_NO_MEN if no memory
  *    existed to buffer write in. Other error codes may also be returned.
  */
-uint32_t flash_write(uint8_t * src, uint32_t dst, uint32_t len);
+uint32_t flash_write(uint32_t dst, uint8_t * src, uint32_t len);
 
 /**
  * Reads 'len' bytes from 'src' to 'dst' from flash.
  * Method blocks until read is complete.
  *
- * @param src Flash address of source. Must be FLASH_START <= src <= FLASH_END. Must be word aligned.
  * @param dst Buffer to place data read from flash. Must be at least 'len' bytes long. Must be word aligned.
+ * @param src Flash address of source. Must be FLASH_START <= src <= FLASH_END. Must be word aligned.
  * @param len Number of bytes to read. Must be 0 <= len <= (FLASH_SIZE - src). Must be word aligned.
  * @return NRF_SUCCESS iff successful. Error code will be returned in case of failure.
  */
-uint32_t flash_read(uint32_t src, uint8_t * dst, uint32_t len);
+uint32_t flash_read(uint8_t * dst, uint32_t src, uint32_t len);
 
 #endif //OPENBADGE_FLASH_H

@@ -4,7 +4,6 @@ project(OpenBadge)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 set(SOURCE_FILES
-    firmware/nRF_badge/data_collector/unit_tests/tests/flash_layout_utils_unittest.cc
     firmware/nRF_badge/data_collector/config/nrf_drv_config.h
     firmware/nRF_badge/data_collector/config/pstorage_platform.h
     firmware/nRF_badge/data_collector/incl/analog.c
@@ -41,7 +40,9 @@ set(SOURCE_FILES
     firmware/nRF_badge/data_collector/incl/storer.h
     firmware/nRF_badge/data_collector/incl/uart_commands.c
     firmware/nRF_badge/data_collector/incl/uart_commands.h
-    firmware/nRF_badge/data_collector/main.c)
+    firmware/nRF_badge/data_collector/main.c
+    firmware/nRF_badge/data_collector/unit_tests/tests/flash_layout_utils_unittest.cc
+    firmware/nRF_badge/data_collector/unit_tests/tests/flash_unittest.cc)
 
 include_directories(
         firmware/nRF_badge/data_collector/config
@@ -72,6 +73,7 @@ include_directories(
         ~/nrf_sdk/components/ble/ble_services/ble_bas
         ~/nrf_sdk/components/ble/ble_services/ble_nus
         ~/nrf_sdk/examples/bsp
+        firmware/nRF_badge/data_collector/unit_tests/mock
 )
 
 add_executable(OpenBadge ${SOURCE_FILES})

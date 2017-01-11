@@ -15,9 +15,11 @@
 # All tests produced by this Makefile.  Remember to add new tests you
 # created to the list.
 TESTS = flash_layout_utils_unittest  \
+        flash_unittest               \
 
 # All the files that must be built out of the firmware for our tests to work.
 TESTED_CODE = $(FIRMWARE_DIR)/incl/flash_layout_utils.c  \
+              $(FIRMWARE_DIR)/incl/flash.c               \
 
 # Please tweak the following variable definitions as needed by your
 # project, except GTEST_HEADERS, which you can use in your own targets
@@ -30,13 +32,18 @@ GTEST_DIR = googletest
 # Where to find test code.
 TEST_DIR = tests
 
+# Where to find test mocks
+MOCK_DIR = mock
+
 # Where to find the firmware
 FIRMWARE_DIR = ..
+
+MOCK_INC_PATHS += -I$(MOCK_DIR)
 
 INC_PATHS += -I$(FIRMWARE_DIR)/config
 INC_PATHS += -I$(FIRMWARE_DIR)/incl
 
-MOCKS = $(shell find mock -name '*.c*')
+MOCKS = $(shell find $(MOCK_DIR) -name '*.c*')
 
 # Flags passed to the preprocessor.
 # Set Google Test's header directory as a system directory, such that
@@ -45,6 +52,10 @@ CPPFLAGS += -isystem $(GTEST_DIR)/include
 
 # Flags passed to the C++ compiler.
 CXXFLAGS += -g -Wall -Wextra -pthread
+CXXFLAGS += -DBOARD_CUSTOM
+CXXFLAGS += -DBOARD_BADGE_03V4
+CXXFLAGS += -DDEBUG_LOG_ENABLE
+CXXFLAGS += -DDEBUG
 
 TEST_OBJECTS = $(addsuffix .o, $(TESTS))
 TEST_SOURCE = $(addsuffix .cc, $(addprefix $(TEST_DIR)/, $(TESTS)))
@@ -59,7 +70,7 @@ GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
 
 # House-keeping build targets.
 
-all : unittests run_tests
+all : clean $(TESTS) run_tests
 
 clean :
 	rm -f $(TESTS) gtest.a gtest_main.a *.o
@@ -96,10 +107,10 @@ gtest_main.a : gtest-all.o gtest_main.o
 # function.
 
 $(TEST_OBJECTS):
-	$(CXX) $(CPPFLAGS) $(INC_PATHS) $(CXXFLAGS) -c $(TEST_SOURCE)
+	$(CXX) $(CPPFLAGS) $(MOCK_INC_PATHS) $(INC_PATHS) $(CXXFLAGS) -c $(TEST_SOURCE)
 
-firmware_dependencies: $(TESTED_CODE) $(TEST_OBJECTS)
-	$(CXX) $(CPPFLAGS) $(INC_PATHS) $(CXXFLAGS) -c $^
+$(TESTED_OBJECTS): $(TEST_OBJECTS)
+	$(CXX) $(CPPFLAGS) $(MOCK_INC_PATHS) $(INC_PATHS) $(CXXFLAGS) -c $(TESTED_CODE)
 
-unittests: firmware_dependencies gtest_main.a
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(MOCKS) -lpthread $(TEST_OBJECTS) $(TESTED_OBJECTS) gtest_main.a -o bin/$@
+$(TESTS): $(TESTED_OBJECTS) gtest_main.a
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(MOCKS) $(MOCK_INC_PATHS) $(INC_PATHS) -lpthread $(TEST_OBJECTS) $(TESTED_OBJECTS) gtest_main.a -o bin/$@
