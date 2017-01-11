@@ -396,5 +396,6 @@ flashCode: flashErase.jlink flashS130.jlink flashAPP.jlink
 	$(JLINK) $(OBJECT_DIRECTORY)/flashS130.jlink
 	$(JLINK) $(OBJECT_DIRECTORY)/flashAPP.jlink
 
+export INC_PATHS
 unittest:
 	make -C unit_tests/

@@ -22,42 +22,10 @@ TEST_DIR = tests
 # Where to find the firmware
 FIRMWARE_DIR = ..
 
-ifndef NRF_SDK_PATH
-$(warning NRF_SDK_PATH environment variable undefined.  Default: /usr/local/nRF51_SDK_8.1.0_b6ed55f)
-endif
-
-NRF_SDK_PATH ?= /usr/local/nRF51_SDK_8.1.0_b6ed55f
-SDK_PATH := $(NRF_SDK_PATH)
-
-INC_PATHS  = -I$(FIRMARE_DIR)/config
+INC_PATHS += -I$(FIRMWARE_DIR)/config
 INC_PATHS += -I$(FIRMWARE_DIR)/incl
-INC_PATHS += -I$(SDK_PATH)/components/device
-INC_PATHS += -I$(SDK_PATH)/components/toolchain
-INC_PATHS += -I$(SDK_PATH)/components/toolchain/gcc
-INC_PATHS += -I$(SDK_PATH)/components/softdevice/s130/headers
-INC_PATHS += -I$(SDK_PATH)/components/softdevice/common/softdevice_handler
-INC_PATHS += -I$(SDK_PATH)/components/libraries/crc16/
-INC_PATHS += -I$(SDK_PATH)/components/libraries/util
-INC_PATHS += -I$(SDK_PATH)/components/libraries/fifo
-INC_PATHS += -I$(SDK_PATH)/components/libraries/scheduler
-INC_PATHS += -I$(SDK_PATH)/components/libraries/trace
-INC_PATHS += -I$(SDK_PATH)/components/libraries/timer
-INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/common
-INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/rtc
-INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/hal
-INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/uart
-INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/config
-INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/gpiote
-INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/ble_flash
-INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/spi_master
-INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/pstorage
-INC_PATHS += -I$(SDK_PATH)/components/ble/common
-INC_PATHS += -I$(SDK_PATH)/components/ble/ble_advertising
-INC_PATHS += -I$(SDK_PATH)/components/ble/ble_services/ble_bas
-INC_PATHS += -I$(SDK_PATH)/components/ble/ble_services/ble_nus
-INC_PATHS += -I$(SDK_PATH)/examples/bsp
 
-MOCKS = mock/app_error.cc
+MOCKS = $(shell find mock -name '*.c*')
 
 # Flags passed to the preprocessor.
 # Set Google Test's header directory as a system directory, such that
@@ -114,7 +82,7 @@ gtest_main.a : gtest-all.o gtest_main.o
 # gtest_main.a, depending on whether it defines its own main()
 # function.
 
-flash_layout_utils.o : $(FIRMWARE_DIR)/incl/flash_layout_utils.c $(FIRMWARE_DIR)/incl/flash_layout_utils.h $(GTEST_HEADERS)
+flash_layout_utils.o : $(FIRMWARE_DIR)/incl/flash_layout_utils.c $(GTEST_HEADERS)
 	$(CXX) $(CPPFLAGS) $(INC_PATHS) $(CXXFLAGS) -c $(FIRMWARE_DIR)/incl/flash_layout_utils.c -o $@
 
 flash_layout_utils_unittest.o : $(TEST_DIR)/flash_layout_utils_unittest.cc \
