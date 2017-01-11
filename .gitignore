@@ -1,4 +1,5 @@
 *.o
+*.a
 *.scn
 *.py[co]
 __pycache__/*
