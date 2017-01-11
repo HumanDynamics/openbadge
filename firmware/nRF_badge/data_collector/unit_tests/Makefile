@@ -16,8 +16,48 @@
 # Remember to tweak this if you move this file.
 GTEST_DIR = googletest
 
-# Where to find user code.
-USER_DIR = tests
+# Where to find test code.
+TEST_DIR = tests
+
+# Where to find the firmware
+FIRMWARE_DIR = ..
+
+ifndef NRF_SDK_PATH
+$(warning NRF_SDK_PATH environment variable undefined.  Default: /usr/local/nRF51_SDK_8.1.0_b6ed55f)
+endif
+
+NRF_SDK_PATH ?= /usr/local/nRF51_SDK_8.1.0_b6ed55f
+SDK_PATH := $(NRF_SDK_PATH)
+
+INC_PATHS  = -I$(FIRMARE_DIR)/config
+INC_PATHS += -I$(FIRMWARE_DIR)/incl
+INC_PATHS += -I$(SDK_PATH)/components/device
+INC_PATHS += -I$(SDK_PATH)/components/toolchain
+INC_PATHS += -I$(SDK_PATH)/components/toolchain/gcc
+INC_PATHS += -I$(SDK_PATH)/components/softdevice/s130/headers
+INC_PATHS += -I$(SDK_PATH)/components/softdevice/common/softdevice_handler
+INC_PATHS += -I$(SDK_PATH)/components/libraries/crc16/
+INC_PATHS += -I$(SDK_PATH)/components/libraries/util
+INC_PATHS += -I$(SDK_PATH)/components/libraries/fifo
+INC_PATHS += -I$(SDK_PATH)/components/libraries/scheduler
+INC_PATHS += -I$(SDK_PATH)/components/libraries/trace
+INC_PATHS += -I$(SDK_PATH)/components/libraries/timer
+INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/common
+INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/rtc
+INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/hal
+INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/uart
+INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/config
+INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/gpiote
+INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/ble_flash
+INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/spi_master
+INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/pstorage
+INC_PATHS += -I$(SDK_PATH)/components/ble/common
+INC_PATHS += -I$(SDK_PATH)/components/ble/ble_advertising
+INC_PATHS += -I$(SDK_PATH)/components/ble/ble_services/ble_bas
+INC_PATHS += -I$(SDK_PATH)/components/ble/ble_services/ble_nus
+INC_PATHS += -I$(SDK_PATH)/examples/bsp
+
+MOCKS = mock/app_error.c
 
 # Flags passed to the preprocessor.
 # Set Google Test's header directory as a system directory, such that
@@ -29,7 +69,7 @@ CXXFLAGS += -g -Wall -Wextra -pthread
 
 # All tests produced by this Makefile.  Remember to add new tests you
 # created to the list.
-TESTS = sample1_unittest
+TESTS = flash_layout_utils_unittest
 
 # All Google Test headers.  Usually you shouldn't change this
 # definition.
@@ -71,12 +111,12 @@ gtest_main.a : gtest-all.o gtest_main.o
 # gtest_main.a, depending on whether it defines its own main()
 # function.
 
-sample1.o : $(USER_DIR)/sample1.cc $(USER_DIR)/sample1.h $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/sample1.cc -o $@
+flash_layout_utils.o : $(FIRMWARE_DIR)/incl/flash_layout_utils.c $(FIRMWARE_DIR)/incl/flash_layout_utils.h $(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) $(INC_PATHS) $(CXXFLAGS) -c $(FIRMWARE_DIR)/incl/flash_layout_utils.c -o $@
 
-sample1_unittest.o : $(USER_DIR)/sample1_unittest.cc \
-                     $(USER_DIR)/sample1.h $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/sample1_unittest.cc -o $@
+flash_layout_utils_unittest.o : $(TEST_DIR)/flash_layout_utils_unittest.cc \
+                     $(FIRMWARE_DIR)/incl/flash_layout_utils.h $(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) $(INC_PATHS) $(CXXFLAGS) -c $(TEST_DIR)/flash_layout_utils_unittest.cc -o $@
 
-sample1_unittest : sample1.o sample1_unittest.o gtest_main.a
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o bin/$@
+flash_layout_utils_unittest : flash_layout_utils.o flash_layout_utils_unittest.o gtest_main.a
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(MOCKS) -lpthread $^ -o bin/$@
