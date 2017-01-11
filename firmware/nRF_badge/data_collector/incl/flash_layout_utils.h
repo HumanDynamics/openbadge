@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <app_error.h>
 
-#include "flash_layout.h""
+#include "flash_layout.h"
 
 #define INVALID_FLASH_ADDR 0xFFFFFFFF
 
