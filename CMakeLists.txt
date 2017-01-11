@@ -23,6 +23,11 @@ set(SOURCE_FILES
     firmware/nRF_badge/data_collector/incl/debug_log.h
     firmware/nRF_badge/data_collector/incl/ext_eeprom.c
     firmware/nRF_badge/data_collector/incl/ext_eeprom.h
+    firmware/nRF_badge/data_collector/incl/flash.c
+    firmware/nRF_badge/data_collector/incl/flash.h
+        firmware/nRF_badge/data_collector/incl/flash_layout.h
+        firmware/nRF_badge/data_collector/incl/flash_layout_utils.c
+        firmware/nRF_badge/data_collector/incl/flash_layout_utils.h
     firmware/nRF_badge/data_collector/incl/rtc_timing.c
     firmware/nRF_badge/data_collector/incl/rtc_timing.h
     firmware/nRF_badge/data_collector/incl/scanner.c
