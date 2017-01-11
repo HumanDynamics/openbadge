@@ -4,6 +4,7 @@ project(OpenBadge)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 set(SOURCE_FILES
+    firmware/nRF_badge/data_collector/unit_tests/tests/flash_layout_utils_unittest.cc
     firmware/nRF_badge/data_collector/config/nrf_drv_config.h
     firmware/nRF_badge/data_collector/config/pstorage_platform.h
     firmware/nRF_badge/data_collector/incl/analog.c
@@ -25,9 +26,9 @@ set(SOURCE_FILES
     firmware/nRF_badge/data_collector/incl/ext_eeprom.h
     firmware/nRF_badge/data_collector/incl/flash.c
     firmware/nRF_badge/data_collector/incl/flash.h
-        firmware/nRF_badge/data_collector/incl/flash_layout.h
-        firmware/nRF_badge/data_collector/incl/flash_layout_utils.c
-        firmware/nRF_badge/data_collector/incl/flash_layout_utils.h
+    firmware/nRF_badge/data_collector/incl/flash_layout.h
+    firmware/nRF_badge/data_collector/incl/flash_layout_utils.c
+    firmware/nRF_badge/data_collector/incl/flash_layout_utils.h
     firmware/nRF_badge/data_collector/incl/rtc_timing.c
     firmware/nRF_badge/data_collector/incl/rtc_timing.h
     firmware/nRF_badge/data_collector/incl/scanner.c
@@ -45,6 +46,7 @@ set(SOURCE_FILES
 include_directories(
         firmware/nRF_badge/data_collector/config
         firmware/nRF_badge/data_collector/incl
+        firmware/nRF_badge/data_collector/unit_tests/googletest/include
         ~/nrf_sdk/components/device
         ~/nrf_sdk/components/toolchain
         ~/nrf_sdk/components/toolchain/gcc

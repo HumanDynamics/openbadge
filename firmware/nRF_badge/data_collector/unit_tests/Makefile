@@ -57,7 +57,7 @@ INC_PATHS += -I$(SDK_PATH)/components/ble/ble_services/ble_bas
 INC_PATHS += -I$(SDK_PATH)/components/ble/ble_services/ble_nus
 INC_PATHS += -I$(SDK_PATH)/examples/bsp
 
-MOCKS = mock/app_error.c
+MOCKS = mock/app_error.cc
 
 # Flags passed to the preprocessor.
 # Set Google Test's header directory as a system directory, such that
@@ -78,7 +78,7 @@ GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
 
 # House-keeping build targets.
 
-all : $(TESTS) clean run_tests
+all : $(TESTS) run_tests
 
 clean :
 	rm -f $(TESTS) gtest.a gtest_main.a *.o

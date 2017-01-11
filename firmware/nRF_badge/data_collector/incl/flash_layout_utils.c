@@ -7,7 +7,7 @@
 /**
  * @return len if len < FLASH_PAGE_SIZE, otherwise FLASH_PAGE_SIZE.
  */
-static uint32_t clip_to_page_size(uint32_t len) {
+uint32_t clip_to_page_size(uint32_t len) {
     return (len > FLASH_PAGE_SIZE) ? FLASH_PAGE_SIZE : len;
 }
 
@@ -37,11 +37,11 @@ uint32_t flash_addr_to_nrf_addr(uint32_t flash_addr) {
     }
 }
 
-bool flash_addr_in_ext_section(uint32_t flash_addr) {
+bool is_flash_addr_in_ext_section(uint32_t flash_addr) {
     return flash_addr_to_ext_addr(flash_addr) != INVALID_FLASH_ADDR;
 }
 
-bool flash_addr_in_nrf_section(uint32_t flash_addr) {
+bool is_flash_addr_in_nrf_section(uint32_t flash_addr) {
     return flash_addr_to_nrf_addr(flash_addr) != INVALID_FLASH_ADDR;
 }
 
@@ -58,13 +58,13 @@ uint32_t clip_region_len_to_ext_flash(uint32_t start_addr, uint32_t len) {
 
     uint32_t end_addr = start_addr + len - 1;
 
-    if (flash_addr_in_ext_section(start_addr) && flash_addr_in_ext_section(end_addr)) {
+    if (is_flash_addr_in_ext_section(start_addr) && is_flash_addr_in_ext_section(end_addr)) {
         return end_addr - start_addr + 1;
-    } else if (!flash_addr_in_ext_section(start_addr) && flash_addr_in_ext_section(end_addr)) {
+    } else if (!is_flash_addr_in_ext_section(start_addr) && is_flash_addr_in_ext_section(end_addr)) {
         APP_ERROR_CHECK_BOOL(false); // This is impossible, would mean start_addr is before start of flash.
-    } else if (flash_addr_in_ext_section(start_addr) && !flash_addr_in_ext_section(end_addr)) {
+    } else if (is_flash_addr_in_ext_section(start_addr) && !is_flash_addr_in_ext_section(end_addr)) {
         return EXT_FLASH_END - start_addr + 1;
-    } else if (!flash_addr_in_ext_section(start_addr) && !flash_addr_in_ext_section(end_addr)) {
+    } else if (!is_flash_addr_in_ext_section(start_addr) && !is_flash_addr_in_ext_section(end_addr)) {
         return 0;
     }
 
@@ -86,13 +86,13 @@ uint32_t clip_region_len_to_nrf_flash(uint32_t start_addr, uint32_t len) {
 
     uint32_t end_addr = start_addr + len - 1;
 
-    if (flash_addr_in_nrf_section(start_addr) && flash_addr_in_nrf_section(end_addr)) {
+    if (is_flash_addr_in_nrf_section(start_addr) && is_flash_addr_in_nrf_section(end_addr)) {
         return end_addr - start_addr + 1;
-    } else if (!flash_addr_in_nrf_section(start_addr) && flash_addr_in_nrf_section(end_addr)) {
+    } else if (!is_flash_addr_in_nrf_section(start_addr) && is_flash_addr_in_nrf_section(end_addr)) {
         return end_addr - NRF_FLASH_START + 1;
-    } else if (flash_addr_in_nrf_section(start_addr) && !flash_addr_in_nrf_section(end_addr)) {
+    } else if (is_flash_addr_in_nrf_section(start_addr) && !is_flash_addr_in_nrf_section(end_addr)) {
         APP_ERROR_CHECK_BOOL(false); // This is impossible, would be mean end_addr is after end of flash.
-    } else if (!flash_addr_in_nrf_section(start_addr) && !flash_addr_in_nrf_section(end_addr)) {
+    } else if (!is_flash_addr_in_nrf_section(start_addr) && !is_flash_addr_in_nrf_section(end_addr)) {
         return 0;
     }
 
@@ -136,6 +136,6 @@ uint32_t clip_region_start_to_nrf_flash(uint32_t start_addr, uint32_t len) {
     APP_ERROR_CHECK_FLASH_RANGE_VALID(start_addr, len);
     APP_ERROR_CHECK_BOOL(region_contains_nrf_flash(start_addr, len));
 
-    return flash_addr_in_nrf_section(start_addr) ? start_addr : NRF_FLASH_START;
+    return is_flash_addr_in_nrf_section(start_addr) ? start_addr : NRF_FLASH_START;
 }
 

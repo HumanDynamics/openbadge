@@ -25,7 +25,7 @@
 /**
  * @return len if len < FLASH_PAGE_SIZE, otherwise FLASH_PAGE_SIZE.
  */
-static uint32_t clip_to_page_size(uint32_t len);
+uint32_t clip_to_page_size(uint32_t len);
 
 /**
  * Calculates the address in EXT flash for a given flash address.
@@ -45,13 +45,13 @@ uint32_t flash_addr_to_nrf_addr(uint32_t flash_addr);
  * @param flash_addr An address in our contigous flash region
  * @return true iff that flash_addr is backed by EXT flash.
  */
-bool flash_addr_in_ext_section(uint32_t flash_addr);
+bool is_flash_addr_in_ext_section(uint32_t flash_addr);
 
 /**
  * @param flash_addr An address in our contigous flash region
  * @return true iff that flash_addr is backed by NRF flash.
  */
-bool flash_addr_in_nrf_section(uint32_t flash_addr);
+bool is_flash_addr_in_nrf_section(uint32_t flash_addr);
 
 /**
  * Calculates the size of the given region in our contigious flash block that is in the EXT flash portion of the block.
