@@ -73,20 +73,6 @@
 #include "sender.h"
 
 
-
-typedef enum storer_mode_t
-{
-    STORER_IDLE,        // storer inactive; nothing to store
-    STORER_STORE,       // waiting to store data (BLE must be disabled first, then data must be written to flash)
-    STORER_ADVANCE,     // advancing to next from/to chunks, possibly erasing a new page
-    STORER_STORE_EXT,
-    STORER_STORE_EXT_WAIT,
-    STORER_ADVANCE_EXT,
-    STORER_STORE_ASSIGNMENT,
-    STORER_INIT         // performing various initialization tasks
-} storer_mode_t;
-
-
 // Struct for keeping track of storing mic data to RAM
 struct
 {
@@ -101,13 +87,6 @@ struct
 void storer_init();
 
 bool storer_test();
-
-/*
- * Called within main loop cycle to manage FLASH storage.
- *   - Avoids conflicts with BLE
- * Returns whether the storer has any pending operations.
- */
-bool updateStorer();
 
 void storer_on_sys_evt(uint32_t sys_evt);
 
@@ -136,6 +115,7 @@ stored_assignment_t lastStoredAssignment;
 
 badge_assignment_t getStoredBadgeAssignment();
 
+void Storer_ScheduleBufferedDataStorage(void);
 
 // Functions for dealing with flash.  Protect from invalid writes/erases.
 void writeWordToFlash(uint32_t* addr, uint32_t val);

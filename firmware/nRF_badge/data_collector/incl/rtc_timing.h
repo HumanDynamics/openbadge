@@ -3,9 +3,12 @@
 #ifndef RTC_TIMING_H
 #define RTC_TIMING_H
 
+#define APP_PRESCALER          0
+#define APP_MAX_TIMERS         12
+#define APP_OP_QUEUE_SIZE      6
+
 #include "nrf_drv_config.h"
 #include "nrf_soc.h"
-#include "nrf_drv_rtc.h"
 #include "app_error.h"
 
 #include "debug_log.h"
@@ -13,19 +16,9 @@
 volatile bool countdownOver;  //set true when the countdown interrupt triggers
 volatile bool sleep;  //whether we should sleep (so actions like data sending can override sleep)
 
-volatile bool ble_timeout;
 #define CONNECTION_TIMEOUT_MS 6000UL
 //#define CONNECTION_TIMEOUT_MS 6000000UL
 
-volatile bool led_timeout;
-
-/**
- * rtc event handler function
- * For extending the 24-bit hardware clock, by incrementing a larger number every time it overflows
- * And handling countdown timer end events
- */
-void rtc_handler(nrf_drv_rtc_int_type_t int_type);
- 
 /**
  * initialize rtc
  */
@@ -73,10 +66,30 @@ unsigned long long ticks(void);
 unsigned long millis(void);
 
 /**
- * emulate functionality of micros() in arduino
+ * Returns a timer tick starting point for timer_comparison_millis_since_start comparisons that start at
+ *   the current time.
+ *  Safe to use from interupt context.
+ *
+ * @return the current time as a value that can be used as an argument for timer_comparison_millis_since_start
  */
-unsigned long micros(void);
+uint32_t timer_comparison_ticks_now(void);
 
+/**
+ * Returns the number of timer ticks (in terms of TIMER_TICKS_MS with APP_PRESCALER) since the given timer ticks time.
+ *
+ * Used to optimize code as the NRF lacks an FPU, so float operations are slow. Generally, only use when profiling
+ *   indicates a performance reason to do so. Otherwise, use timer_comparison_millis_since_start.
+ */
+uint32_t timer_comparison_ticks_since_start(uint32_t ticks_start);
+
+/**
+ * Returns the number of millis since the starting point ticks_start (from timer_comparison_ticks_now).
+ *   Has percision down to 1/APP_TIMER_FREQS seconds. Can be used for comparisons up to ~512 ms long.
+ *  Safe to use from interupt context
+ *
+ *  @return the number of milliseconds since ticks_start as a float
+ */
+float timer_comparison_millis_since_start(uint32_t ticks_start);
 
 /**
  * get current timestamp (set with setTime) in seconds (most likely epoch time)

@@ -91,7 +91,9 @@ helpDetailed:
 C_SOURCE_FILES += \
 main.c \
 incl/analog.c \
+incl/app_fifo_util.c \
 incl/rtc_timing.c \
+incl/battery.c \
 incl/ble_setup.c \
 incl/debug_log.c \
 incl/ext_eeprom.c \
@@ -100,7 +102,10 @@ incl/storer.c \
 incl/sender.c \
 incl/self_test.c \
 incl/scanner.c \
+incl/uart_commands.c \
 $(SDK_PATH)/components/libraries/crc16/crc16.c \
+$(SDK_PATH)/components/libraries/scheduler/app_scheduler.c \
+$(SDK_PATH)/components/libraries/timer/app_timer.c \
 $(SDK_PATH)/components/libraries/util/app_error.c \
 $(SDK_PATH)/components/libraries/util/nrf_assert.c \
 $(SDK_PATH)/components/libraries/uart/retarget.c \
@@ -110,7 +115,6 @@ $(SDK_PATH)/components/drivers_nrf/uart/app_uart_fifo.c \
 $(SDK_PATH)/components/libraries/fifo/app_fifo.c \
 $(SDK_PATH)/components/drivers_nrf/common/nrf_drv_common.c \
 $(SDK_PATH)/components/drivers_nrf/gpiote/nrf_drv_gpiote.c \
-$(SDK_PATH)/components/drivers_nrf/rtc/nrf_drv_rtc.c \
 $(SDK_PATH)/components/drivers_nrf/ble_flash/ble_flash.c \
 $(SDK_PATH)/components/drivers_nrf/spi_master/spi_master.c \
 $(SDK_PATH)/components/drivers_nrf/pstorage/pstorage.c \
@@ -137,7 +141,9 @@ INC_PATHS += -I$(SDK_PATH)/components/softdevice/common/softdevice_handler
 INC_PATHS += -I$(SDK_PATH)/components/libraries/crc16/
 INC_PATHS += -I$(SDK_PATH)/components/libraries/util
 INC_PATHS += -I$(SDK_PATH)/components/libraries/fifo
+INC_PATHS += -I$(SDK_PATH)/components/libraries/scheduler
 INC_PATHS += -I$(SDK_PATH)/components/libraries/trace
+INC_PATHS += -I$(SDK_PATH)/components/libraries/timer
 INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/common
 INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/rtc
 INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/hal
@@ -211,10 +217,15 @@ CFLAGS += -mfloat-abi=soft
 CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing
 CFLAGS += -fno-builtin --short-enums
 
+GIT_TAG += $(shell git describe --tags)
+GIT_BRANCH += $(shell git rev-parse --abbrev-ref HEAD)
+GIT_COMMIT += $(shell git rev-parse --short HEAD)
+CFLAGS += -DGIT_COMMIT='"$(GIT_COMMIT)"'
+CFLAGS += -DGIT_BRANCH='"$(GIT_BRANCH)"'
+CFLAGS += -DGIT_TAG='"$(GIT_TAG)"'
+
 #enable SPI
 CFLAGS += -DSPI_MASTER_0_ENABLE
-
-
 
 # keep every function in separate section. This will allow linker to dump unused functions
 LDFLAGS += -Xlinker -Map=$(LISTING_DIRECTORY)/$(OUTPUT_FILENAME).map

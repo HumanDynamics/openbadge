@@ -8,14 +8,34 @@
 
 
 
+#include <app_timer.h>
+
+#include "battery.h"
 #include "collector.h"
 
+static uint32_t mCollectorSampleTaskTimer;
+static uint32_t mCollectorCollectTaskTimer;
 
+static void collector_sample_task(void * p_context) {
+    if (isCollecting) {
+        uint32_t collection_start = timer_comparison_ticks_now();
+        while (timer_comparison_ticks_since_start(collection_start) < APP_TIMER_TICKS(READING_WINDOW_MS, APP_PRESCALER)) {
+            takeMicReading();
+        }
+    }
+}
+
+static void collector_collect_task(void * p_context) {
+    if (isCollecting && readingsCount > 0) {
+        collectSample();
+    }
+}
 
 void collector_init()
 {
+    debug_log("Reading window: %lu %lu", (uint32_t) (1000*READING_WINDOW_MS), (uint32_t) (1000*READING_PERIOD_MS));
+
     // Set sampling timing parameters to defaults
-    sampleWindow = SAMPLE_WINDOW;
     samplePeriod = SAMPLE_PERIOD;
 
     collect.to = 0;
@@ -29,8 +49,10 @@ void collector_init()
     sampleStartms = 0;
     
     isCollecting = false;
-}
 
+    app_timer_create(&mCollectorSampleTaskTimer, APP_TIMER_MODE_REPEATED, collector_sample_task);
+    app_timer_create(&mCollectorCollectTaskTimer, APP_TIMER_MODE_REPEATED, collector_collect_task);
+}
 
 /**
  * Take a reading from the mic (and add to total for averaging later)
@@ -57,7 +79,7 @@ static void setupChunk(int chunk, unsigned long timestamp, unsigned long msTimes
     }
         
     memset(micBuffer[chunk].samples, INVALID_SAMPLE, sizeof(micBuffer[chunk].samples));  // reset sample array
-    micBuffer[chunk].battery = getBatteryVoltage();
+    micBuffer[chunk].battery = BatteryMonitor_getBatteryVoltage();
     micBuffer[chunk].timestamp = timestamp;     // record timestamp for chunk
     micBuffer[chunk].msTimestamp = msTimestamp;  // record fractional part of timestamp
     micBuffer[chunk].check = CHECK_INCOMPLETE;  // denote that chunk is incomplete
@@ -77,7 +99,7 @@ void collectSample()
     
     if(collect.loc == 0)  {  // are we at start of a new chunk
         setupChunk(collect.to,sampleStart,sampleStartms);
-        debug_log("COLLECTOR: Started RAM chunk %d.\r\n",collect.to);
+        debug_log("COLLECTOR: Started RAM chunk %d. %lu %lu\r\n",collect.to, sampleStart, sampleStartms);
         //printCollectorChunk(collect.to);
     }
     
@@ -88,6 +110,8 @@ void collectSample()
         micBuffer[collect.to].check = micBuffer[collect.to].timestamp;  // mark chunk as complete
         collect.to = (collect.to < LAST_RAM_CHUNK) ? collect.to+1 : 0;
         collect.loc = 0;
+
+        Storer_ScheduleBufferedDataStorage();
     }
     
     takingReadings = false;  // we finished taking readings for that sample
@@ -98,6 +122,8 @@ void startCollector()
     if(!isCollecting)  {
         isCollecting = true;
         debug_log("  Collector started\r\n");
+        app_timer_start(mCollectorSampleTaskTimer, APP_TIMER_TICKS(READING_PERIOD_MS, APP_PRESCALER), NULL);
+        app_timer_start(mCollectorCollectTaskTimer, APP_TIMER_TICKS(SAMPLE_PERIOD, APP_PRESCALER), NULL);
         updateAdvData();
     }
 }
@@ -122,6 +148,9 @@ void stopCollector()
         collect.loc = 0;
     
         isCollecting = false;   // Disable collector
+        app_timer_stop(mCollectorSampleTaskTimer);
+        app_timer_stop(mCollectorCollectTaskTimer);
+        Storer_ScheduleBufferedDataStorage();
         updateAdvData();
     }
 }

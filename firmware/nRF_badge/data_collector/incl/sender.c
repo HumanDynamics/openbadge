@@ -2,13 +2,32 @@
  * INFORMATION ****************************************************
  */
 
-
-
+#include <app_timer.h>
+#include "battery.h"
 #include "sender.h"
 
 // External chunks will be loaded into this buffer all at once, for quicker access.
 static int extChunkFrom;
 static scan_chunk_t extChunk;
+
+static uint32_t mTimeoutCheckTimer;
+
+static void on_check_timeouts(void * p_context) {
+    // Collector timeout.  Stop collector if server is unseen for a long time
+    if (collectorTimeout > 0)  {  // 0 means timeout disabled
+        if (isCollecting && (millis() - lastReceipt >= collectorTimeout))  {
+            debug_log("SENDER: collector timeout.  Stopping collector...\r\n");
+            stopCollector();
+        }
+    }
+
+    if (scannerTimeout > 0)  {  // 0 means timeout disabled
+        if (scanner_enable && (millis() - lastReceipt >= scannerTimeout))  {
+            debug_log("SENDER: scanner timeout.  Stopping scanner...\r\n");
+            stopScanner();
+        }
+    }
+}
 
 server_command_params_t unpackCommand(uint8_t* pkt, unsigned char len)
 {        
@@ -138,7 +157,10 @@ void sender_init()
     send.num = 0;    
     
     dateReceived = false;
-    pendingCommand.cmd = CMD_NONE;   
+    pendingCommand.cmd = CMD_NONE;
+
+    app_timer_create(&mTimeoutCheckTimer, APP_TIMER_MODE_REPEATED, on_check_timeouts);
+    app_timer_start(mTimeoutCheckTimer, APP_TIMER_TICKS(60 * 1000, APP_PRESCALER), NULL);
 }
 
 
@@ -212,7 +234,7 @@ bool updateSender()
             memcpy(send.buf+3,&timestamp,sizeof(unsigned long));
             memcpy(send.buf+7,&ms,sizeof(unsigned short));
             
-            float voltage = getBatteryVoltage();
+            float voltage = BatteryMonitor_getBatteryVoltage();
             memcpy(send.buf+9,&voltage,sizeof(float));
             
             send.bufContents = SENDBUF_STATUS;
@@ -405,7 +427,7 @@ bool updateSender()
                     break;
                 default:
                     debug_log("invalid source?\r\n");
-                    while(1);
+                    APP_ERROR_CHECK_BOOL(false);
                     break;
                 }
                 
@@ -422,6 +444,8 @@ bool updateSender()
                     }
                     else if (chunkPtr->check == CHECK_TRUNC)  {
                         // number of samples in truncated chunk is stored in the last byte of the sample array
+                        // We need this because the compiler doesn't see our APP_ERROR as reseting the system.
+                        #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
                         send.num = chunkPtr->samples[SAMPLES_PER_CHUNK-1];
                     }
                     else  {
@@ -622,13 +646,15 @@ bool updateSender()
                     break;
                 default:
                     debug_log("invalid source\r\n");
-                    while(1);
+                    APP_ERROR_CHECK_BOOL(false);
                     break;
                 }
                 
                 if (send.loc == SEND_LOC_HEADER)  {
                     // Compose header
                     send.num = scanChunkPtr->num;
+                    // We need this because the compiler doesn't see our APP_ERROR as reseting the system.
+                    #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
                     float batteryVoltage = ((int)scanChunkPtr->batteryLevel + 100) / 100.0;
                     memcpy(send.buf,    &(scanChunkPtr->timestamp),     sizeof(unsigned long));   // timestamp
                     memcpy(send.buf+4,  &batteryVoltage,                sizeof(float));          // battery voltage
@@ -718,16 +744,14 @@ bool updateSender()
             led_timeout_cancel();
             nrf_gpio_pin_write(LED_2,0);   // clunky - sender.c doesn't see LED_OFF define
             debug_log("SENDER: LED off.\r\n");
-        }
-    
-        else  {
+        } else  {
             if (command.timeout > 30) command.timeout = 30;  // clip to 30seconds
             unsigned long timeout_ms = ((unsigned long)command.timeout) * 1000UL;
             led_timeout_set(timeout_ms);
             nrf_gpio_pin_write(LED_2,1); // clunky - sender.c doesn't see LED_ON define
             debug_log("SENDER: LED on for %ds.\r\n",command.timeout);
         }
-        pendingCommand.cmd = CMD_NONE;
+            pendingCommand.cmd = CMD_NONE;
         break;  // switch (command.cmd)
     
     case CMD_NONE:
@@ -739,22 +763,6 @@ bool updateSender()
         break;  // switch (command.cmd)
         
     }  // switch (command.cmd)
-    
-    
-    // Collector timeout.  Stop collector if server is unseen for a long time
-    if (collectorTimeout > 0)  {  // 0 means timeout disabled
-        if (isCollecting && (millis() - lastReceipt >= collectorTimeout))  {
-            debug_log("SENDER: collector timeout.  Stopping collector...\r\n");
-            stopCollector();
-        }
-    }
-    
-    if (scannerTimeout > 0)  {  // 0 means timeout disabled
-        if (scanner_enable && (millis() - lastReceipt >= scannerTimeout))  {
-            debug_log("SENDER: scanner timeout.  Stopping scanner...\r\n");
-            stopScanner();
-        }
-    }
     
     return senderActive;
 }
