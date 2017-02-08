@@ -49,4 +49,6 @@ __attribute__((long_call, section(".data"))) int analogRead(nrf_adc_config_input
  */
 float readVDD(void);
 
+void IdentifyLED_On(int time_seconds);
+
 #endif //TIMING_H

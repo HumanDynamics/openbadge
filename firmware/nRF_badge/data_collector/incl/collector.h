@@ -53,18 +53,11 @@ unsigned long samplePeriod;   // time between samples - must exceed SAMPLE_WINDO
 #define READING_PERIOD_MS             (1000.0 / READING_PERIODS_PER_SECOND)
 #define READING_WINDOW_MS             (READING_PERIOD_MS * SAMPLE_SLEEP_RATIO)
 
-
-
-bool isCollecting;
-
 bool takingReadings;  // whether we're currently taking readings for a sample
 unsigned long sampleStart;    // timestamp of first reading for current sample
 unsigned long sampleStartms;    // timestamp of first reading for current sample
 unsigned int readingsCount;   // number of mic readings taken for current sample
 unsigned long readingsSum;    // sum of all mic readings taken for current sample
-
-
-
 
 #define SAMPLES_PER_CHUNK 114   // 128-(4+2+4+4)  ---  see chunk structure below
 #define MIC_BUFFER_SIZE 20       // number of chunks in mic RAM buffer
@@ -109,13 +102,18 @@ void collectSample();
 /**
  * Start (or restart) collecting.
  */
-void startCollector();
+void startCollector(uint32_t timeout_minutes);
 
 /**
  * Halt collecting; current chunk is likely incomplete, filled with some INVALID_READING samples.
  * Next call to addMicReading will start from next chunk in RAM buffer
  */
 void stopCollector();
+
+/**
+ * @return True if collector is recording.
+ */
+bool Collector_IsRecording(void);
 
 /**
  * Get battery voltage

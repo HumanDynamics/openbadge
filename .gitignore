@@ -20,3 +20,5 @@ data.db
 
 .idea
 env/
+.DS_Store
+cmake-build-debug/

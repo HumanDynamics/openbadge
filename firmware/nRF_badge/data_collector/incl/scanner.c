@@ -392,7 +392,8 @@ bool updateScanner()
 }
 
 
-void startScanner(unsigned short window_ms,unsigned short interval_ms,unsigned short duration_s,unsigned short period_s)
+void startScanner(unsigned short window_ms, unsigned short interval_ms, unsigned short duration_s,
+                  unsigned short period_s, uint32_t timeout_minutes)
 {
     scan_params.interval = (interval_ms * 1000UL) / 625;   //scan_params uses interval in units of 0.625ms
     scan_params.window = (window_ms * 1000UL) / 625;       //window also in units of 0.625ms
@@ -420,33 +421,6 @@ scan_state_t getScanState()
     return scan_state;
 }
 
-
-unsigned long getScanTimestamp(int chunk)
-{
-    ext_eeprom_wait();
-    scan_header_t header;
-    ext_eeprom_read(EXT_ADDRESS_OF_CHUNK(chunk),header.buf,sizeof(header.buf));
-    while(spi_busy());
-    return header.timestamp;
-}
-
-unsigned long getScanCheck(int chunk)
-{
-    ext_eeprom_wait();
-    scan_tail_t tail;
-    ext_eeprom_read(EXT_ADDRESS_OF_CHUNK_CHECK(chunk),tail.buf,sizeof(tail.buf));
-    while(spi_busy());
-    return tail.check;
-}
-
-void getScanChunk(scan_chunk_t* destPtr,int chunk)
-{
-    ext_eeprom_wait();
-    ext_eeprom_read(EXT_ADDRESS_OF_CHUNK(chunk),destPtr->buf,sizeof(destPtr->buf));
-    while(spi_busy());
-}
-
-
 void printScanResult(scan_chunk_t* srcPtr)
 {
     //scan_chunk_t readChunk;
@@ -469,4 +443,8 @@ void printScanResult(scan_chunk_t* srcPtr)
         //}
         nrf_delay_ms(1);
     }
+}
+
+bool Scanner_IsScannerRunning(void) {
+    return scanner_enable;
 }

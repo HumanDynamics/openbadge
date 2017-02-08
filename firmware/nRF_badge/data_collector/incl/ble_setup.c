@@ -2,6 +2,7 @@
 
 #include "app_fifo_util.h"
 #include "ble_setup.h"
+#include "pstorage_platform.h"
 
 #include "battery.h"
 
@@ -299,7 +300,8 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 static void sys_evt_dispatch(uint32_t sys_evt)
 {
     ble_advertising_on_sys_evt(sys_evt);
-    storer_on_sys_evt(sys_evt);
+    //storer_on_sys_evt(sys_evt);
+    pstorage_sys_event_handler(sys_evt);
 }
 
 
@@ -366,7 +368,7 @@ void setAdvData()
     customAdvData.battery = (scaledBatteryLevel <= 255) ? scaledBatteryLevel : 255;  // clip scaled level
     customAdvData.statusFlags = 0;
     customAdvData.statusFlags |= (dateReceived) ? 0x01 : 0x00;  // set sync status bit
-    customAdvData.statusFlags |= (isCollecting) ? 0x02 : 0x00;  // set collector status bit
+    customAdvData.statusFlags |= (Collector_IsRecording()) ? 0x02 : 0x00;  // set collector status bit
     customAdvData.statusFlags |= (scanner_enable) ? 0x04 : 0x00;  // set collector status bit
     customAdvData.group = badgeAssignment.group;
     customAdvData.ID = badgeAssignment.ID;

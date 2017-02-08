@@ -8,12 +8,16 @@ set(SOURCE_FILES
     firmware/nRF_badge/data_collector/config/pstorage_platform.h
     firmware/nRF_badge/data_collector/incl/analog.c
     firmware/nRF_badge/data_collector/incl/analog.h
+    firmware/nRF_badge/data_collector/incl/audio_chunks.c
+    firmware/nRF_badge/data_collector/incl/audio_chunks.h
     firmware/nRF_badge/data_collector/incl/badge_03.h
     firmware/nRF_badge/data_collector/incl/badge_03v2_dynastream.h
     firmware/nRF_badge/data_collector/incl/badge_03v2_rigado.h
     firmware/nRF_badge/data_collector/incl/badge_03v4.h
     firmware/nRF_badge/data_collector/incl/battery.c
     firmware/nRF_badge/data_collector/incl/battery.h
+    firmware/nRF_badge/data_collector/incl/comm_protocol.h
+    firmware/nRF_badge/data_collector/incl/comm_protocol.c
     firmware/nRF_badge/data_collector/incl/ble_setup.c
     firmware/nRF_badge/data_collector/incl/ble_setup.h
     firmware/nRF_badge/data_collector/incl/collector.c
@@ -28,6 +32,16 @@ set(SOURCE_FILES
     firmware/nRF_badge/data_collector/incl/flash_layout.h
     firmware/nRF_badge/data_collector/incl/flash_layout_utils.c
     firmware/nRF_badge/data_collector/incl/flash_layout_utils.h
+    firmware/nRF_badge/data_collector/incl/group_assignment.c
+    firmware/nRF_badge/data_collector/incl/group_assignment.h
+    firmware/nRF_badge/data_collector/incl/badge_fs.c
+    firmware/nRF_badge/data_collector/incl/badge_fs.h
+    firmware/nRF_badge/data_collector/incl/badge_fs_private.h
+    firmware/nRF_badge/data_collector/incl/badge_fs_config.h
+    firmware/nRF_badge/data_collector/incl/proximity_chunks.c
+    firmware/nRF_badge/data_collector/incl/proximity_chunks.h
+    firmware/nRF_badge/data_collector/incl/request_handler.c
+    firmware/nRF_badge/data_collector/incl/request_handler.h
     firmware/nRF_badge/data_collector/incl/rtc_timing.c
     firmware/nRF_badge/data_collector/incl/rtc_timing.h
     firmware/nRF_badge/data_collector/incl/scanner.c
@@ -38,11 +52,20 @@ set(SOURCE_FILES
     firmware/nRF_badge/data_collector/incl/sender.h
     firmware/nRF_badge/data_collector/incl/storer.c
     firmware/nRF_badge/data_collector/incl/storer.h
+    firmware/nRF_badge/data_collector/incl/timestamp.h
+    firmware/nRF_badge/data_collector/incl/timestamp.c
     firmware/nRF_badge/data_collector/incl/uart_commands.c
     firmware/nRF_badge/data_collector/incl/uart_commands.h
+    firmware/nRF_badge/data_collector/incl/vaint_utils.c
+    firmware/nRF_badge/data_collector/incl/vaint_utils.h
     firmware/nRF_badge/data_collector/main.c
+    firmware/nRF_badge/data_collector/unit_tests/tests/audio_chunks_unittest.cc
+    firmware/nRF_badge/data_collector/unit_tests/tests/badge_fs_unittest.cc
+    firmware/nRF_badge/data_collector/unit_tests/tests/comm_protocol_unittest.cc
     firmware/nRF_badge/data_collector/unit_tests/tests/flash_layout_utils_unittest.cc
-    firmware/nRF_badge/data_collector/unit_tests/tests/flash_unittest.cc)
+    firmware/nRF_badge/data_collector/unit_tests/tests/flash_unittest.cc
+    firmware/nRF_badge/data_collector/unit_tests/tests/request_handler_unittest.cc
+    firmware/nRF_badge/data_collector/unit_tests/tests/vaint_utils_unittest.cc)
 
 include_directories(
         firmware/nRF_badge/data_collector/config

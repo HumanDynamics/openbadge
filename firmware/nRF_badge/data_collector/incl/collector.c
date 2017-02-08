@@ -15,9 +15,10 @@
 
 static uint32_t mCollectorSampleTaskTimer;
 static uint32_t mCollectorCollectTaskTimer;
+static bool mIsRecoding;
 
 static void collector_sample_task(void * p_context) {
-    if (isCollecting) {
+    if (mIsRecoding) {
         uint32_t collection_start = timer_comparison_ticks_now();
         while (timer_comparison_ticks_since_start(collection_start) < APP_TIMER_TICKS(READING_WINDOW_MS, APP_PRESCALER)) {
             takeMicReading();
@@ -26,7 +27,7 @@ static void collector_sample_task(void * p_context) {
 }
 
 static void collector_collect_task(void * p_context) {
-    if (isCollecting && readingsCount > 0) {
+    if (mIsRecoding && readingsCount > 0) {
         collectSample();
     }
 }
@@ -47,11 +48,15 @@ void collector_init()
     readingsSum = 0;
     sampleStart = 0;
     sampleStartms = 0;
-    
-    isCollecting = false;
+
+    mIsRecoding = false;
 
     app_timer_create(&mCollectorSampleTaskTimer, APP_TIMER_MODE_REPEATED, collector_sample_task);
     app_timer_create(&mCollectorCollectTaskTimer, APP_TIMER_MODE_REPEATED, collector_collect_task);
+}
+
+bool Collector_IsRecording(void) {
+    return mIsRecoding;
 }
 
 /**
@@ -117,10 +122,10 @@ void collectSample()
     takingReadings = false;  // we finished taking readings for that sample
 }
 
-void startCollector()
+void startCollector(uint32_t timeout_minutes)
 {   
-    if(!isCollecting)  {
-        isCollecting = true;
+    if(!mIsRecoding)  {
+        mIsRecoding = true;
         debug_log("  Collector started\r\n");
         app_timer_start(mCollectorSampleTaskTimer, APP_TIMER_TICKS(READING_PERIOD_MS, APP_PRESCALER), NULL);
         app_timer_start(mCollectorCollectTaskTimer, APP_TIMER_TICKS(SAMPLE_PERIOD, APP_PRESCALER), NULL);
@@ -130,7 +135,7 @@ void startCollector()
 
 void stopCollector()
 {
-    if(isCollecting)  {
+    if(mIsRecoding)  {
         // Reset internal collector variables
         takingReadings = false;
         readingsSum = 0;
@@ -146,11 +151,10 @@ void stopCollector()
         // Advance to next chunk in buffer (will resume collecting from a new chunk)
         collect.to = (collect.to < LAST_RAM_CHUNK) ? collect.to+1 : 0;
         collect.loc = 0;
-    
-        isCollecting = false;   // Disable collector
+
+        mIsRecoding = false;   // Disable collector
         app_timer_stop(mCollectorSampleTaskTimer);
         app_timer_stop(mCollectorCollectTaskTimer);
-        Storer_ScheduleBufferedDataStorage();
         updateAdvData();
     }
 }

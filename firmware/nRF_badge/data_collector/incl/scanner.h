@@ -222,7 +222,8 @@ void scanner_init();
 uint32_t startScan();
 
 
-void startScanner(unsigned short window_ms,unsigned short interval_ms,unsigned short duration_s,unsigned short period_s);
+void startScanner(unsigned short window_ms, unsigned short interval_ms, unsigned short duration_s,
+                  unsigned short period_s, uint32_t timeout_minutes);
 void stopScanner();
 
 
@@ -248,6 +249,8 @@ bool updateScanner();
 
 // Returns scan_state, the current status of scanning.
 scan_state_t getScanState();
+
+bool Scanner_IsScannerRunning(void);
 
 // Print a scan chunk to debug log
 void printScanResult(scan_chunk_t* sourceChunk);

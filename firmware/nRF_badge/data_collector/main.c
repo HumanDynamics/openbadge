@@ -37,6 +37,8 @@
 //#include "external_flash.h"  //for interfacing to external SPI flash
 #include "scanner.h"       //for performing scans and storing scan data
 #include "self_test.h"   // for built-in tests
+#include "flash.h"
+#include "flash_layout.h"
 
 typedef struct {
     bool error_occured;
@@ -108,6 +110,7 @@ int main(void)
     adc_config();
     rtc_config();
     spi_init();
+    flash_init();
     
     
     #if defined(TESTER_ENABLE) // tester mode is enabled
@@ -135,11 +138,10 @@ int main(void)
     nrf_gpio_pin_write(LED_2,LED_ON);
     while (1);
     */
-
     APP_SCHED_INIT(SCHED_MAX_EVENT_DATA_SIZE, SCHED_QUEUE_SIZE);
 
     collector_init();
-    storer_init();
+    //storer_init();
     sender_init();
     scanner_init();
     BatteryMonitor_init();
@@ -168,6 +170,20 @@ int main(void)
     BLEstartAdvertising();
 
     nrf_delay_ms(2);
+
+    debug_log("Waiting 10s to test flash...\r\n");
+
+    nrf_delay_ms(10000);
+
+    debug_log("Testing flash!\r\n");
+    char test_write_string[] = "This is a test string!!";
+    flash_write(NRF_FLASH_START - 8, (uint8_t *) test_write_string, sizeof(test_write_string));
+
+    nrf_delay_ms(100);
+
+    char test_read_string[sizeof(test_write_string)];
+    flash_read((uint8_t *) test_read_string, NRF_FLASH_START - 8, sizeof(test_read_string));
+    debug_log("Read from flash: %s\r\n", test_read_string);
 
     while (true) {
         app_sched_execute();

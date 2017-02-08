@@ -97,6 +97,8 @@ incl/battery.c \
 incl/ble_setup.c \
 incl/debug_log.c \
 incl/ext_eeprom.c \
+incl/flash.c \
+incl/flash_layout_utils.c \
 incl/collector.c \
 incl/storer.c \
 incl/sender.c \
@@ -397,5 +399,6 @@ flashCode: flashErase.jlink flashS130.jlink flashAPP.jlink
 	$(JLINK) $(OBJECT_DIRECTORY)/flashAPP.jlink
 
 export INC_PATHS
+export SDK_PATH
 unittest:
 	make -C unit_tests/

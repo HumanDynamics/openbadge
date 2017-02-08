@@ -16,10 +16,22 @@
 # created to the list.
 TESTS = flash_layout_utils_unittest  \
         flash_unittest               \
+        vaint_utils_unittest         \
+        audio_chunks_unittest        \
+        badge_fs_unittest            \
+        comm_protocol_unittest       \
+        request_handler_unittest       \
 
 # All the files that must be built out of the firmware for our tests to work.
-TESTED_CODE = $(FIRMWARE_DIR)/incl/flash_layout_utils.c  \
-              $(FIRMWARE_DIR)/incl/flash.c               \
+TESTED_CODE = $(FIRMWARE_DIR)/incl/audio_chunks.c              \
+              $(FIRMWARE_DIR)/incl/proximity_chunks.c          \
+              $(FIRMWARE_DIR)/incl/badge_fs.c                  \
+              $(FIRMWARE_DIR)/incl/comm_protocol.c             \
+              $(FIRMWARE_DIR)/incl/flash_layout_utils.c        \
+              $(FIRMWARE_DIR)/incl/flash.c                     \
+              $(FIRMWARE_DIR)/incl/app_fifo_util.c             \
+              $(FIRMWARE_DIR)/incl/vaint_utils.c               \
+              $(SDK_PATH)/components/libraries/fifo/app_fifo.c \
 
 # Please tweak the following variable definitions as needed by your
 # project, except GTEST_HEADERS, which you can use in your own targets
@@ -56,6 +68,7 @@ CXXFLAGS += -DBOARD_CUSTOM
 CXXFLAGS += -DBOARD_BADGE_03V4
 CXXFLAGS += -DDEBUG_LOG_ENABLE
 CXXFLAGS += -DDEBUG
+CXXFLAGS += -DUNITTEST
 
 TEST_OBJECTS = $(addsuffix .o, $(TESTS))
 TEST_SOURCE = $(addsuffix .cc, $(addprefix $(TEST_DIR)/, $(TESTS)))

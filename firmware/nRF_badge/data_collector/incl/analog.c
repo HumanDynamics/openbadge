@@ -44,3 +44,7 @@ __attribute__((long_call, section(".data"))) int analogRead(nrf_adc_config_input
     nrf_adc_stop();
     return reading;
 }
+
+void IdentifyLED_On(int time_seconds) {
+    nrf_gpio_pin_write(LED_2, LED_ON);
+}

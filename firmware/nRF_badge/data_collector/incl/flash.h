@@ -5,7 +5,7 @@
 #ifndef OPENBADGE_FLASH_H
 #define OPENBADGE_FLASH_H
 
-#import <stdint.h>
+#include <stdint.h>
 
 /**
  * Initializes the flash storage module.
@@ -14,15 +14,18 @@
  *   single block of contiguous flash of size FLASH_SIZE. This block of flash is addressed in range
  *   [FLASH_START, FLASH_END]
  *
- * Writes/reads to earlier addresses in flash space (<= EXT_FLASH_END) should be perfered to writes later on in flash as
- *   the first portion of this block is backed by the EEPROM, which has perferable physical characteristics to the
+ * Writes/reads to earlier addresses in flash space (<= EXT_FLASH_END) should be prefers to writes later on in flash as
+ *   the first portion of this block is backed by the EEPROM, which has preferable physical characteristics to the
  *   internal Nordic flash.
  */
 void flash_init(void);
 
 /**
- * Writes 'len' bytes from 'src' to 'dst' in flash. Data currently in flash will be over written if neccesary.
- * Method does not block until data is written, but data is gauranteed to be written in FIFO manner.
+ * Writes 'len' bytes from 'src' to 'dst' in flash. Data currently in flash will be over written if necessary.
+ *
+ * Method does not block until data is written.
+ *
+ * Multiple pending writes to the same area simultaneously is not allowed.
  *
  * @param dst Flash address of destination. Must be FLASH_START <= dst <= FLASH_END. Must be word aligned.
  * @param src Byte stream to write to flash.

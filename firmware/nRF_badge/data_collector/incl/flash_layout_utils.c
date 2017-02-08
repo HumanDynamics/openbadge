@@ -3,6 +3,7 @@
 //
 
 #include "flash_layout_utils.h"
+#include "debug_log.h"
 
 /**
  * @return len if len < FLASH_PAGE_SIZE, otherwise FLASH_PAGE_SIZE.

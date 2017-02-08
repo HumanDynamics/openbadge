@@ -105,17 +105,12 @@ unsigned long now();
 unsigned long nowFractional();
 
 /**
+ * (Most consumers should probably use Timestamp_SetTime in timestamp.c, as it manages some additional state.
+ *
  * set current timestamp (set with setTime)
  * In seconds, like Unix time, but extra parameter to set it partway through a full second.
  */
 void setTimeFractional(unsigned long timestamp, unsigned long fractional);
-
-/**
- * set current timestamp (set with setTime)
- * In seconds, like Unix time
- */
-void setTime(unsigned long timestamp);
-
 
 
 

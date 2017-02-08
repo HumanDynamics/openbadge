@@ -10,25 +10,6 @@
 static int extChunkFrom;
 static scan_chunk_t extChunk;
 
-static uint32_t mTimeoutCheckTimer;
-
-static void on_check_timeouts(void * p_context) {
-    // Collector timeout.  Stop collector if server is unseen for a long time
-    if (collectorTimeout > 0)  {  // 0 means timeout disabled
-        if (isCollecting && (millis() - lastReceipt >= collectorTimeout))  {
-            debug_log("SENDER: collector timeout.  Stopping collector...\r\n");
-            stopCollector();
-        }
-    }
-
-    if (scannerTimeout > 0)  {  // 0 means timeout disabled
-        if (scanner_enable && (millis() - lastReceipt >= scannerTimeout))  {
-            debug_log("SENDER: scanner timeout.  Stopping scanner...\r\n");
-            stopScanner();
-        }
-    }
-}
-
 server_command_params_t unpackCommand(uint8_t* pkt, unsigned char len)
 {        
     server_command_params_t command;

@@ -7,6 +7,9 @@
 
 #include "uart_commands.h"
 #include "debug_log.h"
+#include "flash.h"
+#include "flash_layout.h"
+#include "nrf_delay.h"
 
 #define MAX_COMMAND_LEN   32
 #define COMMAND_BUF_SIZE  (MAX_COMMAND_LEN + 1)
@@ -19,12 +22,30 @@ static void on_restart_command(void) {
     NVIC_SystemReset();
 }
 
+static void on_flash_test_command(void) {
+    debug_log("Writing to flash...\r\n");
+
+    char test_write_string[] = "This is a test string!!";
+    flash_write(FLASH_START, (uint8_t *) test_write_string, sizeof(test_write_string));
+
+    nrf_delay_ms(1000);
+
+    char test_read_string[sizeof(test_write_string)];
+    flash_read((uint8_t *) test_read_string, FLASH_START, sizeof(test_read_string));
+
+    debug_log("Read from flash: %s\r\n", test_read_string);
+}
+
 // Command lookup table, maps textual string commands to methods executed when they're received.
 static uart_command_t mUARTCommands[] = {
         {
                 .command = "restart",
                 .handler = on_restart_command,
         },
+        {
+                .command = "flash_test",
+                .handler = on_flash_test_command,
+        }
 };
 
 // Dispatches appropriate handler for matching command.
