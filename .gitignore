@@ -14,6 +14,7 @@ data.db
 *.l#*
 *.brd.lck
 *.sch.lck
+macs.csv
 
 .ipynb_checkpoints/
 
