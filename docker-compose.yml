@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  nrf:
+    build:
+      context: .
+      dockerfile: ./compose/Dockerfile
+    volumes:
+      - .:/app
+#    devices:
+#      - /dev/ttyACM0:/dev/ttyACM0
+    privileged: true
+    entrypoint: ["/app/compose/entry_point.sh"]
+    command: ["badge_03v4_noDebug","flashAPP"]
