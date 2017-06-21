@@ -29,3 +29,7 @@ Commands:
   change the working directory to the data_collector directory. You can see the different make options by calling:
   "docker-compose run nrf make"
 * docker-compose run nrf bash : opens an interactive bash shell
+* ./programming_loop_docker.sh [test/prod] : a utility used for programming a batch of badges. It will compile once, and
+ then enters a loop. Each time a new badge is placed, it will be automatically programmed and its MAC address will be
+ written to the macs.log file. For most purposes, use the "prod" command variables. The "test" option turns on serial
+ output and other testing features and is not recommended for production.

@@ -38,7 +38,7 @@ wait_while_device_not_exists() {
 
 get_mac() {
 	echo "### Extracting MAC, please wait"
-	./getMAC | tail -1 | tee -a macs.log
+	./getMAC.sh | tail -1 | tee -a macs.log
 }
 
 if [[ $# -ne 1 ]]
