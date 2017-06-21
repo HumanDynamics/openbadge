@@ -1,3 +1,0 @@
-bluepy==1.0.4
-python-dateutil==2.5.3
-python-dotenv==0.6.0
