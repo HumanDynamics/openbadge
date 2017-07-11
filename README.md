@@ -25,7 +25,7 @@ Commands:
 * docker-compose build : builds the docker container "nrf". You must run this command at least once before calling
  docker-compose run.
 * docker-compose run nrf <COMMAND> : where <COMMAND> is a command to run inside the container.
-  * When calling make (e.g. make badge_03v4_noDebug flashErase  flashS130 flashAPP), the script will automatically
+  * When calling make (e.g. make badge_03v4_noDebug flashUnlock flashErase  flashS130 flashAPP), the script will automatically
   change the working directory to the data_collector directory. You can see the different make options by calling:
   "docker-compose run nrf make"
 * docker-compose run nrf bash : opens an interactive bash shell
