@@ -5,8 +5,8 @@ services:
     build:
       context: .
       dockerfile: ./compose/Dockerfile
-    volumes:
-      - .:/app
+#    volumes:
+#      - .:/app
 #    devices:
 #      - /dev/ttyACM0:/dev/ttyACM0
     privileged: true
