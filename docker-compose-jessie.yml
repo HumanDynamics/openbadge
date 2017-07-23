@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  nrf:
+    build:
+      context: .
+      dockerfile: ./compose/Dockerfile_jessie
+#    volumes:
+#      - .:/app
+    privileged: true
+    entrypoint: ["/app/compose/entry_point.sh"]
+    command: ["badge_03v4_noDebug","flashAPP"]

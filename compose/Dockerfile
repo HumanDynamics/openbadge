@@ -13,9 +13,10 @@ RUN apt-get update && apt-get install -y \
   lib32ncurses5 \
   unzip \
   binutils-avr \
-	git \
+  git \
   cmake \
-	minicom screen
+  minicom screen \
+  vim
 
 RUN mkdir -p /opt/downloads
 
@@ -33,6 +34,9 @@ RUN unzip -q downloads/nRF51_SDK_8.1.0_b6ed55f.zip -d $NRF_SDK_PATH
 
 COPY compose/Makefile.posix $NRF_SDK_PATH/components/toolchain/gcc/Makefile.posix
 
+# Fix missing library error
+RUN ln -s /lib/x86_64-linux-gnu/libudev.so.0 /lib/x86_64-linux-gnu/libudev.so.1
+
 # SEGGER
-copy compose/jlink_5.2.9_x86_64.deb /opt/downloads/jlink_5.2.9_x86_64.deb
-RUN dpkg -i downloads/jlink_5.2.9_x86_64.deb
+copy compose/JLink_Linux_V616i_x86_64.deb /opt/downloads/JLink_Linux_V616i_x86_64.deb
+RUN dpkg -i downloads/JLink_Linux_V616i_x86_64.deb
