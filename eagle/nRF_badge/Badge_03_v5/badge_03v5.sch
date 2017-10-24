@@ -7727,7 +7727,7 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <part name="U4" library="Badge" deviceset="PCF85263" device=""/>
 <part name="SUPPLY2" library="Badge" deviceset="VCC" device=""/>
 <part name="U5" library="Badge" deviceset="M95M02" device="_SOIC" value="M95M02"/>
-<part name="S4" library="Badge" deviceset="SWITCH-DPDT" device="-SMD-AYZ0202"/>
+<part name="S4" library="Badge" deviceset="SWITCH-DPDT" device="-SMD-AYZ0202" value="DPDT"/>
 <part name="SUPPLY15" library="Badge" deviceset="VCC" device=""/>
 </parts>
 <sheets>
