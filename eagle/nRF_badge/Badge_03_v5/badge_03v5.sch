@@ -1080,6 +1080,40 @@ package type OT</description>
 <wire x1="8.89" y1="-6.985" x2="8.255" y2="-6.35" width="0.4064" layer="21"/>
 <text x="7.62" y="8.89" size="1.27" layer="25" font="vector" ratio="16">&gt;NAME</text>
 </package>
+<package name="BU2032SM_CREAM">
+<smd name="+" x="-14.65" y="0" dx="3.2" dy="4.2" layer="1"/>
+<smd name="-" x="14.65" y="0" dx="3.2" dy="4.2" layer="1"/>
+<wire x1="-14.5" y1="3.5" x2="-11.5" y2="3.5" width="0.2032" layer="21" style="shortdash"/>
+<wire x1="-14.5" y1="3.5" x2="-14.5" y2="2.5" width="0.2032" layer="21" style="shortdash"/>
+<wire x1="-14.5" y1="-2.5" x2="-14.5" y2="-3.5" width="0.2032" layer="21" style="shortdash"/>
+<wire x1="-14.5" y1="-3.5" x2="-11.5" y2="-3.5" width="0.2032" layer="21" style="shortdash"/>
+<wire x1="14.5" y1="2.5" x2="14.5" y2="3.5" width="0.2032" layer="21" style="shortdash"/>
+<wire x1="14.5" y1="3.5" x2="11.5" y2="3.5" width="0.2032" layer="21" style="shortdash"/>
+<wire x1="14.5" y1="-2.5" x2="14.5" y2="-3.5" width="0.2032" layer="21" style="shortdash"/>
+<wire x1="14.5" y1="-3.5" x2="11.5" y2="-3.5" width="0.2032" layer="21" style="shortdash"/>
+<wire x1="-9" y1="-8" x2="-6" y2="-8" width="0.2032" layer="21" style="shortdash"/>
+<wire x1="6" y1="-8" x2="9" y2="-8" width="0.2032" layer="21" style="shortdash"/>
+<wire x1="-11.5" y1="3.5" x2="-9" y2="8" width="0.2032" layer="21" style="shortdash" curve="-24.706026"/>
+<wire x1="11.5" y1="3.5" x2="9" y2="8" width="0.2032" layer="21" style="shortdash" curve="24.706026"/>
+<wire x1="-11.5" y1="-3.5" x2="-9" y2="-8" width="0.2032" layer="21" style="shortdash" curve="24.706026"/>
+<wire x1="11.5" y1="-3.5" x2="9" y2="-8" width="0.2032" layer="21" style="shortdash" curve="-24.706026"/>
+<circle x="0" y="0" radius="10" width="0.3048" layer="51"/>
+<wire x1="0" y1="2" x2="0" y2="-2" width="0.3048" layer="51"/>
+<wire x1="-2" y1="0" x2="2" y2="0" width="0.3048" layer="51"/>
+<wire x1="3" y1="-10.5" x2="3.75" y2="-11.25" width="0.3048" layer="51"/>
+<wire x1="3" y1="-10.5" x2="-3" y2="-10.5" width="0.3048" layer="51"/>
+<wire x1="-3" y1="-10.5" x2="-3.75" y2="-11.25" width="0.3048" layer="51"/>
+<wire x1="-9" y1="8" x2="-6" y2="8" width="0.2032" layer="21" style="shortdash"/>
+<wire x1="9" y1="8" x2="6" y2="8" width="0.2032" layer="21" style="shortdash"/>
+<wire x1="-6" y1="8" x2="6" y2="8" width="0.3048" layer="51" style="shortdash"/>
+<wire x1="-6" y1="-8" x2="-5" y2="-8" width="0.3048" layer="51" style="shortdash"/>
+<wire x1="-5" y1="-8" x2="-3" y2="-6" width="0.3048" layer="51" style="shortdash"/>
+<wire x1="-3" y1="-6" x2="3" y2="-6" width="0.3048" layer="51" style="shortdash"/>
+<wire x1="3" y1="-6" x2="5" y2="-8" width="0.3048" layer="51" style="shortdash"/>
+<wire x1="5" y1="-8" x2="6" y2="-8" width="0.3048" layer="51" style="shortdash"/>
+<text x="-12.7" y="-4.83" size="2.54" layer="27" font="vector" ratio="12" align="center">+</text>
+<text x="13.085" y="-4.58" size="2.54" layer="27" font="vector" ratio="12" align="center">-</text>
+</package>
 </packages>
 <symbols>
 <symbol name="LP2985LV">
@@ -1487,6 +1521,15 @@ Various common sizes : AA, AAA, 18650 (PRT-12895), 20mm coin cell and 12mm coin 
 <connects>
 <connect gate="G$1" pin="+" pad="1 2 3 4"/>
 <connect gate="G$1" pin="-" pad="NEG"/>
+</connects>
+<technologies>
+<technology name=""/>
+</technologies>
+</device>
+<device name="BU2032SM_CREAM" package="BU2032SM_CREAM">
+<connects>
+<connect gate="G$1" pin="+" pad="+"/>
+<connect gate="G$1" pin="-" pad="-"/>
 </connects>
 <technologies>
 <technology name=""/>
@@ -7543,7 +7586,7 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <part name="D2" library="Badge" deviceset="LED" device="" value="YL"/>
 <part name="R3" library="rcl" deviceset="R-US_" device="R0603" value="1k"/>
 <part name="R2" library="rcl" deviceset="R-US_" device="R0603" value="1k"/>
-<part name="BAT1" library="Badge" deviceset="BATTERY" device="20MM_ISO_NO_CENTER_CREAM" value="CR2032"/>
+<part name="BAT1" library="Badge" deviceset="BATTERY" device="20MM_ISO_NOCREAM" value="CR2032"/>
 <part name="C1" library="rcl" deviceset="C-EU" device="C1206" value="100u"/>
 <part name="C6" library="rcl" deviceset="C-EU" device="C0603" value="1u"/>
 <part name="C8" library="rcl" deviceset="C-EU" device="C0603" value="10u"/>
@@ -7599,7 +7642,7 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <part name="BAT3" library="Badge" deviceset="BATTERY" device="HOLDER" value="CR2032"/>
 <part name="M_RAW" library="Badge" deviceset="TESTPOINT" device="" value=""/>
 <part name="C2" library="rcl" deviceset="C-EU" device="C0603" value="0u1"/>
-<part name="BAT4" library="Badge" deviceset="BATTERY" device="HOLDER" value="CR2032"/>
+<part name="BAT4" library="Badge" deviceset="BATTERY" device="BU2032SM_CREAM" value="CR2032"/>
 <part name="MIC_F" library="Badge" deviceset="TESTPOINT" device="" value=""/>
 <part name="M_VCC" library="Badge" deviceset="TESTPOINT" device="" value=""/>
 <part name="GND5" library="Badge" deviceset="GND" device=""/>
