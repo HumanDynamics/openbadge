@@ -9,20 +9,20 @@
 </settings>
 <grid distance="0.1" unitdist="inch" unit="inch" style="lines" multiple="1" display="no" altdistance="0.01" altunitdist="inch" altunit="inch"/>
 <layers>
-<layer number="1" name="Top" color="4" fill="1" visible="no" active="no"/>
-<layer number="16" name="Bottom" color="1" fill="1" visible="no" active="no"/>
-<layer number="17" name="Pads" color="2" fill="1" visible="no" active="no"/>
-<layer number="18" name="Vias" color="2" fill="1" visible="no" active="no"/>
-<layer number="19" name="Unrouted" color="14" fill="1" visible="no" active="no"/>
-<layer number="20" name="Dimension" color="15" fill="1" visible="no" active="no"/>
-<layer number="21" name="tPlace" color="16" fill="1" visible="no" active="no"/>
-<layer number="22" name="bPlace" color="7" fill="1" visible="no" active="no"/>
-<layer number="23" name="tOrigins" color="15" fill="1" visible="no" active="no"/>
-<layer number="24" name="bOrigins" color="15" fill="1" visible="no" active="no"/>
-<layer number="25" name="tNames" color="7" fill="1" visible="no" active="no"/>
-<layer number="26" name="bNames" color="7" fill="1" visible="no" active="no"/>
-<layer number="27" name="tValues" color="7" fill="1" visible="no" active="no"/>
-<layer number="28" name="bValues" color="7" fill="1" visible="no" active="no"/>
+<layer number="1" name="Top" color="4" fill="1" visible="yes" active="no"/>
+<layer number="16" name="Bottom" color="1" fill="1" visible="yes" active="no"/>
+<layer number="17" name="Pads" color="2" fill="1" visible="yes" active="no"/>
+<layer number="18" name="Vias" color="2" fill="1" visible="yes" active="no"/>
+<layer number="19" name="Unrouted" color="14" fill="1" visible="yes" active="no"/>
+<layer number="20" name="Dimension" color="15" fill="1" visible="yes" active="no"/>
+<layer number="21" name="tPlace" color="16" fill="1" visible="yes" active="no"/>
+<layer number="22" name="bPlace" color="7" fill="1" visible="yes" active="no"/>
+<layer number="23" name="tOrigins" color="15" fill="1" visible="yes" active="no"/>
+<layer number="24" name="bOrigins" color="15" fill="1" visible="yes" active="no"/>
+<layer number="25" name="tNames" color="7" fill="1" visible="yes" active="no"/>
+<layer number="26" name="bNames" color="7" fill="1" visible="yes" active="no"/>
+<layer number="27" name="tValues" color="7" fill="1" visible="yes" active="no"/>
+<layer number="28" name="bValues" color="7" fill="1" visible="yes" active="no"/>
 <layer number="29" name="tStop" color="7" fill="3" visible="no" active="no"/>
 <layer number="30" name="bStop" color="7" fill="6" visible="no" active="no"/>
 <layer number="31" name="tCream" color="7" fill="4" visible="no" active="no"/>
@@ -31,8 +31,8 @@
 <layer number="34" name="bFinish" color="6" fill="6" visible="no" active="no"/>
 <layer number="35" name="tGlue" color="7" fill="4" visible="no" active="no"/>
 <layer number="36" name="bGlue" color="7" fill="5" visible="no" active="no"/>
-<layer number="37" name="tTest" color="7" fill="1" visible="no" active="no"/>
-<layer number="38" name="bTest" color="7" fill="1" visible="no" active="no"/>
+<layer number="37" name="tTest" color="7" fill="1" visible="yes" active="no"/>
+<layer number="38" name="bTest" color="7" fill="1" visible="yes" active="no"/>
 <layer number="39" name="tKeepout" color="4" fill="11" visible="no" active="no"/>
 <layer number="40" name="bKeepout" color="1" fill="11" visible="no" active="no"/>
 <layer number="41" name="tRestrict" color="4" fill="10" visible="no" active="no"/>
@@ -40,19 +40,19 @@
 <layer number="43" name="vRestrict" color="2" fill="10" visible="no" active="no"/>
 <layer number="44" name="Drills" color="7" fill="1" visible="no" active="no"/>
 <layer number="45" name="Holes" color="7" fill="1" visible="no" active="no"/>
-<layer number="46" name="Milling" color="3" fill="1" visible="no" active="no"/>
-<layer number="47" name="Measures" color="7" fill="1" visible="no" active="no"/>
-<layer number="48" name="Document" color="7" fill="1" visible="no" active="no"/>
-<layer number="49" name="Reference" color="7" fill="1" visible="no" active="no"/>
-<layer number="50" name="dxf" color="7" fill="1" visible="no" active="no"/>
-<layer number="51" name="tDocu" color="6" fill="1" visible="no" active="no"/>
-<layer number="52" name="bDocu" color="6" fill="1" visible="no" active="no"/>
-<layer number="53" name="tGND_GNDA" color="7" fill="9" visible="no" active="no"/>
-<layer number="54" name="bGND_GNDA" color="1" fill="9" visible="no" active="no"/>
-<layer number="56" name="wert" color="7" fill="1" visible="no" active="no"/>
-<layer number="57" name="tCAD" color="7" fill="1" visible="no" active="no"/>
-<layer number="59" name="tCarbon" color="7" fill="1" visible="no" active="no"/>
-<layer number="60" name="bCarbon" color="7" fill="1" visible="no" active="no"/>
+<layer number="46" name="Milling" color="3" fill="1" visible="yes" active="no"/>
+<layer number="47" name="Measures" color="7" fill="1" visible="yes" active="no"/>
+<layer number="48" name="Document" color="7" fill="1" visible="yes" active="no"/>
+<layer number="49" name="Reference" color="7" fill="1" visible="yes" active="no"/>
+<layer number="50" name="dxf" color="7" fill="1" visible="yes" active="no"/>
+<layer number="51" name="tDocu" color="6" fill="1" visible="yes" active="no"/>
+<layer number="52" name="bDocu" color="6" fill="1" visible="yes" active="no"/>
+<layer number="53" name="tGND_GNDA" color="7" fill="9" visible="yes" active="no"/>
+<layer number="54" name="bGND_GNDA" color="1" fill="9" visible="yes" active="no"/>
+<layer number="56" name="wert" color="7" fill="1" visible="yes" active="no"/>
+<layer number="57" name="tCAD" color="7" fill="1" visible="yes" active="no"/>
+<layer number="59" name="tCarbon" color="7" fill="1" visible="yes" active="no"/>
+<layer number="60" name="bCarbon" color="7" fill="1" visible="yes" active="no"/>
 <layer number="90" name="Modules" color="5" fill="1" visible="yes" active="yes"/>
 <layer number="91" name="Nets" color="2" fill="1" visible="yes" active="yes"/>
 <layer number="92" name="Busses" color="1" fill="1" visible="yes" active="yes"/>
@@ -817,29 +817,6 @@ package type OT</description>
 <wire x1="-0.375" y1="-1.125" x2="-0.875" y2="-1.125" width="0.2032" layer="21"/>
 <wire x1="0.375" y1="-1.125" x2="0.875" y2="-1.125" width="0.2032" layer="21"/>
 </package>
-<package name="JS202011SCQN">
-<smd name="AC" x="2.75" y="0" dx="1.2" dy="2.5" layer="1" rot="R270"/>
-<smd name="A1" x="2.75" y="2.5" dx="1.2" dy="2.5" layer="1" rot="R270"/>
-<smd name="A2" x="2.75" y="-2.5" dx="1.2" dy="2.5" layer="1" rot="R270"/>
-<smd name="B1" x="-2.75" y="2.5" dx="1.2" dy="2.5" layer="1" rot="R270"/>
-<smd name="BC" x="-2.75" y="0" dx="1.2" dy="2.5" layer="1" rot="R270"/>
-<smd name="B2" x="-2.75" y="-2.5" dx="1.2" dy="2.5" layer="1" rot="R270"/>
-<wire x1="1.75" y1="3.5" x2="1.75" y2="4.5" width="0.127" layer="21"/>
-<wire x1="1.75" y1="4.5" x2="-1.75" y2="4.5" width="0.127" layer="21"/>
-<wire x1="-1.75" y1="4.5" x2="-1.75" y2="3.5" width="0.127" layer="21"/>
-<wire x1="-1.75" y1="-3.5" x2="-1.75" y2="-4.5" width="0.127" layer="21"/>
-<wire x1="-1.75" y1="-4.5" x2="1.75" y2="-4.5" width="0.127" layer="21"/>
-<wire x1="1.75" y1="-4.5" x2="1.75" y2="-3.5" width="0.127" layer="21"/>
-<wire x1="-1" y1="1.75" x2="1" y2="1.75" width="0.127" layer="21"/>
-<wire x1="1" y1="1.75" x2="1" y2="-1.75" width="0.127" layer="21"/>
-<wire x1="-1" y1="1.75" x2="-1" y2="-1.75" width="0.127" layer="21"/>
-<wire x1="1" y1="-1.75" x2="-1" y2="-1.75" width="0.127" layer="21"/>
-<wire x1="0.75" y1="1.5" x2="0.75" y2="0" width="0.127" layer="21"/>
-<wire x1="0.75" y1="0" x2="-0.75" y2="0" width="0.127" layer="21"/>
-<wire x1="-0.75" y1="0" x2="-0.75" y2="1.5" width="0.127" layer="21"/>
-<wire x1="-0.75" y1="1.5" x2="0.75" y2="1.5" width="0.127" layer="21"/>
-<text x="-2" y="5" size="0.8128" layer="25" font="vector" ratio="16">&gt;NAME</text>
-</package>
 <package name="BU2032SM">
 <smd name="+" x="-14.65" y="0" dx="3.2" dy="4.2" layer="1" cream="no"/>
 <smd name="-" x="14.65" y="0" dx="3.2" dy="4.2" layer="1" cream="no"/>
@@ -1114,6 +1091,56 @@ package type OT</description>
 <text x="-12.7" y="-4.83" size="2.54" layer="27" font="vector" ratio="12" align="center">+</text>
 <text x="13.085" y="-4.58" size="2.54" layer="27" font="vector" ratio="12" align="center">-</text>
 </package>
+<package name="SWITCH_DPDT_SMD_AYZ0202">
+<description>&lt;h3&gt;ITT Industries AYZ0202 DPDT Switch - SMD&lt;/h3&gt;
+&lt;p&gt;Double-pole, double-throw switches.&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://www.sparkfun.com/datasheets/Components/SW_slide_ayz.pdf"&gt;Datasheet&lt;/a&gt;&lt;/p&gt;</description>
+<wire x1="-3.6" y1="1.75" x2="-3.6" y2="-1.75" width="0.2032" layer="21"/>
+<wire x1="-3.6" y1="-1.75" x2="3.6" y2="-1.75" width="0.2032" layer="21"/>
+<wire x1="3.6" y1="-1.75" x2="3.6" y2="1.75" width="0.2032" layer="21"/>
+<wire x1="3.6" y1="1.75" x2="-3.6" y2="1.75" width="0.2032" layer="21"/>
+<smd name="3" x="2.5" y="2.825" dx="1" dy="1.15" layer="1"/>
+<smd name="2" x="0" y="2.825" dx="1" dy="1.15" layer="1"/>
+<smd name="1" x="-2.5" y="2.825" dx="1" dy="1.15" layer="1"/>
+<smd name="6" x="2.5" y="-2.825" dx="1" dy="1.15" layer="1"/>
+<smd name="5" x="0" y="-2.825" dx="1" dy="1.15" layer="1"/>
+<smd name="4" x="-2.5" y="-2.825" dx="1" dy="1.15" layer="1"/>
+<hole x="1.5" y="0" drill="0.85"/>
+<hole x="-1.5" y="0" drill="0.85"/>
+<text x="-3.81" y="0" size="0.6096" layer="25" font="vector" ratio="20" rot="R90" align="bottom-center">&gt;Name</text>
+<text x="3.81" y="0" size="0.6096" layer="27" font="vector" ratio="20" rot="R90" align="top-center">&gt;Value</text>
+</package>
+<package name="SWITCH_DPDT_PTH_GPI-152-3013">
+<description>&lt;h3&gt;CW Industries  GPI-152-3013  DPDT Switch - PTH&lt;/h3&gt;
+&lt;p&gt;Double-pole, double-throw switches.&lt;/p&gt;
+&lt;p&gt;&lt;a href="http://switches-connectors-custom.cwind.com/Asset/GPI-152-Dimension-DRAWING.pdf"&gt;Dimensional Drawing&lt;/a&gt;&lt;/p&gt;</description>
+<wire x1="12.7" y1="5.13" x2="-12.7" y2="5.13" width="0.127" layer="51"/>
+<wire x1="-12.7" y1="5.13" x2="-12.7" y2="-5.13" width="0.127" layer="51"/>
+<wire x1="-12.7" y1="-5.13" x2="12.7" y2="-5.13" width="0.127" layer="51"/>
+<wire x1="12.7" y1="-5.13" x2="12.7" y2="5.13" width="0.127" layer="51"/>
+<wire x1="-9.5" y1="5.4" x2="9.5" y2="5.4" width="0.2032" layer="21"/>
+<wire x1="-9.4" y1="-5.4" x2="9.6" y2="-5.4" width="0.2032" layer="21"/>
+<wire x1="-13" y1="5" x2="-13" y2="-5" width="0.2032" layer="21"/>
+<wire x1="13" y1="5" x2="13" y2="-5" width="0.2032" layer="21"/>
+<wire x1="2" y1="5.2" x2="1.9" y2="5.2" width="0.127" layer="51"/>
+<wire x1="1.9" y1="5.2" x2="1.9" y2="9.1" width="0.127" layer="51"/>
+<wire x1="1.9" y1="9.1" x2="7" y2="9.1" width="0.127" layer="51"/>
+<wire x1="7" y1="9.1" x2="7" y2="5.2" width="0.127" layer="51"/>
+<circle x="10.31" y="0" radius="0.9518" width="0.127" layer="51"/>
+<circle x="-10.69" y="0" radius="0.9518" width="0.127" layer="51"/>
+<pad name="C@1" x="0" y="3.455" drill="1.65"/>
+<pad name="C@2" x="0" y="-3.455" drill="1.65"/>
+<pad name="21" x="4.6" y="-3.455" drill="1.65"/>
+<pad name="11" x="-4.6" y="-3.455" drill="1.65"/>
+<pad name="10" x="-4.6" y="3.455" drill="1.65"/>
+<pad name="20" x="4.6" y="3.455" drill="1.65"/>
+<pad name="P$7" x="11.43" y="4.85" drill="1.65"/>
+<pad name="P$8" x="-11.43" y="4.85" drill="1.65"/>
+<pad name="P$9" x="-11.43" y="-4.85" drill="1.65"/>
+<pad name="P$10" x="11.43" y="-4.85" drill="1.65"/>
+<text x="0" y="-5.715" size="0.6096" layer="25" font="vector" ratio="20" rot="R180" align="bottom-center">&gt;Name</text>
+<text x="0" y="5.588" size="0.6096" layer="27" font="vector" ratio="20" rot="R180" align="top-center">&gt;Value</text>
+</package>
 </packages>
 <symbols>
 <symbol name="LP2985LV">
@@ -1312,25 +1339,6 @@ package type OT</description>
 <vertex x="-2.413" y="-0.381"/>
 </polygon>
 </symbol>
-<symbol name="DPDT">
-<pin name="A1" x="-5.08" y="7.62" visible="off" length="short" swaplevel="1"/>
-<pin name="AC" x="5.08" y="5.08" visible="off" length="short" rot="R180"/>
-<pin name="A2" x="-5.08" y="2.54" visible="off" length="short" swaplevel="1"/>
-<circle x="2.54" y="5.08" radius="0.508" width="0.254" layer="94"/>
-<circle x="-2.54" y="7.62" radius="0.508" width="0.254" layer="94"/>
-<circle x="-2.54" y="2.54" radius="0.508" width="0.254" layer="94"/>
-<wire x1="2.54" y1="5.08" x2="-2.54" y2="6.35" width="0.254" layer="94"/>
-<pin name="B1" x="-5.08" y="-2.54" visible="off" length="short" swaplevel="1"/>
-<pin name="BC" x="5.08" y="-5.08" visible="off" length="short" rot="R180"/>
-<pin name="B2" x="-5.08" y="-7.62" visible="off" length="short" swaplevel="1"/>
-<circle x="2.54" y="-5.08" radius="0.508" width="0.254" layer="94"/>
-<circle x="-2.54" y="-2.54" radius="0.508" width="0.254" layer="94"/>
-<circle x="-2.54" y="-7.62" radius="0.508" width="0.254" layer="94"/>
-<wire x1="2.54" y1="-5.08" x2="-2.54" y2="-3.81" width="0.254" layer="94"/>
-<wire x1="0" y1="5.08" x2="0" y2="-3.81" width="0.254" layer="94" style="shortdash"/>
-<text x="0" y="7.62" size="1.6764" layer="94">A</text>
-<text x="0" y="-9.144" size="1.6764" layer="94">B</text>
-</symbol>
 <symbol name="TESTPOINT">
 <pin name="&gt;NAME" x="0" y="0" visible="off" length="short"/>
 <wire x1="2.54" y1="0" x2="3.81" y2="1.27" width="0.254" layer="94"/>
@@ -1368,6 +1376,38 @@ package type OT</description>
 <wire x1="10.16" y1="10.16" x2="-5.08" y2="10.16" width="0.254" layer="94"/>
 <text x="-5.08" y="10.922" size="1.6764" layer="95">&gt;NAME</text>
 <text x="12.7" y="-7.62" size="1.6764" layer="95" rot="R90">&gt;VALUE</text>
+</symbol>
+<symbol name="SWITCH-DPDT">
+<description>&lt;h3&gt;Double-Pole, Double-Throw (DPDT) Switch&lt;/h3&gt;
+&lt;p&gt;Double-pole, double-throw switches.&lt;/p&gt;</description>
+<wire x1="1.27" y1="5.08" x2="-2.286" y2="2.794" width="0.254" layer="94"/>
+<wire x1="-2.286" y1="-4.826" x2="1.27" y2="-2.54" width="0.254" layer="94"/>
+<wire x1="2.54" y1="6.35" x2="2.54" y2="7.62" width="0.254" layer="94"/>
+<wire x1="2.54" y1="7.62" x2="-2.54" y2="7.62" width="0.254" layer="94"/>
+<wire x1="-2.54" y1="7.62" x2="-2.54" y2="3.81" width="0.254" layer="94"/>
+<wire x1="-2.54" y1="1.27" x2="-2.54" y2="-3.81" width="0.254" layer="94"/>
+<wire x1="-2.54" y1="-6.35" x2="-2.54" y2="-10.16" width="0.254" layer="94"/>
+<wire x1="-2.54" y1="-10.16" x2="2.54" y2="-10.16" width="0.254" layer="94"/>
+<wire x1="2.54" y1="-10.16" x2="2.54" y2="-8.89" width="0.254" layer="94"/>
+<wire x1="2.54" y1="-6.35" x2="2.54" y2="-3.81" width="0.254" layer="94"/>
+<wire x1="2.54" y1="3.81" x2="2.54" y2="1.27" width="0.254" layer="94"/>
+<wire x1="0" y1="4.064" x2="0" y2="2.54" width="0.254" layer="94"/>
+<wire x1="0" y1="1.27" x2="0" y2="-1.27" width="0.254" layer="94"/>
+<wire x1="0" y1="-2.54" x2="0" y2="-3.302" width="0.254" layer="94"/>
+<circle x="-2.54" y="2.54" radius="0.3592" width="0.254" layer="94"/>
+<circle x="2.54" y="5.08" radius="0.3592" width="0.254" layer="94"/>
+<circle x="2.54" y="0" radius="0.3592" width="0.254" layer="94"/>
+<circle x="2.54" y="-2.54" radius="0.3592" width="0.254" layer="94"/>
+<circle x="2.54" y="-7.62" radius="0.3592" width="0.254" layer="94"/>
+<circle x="-2.54" y="-5.08" radius="0.3592" width="0.254" layer="94"/>
+<text x="0" y="7.874" size="1.778" layer="95" font="vector" align="bottom-center">&gt;NAME</text>
+<text x="0" y="-10.414" size="1.778" layer="96" font="vector" align="top-center">&gt;VALUE</text>
+<pin name="1" x="5.08" y="5.08" visible="off" length="short" rot="R180"/>
+<pin name="2" x="-5.08" y="2.54" visible="off" length="short"/>
+<pin name="3" x="5.08" y="0" visible="off" length="short" rot="R180"/>
+<pin name="4" x="5.08" y="-2.54" visible="off" length="short" rot="R180"/>
+<pin name="5" x="-5.08" y="-5.08" visible="off" length="short"/>
+<pin name="6" x="5.08" y="-7.62" visible="off" length="short" rot="R180"/>
 </symbol>
 </symbols>
 <devicesets>
@@ -1665,26 +1705,6 @@ Various common sizes : AA, AAA, 18650 (PRT-12895), 20mm coin cell and 12mm coin 
 </device>
 </devices>
 </deviceset>
-<deviceset name="JS202011SCQN" prefix="S">
-<gates>
-<gate name="G$1" symbol="DPDT" x="0" y="0"/>
-</gates>
-<devices>
-<device name="" package="JS202011SCQN">
-<connects>
-<connect gate="G$1" pin="A1" pad="A1"/>
-<connect gate="G$1" pin="A2" pad="A2"/>
-<connect gate="G$1" pin="AC" pad="AC"/>
-<connect gate="G$1" pin="B1" pad="B1"/>
-<connect gate="G$1" pin="B2" pad="B2"/>
-<connect gate="G$1" pin="BC" pad="BC"/>
-</connects>
-<technologies>
-<technology name=""/>
-</technologies>
-</device>
-</devices>
-</deviceset>
 <deviceset name="TESTPOINT">
 <gates>
 <gate name="G$1" symbol="TESTPOINT" x="0" y="0"/>
@@ -1755,6 +1775,56 @@ Various common sizes : AA, AAA, 18650 (PRT-12895), 20mm coin cell and 12mm coin 
 </connects>
 <technologies>
 <technology name=""/>
+</technologies>
+</device>
+</devices>
+</deviceset>
+<deviceset name="SWITCH-DPDT" prefix="S" uservalue="yes">
+<description>&lt;h3&gt;Double-Pole, Double-Throw (DPDT) Switch&lt;/h3&gt;
+&lt;p&gt;Double-pole, double-throw switches.&lt;/p&gt;
+&lt;h4&gt;Variant Overview&lt;/h4&gt;
+&lt;h5&gt;PTH-GPI-152-3013&lt;/h5&gt;
+&lt;ul&gt;
+&lt;li&gt;Used on &lt;a href="https://www.sparkfun.com/products/11345"&gt;SparkFun Geiger Counter&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h5&gt;SMD-AY0202&lt;/h5&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://www.sparkfun.com/products/597"&gt;Surface Mount DPDT Switch&lt;/a&gt; (COM-00597)&lt;/li&gt;
+&lt;li&gt;Used on e.g. &lt;a href="https://www.sparkfun.com/products/12049"&gt;LilyPad Arduino USB - ATmega32U4 Board&lt;/a&gt;
+&lt;/ul&gt;</description>
+<gates>
+<gate name="G$1" symbol="SWITCH-DPDT" x="0" y="0"/>
+</gates>
+<devices>
+<device name="-SMD-AYZ0202" package="SWITCH_DPDT_SMD_AYZ0202">
+<connects>
+<connect gate="G$1" pin="1" pad="1"/>
+<connect gate="G$1" pin="2" pad="2"/>
+<connect gate="G$1" pin="3" pad="3"/>
+<connect gate="G$1" pin="4" pad="4"/>
+<connect gate="G$1" pin="5" pad="5"/>
+<connect gate="G$1" pin="6" pad="6"/>
+</connects>
+<technologies>
+<technology name="">
+<attribute name="PROD_ID" value="SWCH-08179"/>
+<attribute name="SF_SKU" value="COM-00597"/>
+</technology>
+</technologies>
+</device>
+<device name="-PTH-GPI-152-3013" package="SWITCH_DPDT_PTH_GPI-152-3013">
+<connects>
+<connect gate="G$1" pin="1" pad="10"/>
+<connect gate="G$1" pin="2" pad="C@1"/>
+<connect gate="G$1" pin="3" pad="20"/>
+<connect gate="G$1" pin="4" pad="11"/>
+<connect gate="G$1" pin="5" pad="C@2"/>
+<connect gate="G$1" pin="6" pad="21"/>
+</connects>
+<technologies>
+<technology name="">
+<attribute name="PROD_ID" value="SWCH-10554"/>
+</technology>
 </technologies>
 </device>
 </devices>
@@ -7596,7 +7666,6 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <part name="GND12" library="Badge" deviceset="GND" device=""/>
 <part name="SUPPLY12" library="Badge" deviceset="VCC" device=""/>
 <part name="GND3" library="Badge" deviceset="GND" device=""/>
-<part name="SUPPLY3" library="Badge" deviceset="VCC" device=""/>
 <part name="SUPPLY10" library="Badge" deviceset="VCC" device=""/>
 <part name="GND8" library="Badge" deviceset="GND" device=""/>
 <part name="C5" library="rcl" deviceset="C-EU" device="C0603" value="10u"/>
@@ -7638,7 +7707,6 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <part name="GND9" library="Badge" deviceset="GND" device=""/>
 <part name="R8" library="rcl" deviceset="R-US_" device="R0603" value="1k"/>
 <part name="GND2" library="Badge" deviceset="GND" device=""/>
-<part name="S1" library="Badge" deviceset="JS202011SCQN" device="" value="DPDT"/>
 <part name="BAT3" library="Badge" deviceset="BATTERY" device="HOLDER" value="CR2032"/>
 <part name="M_RAW" library="Badge" deviceset="TESTPOINT" device="" value=""/>
 <part name="C2" library="rcl" deviceset="C-EU" device="C0603" value="0u1"/>
@@ -7659,6 +7727,8 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <part name="U4" library="Badge" deviceset="PCF85263" device=""/>
 <part name="SUPPLY2" library="Badge" deviceset="VCC" device=""/>
 <part name="U5" library="Badge" deviceset="M95M02" device="_SOIC" value="M95M02"/>
+<part name="S4" library="Badge" deviceset="SWITCH-DPDT" device="-SMD-AYZ0202"/>
+<part name="SUPPLY15" library="Badge" deviceset="VCC" device=""/>
 </parts>
 <sheets>
 <sheet>
@@ -7698,7 +7768,6 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <instance part="GND12" gate="1" x="190.5" y="81.28"/>
 <instance part="SUPPLY12" gate="G$1" x="162.56" y="106.68" rot="MR0"/>
 <instance part="GND3" gate="1" x="35.56" y="7.62"/>
-<instance part="SUPPLY3" gate="G$1" x="38.1" y="43.18" rot="MR0"/>
 <instance part="SUPPLY10" gate="G$1" x="129.54" y="93.98" rot="MR0"/>
 <instance part="GND8" gate="1" x="129.54" y="60.96"/>
 <instance part="C5" gate="G$1" x="142.24" y="78.74"/>
@@ -7759,7 +7828,6 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <attribute name="VALUE" x="61.722" y="105.41" size="1.778" layer="96" rot="R90"/>
 </instance>
 <instance part="GND2" gate="1" x="55.88" y="111.76" rot="R270"/>
-<instance part="S1" gate="G$1" x="35.56" y="33.02" rot="R270"/>
 <instance part="BAT3" gate="G$1" x="66.04" y="17.78" rot="R270"/>
 <instance part="M_RAW" gate="G$1" x="261.62" y="101.6" rot="R90"/>
 <instance part="C2" gate="G$1" x="5.08" y="91.44"/>
@@ -7786,6 +7854,8 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <instance part="U4" gate="G$1" x="175.26" y="30.48"/>
 <instance part="SUPPLY2" gate="G$1" x="76.2" y="114.3" rot="MR0"/>
 <instance part="U5" gate="G$1" x="121.92" y="78.74"/>
+<instance part="S4" gate="G$1" x="12.7" y="33.02" rot="R90"/>
+<instance part="SUPPLY15" gate="G$1" x="12.7" y="43.18" rot="MR0"/>
 </instances>
 <busses>
 </busses>
@@ -7986,17 +8056,6 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <pinref part="SUPPLY8" gate="G$1" pin="VCC"/>
 </segment>
 <segment>
-<pinref part="SUPPLY3" gate="G$1" pin="VCC"/>
-<wire x1="38.1" y1="43.18" x2="38.1" y2="40.64" width="0.1524" layer="91"/>
-<wire x1="38.1" y1="40.64" x2="33.02" y2="40.64" width="0.1524" layer="91"/>
-<pinref part="S1" gate="G$1" pin="B1"/>
-<wire x1="33.02" y1="40.64" x2="33.02" y2="38.1" width="0.1524" layer="91"/>
-<wire x1="38.1" y1="40.64" x2="43.18" y2="40.64" width="0.1524" layer="91"/>
-<junction x="38.1" y="40.64"/>
-<pinref part="S1" gate="G$1" pin="A1"/>
-<wire x1="43.18" y1="40.64" x2="43.18" y2="38.1" width="0.1524" layer="91"/>
-</segment>
-<segment>
 <pinref part="SUPPLY5" gate="G$1" pin="VCC"/>
 <pinref part="R9" gate="G$1" pin="1"/>
 <wire x1="160.02" y1="50.8" x2="160.02" y2="48.26" width="0.1524" layer="91"/>
@@ -8010,6 +8069,17 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <pinref part="R1" gate="G$1" pin="2"/>
 <wire x1="76.2" y1="109.22" x2="76.2" y2="114.3" width="0.1524" layer="91"/>
 <pinref part="SUPPLY2" gate="G$1" pin="VCC"/>
+</segment>
+<segment>
+<pinref part="S4" gate="G$1" pin="1"/>
+<wire x1="7.62" y1="38.1" x2="7.62" y2="40.64" width="0.1524" layer="91"/>
+<pinref part="S4" gate="G$1" pin="4"/>
+<wire x1="7.62" y1="40.64" x2="12.7" y2="40.64" width="0.1524" layer="91"/>
+<wire x1="12.7" y1="40.64" x2="15.24" y2="40.64" width="0.1524" layer="91"/>
+<wire x1="15.24" y1="40.64" x2="15.24" y2="38.1" width="0.1524" layer="91"/>
+<wire x1="12.7" y1="40.64" x2="12.7" y2="43.18" width="0.1524" layer="91"/>
+<junction x="12.7" y="40.64"/>
+<pinref part="SUPPLY15" gate="G$1" pin="VCC"/>
 </segment>
 </net>
 <net name="SCK" class="0">
@@ -8094,16 +8164,9 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <pinref part="BAT1" gate="G$1" pin="+"/>
 <wire x1="35.56" y1="22.86" x2="35.56" y2="25.4" width="0.1524" layer="91"/>
 <junction x="35.56" y="25.4"/>
-<wire x1="35.56" y1="25.4" x2="40.64" y2="25.4" width="0.1524" layer="91"/>
 <pinref part="BAT2" gate="G$1" pin="+"/>
-<wire x1="40.64" y1="25.4" x2="50.8" y2="25.4" width="0.1524" layer="91"/>
+<wire x1="35.56" y1="25.4" x2="50.8" y2="25.4" width="0.1524" layer="91"/>
 <wire x1="50.8" y1="25.4" x2="50.8" y2="22.86" width="0.1524" layer="91"/>
-<pinref part="S1" gate="G$1" pin="BC"/>
-<wire x1="30.48" y1="27.94" x2="30.48" y2="25.4" width="0.1524" layer="91"/>
-<wire x1="30.48" y1="25.4" x2="35.56" y2="25.4" width="0.1524" layer="91"/>
-<pinref part="S1" gate="G$1" pin="AC"/>
-<wire x1="40.64" y1="27.94" x2="40.64" y2="25.4" width="0.1524" layer="91"/>
-<junction x="40.64" y="25.4"/>
 <wire x1="50.8" y1="25.4" x2="66.04" y2="25.4" width="0.1524" layer="91"/>
 <junction x="50.8" y="25.4"/>
 <pinref part="BAT3" gate="G$1" pin="+"/>
@@ -8114,6 +8177,13 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <junction x="66.04" y="25.4"/>
 <wire x1="66.04" y1="25.4" x2="66.04" y2="30.48" width="0.1524" layer="91"/>
 <label x="65.278" y="27.686" size="1.778" layer="95" rot="R90"/>
+<pinref part="S4" gate="G$1" pin="2"/>
+<wire x1="35.56" y1="25.4" x2="17.78" y2="25.4" width="0.1524" layer="91"/>
+<wire x1="17.78" y1="25.4" x2="10.16" y2="25.4" width="0.1524" layer="91"/>
+<wire x1="10.16" y1="25.4" x2="10.16" y2="27.94" width="0.1524" layer="91"/>
+<pinref part="S4" gate="G$1" pin="5"/>
+<wire x1="17.78" y1="27.94" x2="17.78" y2="25.4" width="0.1524" layer="91"/>
+<junction x="17.78" y="25.4"/>
 </segment>
 <segment>
 <label x="182.88" y="50.8" size="1.778" layer="95" rot="R90"/>
