@@ -115,12 +115,49 @@ int main(void)
         while(1);
     #endif    // end of self tests
     
-    
-    /*
-    debug_log("=DEVELOPMENT BADGE.  ONLY ERASES EEPROM=\r\n");
-    debug_log("=ERASING EEPROM...=\r\n");
+    unsigned char test_val = 5;
+
+    debug_log("=Writing a value to EEPROM=\r\n");
+    debug_log("=SETTING EEPROM...=\r\n");
     ext_eeprom_wait();
     unsigned char empty[EXT_CHUNK_SIZE + EXT_EEPROM_PADDING];
+    memset(empty,test_val,sizeof(empty));
+    for (int i = EXT_FIRST_CHUNK; i <= EXT_LAST_CHUNK; i++)  {
+    //for (int i = EXT_FIRST_CHUNK; i <= EXT_FIRST_CHUNK+20; i++)  {
+        ext_eeprom_write(EXT_ADDRESS_OF_CHUNK(i),empty,sizeof(empty));
+        if (i % 10 == 0)  {
+            nrf_gpio_pin_toggle(LED_1);
+            nrf_gpio_pin_toggle(LED_2);
+        }
+        ext_eeprom_wait();
+    }
+    debug_log("  done.  \r\n");
+
+    debug_log("=READING EEPROM...=\r\n");
+    ext_eeprom_wait();
+    unsigned char read_data[EXT_CHUNK_SIZE + EXT_EEPROM_PADDING];
+    debug_log("=BUMP...=\r\n");
+    debug_log("=BUMP...=\r\n");
+    for (int i = EXT_FIRST_CHUNK; i <= EXT_LAST_CHUNK; i++)  {
+    //for (int i = EXT_FIRST_CHUNK; i <= EXT_FIRST_CHUNK+20; i++)  {
+        ext_eeprom_read(EXT_ADDRESS_OF_CHUNK(i),read_data,sizeof(read_data));
+        if (i % 10 == 0)  {
+            nrf_gpio_pin_toggle(LED_1);
+            nrf_gpio_pin_toggle(LED_2);
+        }
+        ext_eeprom_wait();
+
+        // ignore padding in comparison
+        if(memcmp(empty + 4, read_data + 4, sizeof(read_data) - 4 * sizeof(unsigned char)) != 0) {
+            debug_log("=BAD DATA!\r\n");
+
+            while (1);
+        }
+    }
+    debug_log("  done.  \r\n");
+
+    debug_log("=ERASING EEPROM...=\r\n");
+    ext_eeprom_wait();
     memset(empty,0,sizeof(empty));
     for (int i = EXT_FIRST_CHUNK; i <= EXT_LAST_CHUNK; i++)  {
         ext_eeprom_write(EXT_ADDRESS_OF_CHUNK(i),empty,sizeof(empty));
@@ -131,10 +168,10 @@ int main(void)
         ext_eeprom_wait();
     }
     debug_log("  done.  \r\n");
+
     nrf_gpio_pin_write(LED_1,LED_ON);
     nrf_gpio_pin_write(LED_2,LED_ON);
     while (1);
-    */
 
     APP_SCHED_INIT(SCHED_MAX_EVENT_DATA_SIZE, SCHED_QUEUE_SIZE);
 
