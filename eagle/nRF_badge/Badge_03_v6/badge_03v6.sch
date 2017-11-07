@@ -7699,9 +7699,9 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <part name="SUPPLY15" library="Badge" deviceset="VCC" device=""/>
 <part name="GND9" library="Badge" deviceset="GND" device=""/>
 <part name="SUPPLY3" library="Badge" deviceset="VCC" device=""/>
-<part name="C15" library="rcl" deviceset="C-EU" device="C0603" value="0.1uF"/>
-<part name="C16" library="rcl" deviceset="C-EU" device="C0603" value="10uF"/>
-<part name="C17" library="rcl" deviceset="C-EU" device="C0603" value="0.1uF"/>
+<part name="C15" library="rcl" deviceset="C-EU" device="C0603" value="0u1"/>
+<part name="C16" library="rcl" deviceset="C-EU" device="C0603" value="10u"/>
+<part name="C17" library="rcl" deviceset="C-EU" device="C0603" value="0u1"/>
 <part name="SUPPLY18" library="Badge" deviceset="VCC" device=""/>
 <part name="SUPPLY19" library="Badge" deviceset="VCC" device=""/>
 <part name="SUPPLY20" library="Badge" deviceset="VCC" device=""/>
