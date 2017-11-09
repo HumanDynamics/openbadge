@@ -3,14 +3,14 @@ import csv
 
 '''
 next_value = None
-for line_cent, line_bom in izip(open('badge_03v4_centroid.csv'), open('badge_03v4_bom.csv')):
+for line_cent, line_bom in izip(open('badge_03v6_centroid.csv'), open('badge_03v6_bom.csv')):
 	print line_cent.rstrip()
 
 	#print line_bom
 '''
 bom = {}
-with open('badge_03v5_centroid.csv', 'rb') as csvfile:
-	with open('badge_03v5_bom.csv', 'rb') as csvfile2:
+with open('badge_03v6_centroid.csv', 'rb') as csvfile:
+	with open('badge_03v6_bom.csv', 'rb') as csvfile2:
 		
 		bomreader = csv.reader(csvfile2, delimiter=',', quotechar='|')
 		for (row) in (bomreader):
