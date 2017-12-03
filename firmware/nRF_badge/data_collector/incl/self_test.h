@@ -53,9 +53,8 @@ uint8_t testMicAvg();
 // return true if last sample is above threshold
 bool testMicAboveThreshold();
 
-
-
-
-
+// tests the accelerator
+void accel_spi_evt_handler(spi_master_evt_t spi_master_evt);
+void accel_test();
 
 void runSelfTests();
