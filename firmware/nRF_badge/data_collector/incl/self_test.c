@@ -66,8 +66,6 @@ bool testMicAboveThreshold() {
     return lastSample > avg_with_sd;
 }
 
-
-
 void runSelfTests()
 {
     debug_log("Running self-tests.\r\n");
@@ -118,10 +116,7 @@ void runSelfTests()
     nrf_gpio_pin_write(GREEN_LED,LED_OFF);
     nrf_delay_ms(LED_BLINK_MS);
 
-    // ====== test button and mic ======
-    debug_log("Push button to test button and mic.\r\n");
-    while(nrf_gpio_pin_read(BUTTON_1) != 0);
-    
+    // ====== test mic ======
     testMicInit(MIC_ZERO);
     while(1) // stay in infinite loop, spit out mic values
     {
@@ -134,15 +129,6 @@ void runSelfTests()
         }
         else {
             nrf_gpio_pin_write(RED_LED,LED_OFF);   
-        }
-        
-        // turn on green light if button is pressed
-        if(nrf_gpio_pin_read(BUTTON_1) == 0)
-        {
-            nrf_gpio_pin_write(GREEN_LED,LED_ON);
-        }
-        else {
-            nrf_gpio_pin_write(GREEN_LED,LED_OFF);   
         }
 
         nrf_delay_ms(10);
