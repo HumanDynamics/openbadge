@@ -71,6 +71,8 @@ do
     then
 	    echo "============================================================"
 	    echo "########## Programming new badge (${COUNTER}) #######"
+        
+        sleep 5
         load
     	get_mac
 	    let COUNTER=COUNTER+1
