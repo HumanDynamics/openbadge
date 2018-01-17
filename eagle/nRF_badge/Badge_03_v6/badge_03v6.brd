@@ -5816,7 +5816,7 @@ for trimmer refence see : &lt;u&gt;www.electrospec-inc.com/cross_references/trim
 <class number="0" name="default" width="0" drill="0">
 </class>
 </classes>
-<designrules name="PCBNG_DRC_by_oren *">
+<designrules name="PCBNG_DRC_by_oren">
 <description language="de">&lt;b&gt;EAGLE Design Rules&lt;/b&gt;
 &lt;p&gt;
 Die Standard-Design-Rules sind so gewählt, dass sie für 
@@ -6557,19 +6557,14 @@ design rules under a new name.</description>
 <contactref element="S4" pad="2"/>
 <contactref element="S4" pad="5"/>
 <wire x1="12.25" y1="53" x2="12.175" y2="53" width="0.6096" layer="1"/>
-<wire x1="12.175" y1="53" x2="12.175" y2="52.325" width="0.6096" layer="1"/>
-<wire x1="13.625" y1="50.875" x2="13.625" y2="50.1096" width="0.6096" layer="1"/>
-<wire x1="12.175" y1="52.325" x2="13.625" y2="50.875" width="0.6096" layer="1"/>
-<wire x1="13.625" y1="50.1096" x2="14.6404" y2="50.1096" width="0.6096" layer="1"/>
-<wire x1="14.6404" y1="50.1096" x2="15" y2="49.75" width="0.6096" layer="1"/>
 <wire x1="15" y1="49.75" x2="15.48" y2="50.23" width="0.6096" layer="1"/>
 <wire x1="15.48" y1="50.23" x2="15.52605625" y2="50.23" width="0.6096" layer="1"/>
-<wire x1="15.52605625" y1="50.23" x2="15.54605625" y2="50.25" width="0.6096" layer="1"/>
-<wire x1="15.54605625" y1="50.25" x2="16.375" y2="50.25" width="0.6096" layer="1"/>
-<wire x1="16.375" y1="50.25" x2="16.7928" y2="50.6678" width="0.6096" layer="1"/>
-<wire x1="16.7928" y1="50.6678" x2="16.7928" y2="51.18938125" width="0.6096" layer="1"/>
-<wire x1="17.825" y1="52.22158125" x2="17.825" y2="53" width="0.6096" layer="1"/>
-<wire x1="16.7928" y1="51.18938125" x2="17.825" y2="52.22158125" width="0.6096" layer="1"/>
+<wire x1="15.52605625" y1="50.23" x2="17.825" y2="52.52894375" width="0.6096" layer="1"/>
+<wire x1="17.825" y1="52.52894375" x2="17.825" y2="53" width="0.6096" layer="1"/>
+<wire x1="15" y1="49.75" x2="14.52" y2="50.23" width="0.6096" layer="1"/>
+<wire x1="14.52" y1="50.23" x2="14.47394375" y2="50.23" width="0.6096" layer="1"/>
+<wire x1="14.47394375" y1="50.23" x2="12.25" y2="52.45394375" width="0.6096" layer="1"/>
+<wire x1="12.25" y1="52.45394375" x2="12.25" y2="53" width="0.6096" layer="1"/>
 </signal>
 <signal name="MOSI">
 <contactref element="A1" pad="P$15"/>
@@ -6817,7 +6812,7 @@ design rules under a new name.</description>
 <via x="25.375" y="28.742" extent="1-16" drill="0.5" diameter="0.8"/>
 <wire x1="25.375" y1="28.742" x2="25.375" y2="28" width="0.2032" layer="1"/>
 <wire x1="25.375" y1="28" x2="25.375" y2="27.375" width="0.1016" layer="1"/>
-<wire x1="25.375" y1="27.375" x2="25.375" y2="27.0875" width="0.2032" layer="1"/>
+<wire x1="25.375" y1="27.375" x2="25.375" y2="27.0875" width="0.1016" layer="1"/>
 </signal>
 </signals>
 <errors>
@@ -6959,12 +6954,12 @@ design rules under a new name.</description>
 <approved hash="7,39,58abbb8d1a970641"/>
 <approved hash="7,39,1a1d4e9ff688d9bf"/>
 <approved hash="7,39,596cac288cf58782"/>
+<approved hash="5,1,2d08c4611783f6ec"/>
+<approved hash="19,1,31ff9f12eda5a090"/>
+<approved hash="19,1,caff5e824bee944d"/>
 <approved hash="5,1,32b89dc3eaed4596"/>
 <approved hash="5,1,87b36ec81fe5f69e"/>
 <approved hash="5,1,c1ff6e8219acb6d1"/>
-<approved hash="5,1,2d08c4611783f6ec"/>
-<approved hash="19,1,caff5e824bee944d"/>
-<approved hash="19,1,31ff9f12eda5a090"/>
 </errors>
 </board>
 </drawing>
