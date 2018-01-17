@@ -65,8 +65,9 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 /**
  * ============================================== MAIN ====================================================
  */
+
 int main(void)
-{    
+{
     #if defined(BOARD_PCA10028)  //NRF51DK
         //If button 4 is pressed on startup, do nothing (mostly so that UART lines are freed on the DK board)
         nrf_gpio_cfg_input(BUTTON_4,NRF_GPIO_PIN_PULLUP);  //button 4
@@ -100,16 +101,20 @@ int main(void)
     nrf_gpio_pin_write(LED_2,LED_OFF);  //turn off LED
 
     // Button
-    nrf_gpio_cfg_input(BUTTON_1,NRF_GPIO_PIN_PULLUP);  //button
+    //nrf_gpio_cfg_input(BUTTON_1,NRF_GPIO_PIN_PULLUP);  //button
     
     // Initialize
     BLE_init();
     sd_power_mode_set(NRF_POWER_MODE_LOWPWR);  //set low power sleep mode
     adc_config();
     rtc_config();
-    spi_init();
-    
-    
+    //spi_init(); // commenting out in order to test the accelerometer
+
+    /* ------------LIS2DH Accel test --------------------------- */
+    accel_test();
+    while(1);
+    /* --------------------------------------- */
+
     #if defined(TESTER_ENABLE) // tester mode is enabled
         runSelfTests();
         while(1);
