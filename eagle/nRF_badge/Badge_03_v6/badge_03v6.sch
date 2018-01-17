@@ -197,7 +197,7 @@ package type OT</description>
 <smd name="2" x="0" y="0" dx="0.635" dy="1.27" layer="1" cream="no"/>
 <smd name="3" x="0.8128" y="0" dx="0.635" dy="1.27" layer="1" cream="no"/>
 <text x="-1.27" y="1.27" size="0.4064" layer="25">&gt;NAME</text>
-<wire x1="0" y1="0" x2="0.635" y2="0" width="0.4064" layer="1"/>
+<wire x1="0" y1="0" x2="0.762" y2="0" width="0.4064" layer="1"/>
 </package>
 <package name="PAD-JUMPER-3-2OF3_NC_BY_TRACE_YES_SILK_LARGE">
 <wire x1="2.159" y1="-1.016" x2="-2.159" y2="-1.016" width="0.1524" layer="21"/>
@@ -9187,7 +9187,7 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <part name="C3" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="C-EU" device="C0603" package3d_urn="urn:adsk.eagle:package:23616/2" value="12p"/>
 <part name="C4" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="C-EU" device="C0603" package3d_urn="urn:adsk.eagle:package:23616/2" value="12p"/>
 <part name="GND10" library="Badge" deviceset="GND" device=""/>
-<part name="M_ENA" library="Badge" deviceset="JUMPER-PAD-3-2OF3_NC_BY_TRACE" device="_SMALL" value=""/>
+<part name="M_ENA" library="Badge" deviceset="JUMPER-PAD-3-2OF3_NC_BY_TRACE" device="_SMALL" value="JUMPER-PAD-3-2OF3_NC_BY_TRACE_SMALL"/>
 <part name="SUPPLY9" library="Badge" deviceset="VCC" device=""/>
 <part name="A1" library="rigado_BMD-200" deviceset="BMD-200" device=""/>
 <part name="GND4" library="Badge" deviceset="GND" device=""/>
@@ -9656,7 +9656,7 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <pinref part="D2" gate="G$1" pin="A"/>
 </segment>
 </net>
-<net name="N$6" class="0">
+<net name="ON/OFF" class="0">
 <segment>
 <pinref part="U2" gate="G$1" pin="ON/OFF"/>
 <wire x1="175.26" y1="104.14" x2="175.26" y2="96.52" width="0.1524" layer="91"/>
@@ -9821,7 +9821,7 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 <junction x="83.82" y="86.36"/>
 </segment>
 </net>
-<net name="N$9" class="0">
+<net name="BYPASS" class="0">
 <segment>
 <pinref part="U2" gate="G$1" pin="BYPASS"/>
 <pinref part="C7" gate="G$1" pin="2"/>
