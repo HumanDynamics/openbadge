@@ -1095,8 +1095,8 @@ package type OT</description>
 <smd name="6" x="2.5" y="-2.825" dx="1" dy="1.15" layer="1"/>
 <smd name="5" x="0" y="-2.825" dx="1" dy="1.15" layer="1"/>
 <smd name="4" x="-2.5" y="-2.825" dx="1" dy="1.15" layer="1"/>
-<hole x="1.5" y="0" drill="0.85"/>
-<hole x="-1.5" y="0" drill="0.85"/>
+<hole x="1.5" y="0" drill="0.9144"/>
+<hole x="-1.5" y="0" drill="0.9144"/>
 <text x="-3.81" y="0" size="0.6096" layer="25" font="vector" ratio="20" rot="R90" align="bottom-center">&gt;Name</text>
 <text x="3.81" y="0" size="0.6096" layer="27" font="vector" ratio="20" rot="R90" align="top-center">&gt;Value</text>
 </package>
@@ -1130,6 +1130,74 @@ package type OT</description>
 <pad name="P$10" x="11.43" y="-4.85" drill="1.65"/>
 <text x="0" y="-5.715" size="0.6096" layer="25" font="vector" ratio="20" rot="R180" align="bottom-center">&gt;Name</text>
 <text x="0" y="5.588" size="0.6096" layer="27" font="vector" ratio="20" rot="R180" align="top-center">&gt;Value</text>
+</package>
+<package name="LGA12-TN0018-COMPLIANT">
+<description>&lt;b&gt;LGA-12-TN0018-compliant&lt;p&gt;&lt;/b&gt;
+body 2x2x1mm
+
+Design following guidelines for LGA12 package in Technical note TN0018
+
+http://www.st.com/content/ccc/resource/technical/document/technical_note/73/17/9c/16/dd/96/4a/01/CD00134799.pdf/files/CD00134799.pdf/jcr:content/translations/en.CD00134799.pdf</description>
+<wire x1="-1" y1="1" x2="1" y2="1" width="0.0508" layer="51"/>
+<wire x1="1" y1="1" x2="1" y2="-1" width="0.0508" layer="51"/>
+<wire x1="1" y1="-1" x2="-1" y2="-1" width="0.0508" layer="51"/>
+<wire x1="-1" y1="-1" x2="-1" y2="1" width="0.0508" layer="51"/>
+<smd name="1" x="-0.7125" y="0.75" dx="0.375" dy="0.25" layer="1"/>
+<smd name="2" x="-0.7125" y="0.25" dx="0.375" dy="0.25" layer="1"/>
+<smd name="3" x="-0.7125" y="-0.25" dx="0.375" dy="0.25" layer="1"/>
+<smd name="4" x="-0.7125" y="-0.75" dx="0.375" dy="0.25" layer="1"/>
+<smd name="5" x="-0.25" y="-0.7125" dx="0.25" dy="0.375" layer="1"/>
+<smd name="7" x="0.7125" y="-0.75" dx="0.375" dy="0.25" layer="1" rot="R180"/>
+<smd name="8" x="0.7125" y="-0.25" dx="0.375" dy="0.25" layer="1" rot="R180"/>
+<smd name="9" x="0.7125" y="0.25" dx="0.375" dy="0.25" layer="1" rot="R180"/>
+<smd name="10" x="0.7125" y="0.75" dx="0.375" dy="0.25" layer="1" rot="R180"/>
+<smd name="11" x="0.25" y="0.7125" dx="0.25" dy="0.375" layer="1" rot="R180"/>
+<smd name="12" x="-0.25" y="0.7125" dx="0.25" dy="0.375" layer="1" rot="R180"/>
+<text x="-1.25" y="1.55" size="0.8128" layer="25" ratio="18">&gt;NAME</text>
+<text x="-1.2" y="-2" size="0.6096" layer="27" ratio="10">&gt;VALUE</text>
+<rectangle x1="-1.25" y1="1.05" x2="-0.9" y2="1.4" layer="21"/>
+<smd name="6" x="0.25" y="-0.7125" dx="0.25" dy="0.375" layer="1"/>
+<wire x1="-1.15" y1="1.15" x2="-0.6" y2="1.15" width="0.2032" layer="21"/>
+<wire x1="0.6" y1="1.15" x2="1.15" y2="1.15" width="0.2032" layer="21"/>
+<wire x1="0.6" y1="-1.15" x2="1.15" y2="-1.15" width="0.2032" layer="21"/>
+<wire x1="-1.15" y1="-1.15" x2="-0.6" y2="-1.15" width="0.2032" layer="21"/>
+<wire x1="-1.15" y1="-1.15" x2="-1.15" y2="-1.1" width="0.2032" layer="21"/>
+<wire x1="1.15" y1="-1.15" x2="1.15" y2="-1.1" width="0.2032" layer="21"/>
+<wire x1="1.15" y1="1.1" x2="1.15" y2="1.15" width="0.2032" layer="21"/>
+<wire x1="-1.15" y1="1.1" x2="-1.15" y2="1.15" width="0.2032" layer="21"/>
+<circle x="-0.6" y="-0.67" radius="0.2" width="0" layer="51"/>
+</package>
+<package name="LGA12">
+<description>&lt;b&gt;LGA-12&lt;p&gt;&lt;/b&gt;
+body 2x2x1mm</description>
+<wire x1="-1" y1="1" x2="1" y2="1" width="0.0508" layer="51"/>
+<wire x1="1" y1="1" x2="1" y2="-1" width="0.0508" layer="51"/>
+<wire x1="1" y1="-1" x2="-1" y2="-1" width="0.0508" layer="51"/>
+<wire x1="-1" y1="-1" x2="-1" y2="1" width="0.0508" layer="51"/>
+<smd name="1" x="-0.875" y="0.75" dx="0.5" dy="0.25" layer="1"/>
+<smd name="2" x="-0.875" y="0.25" dx="0.5" dy="0.25" layer="1"/>
+<smd name="3" x="-0.875" y="-0.25" dx="0.5" dy="0.25" layer="1"/>
+<smd name="4" x="-0.875" y="-0.75" dx="0.5" dy="0.25" layer="1"/>
+<smd name="5" x="-0.25" y="-0.875" dx="0.25" dy="0.5" layer="1"/>
+<smd name="7" x="0.875" y="-0.75" dx="0.5" dy="0.25" layer="1" rot="R180"/>
+<smd name="8" x="0.875" y="-0.25" dx="0.5" dy="0.25" layer="1" rot="R180"/>
+<smd name="9" x="0.875" y="0.25" dx="0.5" dy="0.25" layer="1" rot="R180"/>
+<smd name="10" x="0.875" y="0.75" dx="0.5" dy="0.25" layer="1" rot="R180"/>
+<smd name="11" x="0.25" y="0.875" dx="0.25" dy="0.5" layer="1" rot="R180"/>
+<smd name="12" x="-0.25" y="0.875" dx="0.25" dy="0.5" layer="1" rot="R180"/>
+<text x="-1.25" y="1.55" size="0.8128" layer="25" ratio="18">&gt;NAME</text>
+<text x="-1.2" y="-2" size="0.6096" layer="27" ratio="10">&gt;VALUE</text>
+<rectangle x1="-1.25" y1="1.05" x2="-0.9" y2="1.4" layer="21"/>
+<smd name="6" x="0.25" y="-0.875" dx="0.25" dy="0.5" layer="1"/>
+<wire x1="-1.15" y1="1.15" x2="-0.6" y2="1.15" width="0.2032" layer="21"/>
+<wire x1="0.6" y1="1.15" x2="1.15" y2="1.15" width="0.2032" layer="21"/>
+<wire x1="0.6" y1="-1.15" x2="1.15" y2="-1.15" width="0.2032" layer="21"/>
+<wire x1="-1.15" y1="-1.15" x2="-0.6" y2="-1.15" width="0.2032" layer="21"/>
+<wire x1="-1.15" y1="-1.15" x2="-1.15" y2="-1.1" width="0.2032" layer="21"/>
+<wire x1="1.15" y1="-1.15" x2="1.15" y2="-1.1" width="0.2032" layer="21"/>
+<wire x1="1.15" y1="1.1" x2="1.15" y2="1.15" width="0.2032" layer="21"/>
+<wire x1="-1.15" y1="1.1" x2="-1.15" y2="1.15" width="0.2032" layer="21"/>
+<circle x="-0.6" y="0.6" radius="0.2" width="0" layer="51"/>
 </package>
 </packages>
 <symbols>
@@ -1369,6 +1437,26 @@ package type OT</description>
 <pin name="4" x="5.08" y="-2.54" visible="off" length="short" rot="R180"/>
 <pin name="5" x="-5.08" y="-5.08" visible="off" length="short"/>
 <pin name="6" x="5.08" y="-7.62" visible="off" length="short" rot="R180"/>
+</symbol>
+<symbol name="LIS2DH12">
+<pin name="SCL/SPC" x="-20.32" y="12.7" length="middle"/>
+<pin name="CS" x="-20.32" y="7.62" length="middle"/>
+<pin name="SDO/A0" x="-20.32" y="2.54" length="middle"/>
+<pin name="SDA/SDI/SDO" x="-20.32" y="-2.54" length="middle"/>
+<pin name="RES" x="-20.32" y="-7.62" length="middle" direction="in"/>
+<pin name="GND@6" x="-20.32" y="-12.7" length="middle" direction="pwr"/>
+<pin name="GND@7" x="20.32" y="-12.7" length="middle" direction="pwr" rot="R180"/>
+<pin name="GND@8" x="20.32" y="-7.62" length="middle" rot="R180"/>
+<pin name="VDD" x="20.32" y="12.7" length="middle" direction="pwr" rot="R180"/>
+<pin name="VDDIO" x="20.32" y="7.62" length="middle" direction="pwr" rot="R180"/>
+<pin name="INT2" x="20.32" y="-2.54" length="middle" direction="out" rot="R180"/>
+<pin name="INT1" x="20.32" y="2.54" length="middle" direction="out" rot="R180"/>
+<wire x1="-15.24" y1="15.24" x2="15.24" y2="15.24" width="0.4064" layer="94"/>
+<wire x1="15.24" y1="15.24" x2="15.24" y2="-15.24" width="0.4064" layer="94"/>
+<wire x1="15.24" y1="-15.24" x2="-15.24" y2="-15.24" width="0.4064" layer="94"/>
+<wire x1="-15.24" y1="-15.24" x2="-15.24" y2="15.24" width="0.4064" layer="94"/>
+<text x="-15.24" y="15.875" size="1.778" layer="95">&gt;NAME</text>
+<text x="-15.24" y="-17.78" size="1.778" layer="96">&gt;VALUE</text>
 </symbol>
 </symbols>
 <devicesets>
@@ -1739,6 +1827,52 @@ Various common sizes : AA, AAA, 18650 (PRT-12895), 20mm coin cell and 12mm coin 
 <technology name="">
 <attribute name="PROD_ID" value="SWCH-10554"/>
 </technology>
+</technologies>
+</device>
+</devices>
+</deviceset>
+<deviceset name="LIS2DH12" prefix="U">
+<description>MEMS Digital Output Motion Sensor</description>
+<gates>
+<gate name="G$1" symbol="LIS2DH12" x="0" y="0"/>
+</gates>
+<devices>
+<device name="" package="LGA12">
+<connects>
+<connect gate="G$1" pin="CS" pad="2"/>
+<connect gate="G$1" pin="GND@6" pad="6"/>
+<connect gate="G$1" pin="GND@7" pad="7"/>
+<connect gate="G$1" pin="GND@8" pad="8"/>
+<connect gate="G$1" pin="INT1" pad="12"/>
+<connect gate="G$1" pin="INT2" pad="11"/>
+<connect gate="G$1" pin="RES" pad="5"/>
+<connect gate="G$1" pin="SCL/SPC" pad="1"/>
+<connect gate="G$1" pin="SDA/SDI/SDO" pad="4"/>
+<connect gate="G$1" pin="SDO/A0" pad="3"/>
+<connect gate="G$1" pin="VDD" pad="9"/>
+<connect gate="G$1" pin="VDDIO" pad="10"/>
+</connects>
+<technologies>
+<technology name=""/>
+</technologies>
+</device>
+<device name="&quot;" package="LGA12-TN0018-COMPLIANT">
+<connects>
+<connect gate="G$1" pin="CS" pad="2"/>
+<connect gate="G$1" pin="GND@6" pad="6"/>
+<connect gate="G$1" pin="GND@7" pad="7"/>
+<connect gate="G$1" pin="GND@8" pad="8"/>
+<connect gate="G$1" pin="INT1" pad="12"/>
+<connect gate="G$1" pin="INT2" pad="11"/>
+<connect gate="G$1" pin="RES" pad="5"/>
+<connect gate="G$1" pin="SCL/SPC" pad="1"/>
+<connect gate="G$1" pin="SDA/SDI/SDO" pad="4"/>
+<connect gate="G$1" pin="SDO/A0" pad="3"/>
+<connect gate="G$1" pin="VDD" pad="9"/>
+<connect gate="G$1" pin="VDDIO" pad="10"/>
+</connects>
+<technologies>
+<technology name=""/>
 </technologies>
 </device>
 </devices>
@@ -9017,97 +9151,6 @@ Source: http://www.murata.com .. GRM43DR72E224KW01.pdf</description>
 </deviceset>
 </devicesets>
 </library>
-<library name="st-microelectronics_modified">
-<description>&lt;b&gt;ST Microelectronics Devices&lt;/b&gt;&lt;p&gt;
-Microcontrollers,  I2C components, linear devices&lt;p&gt;
-http://www.st.com&lt;p&gt;
-&lt;author&gt;Created by librarian@cadsoft.de&lt;/author&gt;</description>
-<packages>
-<package name="LGA12-TN0018-COMPLIANT">
-<description>&lt;b&gt;LGA-12&lt;p&gt;&lt;/b&gt;
-body 2x2x1mm</description>
-<wire x1="-1" y1="1" x2="1" y2="1" width="0.0508" layer="51"/>
-<wire x1="1" y1="1" x2="1" y2="-1" width="0.0508" layer="51"/>
-<wire x1="1" y1="-1" x2="-1" y2="-1" width="0.0508" layer="51"/>
-<wire x1="-1" y1="-1" x2="-1" y2="1" width="0.0508" layer="51"/>
-<smd name="1" x="-0.7125" y="0.75" dx="0.375" dy="0.25" layer="1"/>
-<smd name="2" x="-0.7125" y="0.25" dx="0.375" dy="0.25" layer="1"/>
-<smd name="3" x="-0.7125" y="-0.25" dx="0.375" dy="0.25" layer="1"/>
-<smd name="4" x="-0.7125" y="-0.75" dx="0.375" dy="0.25" layer="1"/>
-<smd name="5" x="-0.25" y="-0.7125" dx="0.25" dy="0.375" layer="1"/>
-<smd name="7" x="0.7125" y="-0.75" dx="0.375" dy="0.25" layer="1" rot="R180"/>
-<smd name="8" x="0.7125" y="-0.25" dx="0.375" dy="0.25" layer="1" rot="R180"/>
-<smd name="9" x="0.7125" y="0.25" dx="0.375" dy="0.25" layer="1" rot="R180"/>
-<smd name="10" x="0.7125" y="0.75" dx="0.375" dy="0.25" layer="1" rot="R180"/>
-<smd name="11" x="0.25" y="0.7125" dx="0.25" dy="0.375" layer="1" rot="R180"/>
-<smd name="12" x="-0.25" y="0.7125" dx="0.25" dy="0.375" layer="1" rot="R180"/>
-<text x="-1.25" y="1.55" size="0.8128" layer="25" ratio="18">&gt;NAME</text>
-<text x="-1.2" y="-2" size="0.6096" layer="27" ratio="10">&gt;VALUE</text>
-<rectangle x1="-1.25" y1="1.05" x2="-0.9" y2="1.4" layer="21"/>
-<smd name="6" x="0.25" y="-0.7125" dx="0.25" dy="0.375" layer="1"/>
-<wire x1="-1.15" y1="1.15" x2="-0.6" y2="1.15" width="0.2032" layer="21"/>
-<wire x1="0.6" y1="1.15" x2="1.15" y2="1.15" width="0.2032" layer="21"/>
-<wire x1="0.6" y1="-1.15" x2="1.15" y2="-1.15" width="0.2032" layer="21"/>
-<wire x1="-1.15" y1="-1.15" x2="-0.6" y2="-1.15" width="0.2032" layer="21"/>
-<wire x1="-1.15" y1="-1.15" x2="-1.15" y2="-1.1" width="0.2032" layer="21"/>
-<wire x1="1.15" y1="-1.15" x2="1.15" y2="-1.1" width="0.2032" layer="21"/>
-<wire x1="1.15" y1="1.1" x2="1.15" y2="1.15" width="0.2032" layer="21"/>
-<wire x1="-1.15" y1="1.1" x2="-1.15" y2="1.15" width="0.2032" layer="21"/>
-<circle x="-0.6" y="-0.67" radius="0.2" width="0" layer="51"/>
-</package>
-</packages>
-<symbols>
-<symbol name="LIS2DH12">
-<pin name="SCL/SPC" x="-20.32" y="12.7" length="middle"/>
-<pin name="CS" x="-20.32" y="7.62" length="middle"/>
-<pin name="SDO/A0" x="-20.32" y="2.54" length="middle"/>
-<pin name="SDA/SDI/SDO" x="-20.32" y="-2.54" length="middle"/>
-<pin name="RES" x="-20.32" y="-7.62" length="middle" direction="in"/>
-<pin name="GND@6" x="-20.32" y="-12.7" length="middle" direction="pwr"/>
-<pin name="GND@7" x="20.32" y="-12.7" length="middle" direction="pwr" rot="R180"/>
-<pin name="GND@8" x="20.32" y="-7.62" length="middle" rot="R180"/>
-<pin name="VDD" x="20.32" y="12.7" length="middle" direction="pwr" rot="R180"/>
-<pin name="VDDIO" x="20.32" y="7.62" length="middle" direction="pwr" rot="R180"/>
-<pin name="INT2" x="20.32" y="-2.54" length="middle" direction="out" rot="R180"/>
-<pin name="INT1" x="20.32" y="2.54" length="middle" direction="out" rot="R180"/>
-<wire x1="-15.24" y1="15.24" x2="15.24" y2="15.24" width="0.4064" layer="94"/>
-<wire x1="15.24" y1="15.24" x2="15.24" y2="-15.24" width="0.4064" layer="94"/>
-<wire x1="15.24" y1="-15.24" x2="-15.24" y2="-15.24" width="0.4064" layer="94"/>
-<wire x1="-15.24" y1="-15.24" x2="-15.24" y2="15.24" width="0.4064" layer="94"/>
-<text x="-15.24" y="15.875" size="1.778" layer="95">&gt;NAME</text>
-<text x="-15.24" y="-17.78" size="1.778" layer="96">&gt;VALUE</text>
-</symbol>
-</symbols>
-<devicesets>
-<deviceset name="LIS2DH12" prefix="U">
-<description>MEMS Digital Output Motion Sensor</description>
-<gates>
-<gate name="G$1" symbol="LIS2DH12" x="0" y="0"/>
-</gates>
-<devices>
-<device name="" package="LGA12-TN0018-COMPLIANT">
-<connects>
-<connect gate="G$1" pin="CS" pad="2"/>
-<connect gate="G$1" pin="GND@6" pad="6"/>
-<connect gate="G$1" pin="GND@7" pad="7"/>
-<connect gate="G$1" pin="GND@8" pad="8"/>
-<connect gate="G$1" pin="INT1" pad="12"/>
-<connect gate="G$1" pin="INT2" pad="11"/>
-<connect gate="G$1" pin="RES" pad="5"/>
-<connect gate="G$1" pin="SCL/SPC" pad="1"/>
-<connect gate="G$1" pin="SDA/SDI/SDO" pad="4"/>
-<connect gate="G$1" pin="SDO/A0" pad="3"/>
-<connect gate="G$1" pin="VDD" pad="9"/>
-<connect gate="G$1" pin="VDDIO" pad="10"/>
-</connects>
-<technologies>
-<technology name=""/>
-</technologies>
-</device>
-</devices>
-</deviceset>
-</devicesets>
-</library>
 </libraries>
 <attributes>
 </attributes>
@@ -9189,7 +9232,7 @@ body 2x2x1mm</description>
 <part name="C16" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="C-EU" device="C0603" package3d_urn="urn:adsk.eagle:package:23616/2" value="10u"/>
 <part name="C17" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="C-EU" device="C0603" package3d_urn="urn:adsk.eagle:package:23616/2" value="0u1"/>
 <part name="SUPPLY18" library="Badge" deviceset="VCC" device=""/>
-<part name="U1" library="st-microelectronics_modified" deviceset="LIS2DH12" device=""/>
+<part name="U1" library="Badge" deviceset="LIS2DH12" device="&quot;"/>
 </parts>
 <sheets>
 <sheet>
