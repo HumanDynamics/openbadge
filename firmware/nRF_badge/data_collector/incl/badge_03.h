@@ -37,10 +37,10 @@
 
 
 #define SPI_MASTER_0_ENABLE 1
-#define SPIM0_MISO_PIN  3    // SPI MISO signal. 
-#define SPIM0_SS_PIN   4    // SPI slave select signal. 
-#define SPIM0_MOSI_PIN  1    // SPI MOSI signal. 
-#define SPIM0_SCK_PIN   2    // SPI clock signal. 
+#define SPIM0_MISO_PIN  3    // SPI MISO signal.
+#define SPIM0_SS_PIN   4    // SPI slave select signal.
+#define SPIM0_MOSI_PIN  1    // SPI MOSI signal.
+#define SPIM0_SCK_PIN   2    // SPI clock signal.
 
 
 #define MIC_PIN ADC_CONFIG_PSEL_AnalogInput6  //GPIO P05

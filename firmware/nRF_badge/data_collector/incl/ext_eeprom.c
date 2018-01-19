@@ -11,11 +11,11 @@ void spi_evt_handler(spi_master_evt_t spi_master_evt)
             extEEPROMstate = EXT_EEPROM_SPI_IDLE;
             break;
         case EXT_EEPROM_READ:                    //completed reading values into rx buffer
-            //debug_log("Finished read\r\n");    
+            //debug_log("Finished read\r\n");
             extEEPROMstate = EXT_EEPROM_SPI_IDLE;
             break;
         case EXT_EEPROM_WRITE:                    //completed writing values from tx buffer
-            //debug_log("Finished write\r\n");    
+            //debug_log("Finished write\r\n");
             extEEPROMstate = EXT_EEPROM_SPI_IDLE;
             break;
         default:
@@ -27,7 +27,7 @@ void spi_evt_handler(spi_master_evt_t spi_master_evt)
 void spi_init()
 {
     uint32_t err_code = NRF_SUCCESS;
-    
+
     //manually handle SS pin
     nrf_gpio_pin_set(SPIM0_SS_PIN);
     nrf_gpio_cfg_output(SPIM0_SS_PIN);
@@ -60,7 +60,7 @@ void spi_end()  {
 }
 
 bool spi_busy()  {
-    return (spi_master_get_state(SPI_MASTER_0) == SPI_MASTER_STATE_BUSY);    
+    return (spi_master_get_state(SPI_MASTER_0) == SPI_MASTER_STATE_BUSY);
 }
 
 ext_eeprom_status_t ext_eeprom_get_status()  {
@@ -157,7 +157,7 @@ uint32_t ext_eeprom_write(unsigned int address, uint8_t* txRaw, unsigned int num
 
 bool testExternalEEPROM(void)
 {
-    
+
     // unlock EEPROM
     uint32_t stat = ext_eeprom_global_unprotect();
     if (stat != EXT_EEPROM_SUCCESS) {
@@ -165,7 +165,7 @@ bool testExternalEEPROM(void)
     }
     ext_eeprom_wait(); // wait for unlock to finish
 
-    // write to the first block and test the result  
+    // write to the first block and test the result
     unsigned char value[8] = {0,0,0,0,1,2,3,4};  // includes padding bytes
     stat = ext_eeprom_write(0,value,sizeof(value));
     if (stat != EXT_EEPROM_SUCCESS) {
@@ -176,7 +176,7 @@ bool testExternalEEPROM(void)
 
     /* not getting what I expected */
     unsigned char buf[8];  // includes padding bytes
-    stat = ext_eeprom_read(0,buf,sizeof(buf));               
+    stat = ext_eeprom_read(0,buf,sizeof(buf));
     if (stat != EXT_EEPROM_SUCCESS) {
         return false;
     }
@@ -185,6 +185,6 @@ bool testExternalEEPROM(void)
         debug_log("Error - got : %d\r\n", buf[0]);
         return false;
     }
-    
+
     return true;
 }

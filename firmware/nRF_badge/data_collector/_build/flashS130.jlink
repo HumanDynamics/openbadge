@@ -1,0 +1,4 @@
+loadbin /Users/bernalrojas/Desktop/HD/nrf51sdk//components/softdevice/s130/hex/s130_softdevice.hex 0
+r
+g
+exit
