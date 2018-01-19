@@ -47,7 +47,7 @@ void collector_init()
     readingsSum = 0;
     sampleStart = 0;
     sampleStartms = 0;
-    
+
     isCollecting = false;
 
     app_timer_create(&mCollectorSampleTaskTimer, APP_TIMER_MODE_REPEATED, collector_sample_task);
@@ -57,7 +57,7 @@ void collector_init()
 /**
  * Take a reading from the mic (and add to total for averaging later)
  */
-void takeMicReading() 
+void takeMicReading()
 {
     if(takingReadings == false)  {   // if we aren't currently taking readings for a sample, start new sample
         readingsCount = 0;          // reset number of readings
@@ -77,7 +77,7 @@ static void setupChunk(int chunk, unsigned long timestamp, unsigned long msTimes
         debug_log("ERR: Invalid collector chunk\r\n");
         return;
     }
-        
+
     memset(micBuffer[chunk].samples, INVALID_SAMPLE, sizeof(micBuffer[chunk].samples));  // reset sample array
     micBuffer[chunk].battery = BatteryMonitor_getBatteryVoltage();
     micBuffer[chunk].timestamp = timestamp;     // record timestamp for chunk
@@ -85,7 +85,7 @@ static void setupChunk(int chunk, unsigned long timestamp, unsigned long msTimes
     micBuffer[chunk].check = CHECK_INCOMPLETE;  // denote that chunk is incomplete
 }
 
-void collectSample()  
+void collectSample()
 {
     unsigned int micValue = readingsSum / (readingsCount/2);
     unsigned char reading = micValue <= MAX_MIC_SAMPLE ? micValue : MAX_MIC_SAMPLE;  //clip sample
@@ -96,16 +96,16 @@ void collectSample()
     //debug_log("readingsCount: %d\r\n",(int)readingsCount);
     readingsCount = 0;
     readingsSum = 0;
-    
+
     if(collect.loc == 0)  {  // are we at start of a new chunk
         setupChunk(collect.to,sampleStart,sampleStartms);
         debug_log("COLLECTOR: Started RAM chunk %d. %lu %lu\r\n",collect.to, sampleStart, sampleStartms);
         //printCollectorChunk(collect.to);
     }
-    
+
     micBuffer[collect.to].samples[collect.loc] = reading;    // add reading
     collect.loc++;                     // move to next location in sample array
-    
+
     if(collect.loc >= SAMPLES_PER_CHUNK)  {  // did we reach the end of the chunk
         micBuffer[collect.to].check = micBuffer[collect.to].timestamp;  // mark chunk as complete
         collect.to = (collect.to < LAST_RAM_CHUNK) ? collect.to+1 : 0;
@@ -113,12 +113,12 @@ void collectSample()
 
         Storer_ScheduleBufferedDataStorage();
     }
-    
+
     takingReadings = false;  // we finished taking readings for that sample
 }
 
 void startCollector()
-{   
+{
     if(!isCollecting)  {
         isCollecting = true;
         debug_log("  Collector started\r\n");
@@ -140,13 +140,13 @@ void stopCollector()
 
         micBuffer[collect.to].check = CHECK_TRUNC;          // mark chunk as truncated; it's not full, but we're done writing in it
         micBuffer[collect.to].samples[SAMPLES_PER_CHUNK-1] = collect.loc;   // store the number of samples in this chunk
-    
+
         debug_log("  Collector stopped.  Truncated RAM chunk %d.\r\n",collect.to);
-    
+
         // Advance to next chunk in buffer (will resume collecting from a new chunk)
         collect.to = (collect.to < LAST_RAM_CHUNK) ? collect.to+1 : 0;
         collect.loc = 0;
-    
+
         isCollecting = false;   // Disable collector
         app_timer_stop(mCollectorSampleTaskTimer);
         app_timer_stop(mCollectorCollectTaskTimer);

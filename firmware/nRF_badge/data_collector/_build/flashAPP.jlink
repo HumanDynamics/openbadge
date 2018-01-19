@@ -1,0 +1,4 @@
+loadbin _build/nrf51422_xxac_s130.hex 1c000  
+r
+g
+exit

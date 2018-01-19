@@ -1,0 +1,2323 @@
+Archive member included to satisfy reference by file (symbol)
+
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-exit.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/crt0.o (exit)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-impure.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-exit.o) (_global_impure_ptr)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-init.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/crt0.o (__libc_init_array)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memset.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/crt0.o (memset)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(_exit.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-exit.o) (_exit)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_udivsi3.o)
+                              _build/collector.o (__aeabi_uidiv)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_divsi3.o)
+                              _build/scanner.o (__aeabi_idiv)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_dvmd_tls.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_udivsi3.o) (__aeabi_idiv0)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_arm_cmpdf2.o)
+                              _build/self_test.o (__aeabi_dcmplt)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_aeabi_uldivmod.o)
+                              _build/rtc_timing.o (__aeabi_uldivmod)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_fixunssfsi.o)
+                              _build/rtc_timing.o (__aeabi_f2uiz)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_udivmoddi4.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_aeabi_uldivmod.o) (__udivmoddi4)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(addsf3.o)
+                              _build/battery.o (__aeabi_fadd)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(mulsf3.o)
+                              _build/analog.o (__aeabi_fmul)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(subsf3.o)
+                              _build/battery.o (__aeabi_fsub)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(fixsfsi.o)
+                              _build/battery.o (__aeabi_f2iz)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(floatsisf.o)
+                              _build/analog.o (__aeabi_i2f)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(floatunsisf.o)
+                              _build/rtc_timing.o (__aeabi_ui2f)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(divdf3.o)
+                              _build/sender.o (__aeabi_ddiv)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(eqdf2.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_arm_cmpdf2.o) (__eqdf2)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(gedf2.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_arm_cmpdf2.o) (__gedf2)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(ledf2.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_arm_cmpdf2.o) (__ledf2)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(muldf3.o)
+                              _build/battery.o (__aeabi_dmul)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(fixdfsi.o)
+                              _build/battery.o (__aeabi_d2iz)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(floatsidf.o)
+                              _build/sender.o (__aeabi_i2d)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(extendsfdf2.o)
+                              _build/battery.o (__aeabi_f2d)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(truncdfsf2.o)
+                              _build/sender.o (__aeabi_d2f)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_arm_cmpsf2.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_fixunssfsi.o) (__aeabi_fcmpge)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_clzsi2.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(addsf3.o) (__clzsi2)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_clzdi2.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_udivmoddi4.o) (__clzdi2)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(eqsf2.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_arm_cmpsf2.o) (__eqsf2)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(gesf2.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_arm_cmpsf2.o) (__gesf2)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(lesf2.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_arm_cmpsf2.o) (__lesf2)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-abs.o)
+                              _build/collector.o (abs)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memcmp.o)
+                              _build/ble_setup.o (memcmp)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memcpy-stub.o)
+                              _build/ble_setup.o (memcpy)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-printf.o)
+                              _build/main.o (printf)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-qsort.o)
+                              _build/scanner.o (qsort)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-strcmp.o)
+                              _build/uart_commands.o (strcmp)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-strlen.o)
+                              _build/ble_setup.o (strlen)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-strncpy.o)
+                              _build/main.o (strncpy)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-findfp.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-printf.o) (__sinit)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fwalk.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-findfp.o) (_fwalk)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-mallocr.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-findfp.o) (_malloc_r)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-vfprintf.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-printf.o) (_vfprintf_r)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-vfprintf_i.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-vfprintf.o) (_printf_i)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-sbrkr.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-mallocr.o) (_sbrk_r)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-stdio.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-findfp.o) (__sread)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-wbuf.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-vfprintf.o) (__swbuf_r)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-writer.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-stdio.o) (_write_r)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-wsetup.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-vfprintf.o) (__swsetup_r)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-closer.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-stdio.o) (_close_r)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fflush.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-findfp.o) (_fflush_r)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fvwrite.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-vfprintf.o) (__sfvwrite_r)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-lseekr.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-stdio.o) (_lseek_r)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-makebuf.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-wsetup.o) (__smakebuf_r)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memchr-stub.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-vfprintf.o) (memchr)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memmove.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fvwrite.o) (memmove)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-mlock.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-mallocr.o) (__malloc_lock)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-freer.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-wsetup.o) (_free_r)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-reallocr.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fvwrite.o) (_realloc_r)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-readr.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-stdio.o) (_read_r)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-reent.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-sbrkr.o) (errno)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fstatr.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-makebuf.o) (_fstat_r)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-isattyr.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-makebuf.o) (_isatty_r)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-msizer.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-reallocr.o) (_malloc_usable_size_r)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(close.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-closer.o) (_close)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(fstat.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fstatr.o) (_fstat)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(isatty.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-isattyr.o) (_isatty)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(lseek.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-lseekr.o) (_lseek)
+/Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(sbrk.o)
+                              /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-sbrkr.o) (_sbrk)
+
+Allocating common symbols
+Common symbol       size              file
+
+micBuffer           0xa00             _build/main.o
+isCollecting        0x1               _build/main.o
+readingsSum         0x4               _build/main.o
+readingsCount       0x4               _build/main.o
+errno               0x4               /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-reent.o)
+badgeAssignment     0x4               _build/main.o
+lastScanTime        0x4               _build/main.o
+store               0x10              _build/main.o
+sleep               0x1               _build/main.o
+extEEPROMstate      0x4               _build/main.o
+scanner_enable      0x1               _build/main.o
+threshold_buffer    0x28              _build/main.o
+scan                0x200             _build/main.o
+send                0x2c              _build/main.o
+collect             0x8               _build/main.o
+dummyRxBuf          0x1               _build/ext_eeprom.o
+takingReadings      0x1               _build/main.o
+pendingCommand      0x18              _build/main.o
+dateReceived        0x1               _build/main.o
+flashWorking        0x1               _build/storer.o
+customAdvData       0xc               _build/main.o
+__stdin             0x68              _build/retarget.o
+masterTime          0x8               _build/rtc_timing.o
+needAdvDataUpdate   0x1               _build/main.o
+sampleStart         0x4               _build/main.o
+defaultID           0x2               _build/main.o
+scanBuffer          0x528             _build/main.o
+scannerTimeout      0x4               _build/main.o
+collectorTimeout    0x4               _build/main.o
+scan_state          0x1               _build/main.o
+sampleStartms       0x4               _build/main.o
+sampleWindow        0x4               _build/main.o
+lastReceipt         0x4               _build/main.o
+pauseRequest        0x2               _build/main.o
+lastMillis          0x4               _build/rtc_timing.o
+__stdout            0x68              _build/retarget.o
+minimumRSSI         0x1               _build/main.o
+scanPeriod_ms       0x4               _build/main.o
+lastStoredAssignment
+                    0x8               _build/main.o
+samplePeriod        0x4               _build/main.o
+scan_params         0x10              _build/main.o
+
+Discarded input sections
+
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crti.o
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crti.o
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crti.o
+ .text          0x0000000000000000       0x60 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crtbegin.o
+ .data          0x0000000000000000        0x4 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crtbegin.o
+ .bss           0x0000000000000000       0x1c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crtbegin.o
+ .init_array    0x0000000000000000        0x4 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crtbegin.o
+ .fini_array    0x0000000000000000        0x4 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crtbegin.o
+ .eh_frame      0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crtbegin.o
+ .jcr           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crtbegin.o
+ .ARM.attributes
+                0x0000000000000000       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crtbegin.o
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/crt0.o
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/crt0.o
+ .ARM.extab     0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/crt0.o
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-exit.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-exit.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-exit.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-impure.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-impure.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-impure.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-init.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-init.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-init.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memset.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memset.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memset.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(_exit.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(_exit.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(_exit.o)
+ .text          0x0000000000000000        0x0 _build/main.o
+ .data          0x0000000000000000        0x0 _build/main.o
+ .bss           0x0000000000000000        0x0 _build/main.o
+ .text          0x0000000000000000        0x0 _build/analog.o
+ .bss           0x0000000000000000        0x0 _build/analog.o
+ .text.readVDD  0x0000000000000000       0x80 _build/analog.o
+ .rodata        0x0000000000000000        0x8 _build/analog.o
+ .text          0x0000000000000000        0x0 _build/app_fifo_util.o
+ .data          0x0000000000000000        0x0 _build/app_fifo_util.o
+ .bss           0x0000000000000000        0x0 _build/app_fifo_util.o
+ .text.app_fifo_put_bytes
+                0x0000000000000000       0x4c _build/app_fifo_util.o
+ .text.app_fifo_put_bytes_circular
+                0x0000000000000000       0x8c _build/app_fifo_util.o
+ .text          0x0000000000000000        0x0 _build/rtc_timing.o
+ .data          0x0000000000000000        0x0 _build/rtc_timing.o
+ .bss           0x0000000000000000        0x0 _build/rtc_timing.o
+ .text.countdown_set
+                0x0000000000000000       0x50 _build/rtc_timing.o
+ .text.timer_comparison_ticks_now
+                0x0000000000000000       0x10 _build/rtc_timing.o
+ .text.timer_comparison_ticks_since_start
+                0x0000000000000000       0x1c _build/rtc_timing.o
+ .text.timer_comparison_millis_since_start
+                0x0000000000000000       0x2c _build/rtc_timing.o
+ .text.setTime  0x0000000000000000      0x110 _build/rtc_timing.o
+ .text          0x0000000000000000        0x0 _build/battery.o
+ .data          0x0000000000000000        0x0 _build/battery.o
+ .bss           0x0000000000000000        0x0 _build/battery.o
+ .text.on_battery_sample
+                0x0000000000000000       0x6c _build/battery.o
+ .text.BatteryMonitor_init
+                0x0000000000000000       0x50 _build/battery.o
+ .rodata.str1.4
+                0x0000000000000000       0x35 _build/battery.o
+ .bss.mBatteryMonitorTimer
+                0x0000000000000000        0x4 _build/battery.o
+ .text          0x0000000000000000        0x0 _build/ble_setup.o
+ .data          0x0000000000000000        0x0 _build/ble_setup.o
+ .bss           0x0000000000000000        0x0 _build/ble_setup.o
+ .text.ble_queue_adv_paused_callback
+                0x0000000000000000       0x48 _build/ble_setup.o
+ .text.advertising_init
+                0x0000000000000000       0x64 _build/ble_setup.o
+ .text.BLEstartAdvertising
+                0x0000000000000000       0x40 _build/ble_setup.o
+ .text.BLEdisable
+                0x0000000000000000       0x14 _build/ble_setup.o
+ .text.BLEpause
+                0x0000000000000000       0x3c _build/ble_setup.o
+ .text.BLEresume
+                0x0000000000000000       0x68 _build/ble_setup.o
+ .text.BLEgetStatus
+                0x0000000000000000       0x20 _build/ble_setup.o
+ .text.BLEpauseReqPending
+                0x0000000000000000       0x14 _build/ble_setup.o
+ .text.notificationEnabled
+                0x0000000000000000        0xc _build/ble_setup.o
+ .text.ble_write_buffered
+                0x0000000000000000       0x94 _build/ble_setup.o
+ .text.ble_write_buffered_atomic
+                0x0000000000000000       0xc0 _build/ble_setup.o
+ .text.BLEwriteChar
+                0x0000000000000000       0x30 _build/ble_setup.o
+ .bss.isConnected
+                0x0000000000000000        0x1 _build/ble_setup.o
+ .text          0x0000000000000000        0x0 _build/debug_log.o
+ .data          0x0000000000000000        0x0 _build/debug_log.o
+ .bss           0x0000000000000000        0x0 _build/debug_log.o
+ .text.uart_error_handle
+                0x0000000000000000        0x4 _build/debug_log.o
+ .text.debug_log_dump
+                0x0000000000000000       0x34 _build/debug_log.o
+ .rodata.str1.4
+                0x0000000000000000        0xc _build/debug_log.o
+ .text          0x0000000000000000        0x0 _build/ext_eeprom.o
+ .data          0x0000000000000000        0x0 _build/ext_eeprom.o
+ .bss           0x0000000000000000        0x0 _build/ext_eeprom.o
+ .text.spi_end  0x0000000000000000        0xc _build/ext_eeprom.o
+ .text.ext_eeprom_get_status
+                0x0000000000000000       0x50 _build/ext_eeprom.o
+ .text.ext_eeprom_busy
+                0x0000000000000000       0x58 _build/ext_eeprom.o
+ .text.ext_eeprom_global_unprotect
+                0x0000000000000000       0x60 _build/ext_eeprom.o
+ .text.ext_eeprom_read_status
+                0x0000000000000000       0x40 _build/ext_eeprom.o
+ .text          0x0000000000000000        0x0 _build/collector.o
+ .data          0x0000000000000000        0x0 _build/collector.o
+ .bss           0x0000000000000000        0x0 _build/collector.o
+ .text.collector_sample_task
+                0x0000000000000000       0x90 _build/collector.o
+ .text.collector_collect_task
+                0x0000000000000000      0x11c _build/collector.o
+ .text.collector_init
+                0x0000000000000000       0x80 _build/collector.o
+ .text.takeMicReading
+                0x0000000000000000       0x60 _build/collector.o
+ .text.collectSample
+                0x0000000000000000      0x104 _build/collector.o
+ .text.printCollectorChunk
+                0x0000000000000000       0xdc _build/collector.o
+ .text          0x0000000000000000        0x0 _build/storer.o
+ .data          0x0000000000000000        0x0 _build/storer.o
+ .bss           0x0000000000000000        0x0 _build/storer.o
+ .text.storer_init
+                0x0000000000000000      0x39c _build/storer.o
+ .text.storer_test
+                0x0000000000000000       0xac _build/storer.o
+ .text.printStorerChunk
+                0x0000000000000000       0xd4 _build/storer.o
+ .text.getStoredBadgeAssignment
+                0x0000000000000000       0x44 _build/storer.o
+ .text.writeBlockToFlash
+                0x0000000000000000       0x44 _build/storer.o
+ .text.erasePageOfFlash
+                0x0000000000000000       0x5c _build/storer.o
+ .text          0x0000000000000000        0x0 _build/sender.o
+ .data          0x0000000000000000        0x0 _build/sender.o
+ .bss           0x0000000000000000        0x0 _build/sender.o
+ .text.on_check_timeouts
+                0x0000000000000000       0x78 _build/sender.o
+ .text.sender_init
+                0x0000000000000000       0x50 _build/sender.o
+ .bss.mTimeoutCheckTimer
+                0x0000000000000000        0x4 _build/sender.o
+ .text          0x0000000000000000        0x0 _build/self_test.o
+ .data          0x0000000000000000        0x0 _build/self_test.o
+ .bss           0x0000000000000000        0x0 _build/self_test.o
+ .text.testMicAddSample
+                0x0000000000000000       0x50 _build/self_test.o
+ .text.testMicInit
+                0x0000000000000000       0x1c _build/self_test.o
+ .text.testMicAvg
+                0x0000000000000000       0x2c _build/self_test.o
+ .text.testMicAboveThreshold
+                0x0000000000000000       0x68 _build/self_test.o
+ .text.accel_spi_init
+                0x0000000000000000       0x58 _build/self_test.o
+ .text.readRegister8
+                0x0000000000000000       0x34 _build/self_test.o
+ .text.writeRegister8
+                0x0000000000000000       0x30 _build/self_test.o
+ .text.setDataRate
+                0x0000000000000000       0x58 _build/self_test.o
+ .text.tap_accel
+                0x0000000000000000       0x50 _build/self_test.o
+ .text.motion_interruput
+                0x0000000000000000       0x38 _build/self_test.o
+ .text          0x0000000000000000        0x0 _build/scanner.o
+ .data          0x0000000000000000        0x0 _build/scanner.o
+ .bss           0x0000000000000000        0x0 _build/scanner.o
+ .text.sd_ble_gap_scan_start
+                0x0000000000000000        0x4 _build/scanner.o
+ .text.sd_ble_gap_scan_stop
+                0x0000000000000000        0x4 _build/scanner.o
+ .text.scan_task
+                0x0000000000000000       0x68 _build/scanner.o
+ .text.scanner_init
+                0x0000000000000000       0x48 _build/scanner.o
+ .text.startScan
+                0x0000000000000000       0x2c _build/scanner.o
+ .text.getScanState
+                0x0000000000000000        0xc _build/scanner.o
+ .text.printScanResult
+                0x0000000000000000       0x58 _build/scanner.o
+ .text          0x0000000000000000        0x0 _build/uart_commands.o
+ .data          0x0000000000000000        0x0 _build/uart_commands.o
+ .bss           0x0000000000000000        0x0 _build/uart_commands.o
+ .text          0x0000000000000000        0x0 _build/crc16.o
+ .data          0x0000000000000000        0x0 _build/crc16.o
+ .bss           0x0000000000000000        0x0 _build/crc16.o
+ .text          0x0000000000000000        0x0 _build/app_scheduler.o
+ .data          0x0000000000000000        0x0 _build/app_scheduler.o
+ .bss           0x0000000000000000        0x0 _build/app_scheduler.o
+ .text.app_sched_init
+                0x0000000000000000       0x4c _build/app_scheduler.o
+ .text.app_sched_execute
+                0x0000000000000000       0x7c _build/app_scheduler.o
+ .text          0x0000000000000000        0x0 _build/app_timer.o
+ .data          0x0000000000000000        0x0 _build/app_timer.o
+ .bss           0x0000000000000000        0x0 _build/app_timer.o
+ .text.app_timer_stop_all
+                0x0000000000000000       0xc0 _build/app_timer.o
+ .text          0x0000000000000000        0x0 _build/app_error.o
+ .data          0x0000000000000000        0x0 _build/app_error.o
+ .bss           0x0000000000000000        0x0 _build/app_error.o
+ .text.app_error_handler
+                0x0000000000000000       0x18 _build/app_error.o
+ .comment       0x0000000000000000       0x6f _build/app_error.o
+ .ARM.attributes
+                0x0000000000000000       0x31 _build/app_error.o
+ .text          0x0000000000000000        0x0 _build/nrf_assert.o
+ .data          0x0000000000000000        0x0 _build/nrf_assert.o
+ .bss           0x0000000000000000        0x0 _build/nrf_assert.o
+ .comment       0x0000000000000000       0x6f _build/nrf_assert.o
+ .ARM.attributes
+                0x0000000000000000       0x31 _build/nrf_assert.o
+ .text          0x0000000000000000        0x0 _build/retarget.o
+ .data          0x0000000000000000        0x0 _build/retarget.o
+ .bss           0x0000000000000000        0x0 _build/retarget.o
+ COMMON         0x0000000000000000       0xd0 _build/retarget.o
+ .text          0x0000000000000000        0x0 _build/nrf_adc.o
+ .data          0x0000000000000000        0x0 _build/nrf_adc.o
+ .bss           0x0000000000000000        0x0 _build/nrf_adc.o
+ .text.nrf_adc_convert_single
+                0x0000000000000000       0x58 _build/nrf_adc.o
+ .text          0x0000000000000000        0x0 _build/nrf_delay.o
+ .data          0x0000000000000000        0x0 _build/nrf_delay.o
+ .bss           0x0000000000000000        0x0 _build/nrf_delay.o
+ .text          0x0000000000000000        0x0 _build/app_uart_fifo.o
+ .data          0x0000000000000000        0x0 _build/app_uart_fifo.o
+ .bss           0x0000000000000000        0x0 _build/app_uart_fifo.o
+ .text.action_tx_stop
+                0x0000000000000000       0x2c _build/app_uart_fifo.o
+ .text.app_uart_flush
+                0x0000000000000000       0x1c _build/app_uart_fifo.o
+ .text.app_uart_get_connection_state
+                0x0000000000000000       0x14 _build/app_uart_fifo.o
+ .text.app_uart_close
+                0x0000000000000000       0x30 _build/app_uart_fifo.o
+ .text          0x0000000000000000        0x0 _build/app_fifo.o
+ .data          0x0000000000000000        0x0 _build/app_fifo.o
+ .bss           0x0000000000000000        0x0 _build/app_fifo.o
+ .text.app_fifo_flush
+                0x0000000000000000        0x8 _build/app_fifo.o
+ .text          0x0000000000000000        0x0 _build/nrf_drv_common.o
+ .data          0x0000000000000000        0x0 _build/nrf_drv_common.o
+ .bss           0x0000000000000000        0x0 _build/nrf_drv_common.o
+ .text          0x0000000000000000        0x0 _build/nrf_drv_gpiote.o
+ .data          0x0000000000000000        0x0 _build/nrf_drv_gpiote.o
+ .bss           0x0000000000000000        0x0 _build/nrf_drv_gpiote.o
+ .text.nrf_drv_gpiote_uninit
+                0x0000000000000000       0xe8 _build/nrf_drv_gpiote.o
+ .text.nrf_drv_gpiote_out_uninit
+                0x0000000000000000       0x34 _build/nrf_drv_gpiote.o
+ .text.nrf_drv_gpiote_out_set
+                0x0000000000000000       0x10 _build/nrf_drv_gpiote.o
+ .text.nrf_drv_gpiote_out_clear
+                0x0000000000000000       0x14 _build/nrf_drv_gpiote.o
+ .text.nrf_drv_gpiote_out_toggle
+                0x0000000000000000       0x2c _build/nrf_drv_gpiote.o
+ .text.nrf_drv_gpiote_out_task_enable
+                0x0000000000000000       0x38 _build/nrf_drv_gpiote.o
+ .text.nrf_drv_gpiote_out_task_disable
+                0x0000000000000000       0x28 _build/nrf_drv_gpiote.o
+ .text.nrf_drv_gpiote_out_task_addr_get
+                0x0000000000000000       0x1c _build/nrf_drv_gpiote.o
+ .text.nrf_drv_gpiote_out_task_force
+                0x0000000000000000       0x38 _build/nrf_drv_gpiote.o
+ .text.nrf_drv_gpiote_out_task_trigger
+                0x0000000000000000       0x20 _build/nrf_drv_gpiote.o
+ .text.nrf_drv_gpiote_in_event_disable
+                0x0000000000000000       0x58 _build/nrf_drv_gpiote.o
+ .text.nrf_drv_gpiote_in_uninit
+                0x0000000000000000       0xa4 _build/nrf_drv_gpiote.o
+ .text.nrf_drv_gpiote_in_event_addr_get
+                0x0000000000000000       0x20 _build/nrf_drv_gpiote.o
+ .text          0x0000000000000000        0x0 _build/ble_flash.o
+ .data          0x0000000000000000        0x0 _build/ble_flash.o
+ .bss           0x0000000000000000        0x0 _build/ble_flash.o
+ .text.sd_app_evt_wait
+                0x0000000000000000        0x4 _build/ble_flash.o
+ .text.ble_flash_crc16_compute
+                0x0000000000000000       0x48 _build/ble_flash.o
+ .text.ble_flash_word_write
+                0x0000000000000000       0x5c _build/ble_flash.o
+ .text.ble_flash_block_write
+                0x0000000000000000       0x90 _build/ble_flash.o
+ .text.ble_flash_page_erase
+                0x0000000000000000       0x54 _build/ble_flash.o
+ .text.ble_flash_page_write
+                0x0000000000000000      0x1b8 _build/ble_flash.o
+ .text.ble_flash_page_read
+                0x0000000000000000       0x90 _build/ble_flash.o
+ .text.ble_flash_page_addr
+                0x0000000000000000       0x14 _build/ble_flash.o
+ .text.ble_flash_on_radio_active_evt
+                0x0000000000000000        0xc _build/ble_flash.o
+ .bss.m_radio_active
+                0x0000000000000000        0x1 _build/ble_flash.o
+ .comment       0x0000000000000000       0x6f _build/ble_flash.o
+ .ARM.attributes
+                0x0000000000000000       0x31 _build/ble_flash.o
+ .text          0x0000000000000000        0x0 _build/spi_master.o
+ .data          0x0000000000000000        0x0 _build/spi_master.o
+ .bss           0x0000000000000000        0x0 _build/spi_master.o
+ .text.spi_master_close
+                0x0000000000000000       0xb0 _build/spi_master.o
+ .text          0x0000000000000000        0x0 _build/pstorage.o
+ .data          0x0000000000000000        0x0 _build/pstorage.o
+ .bss           0x0000000000000000        0x0 _build/pstorage.o
+ .text.sd_flash_write
+                0x0000000000000000        0x4 _build/pstorage.o
+ .text.sd_flash_page_erase
+                0x0000000000000000        0x4 _build/pstorage.o
+ .text.swap_state_process
+                0x0000000000000000      0x1ec _build/pstorage.o
+ .rodata.swap_state_process
+                0x0000000000000000       0x1c _build/pstorage.o
+ .text.cmd_process
+                0x0000000000000000      0x120 _build/pstorage.o
+ .text.unlikely.cmd_queue_enqueue
+                0x0000000000000000       0x5c _build/pstorage.o
+ .text.pstorage_sys_event_handler
+                0x0000000000000000      0x1a0 _build/pstorage.o
+ .text.pstorage_init
+                0x0000000000000000       0xe8 _build/pstorage.o
+ .text.pstorage_register
+                0x0000000000000000      0x134 _build/pstorage.o
+ .text.pstorage_block_identifier_get
+                0x0000000000000000       0x54 _build/pstorage.o
+ .text.pstorage_store
+                0x0000000000000000       0x88 _build/pstorage.o
+ .text.pstorage_update
+                0x0000000000000000       0x88 _build/pstorage.o
+ .text.pstorage_load
+                0x0000000000000000       0xb8 _build/pstorage.o
+ .text.pstorage_clear
+                0x0000000000000000       0x6c _build/pstorage.o
+ .bss.m_app_table
+                0x0000000000000000       0x20 _build/pstorage.o
+ .bss.m_next_app_instance
+                0x0000000000000000        0x2 _build/pstorage.o
+ .bss.m_next_page_addr
+                0x0000000000000000        0x4 _build/pstorage.o
+ .bss.m_swap_state
+                0x0000000000000000        0x1 _build/pstorage.o
+ .bss.m_round_val
+                0x0000000000000000        0x2 _build/pstorage.o
+ .text          0x0000000000000000        0x0 _build/ble_advdata.o
+ .data          0x0000000000000000        0x0 _build/ble_advdata.o
+ .bss           0x0000000000000000        0x0 _build/ble_advdata.o
+ .text          0x0000000000000000        0x0 _build/ble_advertising.o
+ .data          0x0000000000000000        0x0 _build/ble_advertising.o
+ .bss           0x0000000000000000        0x0 _build/ble_advertising.o
+ .text.sd_ble_gap_adv_stop
+                0x0000000000000000        0x4 _build/ble_advertising.o
+ .text.ble_advertising_init
+                0x0000000000000000      0x17c _build/ble_advertising.o
+ .text.ble_advertising_peer_addr_reply
+                0x0000000000000000       0x3c _build/ble_advertising.o
+ .text.ble_advertising_whitelist_reply
+                0x0000000000000000       0xd4 _build/ble_advertising.o
+ .text.ble_advertising_restart_without_whitelist
+                0x0000000000000000       0x78 _build/ble_advertising.o
+ .bss.m_manuf_specific_data
+                0x0000000000000000        0xc _build/ble_advertising.o
+ .bss.m_manuf_data_array
+                0x0000000000000000       0x1f _build/ble_advertising.o
+ .bss.mp_whitelist_addr
+                0x0000000000000000       0x20 _build/ble_advertising.o
+ .bss.m_tx_power_level
+                0x0000000000000000        0x1 _build/ble_advertising.o
+ .bss.m_service_data_array
+                0x0000000000000000       0x1f _build/ble_advertising.o
+ .bss.mp_whitelist_irk
+                0x0000000000000000       0x20 _build/ble_advertising.o
+ .bss.m_slave_conn_int
+                0x0000000000000000        0x4 _build/ble_advertising.o
+ .bss.m_service_data
+                0x0000000000000000        0xc _build/ble_advertising.o
+ .text          0x0000000000000000        0x0 _build/ble_srv_common.o
+ .data          0x0000000000000000        0x0 _build/ble_srv_common.o
+ .bss           0x0000000000000000        0x0 _build/ble_srv_common.o
+ .text.ble_srv_report_ref_encode
+                0x0000000000000000        0xc _build/ble_srv_common.o
+ .text.ble_srv_ascii_to_utf8
+                0x0000000000000000       0x14 _build/ble_srv_common.o
+ .comment       0x0000000000000000       0x6f _build/ble_srv_common.o
+ .ARM.attributes
+                0x0000000000000000       0x31 _build/ble_srv_common.o
+ .text          0x0000000000000000        0x0 _build/system_nrf51.o
+ .data          0x0000000000000000        0x0 _build/system_nrf51.o
+ .bss           0x0000000000000000        0x0 _build/system_nrf51.o
+ .text.SystemCoreClockUpdate
+                0x0000000000000000       0x10 _build/system_nrf51.o
+ .data.SystemCoreClock
+                0x0000000000000000        0x4 _build/system_nrf51.o
+ .text          0x0000000000000000        0x0 _build/softdevice_handler.o
+ .data          0x0000000000000000        0x0 _build/softdevice_handler.o
+ .bss           0x0000000000000000        0x0 _build/softdevice_handler.o
+ .text.sd_softdevice_disable
+                0x0000000000000000        0x4 _build/softdevice_handler.o
+ .text.intern_softdevice_events_execute
+                0x0000000000000000       0x14 _build/softdevice_handler.o
+ .text.softdevice_handler_sd_disable
+                0x0000000000000000       0x18 _build/softdevice_handler.o
+ .text          0x0000000000000000        0x0 _build/ble_bas.o
+ .data          0x0000000000000000        0x0 _build/ble_bas.o
+ .bss           0x0000000000000000        0x0 _build/ble_bas.o
+ .text.sd_ble_gatts_service_add
+                0x0000000000000000        0x4 _build/ble_bas.o
+ .text.sd_ble_gatts_characteristic_add
+                0x0000000000000000        0x4 _build/ble_bas.o
+ .text.sd_ble_gatts_descriptor_add
+                0x0000000000000000        0x4 _build/ble_bas.o
+ .text.sd_ble_gatts_value_set
+                0x0000000000000000        0x4 _build/ble_bas.o
+ .text.sd_ble_gatts_hvx
+                0x0000000000000000        0x4 _build/ble_bas.o
+ .text.ble_bas_on_ble_evt
+                0x0000000000000000       0x5c _build/ble_bas.o
+ .text.ble_bas_init
+                0x0000000000000000      0x1d0 _build/ble_bas.o
+ .text.ble_bas_battery_level_update
+                0x0000000000000000       0x80 _build/ble_bas.o
+ .comment       0x0000000000000000       0x6f _build/ble_bas.o
+ .ARM.attributes
+                0x0000000000000000       0x31 _build/ble_bas.o
+ .text          0x0000000000000000        0x0 _build/ble_nus.o
+ .data          0x0000000000000000        0x0 _build/ble_nus.o
+ .bss           0x0000000000000000        0x0 _build/ble_nus.o
+ .data          0x0000000000000000        0x0 _build/gcc_startup_nrf51.o
+ .bss           0x0000000000000000        0x0 _build/gcc_startup_nrf51.o
+ .ARM.extab     0x0000000000000000        0x0 _build/gcc_startup_nrf51.o
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_udivsi3.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_udivsi3.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_divsi3.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_divsi3.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_dvmd_tls.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_dvmd_tls.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_arm_cmpdf2.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_arm_cmpdf2.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_aeabi_uldivmod.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_aeabi_uldivmod.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_fixunssfsi.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_fixunssfsi.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_udivmoddi4.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_udivmoddi4.o)
+ .ARM.extab     0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_udivmoddi4.o)
+ .text          0x0000000000000000      0x2ec /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(addsf3.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(addsf3.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(addsf3.o)
+ .debug_frame   0x0000000000000000       0x30 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(addsf3.o)
+ .ARM.attributes
+                0x0000000000000000       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(addsf3.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(mulsf3.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(mulsf3.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(subsf3.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(subsf3.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(fixsfsi.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(fixsfsi.o)
+ .text          0x0000000000000000       0x90 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(floatsisf.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(floatsisf.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(floatsisf.o)
+ .debug_frame   0x0000000000000000       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(floatsisf.o)
+ .ARM.attributes
+                0x0000000000000000       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(floatsisf.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(floatunsisf.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(floatunsisf.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(divdf3.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(divdf3.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(eqdf2.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(eqdf2.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(gedf2.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(gedf2.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(ledf2.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(ledf2.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(muldf3.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(muldf3.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(fixdfsi.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(fixdfsi.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(floatsidf.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(floatsidf.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(extendsfdf2.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(extendsfdf2.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(truncdfsf2.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(truncdfsf2.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_arm_cmpsf2.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_arm_cmpsf2.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_clzsi2.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_clzsi2.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_clzdi2.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_clzdi2.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(eqsf2.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(eqsf2.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(gesf2.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(gesf2.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(lesf2.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(lesf2.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-abs.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-abs.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-abs.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memcmp.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memcmp.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memcmp.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memcpy-stub.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memcpy-stub.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memcpy-stub.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-printf.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-printf.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-printf.o)
+ .text._printf_r
+                0x0000000000000000       0x28 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-printf.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-qsort.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-qsort.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-qsort.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-strcmp.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-strcmp.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-strlen.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-strlen.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-strncpy.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-strncpy.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-strncpy.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-findfp.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-findfp.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-findfp.o)
+ .text.__fp_unlock
+                0x0000000000000000        0x4 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-findfp.o)
+ .text.__fp_lock
+                0x0000000000000000        0x4 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-findfp.o)
+ .text._cleanup
+                0x0000000000000000       0x10 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-findfp.o)
+ .text.__sfp_lock_acquire
+                0x0000000000000000        0x2 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-findfp.o)
+ .text.__sfp_lock_release
+                0x0000000000000000        0x2 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-findfp.o)
+ .text.__sinit_lock_acquire
+                0x0000000000000000        0x2 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-findfp.o)
+ .text.__sinit_lock_release
+                0x0000000000000000        0x2 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-findfp.o)
+ .text.__fp_lock_all
+                0x0000000000000000       0x18 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-findfp.o)
+ .text.__fp_unlock_all
+                0x0000000000000000       0x18 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-findfp.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fwalk.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fwalk.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fwalk.o)
+ .text._fwalk   0x0000000000000000       0x38 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fwalk.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-mallocr.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-mallocr.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-mallocr.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-vfprintf.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-vfprintf.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-vfprintf.o)
+ .text.__sprint_r
+                0x0000000000000000       0x1c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-vfprintf.o)
+ .text.vfprintf
+                0x0000000000000000       0x18 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-vfprintf.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-vfprintf_i.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-vfprintf_i.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-vfprintf_i.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-sbrkr.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-sbrkr.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-sbrkr.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-stdio.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-stdio.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-stdio.o)
+ .text.__seofread
+                0x0000000000000000        0x4 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-stdio.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-wbuf.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-wbuf.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-wbuf.o)
+ .text.__swbuf  0x0000000000000000       0x14 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-wbuf.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-writer.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-writer.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-writer.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-wsetup.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-wsetup.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-wsetup.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-closer.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-closer.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-closer.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fflush.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fflush.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fflush.o)
+ .text.fflush   0x0000000000000000       0x28 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fflush.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fvwrite.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fvwrite.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fvwrite.o)
+ .text.__sfvwrite_r
+                0x0000000000000000      0x2d0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fvwrite.o)
+ .debug_frame   0x0000000000000000       0x30 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fvwrite.o)
+ .ARM.attributes
+                0x0000000000000000       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fvwrite.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-lseekr.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-lseekr.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-lseekr.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-makebuf.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-makebuf.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-makebuf.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memchr-stub.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memchr-stub.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memchr-stub.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memmove.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memmove.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memmove.o)
+ .text.memmove  0x0000000000000000       0x2a /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memmove.o)
+ .debug_frame   0x0000000000000000       0x28 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memmove.o)
+ .ARM.attributes
+                0x0000000000000000       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memmove.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-mlock.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-mlock.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-mlock.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-freer.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-freer.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-freer.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-reallocr.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-reallocr.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-reallocr.o)
+ .text._realloc_r
+                0x0000000000000000       0x4c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-reallocr.o)
+ .debug_frame   0x0000000000000000       0x30 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-reallocr.o)
+ .ARM.attributes
+                0x0000000000000000       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-reallocr.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-readr.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-readr.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-readr.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-reent.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-reent.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-reent.o)
+ .text.cleanup_glue
+                0x0000000000000000       0x1a /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-reent.o)
+ .text._reclaim_reent
+                0x0000000000000000       0xcc /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-reent.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fstatr.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fstatr.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fstatr.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-isattyr.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-isattyr.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-isattyr.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-msizer.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-msizer.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-msizer.o)
+ .text._malloc_usable_size_r
+                0x0000000000000000       0x16 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-msizer.o)
+ .debug_frame   0x0000000000000000       0x20 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-msizer.o)
+ .ARM.attributes
+                0x0000000000000000       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-msizer.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crtend.o
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crtend.o
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crtend.o
+ .eh_frame      0x0000000000000000        0x4 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crtend.o
+ .jcr           0x0000000000000000        0x4 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crtend.o
+ .ARM.attributes
+                0x0000000000000000       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crtend.o
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crtn.o
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crtn.o
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crtn.o
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(close.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(close.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(close.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(fstat.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(fstat.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(fstat.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(isatty.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(isatty.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(isatty.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(lseek.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(lseek.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(lseek.o)
+ .text          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(sbrk.o)
+ .data          0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(sbrk.o)
+ .bss           0x0000000000000000        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(sbrk.o)
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+FLASH            0x000000000001c000 0x0000000000024000 xr
+RAM              0x0000000020002800 0x0000000000005800 xrw
+*default*        0x0000000000000000 0xffffffffffffffff
+
+Linker script and memory map
+
+LOAD /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crti.o
+LOAD /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crtbegin.o
+LOAD /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/crt0.o
+LOAD /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a
+LOAD /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a
+LOAD _build/main.o
+LOAD _build/analog.o
+LOAD _build/app_fifo_util.o
+LOAD _build/rtc_timing.o
+LOAD _build/battery.o
+LOAD _build/ble_setup.o
+LOAD _build/debug_log.o
+LOAD _build/ext_eeprom.o
+LOAD _build/collector.o
+LOAD _build/storer.o
+LOAD _build/sender.o
+LOAD _build/self_test.o
+LOAD _build/scanner.o
+LOAD _build/uart_commands.o
+LOAD _build/crc16.o
+LOAD _build/app_scheduler.o
+LOAD _build/app_timer.o
+LOAD _build/app_error.o
+LOAD _build/nrf_assert.o
+LOAD _build/retarget.o
+LOAD _build/nrf_adc.o
+LOAD _build/nrf_delay.o
+LOAD _build/app_uart_fifo.o
+LOAD _build/app_fifo.o
+LOAD _build/nrf_drv_common.o
+LOAD _build/nrf_drv_gpiote.o
+LOAD _build/ble_flash.o
+LOAD _build/spi_master.o
+LOAD _build/pstorage.o
+LOAD _build/ble_advdata.o
+LOAD _build/ble_advertising.o
+LOAD _build/ble_srv_common.o
+LOAD _build/system_nrf51.o
+LOAD _build/softdevice_handler.o
+LOAD _build/ble_bas.o
+LOAD _build/ble_nus.o
+LOAD _build/gcc_startup_nrf51.o
+START GROUP
+LOAD /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a
+LOAD /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a
+END GROUP
+START GROUP
+LOAD /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a
+LOAD /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a
+END GROUP
+LOAD /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crtend.o
+LOAD /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crtn.o
+START GROUP
+LOAD /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a
+LOAD /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc.a
+LOAD /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a
+END GROUP
+
+.text           0x000000000001c000     0xa1cc
+ *(.Vectors)
+ .Vectors       0x000000000001c000       0xc0 _build/gcc_startup_nrf51.o
+                0x000000000001c000                __Vectors
+ *(.text*)
+ .text          0x000000000001c0c0       0x78 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/crt0.o
+                0x000000000001c0c0                _mainCRTStartup
+                0x000000000001c0c0                _start
+ .text.exit     0x000000000001c138       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-exit.o)
+                0x000000000001c138                exit
+ .text.__libc_init_array
+                0x000000000001c164       0x4c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-init.o)
+                0x000000000001c164                __libc_init_array
+ .text.memset   0x000000000001c1b0       0x10 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memset.o)
+                0x000000000001c1b0                memset
+ .text._exit    0x000000000001c1c0        0x4 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(_exit.o)
+                0x000000000001c1c0                _exit
+ .text.sd_power_mode_set
+                0x000000000001c1c4        0x4 _build/main.o
+ .text.processPendingCommand
+                0x000000000001c1c8       0x1c _build/main.o
+ .text.app_error_handler
+                0x000000000001c1e4       0x38 _build/main.o
+                0x000000000001c1e4                app_error_handler
+ .text.startup.main
+                0x000000000001c21c       0x9c _build/main.o
+                0x000000000001c21c                main
+ .text.BLEonConnect
+                0x000000000001c2b8       0x30 _build/main.o
+                0x000000000001c2b8                BLEonConnect
+ .text.BLEonDisconnect
+                0x000000000001c2e8       0x2c _build/main.o
+                0x000000000001c2e8                BLEonDisconnect
+ .text.BLEonReceive
+                0x000000000001c314       0x40 _build/main.o
+                0x000000000001c314                BLEonReceive
+ .text.adc_config
+                0x000000000001c354       0x3c _build/analog.o
+                0x000000000001c354                adc_config
+ .text.app_fifo_rewind
+                0x000000000001c390        0x8 _build/app_fifo_util.o
+                0x000000000001c390                app_fifo_rewind
+ .text.app_fifo_len
+                0x000000000001c398        0x8 _build/app_fifo_util.o
+                0x000000000001c398                app_fifo_len
+ .text.app_fifo_get_bytes
+                0x000000000001c3a0       0x50 _build/app_fifo_util.o
+                0x000000000001c3a0                app_fifo_get_bytes
+ .text.sd_nvic_critical_region_enter
+                0x000000000001c3f0        0x4 _build/rtc_timing.o
+ .text.sd_nvic_critical_region_exit
+                0x000000000001c3f4        0x4 _build/rtc_timing.o
+ .text.on_countdown_timeout
+                0x000000000001c3f8        0xc _build/rtc_timing.o
+ .text.on_led_timeout
+                0x000000000001c404       0x14 _build/rtc_timing.o
+ .text.on_clock_timeout
+                0x000000000001c418       0x24 _build/rtc_timing.o
+ .text.on_ble_timeout
+                0x000000000001c43c       0x14 _build/rtc_timing.o
+ .text.rtc_config
+                0x000000000001c450       0x80 _build/rtc_timing.o
+                0x000000000001c450                rtc_config
+ .text.ble_timeout_set
+                0x000000000001c4d0        0x4 _build/rtc_timing.o
+                0x000000000001c4d0                ble_timeout_set
+ .text.ble_timeout_cancel
+                0x000000000001c4d4       0x10 _build/rtc_timing.o
+                0x000000000001c4d4                ble_timeout_cancel
+ .text.led_timeout_set
+                0x000000000001c4e4       0x44 _build/rtc_timing.o
+                0x000000000001c4e4                led_timeout_set
+ .text.led_timeout_cancel
+                0x000000000001c528       0x10 _build/rtc_timing.o
+                0x000000000001c528                led_timeout_cancel
+ .text.millis   0x000000000001c538      0x100 _build/rtc_timing.o
+                0x000000000001c538                millis
+ .text.now      0x000000000001c638      0x17c _build/rtc_timing.o
+                0x000000000001c638                now
+ .text.nowFractional
+                0x000000000001c7b4        0xc _build/rtc_timing.o
+                0x000000000001c7b4                nowFractional
+ .text.setTimeFractional
+                0x000000000001c7c0      0x114 _build/rtc_timing.o
+                0x000000000001c7c0                setTimeFractional
+ .text.BatteryMonitor_getBatteryVoltage
+                0x000000000001c8d4        0xc _build/battery.o
+                0x000000000001c8d4                BatteryMonitor_getBatteryVoltage
+ .text.sd_ble_gap_address_get
+                0x000000000001c8e0        0x4 _build/ble_setup.o
+ .text.sd_ble_gap_disconnect
+                0x000000000001c8e4        0x4 _build/ble_setup.o
+ .text.sd_ble_gap_appearance_set
+                0x000000000001c8e8        0x4 _build/ble_setup.o
+ .text.sd_ble_gap_device_name_set
+                0x000000000001c8ec        0x4 _build/ble_setup.o
+ .text.sd_ble_gap_sec_params_reply
+                0x000000000001c8f0        0x4 _build/ble_setup.o
+ .text.sd_ble_gap_sec_info_reply
+                0x000000000001c8f4        0x4 _build/ble_setup.o
+ .text.sd_ble_gatts_sys_attr_set
+                0x000000000001c8f8        0x4 _build/ble_setup.o
+ .text.sd_ble_enable
+                0x000000000001c8fc        0x4 _build/ble_setup.o
+ .text.sys_evt_dispatch
+                0x000000000001c900       0x10 _build/ble_setup.o
+ .text.assert_nrf_callback
+                0x000000000001c910       0x14 _build/ble_setup.o
+                0x000000000001c910                assert_nrf_callback
+ .text.updateAdvData
+                0x000000000001c924        0xc _build/ble_setup.o
+                0x000000000001c924                updateAdvData
+ .text.setAdvData
+                0x000000000001c930       0xe0 _build/ble_setup.o
+                0x000000000001c930                setAdvData
+ .text.ble_evt_dispatch
+                0x000000000001ca10      0x244 _build/ble_setup.o
+ .text.BLEsetBadgeAssignment
+                0x000000000001cc54       0x5c _build/ble_setup.o
+                0x000000000001cc54                BLEsetBadgeAssignment
+ .text.BLE_init
+                0x000000000001ccb0      0x1a0 _build/ble_setup.o
+                0x000000000001ccb0                BLE_init
+ .text.BLEforceDisconnect
+                0x000000000001ce50       0x14 _build/ble_setup.o
+                0x000000000001ce50                BLEforceDisconnect
+ .text.BLEwrite
+                0x000000000001ce64       0x28 _build/ble_setup.o
+                0x000000000001ce64                BLEwrite
+ .text.uart_event_handle
+                0x000000000001ce8c       0x24 _build/debug_log.o
+                0x000000000001ce8c                uart_event_handle
+ .text.debug_log_init
+                0x000000000001ceb0       0x48 _build/debug_log.o
+                0x000000000001ceb0                debug_log_init
+ .text.spi_evt_handler
+                0x000000000001cef8       0x28 _build/ext_eeprom.o
+                0x000000000001cef8                spi_evt_handler
+ .text.spi_init
+                0x000000000001cf20       0x54 _build/ext_eeprom.o
+                0x000000000001cf20                spi_init
+ .text.spi_busy
+                0x000000000001cf74       0x14 _build/ext_eeprom.o
+                0x000000000001cf74                spi_busy
+ .text.ext_eeprom_wait
+                0x000000000001cf88       0x54 _build/ext_eeprom.o
+                0x000000000001cf88                ext_eeprom_wait
+ .text.ext_eeprom_read
+                0x000000000001cfdc       0x40 _build/ext_eeprom.o
+                0x000000000001cfdc                ext_eeprom_read
+ .text.ext_eeprom_write
+                0x000000000001d01c       0x70 _build/ext_eeprom.o
+                0x000000000001d01c                ext_eeprom_write
+ .text.testExternalEEPROM
+                0x000000000001d08c      0x174 _build/ext_eeprom.o
+                0x000000000001d08c                testExternalEEPROM
+ .text.startCollector
+                0x000000000001d200       0x48 _build/collector.o
+                0x000000000001d200                startCollector
+ .text.stopCollector
+                0x000000000001d248       0x8c _build/collector.o
+                0x000000000001d248                stopCollector
+ .text.sd_flash_write
+                0x000000000001d2d4        0x4 _build/storer.o
+ .text.sd_flash_page_erase
+                0x000000000001d2d8        0x4 _build/storer.o
+ .text.StorerSchedulerCallbackHandler_StoreBufferedData
+                0x000000000001d2dc      0x1d4 _build/storer.o
+ .text.Storer_ScheduleBufferedDataStorage
+                0x000000000001d4b0       0x34 _build/storer.o
+                0x000000000001d4b0                Storer_ScheduleBufferedDataStorage
+ .text.storer_on_sys_evt
+                0x000000000001d4e4      0x164 _build/storer.o
+                0x000000000001d4e4                storer_on_sys_evt
+ .text.unpackCommand
+                0x000000000001d648      0x1ec _build/sender.o
+                0x000000000001d648                unpackCommand
+ .text.updateSender
+                0x000000000001d834      0xab0 _build/sender.o
+                0x000000000001d834                updateSender
+ .text.accel_spi_evt_handler
+                0x000000000001e2e4       0x14 _build/self_test.o
+                0x000000000001e2e4                accel_spi_evt_handler
+ .text.accel_test
+                0x000000000001e2f8      0x29c _build/self_test.o
+                0x000000000001e2f8                accel_test
+ .text.init_ACC
+                0x000000000001e594      0x15c _build/self_test.o
+                0x000000000001e594                init_ACC
+ .text.acc_self_test
+                0x000000000001e6f0       0xdc _build/self_test.o
+                0x000000000001e6f0                acc_self_test
+ .text.runSelfTests
+                0x000000000001e7cc      0x1d0 _build/self_test.o
+                0x000000000001e7cc                runSelfTests
+ .text.sortScanByRSSIDescending
+                0x000000000001e99c       0xa4 _build/scanner.o
+ .text.compareSeenDeviceByRSSI
+                0x000000000001ea40       0x34 _build/scanner.o
+ .text.BLEonAdvReport
+                0x000000000001ea74      0x19c _build/scanner.o
+                0x000000000001ea74                BLEonAdvReport
+ .text.BLEonScanTimeout
+                0x000000000001ec10       0x1c _build/scanner.o
+                0x000000000001ec10                BLEonScanTimeout
+ .text.updateScanner
+                0x000000000001ec2c      0x18c _build/scanner.o
+                0x000000000001ec2c                updateScanner
+ .text.save_scan_results
+                0x000000000001edb8       0x20 _build/scanner.o
+ .text.startScanner
+                0x000000000001edd8       0x78 _build/scanner.o
+                0x000000000001edd8                startScanner
+ .text.stopScanner
+                0x000000000001ee50       0x20 _build/scanner.o
+                0x000000000001ee50                stopScanner
+ .text.getScanTimestamp
+                0x000000000001ee70       0x24 _build/scanner.o
+                0x000000000001ee70                getScanTimestamp
+ .text.getScanCheck
+                0x000000000001ee94       0x28 _build/scanner.o
+                0x000000000001ee94                getScanCheck
+ .text.getScanChunk
+                0x000000000001eebc       0x20 _build/scanner.o
+                0x000000000001eebc                getScanChunk
+ .text.on_restart_command
+                0x000000000001eedc       0x18 _build/uart_commands.o
+ .text.UARTCommands_ProcessChar
+                0x000000000001eef4       0x68 _build/uart_commands.o
+                0x000000000001eef4                UARTCommands_ProcessChar
+ .text.crc16_compute
+                0x000000000001ef5c       0x44 _build/crc16.o
+                0x000000000001ef5c                crc16_compute
+ .text.sd_nvic_critical_region_enter
+                0x000000000001efa0        0x4 _build/app_scheduler.o
+ .text.sd_nvic_critical_region_exit
+                0x000000000001efa4        0x4 _build/app_scheduler.o
+ .text.app_sched_event_put
+                0x000000000001efa8      0x178 _build/app_scheduler.o
+                0x000000000001efa8                app_sched_event_put
+ .text.rtc1_stop
+                0x000000000001f120       0x78 _build/app_timer.o
+ .text.RTC1_IRQHandler
+                0x000000000001f198       0xe4 _build/app_timer.o
+                0x000000000001f198                RTC1_IRQHandler
+ .text.SWI0_IRQHandler
+                0x000000000001f27c      0x574 _build/app_timer.o
+                0x000000000001f27c                SWI0_IRQHandler
+ .text.app_timer_init
+                0x000000000001f7f0      0x108 _build/app_timer.o
+                0x000000000001f7f0                app_timer_init
+ .text.app_timer_create
+                0x000000000001f8f8       0x68 _build/app_timer.o
+                0x000000000001f8f8                app_timer_create
+ .text.app_timer_start
+                0x000000000001f960      0x110 _build/app_timer.o
+                0x000000000001f960                app_timer_start
+ .text.app_timer_stop
+                0x000000000001fa70       0xdc _build/app_timer.o
+                0x000000000001fa70                app_timer_stop
+ .text.app_timer_cnt_get
+                0x000000000001fb4c       0x14 _build/app_timer.o
+                0x000000000001fb4c                app_timer_cnt_get
+ .text.app_timer_cnt_diff_compute
+                0x000000000001fb60        0xc _build/app_timer.o
+                0x000000000001fb60                app_timer_cnt_diff_compute
+ .text._write   0x000000000001fb6c       0x1c _build/retarget.o
+                0x000000000001fb6c                _write
+ .text._read    0x000000000001fb88       0x14 _build/retarget.o
+                0x000000000001fb88                _read
+ .text.nrf_adc_configure
+                0x000000000001fb9c       0x5c _build/nrf_adc.o
+                0x000000000001fb9c                nrf_adc_configure
+ .text.nrf_delay_ms
+                0x000000000001fbf8       0x3c _build/nrf_delay.o
+                0x000000000001fbf8                nrf_delay_ms
+ .text.gpiote_uart_event_handler
+                0x000000000001fc34       0xc0 _build/app_uart_fifo.o
+ .text.UART0_IRQHandler
+                0x000000000001fcf4      0x124 _build/app_uart_fifo.o
+                0x000000000001fcf4                UART0_IRQHandler
+ .text.app_uart_init
+                0x000000000001fe18      0x2b0 _build/app_uart_fifo.o
+                0x000000000001fe18                app_uart_init
+ .text.app_uart_get
+                0x00000000000200c8       0x10 _build/app_uart_fifo.o
+                0x00000000000200c8                app_uart_get
+ .text.app_uart_put
+                0x00000000000200d8       0x80 _build/app_uart_fifo.o
+                0x00000000000200d8                app_uart_put
+ .text.app_fifo_init
+                0x0000000000020158       0x28 _build/app_fifo.o
+                0x0000000000020158                app_fifo_init
+ .text.app_fifo_put
+                0x0000000000020180       0x28 _build/app_fifo.o
+                0x0000000000020180                app_fifo_put
+ .text.app_fifo_get
+                0x00000000000201a8       0x28 _build/app_fifo.o
+                0x00000000000201a8                app_fifo_get
+ .text.nrf_drv_common_irq_enable
+                0x00000000000201d0       0x7c _build/nrf_drv_common.o
+                0x00000000000201d0                nrf_drv_common_irq_enable
+ .text.nrf_drv_gpiote_init
+                0x000000000002024c       0x6c _build/nrf_drv_gpiote.o
+                0x000000000002024c                nrf_drv_gpiote_init
+ .text.nrf_drv_gpiote_is_init
+                0x00000000000202b8       0x10 _build/nrf_drv_gpiote.o
+                0x00000000000202b8                nrf_drv_gpiote_is_init
+ .text.nrf_drv_gpiote_out_init
+                0x00000000000202c8       0xd8 _build/nrf_drv_gpiote.o
+                0x00000000000202c8                nrf_drv_gpiote_out_init
+ .text.nrf_drv_gpiote_in_init
+                0x00000000000203a0      0x17c _build/nrf_drv_gpiote.o
+                0x00000000000203a0                nrf_drv_gpiote_in_init
+ .text.nrf_drv_gpiote_in_event_enable
+                0x000000000002051c       0x9c _build/nrf_drv_gpiote.o
+                0x000000000002051c                nrf_drv_gpiote_in_event_enable
+ .text.nrf_drv_gpiote_in_is_set
+                0x00000000000205b8       0x14 _build/nrf_drv_gpiote.o
+                0x00000000000205b8                nrf_drv_gpiote_in_is_set
+ .text.GPIOTE_IRQHandler
+                0x00000000000205cc      0x448 _build/nrf_drv_gpiote.o
+                0x00000000000205cc                GPIOTE_IRQHandler
+ .text.sd_nvic_EnableIRQ
+                0x0000000000020a14        0x4 _build/spi_master.o
+ .text.sd_nvic_DisableIRQ
+                0x0000000000020a18        0x4 _build/spi_master.o
+ .text.sd_nvic_ClearPendingIRQ
+                0x0000000000020a1c        0x4 _build/spi_master.o
+ .text.sd_nvic_SetPriority
+                0x0000000000020a20        0x4 _build/spi_master.o
+ .text.sd_nvic_critical_region_enter
+                0x0000000000020a24        0x4 _build/spi_master.o
+ .text.sd_nvic_critical_region_exit
+                0x0000000000020a28        0x4 _build/spi_master.o
+ .text.SPI0_TWI0_IRQHandler
+                0x0000000000020a2c       0xf0 _build/spi_master.o
+                0x0000000000020a2c                SPI0_TWI0_IRQHandler
+ .text.spi_master_open
+                0x0000000000020b1c      0x150 _build/spi_master.o
+                0x0000000000020b1c                spi_master_open
+ .text.spi_master_get_state
+                0x0000000000020c6c       0x24 _build/spi_master.o
+                0x0000000000020c6c                spi_master_get_state
+ .text.spi_master_evt_handler_reg
+                0x0000000000020c90       0x24 _build/spi_master.o
+                0x0000000000020c90                spi_master_evt_handler_reg
+ .text.spi_master_send_recv
+                0x0000000000020cb4      0x160 _build/spi_master.o
+                0x0000000000020cb4                spi_master_send_recv
+ .text.pstorage_access_status_get
+                0x0000000000020e14       0x28 _build/pstorage.o
+                0x0000000000020e14                pstorage_access_status_get
+ .text.sd_ble_gap_adv_data_set
+                0x0000000000020e3c        0x4 _build/ble_advdata.o
+ .text.sd_ble_gap_appearance_get
+                0x0000000000020e40        0x4 _build/ble_advdata.o
+ .text.sd_ble_gap_device_name_get
+                0x0000000000020e44        0x4 _build/ble_advdata.o
+ .text.sd_ble_uuid_encode
+                0x0000000000020e48        0x4 _build/ble_advdata.o
+ .text.uuid_list_sized_encode
+                0x0000000000020e4c       0xdc _build/ble_advdata.o
+ .text.ble_advdata_set
+                0x0000000000020f28      0x758 _build/ble_advdata.o
+                0x0000000000020f28                ble_advdata_set
+ .text.sd_ble_gap_adv_start
+                0x0000000000021680        0x4 _build/ble_advertising.o
+ .text.ble_advertising_start.part.1
+                0x0000000000021684      0x230 _build/ble_advertising.o
+ .text.ble_advertising_start
+                0x00000000000218b4       0x3c _build/ble_advertising.o
+                0x00000000000218b4                ble_advertising_start
+ .text.ble_advertising_on_ble_evt
+                0x00000000000218f0      0x15c _build/ble_advertising.o
+                0x00000000000218f0                ble_advertising_on_ble_evt
+ .text.ble_advertising_on_sys_evt
+                0x0000000000021a4c       0x54 _build/ble_advertising.o
+                0x0000000000021a4c                ble_advertising_on_sys_evt
+ .text.SystemInit
+                0x0000000000021aa0       0x94 _build/system_nrf51.o
+                0x0000000000021aa0                SystemInit
+ .text.sd_nvic_EnableIRQ
+                0x0000000000021b34        0x4 _build/softdevice_handler.o
+ .text.sd_evt_get
+                0x0000000000021b38        0x4 _build/softdevice_handler.o
+ .text.sd_softdevice_enable
+                0x0000000000021b3c        0x4 _build/softdevice_handler.o
+ .text.sd_ble_evt_get
+                0x0000000000021b40        0x4 _build/softdevice_handler.o
+ .text.softdevice_assertion_handler
+                0x0000000000021b44        0xc _build/softdevice_handler.o
+                0x0000000000021b44                softdevice_assertion_handler
+ .text.intern_softdevice_events_execute.part.0
+                0x0000000000021b50       0xec _build/softdevice_handler.o
+ .text.softdevice_handler_init
+                0x0000000000021c3c       0x4c _build/softdevice_handler.o
+                0x0000000000021c3c                softdevice_handler_init
+ .text.softdevice_ble_evt_handler_set
+                0x0000000000021c88       0x14 _build/softdevice_handler.o
+                0x0000000000021c88                softdevice_ble_evt_handler_set
+ .text.softdevice_sys_evt_handler_set
+                0x0000000000021c9c       0x14 _build/softdevice_handler.o
+                0x0000000000021c9c                softdevice_sys_evt_handler_set
+ .text.SWI2_IRQHandler
+                0x0000000000021cb0       0x34 _build/softdevice_handler.o
+                0x0000000000021cb0                SWI2_IRQHandler
+ .text.sd_ble_gatts_service_add
+                0x0000000000021ce4        0x4 _build/ble_nus.o
+ .text.sd_ble_gatts_characteristic_add
+                0x0000000000021ce8        0x4 _build/ble_nus.o
+ .text.sd_ble_gatts_hvx
+                0x0000000000021cec        0x4 _build/ble_nus.o
+ .text.sd_ble_uuid_vs_add
+                0x0000000000021cf0        0x4 _build/ble_nus.o
+ .text.ble_nus_on_ble_evt
+                0x0000000000021cf4       0x60 _build/ble_nus.o
+                0x0000000000021cf4                ble_nus_on_ble_evt
+ .text.ble_nus_init
+                0x0000000000021d54      0x208 _build/ble_nus.o
+                0x0000000000021d54                ble_nus_init
+ .text.ble_nus_string_send
+                0x0000000000021f5c       0x5c _build/ble_nus.o
+                0x0000000000021f5c                ble_nus_string_send
+ .text          0x0000000000021fb8       0x54 _build/gcc_startup_nrf51.o
+                0x0000000000021fb8                Reset_Handler
+                0x0000000000022000                NMI_Handler
+                0x0000000000022002                HardFault_Handler
+                0x0000000000022004                SVC_Handler
+                0x0000000000022006                PendSV_Handler
+                0x0000000000022008                SysTick_Handler
+                0x000000000002200a                TEMP_IRQHandler
+                0x000000000002200a                QDEC_IRQHandler
+                0x000000000002200a                SWI5_IRQHandler
+                0x000000000002200a                TIMER0_IRQHandler
+                0x000000000002200a                TIMER1_IRQHandler
+                0x000000000002200a                ECB_IRQHandler
+                0x000000000002200a                Default_Handler
+                0x000000000002200a                ADC_IRQHandler
+                0x000000000002200a                SWI3_IRQHandler
+                0x000000000002200a                CCM_AAR_IRQHandler
+                0x000000000002200a                WDT_IRQHandler
+                0x000000000002200a                RNG_IRQHandler
+                0x000000000002200a                SPI1_TWI1_IRQHandler
+                0x000000000002200a                TIMER2_IRQHandler
+                0x000000000002200a                SWI1_IRQHandler
+                0x000000000002200a                RTC0_IRQHandler
+                0x000000000002200a                POWER_CLOCK_IRQHandler
+                0x000000000002200a                RADIO_IRQHandler
+                0x000000000002200a                LPCOMP_IRQHandler
+                0x000000000002200a                SWI4_IRQHandler
+ .text          0x000000000002200c      0x114 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_udivsi3.o)
+                0x000000000002200c                __udivsi3
+                0x000000000002200c                __aeabi_uidiv
+                0x0000000000022118                __aeabi_uidivmod
+ .text          0x0000000000022120      0x1d4 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_divsi3.o)
+                0x0000000000022120                __aeabi_idiv
+                0x0000000000022120                __divsi3
+                0x00000000000222ec                __aeabi_idivmod
+ .text          0x00000000000222f4        0x4 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_dvmd_tls.o)
+                0x00000000000222f4                __aeabi_ldiv0
+                0x00000000000222f4                __aeabi_idiv0
+ .text          0x00000000000222f8       0x7c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_arm_cmpdf2.o)
+                0x00000000000222f8                __aeabi_cdrcmple
+                0x0000000000022308                __aeabi_cdcmple
+                0x0000000000022308                __aeabi_cdcmpeq
+                0x0000000000022318                __aeabi_dcmpeq
+                0x0000000000022324                __aeabi_dcmplt
+                0x0000000000022338                __aeabi_dcmple
+                0x000000000002234c                __aeabi_dcmpgt
+                0x0000000000022360                __aeabi_dcmpge
+ .text          0x0000000000022374       0x40 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_aeabi_uldivmod.o)
+                0x0000000000022374                __aeabi_uldivmod
+ .text          0x00000000000223b4       0x30 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_fixunssfsi.o)
+                0x00000000000223b4                __aeabi_f2uiz
+                0x00000000000223b4                __fixunssfsi
+ .text          0x00000000000223e4      0x180 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_udivmoddi4.o)
+                0x00000000000223e4                __udivmoddi4
+ .text          0x0000000000022564      0x228 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(mulsf3.o)
+                0x0000000000022564                __aeabi_fmul
+ .text          0x000000000002278c      0x30c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(subsf3.o)
+                0x000000000002278c                __aeabi_fsub
+ .text          0x0000000000022a98       0x44 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(fixsfsi.o)
+                0x0000000000022a98                __aeabi_f2iz
+ .text          0x0000000000022adc       0x7c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(floatunsisf.o)
+                0x0000000000022adc                __aeabi_ui2f
+ .text          0x0000000000022b58      0x62c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(divdf3.o)
+                0x0000000000022b58                __aeabi_ddiv
+ .text          0x0000000000023184       0x80 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(eqdf2.o)
+                0x0000000000023184                __eqdf2
+                0x0000000000023184                __nedf2
+ .text          0x0000000000023204       0xc8 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(gedf2.o)
+                0x0000000000023204                __gtdf2
+                0x0000000000023204                __gedf2
+ .text          0x00000000000232cc       0xd4 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(ledf2.o)
+                0x00000000000232cc                __ltdf2
+                0x00000000000232cc                __ledf2
+ .text          0x00000000000233a0      0x4f4 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(muldf3.o)
+                0x00000000000233a0                __aeabi_dmul
+ .text          0x0000000000023894       0x6c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(fixdfsi.o)
+                0x0000000000023894                __aeabi_d2iz
+ .text          0x0000000000023900       0x84 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(floatsidf.o)
+                0x0000000000023900                __aeabi_i2d
+ .text          0x0000000000023984       0xa8 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(extendsfdf2.o)
+                0x0000000000023984                __aeabi_f2d
+ .text          0x0000000000023a2c      0x118 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(truncdfsf2.o)
+                0x0000000000023a2c                __aeabi_d2f
+ .text          0x0000000000023b44       0x74 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_arm_cmpsf2.o)
+                0x0000000000023b44                __aeabi_cfrcmple
+                0x0000000000023b4c                __aeabi_cfcmple
+                0x0000000000023b4c                __aeabi_cfcmpeq
+                0x0000000000023b5c                __aeabi_fcmpeq
+                0x0000000000023b68                __aeabi_fcmplt
+                0x0000000000023b7c                __aeabi_fcmple
+                0x0000000000023b90                __aeabi_fcmpgt
+                0x0000000000023ba4                __aeabi_fcmpge
+ .text          0x0000000000023bb8       0x3c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_clzsi2.o)
+                0x0000000000023bb8                __clzsi2
+ .text          0x0000000000023bf4       0x18 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_clzdi2.o)
+                0x0000000000023bf4                __clzdi2
+ .text          0x0000000000023c0c       0x50 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(eqsf2.o)
+                0x0000000000023c0c                __nesf2
+                0x0000000000023c0c                __eqsf2
+ .text          0x0000000000023c5c       0x88 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(gesf2.o)
+                0x0000000000023c5c                __gtsf2
+                0x0000000000023c5c                __gesf2
+ .text          0x0000000000023ce4       0x88 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(lesf2.o)
+                0x0000000000023ce4                __lesf2
+                0x0000000000023ce4                __ltsf2
+ .text.abs      0x0000000000023d6c        0x8 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-abs.o)
+                0x0000000000023d6c                abs
+ .text.memcmp   0x0000000000023d74       0x1e /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memcmp.o)
+                0x0000000000023d74                memcmp
+ .text.memcpy   0x0000000000023d92       0x12 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memcpy-stub.o)
+                0x0000000000023d92                memcpy
+ .text.printf   0x0000000000023da4       0x34 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-printf.o)
+                0x0000000000023da4                printf
+                0x0000000000023da4                iprintf
+ .text.swapfunc
+                0x0000000000023dd8       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-qsort.o)
+ .text.med3.isra.1
+                0x0000000000023e04       0x42 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-qsort.o)
+ .text.qsort    0x0000000000023e46      0x284 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-qsort.o)
+                0x0000000000023e46                qsort
+ .text          0x00000000000240ca       0x14 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-strcmp.o)
+                0x00000000000240ca                strcmp
+ .text          0x00000000000240de        0xe /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-strlen.o)
+                0x00000000000240de                strlen
+ .text.strncpy  0x00000000000240ec       0x26 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-strncpy.o)
+                0x00000000000240ec                strncpy
+ *fill*         0x0000000000024112        0x2 
+ .text._cleanup_r
+                0x0000000000024114       0x10 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-findfp.o)
+                0x0000000000024114                _cleanup_r
+ .text.std.isra.0
+                0x0000000000024124       0x48 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-findfp.o)
+ .text.__sfmoreglue
+                0x000000000002416c       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-findfp.o)
+                0x000000000002416c                __sfmoreglue
+ .text.__sinit  0x0000000000024198       0x68 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-findfp.o)
+                0x0000000000024198                __sinit
+ .text.__sfp    0x0000000000024200       0x7c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-findfp.o)
+                0x0000000000024200                __sfp
+ .text._fwalk_reent
+                0x000000000002427c       0x42 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fwalk.o)
+                0x000000000002427c                _fwalk_reent
+ *fill*         0x00000000000242be        0x2 
+ .text._malloc_r
+                0x00000000000242c0       0xc0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-mallocr.o)
+                0x00000000000242c0                _malloc_r
+ .text.__sfputc_r
+                0x0000000000024380       0x2a /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-vfprintf.o)
+ .text.__sfputs_r
+                0x00000000000243aa       0x24 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-vfprintf.o)
+                0x00000000000243aa                __sfputs_r
+ *fill*         0x00000000000243ce        0x2 
+ .text._vfprintf_r
+                0x00000000000243d0      0x238 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-vfprintf.o)
+                0x00000000000243d0                _vfiprintf_r
+                0x00000000000243d0                _vfprintf_r
+ .text._printf_common
+                0x0000000000024608       0xdc /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-vfprintf_i.o)
+                0x0000000000024608                _printf_common
+ .text._printf_i
+                0x00000000000246e4      0x244 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-vfprintf_i.o)
+                0x00000000000246e4                _printf_i
+ .text._sbrk_r  0x0000000000024928       0x24 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-sbrkr.o)
+                0x0000000000024928                _sbrk_r
+ .text.__sread  0x000000000002494c       0x28 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-stdio.o)
+                0x000000000002494c                __sread
+ .text.__swrite
+                0x0000000000024974       0x38 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-stdio.o)
+                0x0000000000024974                __swrite
+ .text.__sseek  0x00000000000249ac       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-stdio.o)
+                0x00000000000249ac                __sseek
+ .text.__sclose
+                0x00000000000249d8        0xc /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-stdio.o)
+                0x00000000000249d8                __sclose
+ .text.__swbuf_r
+                0x00000000000249e4       0xac /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-wbuf.o)
+                0x00000000000249e4                __swbuf_r
+ .text._write_r
+                0x0000000000024a90       0x28 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-writer.o)
+                0x0000000000024a90                _write_r
+ .text.__swsetup_r
+                0x0000000000024ab8       0xec /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-wsetup.o)
+                0x0000000000024ab8                __swsetup_r
+ .text._close_r
+                0x0000000000024ba4       0x24 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-closer.o)
+                0x0000000000024ba4                _close_r
+ .text.__sflush_r
+                0x0000000000024bc8      0x10c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fflush.o)
+                0x0000000000024bc8                __sflush_r
+ .text._fflush_r
+                0x0000000000024cd4       0x58 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fflush.o)
+                0x0000000000024cd4                _fflush_r
+ .text._lseek_r
+                0x0000000000024d2c       0x28 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-lseekr.o)
+                0x0000000000024d2c                _lseek_r
+ .text.__swhatbuf_r
+                0x0000000000024d54       0x4c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-makebuf.o)
+                0x0000000000024d54                __swhatbuf_r
+ .text.__smakebuf_r
+                0x0000000000024da0       0x7c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-makebuf.o)
+                0x0000000000024da0                __smakebuf_r
+ .text.memchr   0x0000000000024e1c       0x16 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memchr-stub.o)
+                0x0000000000024e1c                memchr
+ .text.__malloc_lock
+                0x0000000000024e32        0x2 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-mlock.o)
+                0x0000000000024e32                __malloc_lock
+ .text.__malloc_unlock
+                0x0000000000024e34        0x2 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-mlock.o)
+                0x0000000000024e34                __malloc_unlock
+ *fill*         0x0000000000024e36        0x2 
+ .text._free_r  0x0000000000024e38       0x98 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-freer.o)
+                0x0000000000024e38                _free_r
+ .text._read_r  0x0000000000024ed0       0x28 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-readr.o)
+                0x0000000000024ed0                _read_r
+ .text._fstat_r
+                0x0000000000024ef8       0x24 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fstatr.o)
+                0x0000000000024ef8                _fstat_r
+ .text._isatty_r
+                0x0000000000024f1c       0x24 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-isattyr.o)
+                0x0000000000024f1c                _isatty_r
+ .text._close   0x0000000000024f40       0x10 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(close.o)
+                0x0000000000024f40                _close
+ .text._fstat   0x0000000000024f50       0x10 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(fstat.o)
+                0x0000000000024f50                _fstat
+ .text._isatty  0x0000000000024f60       0x10 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(isatty.o)
+                0x0000000000024f60                _isatty
+ .text._lseek   0x0000000000024f70       0x10 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(lseek.o)
+                0x0000000000024f70                _lseek
+ .text._sbrk    0x0000000000024f80       0x1c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(sbrk.o)
+                0x0000000000024f80                _sbrk
+ *(.init)
+ .init          0x0000000000024f9c        0x4 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crti.o
+                0x0000000000024f9c                _init
+ .init          0x0000000000024fa0        0x8 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crtn.o
+ *(.fini)
+ .fini          0x0000000000024fa8        0x4 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crti.o
+                0x0000000000024fa8                _fini
+ .fini          0x0000000000024fac        0x8 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crtn.o
+ *crtbegin.o(.ctors)
+ *crtbegin?.o(.ctors)
+ *(EXCLUDE_FILE(*crtend.o *crtend?.o) .ctors)
+ *(SORT(.ctors.*))
+ *(.ctors)
+ *crtbegin.o(.dtors)
+ *crtbegin?.o(.dtors)
+ *(EXCLUDE_FILE(*crtend.o *crtend?.o) .dtors)
+ *(SORT(.dtors.*))
+ *(.dtors)
+ *(.rodata*)
+ .rodata._global_impure_ptr
+                0x0000000000024fb4        0x4 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-impure.o)
+                0x0000000000024fb4                _global_impure_ptr
+ .rodata.str1.4
+                0x0000000000024fb8       0xc7 _build/main.o
+                                         0xcf (size before relaxing)
+ *fill*         0x000000000002507f        0x1 
+ .rodata.str1.4
+                0x0000000000025080       0x28 _build/rtc_timing.o
+ .rodata.ble_evt_dispatch
+                0x00000000000250a8      0x14c _build/ble_setup.o
+ .rodata.str1.4
+                0x00000000000251f4      0x12f _build/ble_setup.o
+                                        0x137 (size before relaxing)
+ *fill*         0x0000000000025323        0x1 
+ .rodata        0x0000000000025324        0xc _build/debug_log.o
+ .rodata        0x0000000000025330       0x24 _build/ext_eeprom.o
+ .rodata.str1.4
+                0x0000000000025354       0x1b _build/ext_eeprom.o
+ *fill*         0x000000000002536f        0x1 
+ .rodata.str1.4
+                0x0000000000025370      0x15c _build/collector.o
+ .rodata.str1.4
+                0x00000000000254cc      0x413 _build/storer.o
+                                        0x460 (size before relaxing)
+ *fill*         0x00000000000258df        0x1 
+ .rodata.unpackCommand
+                0x00000000000258e0      0x110 _build/sender.o
+ .rodata.str1.4
+                0x00000000000259f0      0x3de _build/sender.o
+ *fill*         0x0000000000025dce        0x2 
+ .rodata        0x0000000000025dd0       0x1c _build/self_test.o
+ .rodata.str1.4
+                0x0000000000025dec       0xd3 _build/self_test.o
+                                         0xdb (size before relaxing)
+ *fill*         0x0000000000025ebf        0x1 
+ .rodata.str1.4
+                0x0000000000025ec0      0x18e _build/scanner.o
+                                        0x196 (size before relaxing)
+ *fill*         0x000000000002604e        0x2 
+ .rodata.str1.4
+                0x0000000000026050       0x18 _build/uart_commands.o
+                                         0x15 (size before relaxing)
+ .rodata        0x0000000000026068       0x10 _build/ble_nus.o
+ .rodata        0x0000000000026078       0x40 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(mulsf3.o)
+ .rodata        0x00000000000260b8       0x40 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(divdf3.o)
+ .rodata        0x00000000000260f8       0x40 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(muldf3.o)
+ .rodata.__sf_fake_stdin
+                0x0000000000026138       0x20 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-findfp.o)
+                0x0000000000026138                __sf_fake_stdin
+ .rodata.__sf_fake_stdout
+                0x0000000000026158       0x20 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-findfp.o)
+                0x0000000000026158                __sf_fake_stdout
+ .rodata.__sf_fake_stderr
+                0x0000000000026178       0x20 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-findfp.o)
+                0x0000000000026178                __sf_fake_stderr
+ .rodata.str1.1
+                0x0000000000026198       0x11 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-vfprintf.o)
+ .rodata.str1.1
+                0x00000000000261a9       0x22 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-vfprintf_i.o)
+ *(.eh_frame*)
+                0x00000000000261cc                . = ALIGN (0x4)
+ *fill*         0x00000000000261cb        0x1 
+
+.glue_7         0x00000000000261cc        0x0
+ .glue_7        0x00000000000261cc        0x0 linker stubs
+
+.glue_7t        0x00000000000261cc        0x0
+ .glue_7t       0x00000000000261cc        0x0 linker stubs
+
+.vfp11_veneer   0x00000000000261cc        0x0
+ .vfp11_veneer  0x00000000000261cc        0x0 linker stubs
+
+.v4_bx          0x00000000000261cc        0x0
+ .v4_bx         0x00000000000261cc        0x0 linker stubs
+
+.iplt           0x00000000000261cc        0x0
+ .iplt          0x00000000000261cc        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crtbegin.o
+
+.ARM.extab      0x00000000000261cc        0x0
+ *(.ARM.extab* .gnu.linkonce.armextab.*)
+                0x00000000000261cc                . = ALIGN (0x4)
+                0x00000000000261cc                __exidx_start = .
+
+.ARM.exidx      0x00000000000261cc        0x8
+ *(.ARM.exidx* .gnu.linkonce.armexidx.*)
+ .ARM.exidx     0x00000000000261cc        0x8 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/crt0.o
+ .ARM.exidx     0x00000000000261d4        0x0 _build/gcc_startup_nrf51.o
+                                          0x8 (size before relaxing)
+ .ARM.exidx     0x00000000000261d4        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_udivmoddi4.o)
+                                          0x8 (size before relaxing)
+                0x00000000000261d4                . = ALIGN (0x4)
+                0x00000000000261d4                __exidx_end = .
+                0x00000000000261d4                __etext = .
+
+.rel.dyn        0x00000000000261d4        0x0
+ .rel.iplt      0x00000000000261d4        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crtbegin.o
+
+.data           0x0000000020002800      0x108 load address 0x00000000000261d4
+                0x0000000020002800                __data_start__ = .
+ *(vtable)
+ *(.data*)
+ .data.impure_data
+                0x0000000020002800       0x60 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-impure.o)
+ .data._impure_ptr
+                0x0000000020002860        0x4 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-impure.o)
+                0x0000000020002860                _impure_ptr
+ .data          0x0000000020002864       0x58 _build/analog.o
+                0x0000000020002864                analogRead
+ .data.m_adv_uuids
+                0x00000000200028bc        0x4 _build/ble_setup.o
+                0x00000000200028bc                m_adv_uuids
+ .data.m_conn_handle
+                0x00000000200028c0        0x2 _build/ble_setup.o
+ *fill*         0x00000000200028c2        0x2 
+ .data.m_keys.8517
+                0x00000000200028c4       0x18 _build/ble_setup.o
+ .data.mUARTCommands
+                0x00000000200028dc       0x28 _build/uart_commands.o
+ .data.m_instance_counter
+                0x0000000020002904        0x1 _build/app_uart_fifo.o
+ *fill*         0x0000000020002905        0x1 
+ .data.current_slave_link_conn_handle.7260
+                0x0000000020002906        0x2 _build/ble_advertising.o
+                0x0000000020002908                . = ALIGN (0x4)
+                0x0000000020002908                PROVIDE (__preinit_array_start, .)
+ *(.preinit_array)
+                0x0000000020002908                PROVIDE (__preinit_array_end, .)
+                0x0000000020002908                . = ALIGN (0x4)
+                0x0000000020002908                PROVIDE (__init_array_start, .)
+ *(SORT(.init_array.*))
+ *(.init_array)
+                0x0000000020002908                PROVIDE (__init_array_end, .)
+                0x0000000020002908                . = ALIGN (0x4)
+                [!provide]                        PROVIDE (__fini_array_start, .)
+ *(SORT(.fini_array.*))
+ *(.fini_array)
+                [!provide]                        PROVIDE (__fini_array_end, .)
+ *(.jcr)
+                0x0000000020002908                . = ALIGN (0x4)
+                0x0000000020002908                __data_end__ = .
+
+.igot.plt       0x0000000020002908        0x0 load address 0x00000000000262dc
+ .igot.plt      0x0000000020002908        0x0 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crtbegin.o
+
+.noinit         0x0000000020002908       0x2c load address 0x00000000000262dc
+ .noinit        0x0000000020002908       0x2c _build/main.o
+
+.bss            0x0000000020002934     0x1f38 load address 0x0000000000026308
+                0x0000000020002934                . = ALIGN (0x4)
+                0x0000000020002934                __bss_start__ = .
+ *(.bss*)
+ .bss.APP_TIMER_BUF.8456
+                0x0000000020002934      0x438 _build/rtc_timing.o
+ .bss.mLastClockTickTimerCount
+                0x0000000020002d6c        0x4 _build/rtc_timing.o
+ .bss.countdownOver
+                0x0000000020002d70        0x1 _build/rtc_timing.o
+                0x0000000020002d70                countdownOver
+ *fill*         0x0000000020002d71        0x3 
+ .bss.mCountdownTimer
+                0x0000000020002d74        0x4 _build/rtc_timing.o
+ .bss.mLEDTimeoutTimer
+                0x0000000020002d78        0x4 _build/rtc_timing.o
+ .bss.mClockInMillis
+                0x0000000020002d7c        0x4 _build/rtc_timing.o
+ .bss.mClock    0x0000000020002d80        0x4 _build/rtc_timing.o
+ .bss.mBLETimeoutTimer
+                0x0000000020002d84        0x4 _build/rtc_timing.o
+ .bss.mBatteryAverage
+                0x0000000020002d88        0x4 _build/battery.o
+ .bss.m_id_key.8515
+                0x0000000020002d8c       0x17 _build/ble_setup.o
+ *fill*         0x0000000020002da3        0x1 
+ .bss.m_sign_key.8516
+                0x0000000020002da4       0x10 _build/ble_setup.o
+ .bss.BLE_EVT_BUFFER.8549
+                0x0000000020002db4       0x48 _build/ble_setup.o
+ .bss.isAdvertising
+                0x0000000020002dfc        0x1 _build/ble_setup.o
+                0x0000000020002dfc                isAdvertising
+ *fill*         0x0000000020002dfd        0x3 
+ .bss.m_ble_fifo
+                0x0000000020002e00       0x10 _build/ble_setup.o
+ .bss.m_ble_fifo_buffer
+                0x0000000020002e10      0x200 _build/ble_setup.o
+ .bss.m_sec_params
+                0x0000000020003010        0x5 _build/ble_setup.o
+ *fill*         0x0000000020003015        0x3 
+ .bss.m_adv_pause_callback_queue
+                0x0000000020003018        0xc _build/ble_setup.o
+ .bss.m_auth_status.8508
+                0x0000000020003024        0x6 _build/ble_setup.o
+ *fill*         0x000000002000302a        0x2 
+ .bss.m_enc_key.8514
+                0x000000002000302c       0x1c _build/ble_setup.o
+ .bss.m_nus     0x0000000020003048       0x1c _build/ble_setup.o
+ .bss.rx_buf.6404
+                0x0000000020003064       0x20 _build/debug_log.o
+ .bss.tx_buf.6405
+                0x0000000020003084      0x100 _build/debug_log.o
+ .bss.mCollectorCollectTaskTimer
+                0x0000000020003184        0x4 _build/collector.o
+ .bss.mCollectorSampleTaskTimer
+                0x0000000020003188        0x4 _build/collector.o
+ .bss.mPendingFlashOperation
+                0x000000002000318c       0x14 _build/storer.o
+ .bss.mStorerScheduled
+                0x00000000200031a0        0x1 _build/storer.o
+ *fill*         0x00000000200031a1        0x3 
+ .bss.extChunkFrom
+                0x00000000200031a4        0x4 _build/sender.o
+ .bss.extChunk  0x00000000200031a8       0x84 _build/sender.o
+ .bss.self_test_enable
+                0x000000002000322c        0x1 _build/self_test.o
+                0x000000002000322c                self_test_enable
+ .bss.transmission_completed_spi
+                0x000000002000322d        0x1 _build/self_test.o
+                0x000000002000322d                transmission_completed_spi
+ *fill*         0x000000002000322e        0x2 
+ .bss.mScanTimer
+                0x0000000020003230        0x4 _build/scanner.o
+ .bss.mCommandBuffer
+                0x0000000020003234       0x21 _build/uart_commands.o
+ *fill*         0x0000000020003255        0x3 
+ .bss.mCommandBufferPos
+                0x0000000020003258        0x4 _build/uart_commands.o
+ .bss.m_queue_event_headers
+                0x000000002000325c        0x4 _build/app_scheduler.o
+ .bss.m_queue_event_data
+                0x0000000020003260        0x4 _build/app_scheduler.o
+ .bss.m_queue_event_size
+                0x0000000020003264        0x2 _build/app_scheduler.o
+ .bss.m_queue_start_index
+                0x0000000020003266        0x1 _build/app_scheduler.o
+ .bss.m_queue_end_index
+                0x0000000020003267        0x1 _build/app_scheduler.o
+ .bss.m_queue_size
+                0x0000000020003268        0x2 _build/app_scheduler.o
+ *fill*         0x000000002000326a        0x2 
+ .bss.m_ticks_latest
+                0x000000002000326c        0x4 _build/app_timer.o
+ .bss.m_evt_schedule_func
+                0x0000000020003270        0x4 _build/app_timer.o
+ .bss.mp_nodes  0x0000000020003274        0x4 _build/app_timer.o
+ .bss.m_user_array_size
+                0x0000000020003278        0x1 _build/app_timer.o
+ *fill*         0x0000000020003279        0x3 
+ .bss.mp_users  0x000000002000327c        0x4 _build/app_timer.o
+ .bss.m_ticks_elapsed_q_read_ind
+                0x0000000020003280        0x1 _build/app_timer.o
+ .bss.m_ticks_elapsed_q_write_ind
+                0x0000000020003281        0x1 _build/app_timer.o
+ .bss.m_node_array_size
+                0x0000000020003282        0x1 _build/app_timer.o
+ *fill*         0x0000000020003283        0x1 
+ .bss.m_timer_id_head
+                0x0000000020003284        0x4 _build/app_timer.o
+ .bss.m_rtc1_reset
+                0x0000000020003288        0x1 _build/app_timer.o
+ *fill*         0x0000000020003289        0x3 
+ .bss.m_ticks_elapsed
+                0x000000002000328c        0x8 _build/app_timer.o
+ .bss.m_rtc1_running
+                0x0000000020003294        0x1 _build/app_timer.o
+ *fill*         0x0000000020003295        0x3 
+ .bss.m_event_handler
+                0x0000000020003298        0x4 _build/app_uart_fifo.o
+ .bss.m_tx_fifo
+                0x000000002000329c       0x10 _build/app_uart_fifo.o
+ .bss.m_current_state
+                0x00000000200032ac        0x1 _build/app_uart_fifo.o
+ *fill*         0x00000000200032ad        0x3 
+ .bss.m_rx_fifo
+                0x00000000200032b0       0x10 _build/app_uart_fifo.o
+ .bss.m_cb      0x00000000200032c0       0x50 _build/nrf_drv_gpiote.o
+ .bss.m_spi_master_instances
+                0x0000000020003310       0x28 _build/spi_master.o
+ .bss.m_cmd_queue
+                0x0000000020003338      0x25c _build/pstorage.o
+ .bss.m_module_initialized
+                0x0000000020003594        0x1 _build/pstorage.o
+ *fill*         0x0000000020003595        0x3 
+ .bss.m_advdata
+                0x0000000020003598       0x30 _build/ble_advertising.o
+ .bss.m_evt_handler
+                0x00000000200035c8        0x4 _build/ble_advertising.o
+ .bss.m_advertising_start_pending
+                0x00000000200035cc        0x1 _build/ble_advertising.o
+ .bss.m_whitelist_temporarily_disabled
+                0x00000000200035cd        0x1 _build/ble_advertising.o
+ *fill*         0x00000000200035ce        0x2 
+ .bss.m_error_handler
+                0x00000000200035d0        0x4 _build/ble_advertising.o
+ .bss.m_peer_address
+                0x00000000200035d4        0x7 _build/ble_advertising.o
+ *fill*         0x00000000200035db        0x1 
+ .bss.m_adv_modes_config
+                0x00000000200035dc       0x20 _build/ble_advertising.o
+ .bss.m_whitelist
+                0x00000000200035fc       0x10 _build/ble_advertising.o
+ .bss.m_direct_adv_cnt
+                0x000000002000360c        0x1 _build/ble_advertising.o
+ .bss.m_whitelist_reply_expected
+                0x000000002000360d        0x1 _build/ble_advertising.o
+ .bss.m_adv_mode_current
+                0x000000002000360e        0x1 _build/ble_advertising.o
+ .bss.m_peer_addr_reply_expected
+                0x000000002000360f        0x1 _build/ble_advertising.o
+ .bss.m_adv_evt
+                0x0000000020003610        0x1 _build/ble_advertising.o
+ .bss.m_softdevice_enabled
+                0x0000000020003611        0x1 _build/softdevice_handler.o
+ .bss.m_ble_evt_buffer_size
+                0x0000000020003612        0x2 _build/softdevice_handler.o
+ .bss.mp_ble_evt_buffer
+                0x0000000020003614        0x4 _build/softdevice_handler.o
+ .bss.m_sys_evt_handler
+                0x0000000020003618        0x4 _build/softdevice_handler.o
+ .bss.m_ble_evt_handler
+                0x000000002000361c        0x4 _build/softdevice_handler.o
+ .bss.m_evt_schedule_func
+                0x0000000020003620        0x4 _build/softdevice_handler.o
+ .bss.__malloc_sbrk_start
+                0x0000000020003624        0x4 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-mallocr.o)
+                0x0000000020003624                __malloc_sbrk_start
+ .bss.__malloc_free_list
+                0x0000000020003628        0x4 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-mallocr.o)
+                0x0000000020003628                __malloc_free_list
+ .bss.heap_end.4167
+                0x000000002000362c        0x4 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(sbrk.o)
+ *(COMMON)
+ COMMON         0x0000000020003630     0x1228 _build/main.o
+                0x0000000020003630                micBuffer
+                0x0000000020004030                isCollecting
+                0x0000000020004034                readingsSum
+                0x0000000020004038                readingsCount
+                0x000000002000403c                badgeAssignment
+                0x0000000020004040                lastScanTime
+                0x0000000020004044                store
+                0x0000000020004054                sleep
+                0x0000000020004058                extEEPROMstate
+                0x000000002000405c                scanner_enable
+                0x0000000020004060                threshold_buffer
+                0x0000000020004088                scan
+                0x0000000020004288                send
+                0x00000000200042b4                collect
+                0x00000000200042bc                takingReadings
+                0x00000000200042c0                pendingCommand
+                0x00000000200042d8                dateReceived
+                0x00000000200042dc                customAdvData
+                0x00000000200042e8                needAdvDataUpdate
+                0x00000000200042ec                sampleStart
+                0x00000000200042f0                defaultID
+                0x00000000200042f4                scanBuffer
+                0x000000002000481c                scannerTimeout
+                0x0000000020004820                collectorTimeout
+                0x0000000020004824                scan_state
+                0x0000000020004828                sampleStartms
+                0x000000002000482c                sampleWindow
+                0x0000000020004830                lastReceipt
+                0x0000000020004834                pauseRequest
+                0x0000000020004836                minimumRSSI
+                0x0000000020004838                scanPeriod_ms
+                0x000000002000483c                lastStoredAssignment
+                0x0000000020004844                samplePeriod
+                0x0000000020004848                scan_params
+ COMMON         0x0000000020004858        0xc _build/rtc_timing.o
+                0x0000000020004858                masterTime
+                0x0000000020004860                lastMillis
+ COMMON         0x0000000020004864        0x1 _build/ext_eeprom.o
+                0x0000000020004864                dummyRxBuf
+ COMMON         0x0000000020004865        0x1 _build/storer.o
+                0x0000000020004865                flashWorking
+ *fill*         0x0000000020004866        0x2 
+ COMMON         0x0000000020004868        0x4 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-reent.o)
+                0x0000000020004868                errno
+                0x000000002000486c                . = ALIGN (0x4)
+                0x000000002000486c                __bss_end__ = .
+
+.heap           0x0000000020004870      0x800
+                0x0000000020004870                __end__ = .
+                0x0000000020004870                end = __end__
+ *(.heap*)
+ .heap          0x0000000020004870      0x800 _build/gcc_startup_nrf51.o
+                0x0000000020004870                __HeapBase
+                0x0000000020005070                __HeapLimit = .
+
+.stack_dummy    0x0000000020004870      0x800
+ *(.stack*)
+ .stack         0x0000000020004870      0x800 _build/gcc_startup_nrf51.o
+                0x0000000020008000                __StackTop = (ORIGIN (RAM) + LENGTH (RAM))
+                0x0000000020007800                __StackLimit = (__StackTop - SIZEOF (.stack_dummy))
+                0x0000000020008000                PROVIDE (__stack, __StackTop)
+                0x0000000000000001                ASSERT ((__StackLimit >= __HeapLimit), region RAM overflowed with stack)
+OUTPUT(_build/nrf51422_xxac_s130.out elf32-littlearm)
+
+.ARM.attributes
+                0x0000000000000000       0x28
+ .ARM.attributes
+                0x0000000000000000       0x1e /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crti.o
+ .ARM.attributes
+                0x000000000000001e       0x1b /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/crt0.o
+ .ARM.attributes
+                0x0000000000000039       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-exit.o)
+ .ARM.attributes
+                0x0000000000000065       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-impure.o)
+ .ARM.attributes
+                0x0000000000000091       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-init.o)
+ .ARM.attributes
+                0x00000000000000bd       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memset.o)
+ .ARM.attributes
+                0x00000000000000e9       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(_exit.o)
+ .ARM.attributes
+                0x0000000000000115       0x31 _build/main.o
+ .ARM.attributes
+                0x0000000000000146       0x31 _build/analog.o
+ .ARM.attributes
+                0x0000000000000177       0x31 _build/app_fifo_util.o
+ .ARM.attributes
+                0x00000000000001a8       0x31 _build/rtc_timing.o
+ .ARM.attributes
+                0x00000000000001d9       0x31 _build/battery.o
+ .ARM.attributes
+                0x000000000000020a       0x31 _build/ble_setup.o
+ .ARM.attributes
+                0x000000000000023b       0x31 _build/debug_log.o
+ .ARM.attributes
+                0x000000000000026c       0x31 _build/ext_eeprom.o
+ .ARM.attributes
+                0x000000000000029d       0x31 _build/collector.o
+ .ARM.attributes
+                0x00000000000002ce       0x31 _build/storer.o
+ .ARM.attributes
+                0x00000000000002ff       0x31 _build/sender.o
+ .ARM.attributes
+                0x0000000000000330       0x31 _build/self_test.o
+ .ARM.attributes
+                0x0000000000000361       0x31 _build/scanner.o
+ .ARM.attributes
+                0x0000000000000392       0x31 _build/uart_commands.o
+ .ARM.attributes
+                0x00000000000003c3       0x31 _build/crc16.o
+ .ARM.attributes
+                0x00000000000003f4       0x31 _build/app_scheduler.o
+ .ARM.attributes
+                0x0000000000000425       0x31 _build/app_timer.o
+ .ARM.attributes
+                0x0000000000000456       0x31 _build/retarget.o
+ .ARM.attributes
+                0x0000000000000487       0x31 _build/nrf_adc.o
+ .ARM.attributes
+                0x00000000000004b8       0x31 _build/nrf_delay.o
+ .ARM.attributes
+                0x00000000000004e9       0x31 _build/app_uart_fifo.o
+ .ARM.attributes
+                0x000000000000051a       0x31 _build/app_fifo.o
+ .ARM.attributes
+                0x000000000000054b       0x31 _build/nrf_drv_common.o
+ .ARM.attributes
+                0x000000000000057c       0x31 _build/nrf_drv_gpiote.o
+ .ARM.attributes
+                0x00000000000005ad       0x31 _build/spi_master.o
+ .ARM.attributes
+                0x00000000000005de       0x31 _build/pstorage.o
+ .ARM.attributes
+                0x000000000000060f       0x31 _build/ble_advdata.o
+ .ARM.attributes
+                0x0000000000000640       0x31 _build/ble_advertising.o
+ .ARM.attributes
+                0x0000000000000671       0x31 _build/system_nrf51.o
+ .ARM.attributes
+                0x00000000000006a2       0x31 _build/softdevice_handler.o
+ .ARM.attributes
+                0x00000000000006d3       0x31 _build/ble_nus.o
+ .ARM.attributes
+                0x0000000000000704       0x1b _build/gcc_startup_nrf51.o
+ .ARM.attributes
+                0x000000000000071f       0x1e /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_udivsi3.o)
+ .ARM.attributes
+                0x000000000000073d       0x1e /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_divsi3.o)
+ .ARM.attributes
+                0x000000000000075b       0x1e /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_dvmd_tls.o)
+ .ARM.attributes
+                0x0000000000000779       0x1e /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_arm_cmpdf2.o)
+ .ARM.attributes
+                0x0000000000000797       0x1e /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_aeabi_uldivmod.o)
+ .ARM.attributes
+                0x00000000000007b5       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_fixunssfsi.o)
+ .ARM.attributes
+                0x00000000000007e1       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_udivmoddi4.o)
+ .ARM.attributes
+                0x000000000000080d       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(mulsf3.o)
+ .ARM.attributes
+                0x0000000000000839       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(subsf3.o)
+ .ARM.attributes
+                0x0000000000000865       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(fixsfsi.o)
+ .ARM.attributes
+                0x0000000000000891       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(floatunsisf.o)
+ .ARM.attributes
+                0x00000000000008bd       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(divdf3.o)
+ .ARM.attributes
+                0x00000000000008e9       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(eqdf2.o)
+ .ARM.attributes
+                0x0000000000000915       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(gedf2.o)
+ .ARM.attributes
+                0x0000000000000941       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(ledf2.o)
+ .ARM.attributes
+                0x000000000000096d       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(muldf3.o)
+ .ARM.attributes
+                0x0000000000000999       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(fixdfsi.o)
+ .ARM.attributes
+                0x00000000000009c5       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(floatsidf.o)
+ .ARM.attributes
+                0x00000000000009f1       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(extendsfdf2.o)
+ .ARM.attributes
+                0x0000000000000a1d       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(truncdfsf2.o)
+ .ARM.attributes
+                0x0000000000000a49       0x1e /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_arm_cmpsf2.o)
+ .ARM.attributes
+                0x0000000000000a67       0x1e /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_clzsi2.o)
+ .ARM.attributes
+                0x0000000000000a85       0x1e /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_clzdi2.o)
+ .ARM.attributes
+                0x0000000000000aa3       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(eqsf2.o)
+ .ARM.attributes
+                0x0000000000000acf       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(gesf2.o)
+ .ARM.attributes
+                0x0000000000000afb       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(lesf2.o)
+ .ARM.attributes
+                0x0000000000000b27       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-abs.o)
+ .ARM.attributes
+                0x0000000000000b53       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memcmp.o)
+ .ARM.attributes
+                0x0000000000000b7f       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memcpy-stub.o)
+ .ARM.attributes
+                0x0000000000000bab       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-printf.o)
+ .ARM.attributes
+                0x0000000000000bd7       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-qsort.o)
+ .ARM.attributes
+                0x0000000000000c03       0x1c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-strcmp.o)
+ .ARM.attributes
+                0x0000000000000c1f       0x1c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-strlen.o)
+ .ARM.attributes
+                0x0000000000000c3b       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-strncpy.o)
+ .ARM.attributes
+                0x0000000000000c67       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-findfp.o)
+ .ARM.attributes
+                0x0000000000000c93       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fwalk.o)
+ .ARM.attributes
+                0x0000000000000cbf       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-mallocr.o)
+ .ARM.attributes
+                0x0000000000000ceb       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-vfprintf.o)
+ .ARM.attributes
+                0x0000000000000d17       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-vfprintf_i.o)
+ .ARM.attributes
+                0x0000000000000d43       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-sbrkr.o)
+ .ARM.attributes
+                0x0000000000000d6f       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-stdio.o)
+ .ARM.attributes
+                0x0000000000000d9b       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-wbuf.o)
+ .ARM.attributes
+                0x0000000000000dc7       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-writer.o)
+ .ARM.attributes
+                0x0000000000000df3       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-wsetup.o)
+ .ARM.attributes
+                0x0000000000000e1f       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-closer.o)
+ .ARM.attributes
+                0x0000000000000e4b       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fflush.o)
+ .ARM.attributes
+                0x0000000000000e77       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-lseekr.o)
+ .ARM.attributes
+                0x0000000000000ea3       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-makebuf.o)
+ .ARM.attributes
+                0x0000000000000ecf       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memchr-stub.o)
+ .ARM.attributes
+                0x0000000000000efb       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-mlock.o)
+ .ARM.attributes
+                0x0000000000000f27       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-freer.o)
+ .ARM.attributes
+                0x0000000000000f53       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-readr.o)
+ .ARM.attributes
+                0x0000000000000f7f       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-reent.o)
+ .ARM.attributes
+                0x0000000000000fab       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fstatr.o)
+ .ARM.attributes
+                0x0000000000000fd7       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-isattyr.o)
+ .ARM.attributes
+                0x0000000000001003       0x1e /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/crtn.o
+ .ARM.attributes
+                0x0000000000001021       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(close.o)
+ .ARM.attributes
+                0x000000000000104d       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(fstat.o)
+ .ARM.attributes
+                0x0000000000001079       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(isatty.o)
+ .ARM.attributes
+                0x00000000000010a5       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(lseek.o)
+ .ARM.attributes
+                0x00000000000010d1       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(sbrk.o)
+
+.comment        0x0000000000000000       0x6e
+ .comment       0x0000000000000000       0x6e _build/main.o
+                                         0x6f (size before relaxing)
+ .comment       0x000000000000006e       0x6f _build/analog.o
+ .comment       0x000000000000006e       0x6f _build/app_fifo_util.o
+ .comment       0x000000000000006e       0x6f _build/rtc_timing.o
+ .comment       0x000000000000006e       0x6f _build/battery.o
+ .comment       0x000000000000006e       0x6f _build/ble_setup.o
+ .comment       0x000000000000006e       0x6f _build/debug_log.o
+ .comment       0x000000000000006e       0x6f _build/ext_eeprom.o
+ .comment       0x000000000000006e       0x6f _build/collector.o
+ .comment       0x000000000000006e       0x6f _build/storer.o
+ .comment       0x000000000000006e       0x6f _build/sender.o
+ .comment       0x000000000000006e       0x6f _build/self_test.o
+ .comment       0x000000000000006e       0x6f _build/scanner.o
+ .comment       0x000000000000006e       0x6f _build/uart_commands.o
+ .comment       0x000000000000006e       0x6f _build/crc16.o
+ .comment       0x000000000000006e       0x6f _build/app_scheduler.o
+ .comment       0x000000000000006e       0x6f _build/app_timer.o
+ .comment       0x000000000000006e       0x6f _build/retarget.o
+ .comment       0x000000000000006e       0x6f _build/nrf_adc.o
+ .comment       0x000000000000006e       0x6f _build/nrf_delay.o
+ .comment       0x000000000000006e       0x6f _build/app_uart_fifo.o
+ .comment       0x000000000000006e       0x6f _build/app_fifo.o
+ .comment       0x000000000000006e       0x6f _build/nrf_drv_common.o
+ .comment       0x000000000000006e       0x6f _build/nrf_drv_gpiote.o
+ .comment       0x000000000000006e       0x6f _build/spi_master.o
+ .comment       0x000000000000006e       0x6f _build/pstorage.o
+ .comment       0x000000000000006e       0x6f _build/ble_advdata.o
+ .comment       0x000000000000006e       0x6f _build/ble_advertising.o
+ .comment       0x000000000000006e       0x6f _build/system_nrf51.o
+ .comment       0x000000000000006e       0x6f _build/softdevice_handler.o
+ .comment       0x000000000000006e       0x6f _build/ble_nus.o
+
+.debug_frame    0x0000000000000000      0xcd0
+ .debug_frame   0x0000000000000000       0x28 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-exit.o)
+ .debug_frame   0x0000000000000028       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-init.o)
+ .debug_frame   0x0000000000000054       0x20 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memset.o)
+ .debug_frame   0x0000000000000074       0x20 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(_exit.o)
+ .debug_frame   0x0000000000000094       0x20 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_udivsi3.o)
+ .debug_frame   0x00000000000000b4       0x20 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_divsi3.o)
+ .debug_frame   0x00000000000000d4       0x28 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_fixunssfsi.o)
+ .debug_frame   0x00000000000000fc       0x3c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(_udivmoddi4.o)
+ .debug_frame   0x0000000000000138       0x38 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(mulsf3.o)
+ .debug_frame   0x0000000000000170       0x30 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(subsf3.o)
+ .debug_frame   0x00000000000001a0       0x20 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(fixsfsi.o)
+ .debug_frame   0x00000000000001c0       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(floatunsisf.o)
+ .debug_frame   0x00000000000001ec       0x3c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(divdf3.o)
+ .debug_frame   0x0000000000000228       0x38 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(eqdf2.o)
+ .debug_frame   0x0000000000000260       0x38 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(gedf2.o)
+ .debug_frame   0x0000000000000298       0x38 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(ledf2.o)
+ .debug_frame   0x00000000000002d0       0x3c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(muldf3.o)
+ .debug_frame   0x000000000000030c       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(fixdfsi.o)
+ .debug_frame   0x0000000000000338       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(floatsidf.o)
+ .debug_frame   0x0000000000000364       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(extendsfdf2.o)
+ .debug_frame   0x0000000000000390       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(truncdfsf2.o)
+ .debug_frame   0x00000000000003bc       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(eqsf2.o)
+ .debug_frame   0x00000000000003e8       0x30 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(gesf2.o)
+ .debug_frame   0x0000000000000418       0x30 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv6-m/libgcc.a(lesf2.o)
+ .debug_frame   0x0000000000000448       0x20 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-abs.o)
+ .debug_frame   0x0000000000000468       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memcmp.o)
+ .debug_frame   0x0000000000000494       0x28 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memcpy-stub.o)
+ .debug_frame   0x00000000000004bc       0x50 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-printf.o)
+ .debug_frame   0x000000000000050c       0x6c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-qsort.o)
+ .debug_frame   0x0000000000000578       0x20 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-strcmp.o)
+ .debug_frame   0x0000000000000598       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-strncpy.o)
+ .debug_frame   0x00000000000005c4      0x140 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-findfp.o)
+ .debug_frame   0x0000000000000704       0x58 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fwalk.o)
+ .debug_frame   0x000000000000075c       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-mallocr.o)
+ .debug_frame   0x0000000000000788       0x9c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-vfprintf.o)
+ .debug_frame   0x0000000000000824       0x54 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-vfprintf_i.o)
+ .debug_frame   0x0000000000000878       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-sbrkr.o)
+ .debug_frame   0x00000000000008a4       0x90 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-stdio.o)
+ .debug_frame   0x0000000000000934       0x48 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-wbuf.o)
+ .debug_frame   0x000000000000097c       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-writer.o)
+ .debug_frame   0x00000000000009a8       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-wsetup.o)
+ .debug_frame   0x00000000000009d4       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-closer.o)
+ .debug_frame   0x0000000000000a00       0x68 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fflush.o)
+ .debug_frame   0x0000000000000a68       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-lseekr.o)
+ .debug_frame   0x0000000000000a94       0x54 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-makebuf.o)
+ .debug_frame   0x0000000000000ae8       0x20 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-memchr-stub.o)
+ .debug_frame   0x0000000000000b08       0x30 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-mlock.o)
+ .debug_frame   0x0000000000000b38       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-nano-freer.o)
+ .debug_frame   0x0000000000000b64       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-readr.o)
+ .debug_frame   0x0000000000000b90       0x48 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-reent.o)
+ .debug_frame   0x0000000000000bd8       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-fstatr.o)
+ .debug_frame   0x0000000000000c04       0x2c /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libc_nano.a(lib_a-isattyr.o)
+ .debug_frame   0x0000000000000c30       0x20 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(close.o)
+ .debug_frame   0x0000000000000c50       0x20 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(fstat.o)
+ .debug_frame   0x0000000000000c70       0x20 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(isatty.o)
+ .debug_frame   0x0000000000000c90       0x20 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(lseek.o)
+ .debug_frame   0x0000000000000cb0       0x20 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(sbrk.o)
+
+.stab           0x0000000000000000       0x6c
+ .stab          0x0000000000000000       0x24 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(close.o)
+ .stab          0x0000000000000024       0x18 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(fstat.o)
+                                         0x24 (size before relaxing)
+ .stab          0x000000000000003c       0x18 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(isatty.o)
+                                         0x24 (size before relaxing)
+ .stab          0x0000000000000054       0x18 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(lseek.o)
+                                         0x24 (size before relaxing)
+
+.stabstr        0x0000000000000000       0xe3
+ .stabstr       0x0000000000000000       0xe3 /Users/bernalrojas/Desktop/HD/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv6-m/libnosys.a(close.o)
