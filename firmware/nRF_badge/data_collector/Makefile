@@ -4,13 +4,13 @@ ifndef NRF_SDK_PATH
 $(warning NRF_SDK_PATH environment variable undefined.  Default: /usr/local/nRF51_SDK_8.1.0_b6ed55f)
 endif
 
-NRF_SDK_PATH ?= /usr/local/nRF51_SDK_8.1.0_b6ed55f
+NRF_SDK_PATH ?= /Users/bernalrojas/Desktop/HD/nrf51sdk/
 SDK_PATH := $(NRF_SDK_PATH)
 
 export OUTPUT_FILENAME
 #MAKEFILE_NAME := $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
 MAKEFILE_NAME := $(MAKEFILE_LIST)
-MAKEFILE_DIR := $(dir $(MAKEFILE_NAME) ) 
+MAKEFILE_DIR := $(dir $(MAKEFILE_NAME) )
 
 TEMPLATE_PATH = $(SDK_PATH)/components/toolchain/gcc
 ifeq ($(OS),Windows_NT)
@@ -28,7 +28,7 @@ RM := rm -rf
 
 #echo suspend
 ifeq ("$(VERBOSE)","1")
-NO_ECHO := 
+NO_ECHO :=
 else
 NO_ECHO := @
 endif
@@ -56,6 +56,7 @@ help:
 	@echo "                     badge_03v2_rigado   badge_03v2_dynastream"
 	@echo "                     badge_03v2_rigado_noDebug	badge_03v2_rigado_tester"
 	@echo "                     badge_03v4	 badge_03v4_noDebug   badge_03v4_tester"
+	@echo "                     badge_03v6	 badge_03v6_noDebug   badge_03v6_tester"
 	@echo "  - Actions:         flashUnlock  flashErase  flashS130  flashAPP"
 	@echo "  - Info:            help  helpDetailed"
 	@echo
@@ -76,14 +77,16 @@ helpDetailed:
 	@echo "   - badge_03v4_noDebug: compile for Badge 03v4 board, UART disabled"
 	@echo "   - badge_03v4_tester:  compile for Badge 03v4 board, UART disabled"
 	@echo " -----"
+	@echo "   - badge_03v46:        compile for Badge 03v6 board"
+	@echo "   - badge_03v6_noDebug: compile for Badge 03v6 board, UART disabled"
+	@echo "   - badge_03v6_tester:  compile for Badge 03v6 board, UART disabled"
+	@echo " -----"
 	@echo "   - flashUnlock:        set flags required to enable erasing/programming of flash"
 	@echo "                           (only required for brand new NRF51 chips)"
 	@echo "   - flashErase:         erase all flash (including softdevice)"
 	@echo "   - flashS130:          flash S130 (BLE simultaneous central/peripheral) softdevice"
 	@echo "   - flashAPP:           flash the badge firmware (after the softdevice)"
 	@echo
-
-
 
 
 
@@ -167,7 +170,6 @@ OUTPUT_BINARY_DIRECTORY = $(OBJECT_DIRECTORY)
 BUILD_DIRECTORIES := $(sort $(OBJECT_DIRECTORY) $(OUTPUT_BINARY_DIRECTORY) $(LISTING_DIRECTORY) )
 
 
-
 #======= Target-dependent compiler flags
 NRF51DK: CFLAGS += -DBOARD_PCA10028
 
@@ -182,7 +184,7 @@ badge_03v2_rigado_noDebug: CFLAGS += -DBOARD_CUSTOM
 badge_03v2_rigado_noDebug: CFLAGS += -DBOARD_BADGE_03V2_RIGADO
 badge_03v2_rigado_tester: CFLAGS += -DBOARD_CUSTOM
 badge_03v2_rigado_tester: CFLAGS += -DBOARD_BADGE_03V2_RIGADO
-badge_03v2_rigado_tester: CFLAGS += -DTESTER_ENABLE #enables tester mode 
+badge_03v2_rigado_tester: CFLAGS += -DTESTER_ENABLE #enables tester mode
 badge_03v2_dynastream: CFLAGS += -DBOARD_CUSTOM
 badge_03v2_dynastream: CFLAGS += -DBOARD_BADGE_03V2_DYNASTREAM
 
@@ -194,14 +196,20 @@ badge_03v4_tester: CFLAGS += -DBOARD_CUSTOM
 badge_03v4_tester: CFLAGS += -DBOARD_BADGE_03V4
 badge_03v4_tester: CFLAGS += -DTESTER_ENABLE #enables tester mode
 
+badge_03v6: CFLAGS += -DBOARD_CUSTOM
+badge_03v6: CFLAGS += -DBOARD_BADGE_03V6 			#Cambiar a DBOARD_BADGE_03V6
+badge_03v6_noDebug: CFLAGS += -DBOARD_CUSTOM
+badge_03v6_noDebug: CFLAGS += -DBOARD_BADGE_03V6
+badge_03v6_tester: CFLAGS += -DBOARD_CUSTOM
+badge_03v6_tester: CFLAGS += -DBOARD_BADGE_03V6
+badge_03v6_tester: CFLAGS += -DTESTER_ENABLE #enables tester mode
 
 
 CFLAGS += -DDEBUG_LOG_ENABLE    #enable UART debug logger
 badge_03_noDebug: CFLAGS += -UDEBUG_LOG_ENABLE    #disable if noDebug target specified
 badge_03v2_rigado_noDebug: CFLAGS += -UDEBUG_LOG_ENABLE
 badge_03v4_noDebug: CFLAGS += -UDEBUG_LOG_ENABLE
-
-
+badge_03v6_noDebug: CFLAGS += -UDEBUG_LOG_ENABLE
 
 #======= Other compiler flags
 CFLAGS += -DSOFTDEVICE_PRESENT
@@ -311,7 +319,7 @@ genbin:
 	$(NO_ECHO)$(OBJCOPY) -O binary $(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_FILENAME).out $(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_FILENAME).bin
 
 ## Create binary .hex file from the .out file
-genhex: 
+genhex:
 	@echo Preparing: $(OUTPUT_FILENAME).hex
 	$(NO_ECHO)$(OBJCOPY) -O ihex $(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_FILENAME).out $(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_FILENAME).hex
 
@@ -345,43 +353,46 @@ badge_03v4: clean nrf51422_xxac_s130
 badge_03v4_noDebug: clean nrf51422_xxac_s130
 badge_03v4_tester: clean nrf51422_xxac_s130
 
+badge_03v6: clean nrf51422_xxac_s130
+badge_03v6_noDebug: clean nrf51422_xxac_s130
+badge_03v6_tester: clean nrf51422_xxac_s130
 
 #=================================  Action rules  =====================================
 
 #write some flash config registers to "unlock" flash
-flashUnlock: clean flashUnlock.jlink 
+flashUnlock: clean flashUnlock.jlink
 	$(JLINK) $(OBJECT_DIRECTORY)/flashUnlock.jlink
 
 #create flash unlocking script for JLinkExe.
 flashUnlock.jlink:
-	printf "w4 4001e504 2\nw4 4001e50c 1\nSleep 100\nr\ng\nexit\n" > $(OBJECT_DIRECTORY)/flashUnlock.jlink	
-	
-	
+	printf "w4 4001e504 2\nw4 4001e50c 1\nSleep 100\nr\ng\nexit\n" > $(OBJECT_DIRECTORY)/flashUnlock.jlink
+
+
 #build and flash firmware
-flashAPP: clean nrf51422_xxac_s130 flashAPP.jlink 
+flashAPP: clean nrf51422_xxac_s130 flashAPP.jlink
 	$(JLINK) $(OBJECT_DIRECTORY)/flashAPP.jlink
 
 #create application flashing script for JLinkExe.  1c000 offset is for S130 softdevice.
 flashAPP.jlink:
-	printf "loadbin $(OUTPUT_BINARY_DIRECTORY)/nrf51422_xxac_s130.hex $(APP_MEMORY_OFFSET)\nr\ng\nexit\n" > $(OBJECT_DIRECTORY)/flashAPP.jlink	
+	printf "loadbin $(OUTPUT_BINARY_DIRECTORY)/nrf51422_xxac_s130.hex $(APP_MEMORY_OFFSET)\nr\ng\nexit\n" > $(OBJECT_DIRECTORY)/flashAPP.jlink
 
 
 #flash SoftDevice
-flashS130: flashS130.jlink 
+flashS130: flashS130.jlink
 	$(JLINK) $(OBJECT_DIRECTORY)/flashS130.jlink
 
 #create SoftDevice flashing script for JLinkExe
 flashS130.jlink:
-	printf "loadbin $(SDK_PATH)/components/softdevice/s130/hex/s130_softdevice.hex 0\nr\ng\nexit\n" > $(OBJECT_DIRECTORY)/flashS130.jlink	
-	
-	
+	printf "loadbin $(SDK_PATH)/components/softdevice/s130/hex/s130_softdevice.hex 0\nr\ng\nexit\n" > $(OBJECT_DIRECTORY)/flashS130.jlink
+
+
 #erase all flash
-flashErase: flashErase.jlink 
+flashErase: flashErase.jlink
 	$(JLINK) $(OBJECT_DIRECTORY)/flashErase.jlink
 
 #create flash erasing for JLinkExe
 flashErase.jlink:
-	printf "erase\nr\ng\nexit\n" > $(OBJECT_DIRECTORY)/flashErase.jlink	
+	printf "erase\nr\ng\nexit\n" > $(OBJECT_DIRECTORY)/flashErase.jlink
 
 #runs the complete sequence for a new badge
 flashNew: flashUnlock.jlink flashErase.jlink flashS130.jlink flashAPP.jlink
@@ -395,4 +406,3 @@ flashCode: flashErase.jlink flashS130.jlink flashAPP.jlink
 	$(JLINK) $(OBJECT_DIRECTORY)/flashErase.jlink
 	$(JLINK) $(OBJECT_DIRECTORY)/flashS130.jlink
 	$(JLINK) $(OBJECT_DIRECTORY)/flashAPP.jlink
-
