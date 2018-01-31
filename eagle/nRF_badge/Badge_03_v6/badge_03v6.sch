@@ -1165,7 +1165,7 @@ http://www.st.com/content/ccc/resource/technical/document/technical_note/73/17/9
 <wire x1="1.15" y1="-1.15" x2="1.15" y2="-1.1" width="0.2032" layer="21"/>
 <wire x1="1.15" y1="1.1" x2="1.15" y2="1.15" width="0.2032" layer="21"/>
 <wire x1="-1.15" y1="1.1" x2="-1.15" y2="1.15" width="0.2032" layer="21"/>
-<circle x="-0.6" y="-0.67" radius="0.2" width="0" layer="51"/>
+<circle x="-0.6" y="0.67" radius="0.2" width="0" layer="51"/>
 </package>
 <package name="LGA12">
 <description>&lt;b&gt;LGA-12&lt;p&gt;&lt;/b&gt;
