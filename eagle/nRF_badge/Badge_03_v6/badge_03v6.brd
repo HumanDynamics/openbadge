@@ -37,7 +37,7 @@
 <layer number="26" name="bNames" color="7" fill="1" visible="yes" active="yes"/>
 <layer number="27" name="tValues" color="7" fill="1" visible="yes" active="yes"/>
 <layer number="28" name="bValues" color="7" fill="1" visible="yes" active="yes"/>
-<layer number="29" name="tStop" color="7" fill="3" visible="no" active="yes"/>
+<layer number="29" name="tStop" color="7" fill="3" visible="yes" active="yes"/>
 <layer number="30" name="bStop" color="7" fill="6" visible="no" active="yes"/>
 <layer number="31" name="tCream" color="7" fill="4" visible="no" active="yes"/>
 <layer number="32" name="bCream" color="7" fill="5" visible="no" active="yes"/>
@@ -4640,7 +4640,7 @@ http://www.st.com/content/ccc/resource/technical/document/technical_note/73/17/9
 <wire x1="1.15" y1="-1.15" x2="1.15" y2="-1.1" width="0.2032" layer="21"/>
 <wire x1="1.15" y1="1.1" x2="1.15" y2="1.15" width="0.2032" layer="21"/>
 <wire x1="-1.15" y1="1.1" x2="-1.15" y2="1.15" width="0.2032" layer="21"/>
-<circle x="-0.6" y="-0.67" radius="0.2" width="0" layer="51"/>
+<circle x="-0.6" y="0.67" radius="0.2" width="0" layer="51"/>
 </package>
 </packages>
 </library>
@@ -5883,7 +5883,7 @@ design rules under a new name.</description>
 <param name="mvStopFrame" value="1"/>
 <param name="mvCreamFrame" value="0"/>
 <param name="mlMinStopFrame" value="2mil"/>
-<param name="mlMaxStopFrame" value="4mil"/>
+<param name="mlMaxStopFrame" value="3mil"/>
 <param name="mlMinCreamFrame" value="0mil"/>
 <param name="mlMaxCreamFrame" value="0mil"/>
 <param name="mlViaStopLimit" value="100mil"/>
@@ -6817,7 +6817,7 @@ design rules under a new name.</description>
 <via x="25.375" y="28.742" extent="1-16" drill="0.5" diameter="0.8"/>
 <wire x1="25.375" y1="28.742" x2="25.375" y2="28" width="0.2032" layer="1"/>
 <wire x1="25.375" y1="28" x2="25.375" y2="27.375" width="0.1016" layer="1"/>
-<wire x1="25.375" y1="27.375" x2="25.375" y2="27.0875" width="0.2032" layer="1"/>
+<wire x1="25.375" y1="27.375" x2="25.375" y2="27.0875" width="0.1016" layer="1"/>
 </signal>
 </signals>
 <errors>
@@ -6900,71 +6900,6 @@ design rules under a new name.</description>
 <approved hash="5,1,4dfa49957f77b7d8"/>
 <approved hash="19,1,9329e2131741ee88"/>
 <approved hash="19,1,3e1e066e4c6f77e4"/>
-<approved hash="7,39,c47ee4d108d57f96"/>
-<approved hash="7,39,cdc31bad85998089"/>
-<approved hash="7,39,a57900112b82061e"/>
-<approved hash="7,39,68431b5f20ebe2fb"/>
-<approved hash="7,39,d26f1368ff626f99"/>
-<approved hash="7,39,cec31b5f60ebe209"/>
-<approved hash="7,39,cec200114029001e"/>
-<approved hash="7,39,d3971290c0be6f81"/>
-<approved hash="7,39,cc3b2461ba4d8169"/>
-<approved hash="7,39,cf3b24935f3fe3e9"/>
-<approved hash="7,39,a4810011145e07fe"/>
-<approved hash="7,39,cf3a00117fe501fe"/>
-<approved hash="7,39,69bb24931f3fe31b"/>
-<approved hash="7,39,c586e52937017f96"/>
-<approved hash="7,39,cec8ecbb9704e209"/>
-<approved hash="7,39,a5730010dc61061e"/>
-<approved hash="7,39,cdc8ec4972768089"/>
-<approved hash="7,39,d265136308816f93"/>
-<approved hash="7,39,d93dff42dbd183c1"/>
-<approved hash="7,39,1878df4f854d90f7"/>
-<approved hash="7,39,0d8cb6cd3e262bec"/>
-<approved hash="7,39,1ae5b699235ed550"/>
-<approved hash="7,39,57d87f42d5340d3f"/>
-<approved hash="7,39,cdb8d95c6013a589"/>
-<approved hash="7,39,25030070eaf6419e"/>
-<approved hash="7,39,cdb800700249479e"/>
-<approved hash="7,39,4a046baaca493714"/>
-<approved hash="7,39,6838d95ca213a59f"/>
-<approved hash="7,39,cab8d94a00854009"/>
-<approved hash="7,39,da151313b2f2a103"/>
-<approved hash="7,39,fe9afd302c30cc9e"/>
-<approved hash="7,39,593d7f589fcbc7c1"/>
-<approved hash="7,39,90785f4f0557dcf7"/>
-<approved hash="7,39,597a71f5112e4792"/>
-<approved hash="7,39,9ae54e99ab449950"/>
-<approved hash="7,39,cec80010b7de001e"/>
-<approved hash="7,39,c474e4daff3a7f84"/>
-<approved hash="7,39,6848ecbbd704e2fb"/>
-<approved hash="7,39,d97af1ef55340392"/>
-<approved hash="7,39,a312d987305e6cbf"/>
-<approved hash="7,39,229a3c306b304c9e"/>
-<approved hash="7,39,23125987b84420bf"/>
-<approved hash="7,39,858c4ecdbe3c67ec"/>
-<approved hash="7,39,800c9fa689a6ae08"/>
-<approved hash="7,39,d7d8ff58912e493f"/>
-<approved hash="7,39,a8ab4bbbd6a1ca41"/>
-<approved hash="7,39,8c0bb76c7b3d6264"/>
-<approved hash="7,39,99efaeadc015d96f"/>
-<approved hash="7,39,3ec9cbbbc0c35c27"/>
-<approved hash="7,39,2302a9696d46a4a8"/>
-<approved hash="7,39,9a1db69f7ebe1dbf"/>
-<approved hash="7,39,a96c5c1e40c34b82"/>
-<approved hash="7,39,cec93b8d0cf59027"/>
-<approved hash="7,39,a3025969e57060a8"/>
-<approved hash="7,39,11ef5ead40231d6f"/>
-<approved hash="7,39,040b4f6cfb0ba664"/>
-<approved hash="7,39,58abbb8d1a970641"/>
-<approved hash="7,39,1a1d4e9ff688d9bf"/>
-<approved hash="7,39,596cac288cf58782"/>
-<approved hash="5,1,32b89dc3eaed4596"/>
-<approved hash="5,1,87b36ec81fe5f69e"/>
-<approved hash="5,1,c1ff6e8219acb6d1"/>
-<approved hash="5,1,2d08c4611783f6ec"/>
-<approved hash="19,1,caff5e824bee944d"/>
-<approved hash="19,1,31ff9f12eda5a090"/>
 </errors>
 </board>
 </drawing>
