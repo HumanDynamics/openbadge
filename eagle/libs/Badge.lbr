@@ -7,7 +7,7 @@
 <setting keepoldvectorfont="yes"/>
 <setting verticaltext="up"/>
 </settings>
-<grid distance="0.1" unitdist="mm" unit="mm" style="lines" multiple="1" display="yes" altdistance="0.1" altunitdist="mm" altunit="mm"/>
+<grid distance="0.1" unitdist="inch" unit="inch" style="lines" multiple="1" display="no" altdistance="0.01" altunitdist="inch" altunit="inch"/>
 <layers>
 <layer number="1" name="Top" color="4" fill="1" visible="yes" active="yes"/>
 <layer number="2" name="Route2" color="1" fill="3" visible="no" active="no"/>
@@ -1648,6 +1648,40 @@ http://www.st.com/content/ccc/resource/technical/document/technical_note/73/17/9
 <wire x1="-1.15" y1="1.1" x2="-1.15" y2="1.15" width="0.2032" layer="21"/>
 <circle x="-0.6" y="0.67" radius="0.2" width="0" layer="51"/>
 </package>
+<package name="LGA12-FROM-DEVKIT">
+<description>&lt;b&gt;LGA-FROM-DEVKIT&lt;p&gt;&lt;/b&gt;
+body 2x2x1mm
+
+Designed based on the footprint taken form the LIS2DH12 Dev Kit (STEVAL-MKI109V2) gerber files - http://www.st.com/en/evaluation-tools/steval-mki109v2.html</description>
+<wire x1="-1" y1="1" x2="1" y2="1" width="0.0508" layer="51"/>
+<wire x1="1" y1="1" x2="1" y2="-1" width="0.0508" layer="51"/>
+<wire x1="1" y1="-1" x2="-1" y2="-1" width="0.0508" layer="51"/>
+<wire x1="-1" y1="-1" x2="-1" y2="1" width="0.0508" layer="51"/>
+<smd name="1" x="-0.7625" y="0.75" dx="0.5" dy="0.3" layer="1"/>
+<smd name="2" x="-0.7625" y="0.25" dx="0.5" dy="0.3" layer="1"/>
+<smd name="3" x="-0.7625" y="-0.25" dx="0.5" dy="0.3" layer="1"/>
+<smd name="4" x="-0.7625" y="-0.75" dx="0.5" dy="0.3" layer="1"/>
+<smd name="5" x="-0.25" y="-0.7625" dx="0.3" dy="0.5" layer="1"/>
+<smd name="7" x="0.7625" y="-0.75" dx="0.5" dy="0.3" layer="1" rot="R180"/>
+<smd name="8" x="0.7625" y="-0.25" dx="0.5" dy="0.3" layer="1" rot="R180"/>
+<smd name="9" x="0.7625" y="0.25" dx="0.5" dy="0.3" layer="1" rot="R180"/>
+<smd name="10" x="0.7625" y="0.75" dx="0.5" dy="0.3" layer="1" rot="R180"/>
+<smd name="11" x="0.25" y="0.7625" dx="0.3" dy="0.5" layer="1" rot="R180"/>
+<smd name="12" x="-0.25" y="0.7625" dx="0.3" dy="0.5" layer="1" rot="R180"/>
+<text x="-1.25" y="1.55" size="0.8128" layer="25" ratio="18">&gt;NAME</text>
+<text x="-1.2" y="-2" size="0.6096" layer="27" ratio="10">&gt;VALUE</text>
+<rectangle x1="-1.25" y1="1.05" x2="-0.9" y2="1.4" layer="21"/>
+<smd name="6" x="0.25" y="-0.7625" dx="0.3" dy="0.5" layer="1"/>
+<wire x1="-1.15" y1="1.15" x2="-0.6" y2="1.15" width="0.2032" layer="21"/>
+<wire x1="0.6" y1="1.15" x2="1.15" y2="1.15" width="0.2032" layer="21"/>
+<wire x1="0.6" y1="-1.15" x2="1.15" y2="-1.15" width="0.2032" layer="21"/>
+<wire x1="-1.15" y1="-1.15" x2="-0.6" y2="-1.15" width="0.2032" layer="21"/>
+<wire x1="-1.15" y1="-1.15" x2="-1.15" y2="-1.1" width="0.2032" layer="21"/>
+<wire x1="1.15" y1="-1.15" x2="1.15" y2="-1.1" width="0.2032" layer="21"/>
+<wire x1="1.15" y1="1.1" x2="1.15" y2="1.15" width="0.2032" layer="21"/>
+<wire x1="-1.15" y1="1.1" x2="-1.15" y2="1.15" width="0.2032" layer="21"/>
+<circle x="-0.6" y="0.67" radius="0.2" width="0" layer="51"/>
+</package>
 </packages>
 <symbols>
 <symbol name="MDBT40">
@@ -2890,7 +2924,7 @@ Various common sizes : AA, AAA, 18650 (PRT-12895), 20mm coin cell and 12mm coin 
 <gate name="G$1" symbol="LIS2DH12" x="0" y="0"/>
 </gates>
 <devices>
-<device name="" package="LGA12">
+<device name="LISDH12-LGA12" package="LGA12">
 <connects>
 <connect gate="G$1" pin="CS" pad="2"/>
 <connect gate="G$1" pin="GND@6" pad="6"/>
@@ -2909,7 +2943,26 @@ Various common sizes : AA, AAA, 18650 (PRT-12895), 20mm coin cell and 12mm coin 
 <technology name=""/>
 </technologies>
 </device>
-<device name="&quot;" package="LGA12-TN0018-COMPLIANT">
+<device name="LISDH12-TN0018" package="LGA12-TN0018-COMPLIANT">
+<connects>
+<connect gate="G$1" pin="CS" pad="2"/>
+<connect gate="G$1" pin="GND@6" pad="6"/>
+<connect gate="G$1" pin="GND@7" pad="7"/>
+<connect gate="G$1" pin="GND@8" pad="8"/>
+<connect gate="G$1" pin="INT1" pad="12"/>
+<connect gate="G$1" pin="INT2" pad="11"/>
+<connect gate="G$1" pin="RES" pad="5"/>
+<connect gate="G$1" pin="SCL/SPC" pad="1"/>
+<connect gate="G$1" pin="SDA/SDI/SDO" pad="4"/>
+<connect gate="G$1" pin="SDO/A0" pad="3"/>
+<connect gate="G$1" pin="VDD" pad="9"/>
+<connect gate="G$1" pin="VDDIO" pad="10"/>
+</connects>
+<technologies>
+<technology name=""/>
+</technologies>
+</device>
+<device name="LIS2DH-DEVKIT" package="LGA12-FROM-DEVKIT">
 <connects>
 <connect gate="G$1" pin="CS" pad="2"/>
 <connect gate="G$1" pin="GND@6" pad="6"/>
