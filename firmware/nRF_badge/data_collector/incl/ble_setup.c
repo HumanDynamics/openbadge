@@ -395,7 +395,7 @@ void setAdvData()
         debug_log("ERR: error setting advertising data, #%d.\r\n",(int)result);
     }
     else  {
-        debug_log("  Updated adv. data.\r\n");
+        //debug_log("  Updated adv. data.\r\n");
         needAdvDataUpdate = false;
     }
     

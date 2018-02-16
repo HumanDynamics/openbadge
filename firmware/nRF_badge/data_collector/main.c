@@ -80,6 +80,7 @@ int main(void)
     #endif
     
     debug_log_init();
+
     debug_log("\r\n\r\n\r\n\r\nUART trace initialized.\r\n\r\n");
 
     // TODO: Check the reset reason to make sure our noinit RAM is valid
@@ -103,20 +104,23 @@ int main(void)
     nrf_gpio_cfg_input(BUTTON_1,NRF_GPIO_PIN_PULLUP);  //button
     
     // Initialize
+ 
     BLE_init();
+
     sd_power_mode_set(NRF_POWER_MODE_LOWPWR);  //set low power sleep mode
     adc_config();
     rtc_config();
     spi_init();
-    
-    
+
+
     #if defined(TESTER_ENABLE) // tester mode is enabled
         runSelfTests();
         while(1);
     #endif    // end of self tests
     
     
-    /*
+    
+/*
     debug_log("=DEVELOPMENT BADGE.  ONLY ERASES EEPROM=\r\n");
     debug_log("=ERASING EEPROM...=\r\n");
     ext_eeprom_wait();
@@ -142,11 +146,12 @@ int main(void)
     storer_init();
     sender_init();
     scanner_init();
-    BatteryMonitor_init();
+    //BatteryMonitor_init();
     
     BLEsetBadgeAssignment(getStoredBadgeAssignment());
     advertising_init();
-    
+
+
     // Blink once on start
     nrf_gpio_pin_write(LED_1,LED_OFF);
     nrf_delay_ms(200);
@@ -160,19 +165,20 @@ int main(void)
     nrf_gpio_pin_write(LED_1,LED_OFF);
     nrf_gpio_pin_write(LED_2,LED_OFF);
 
+    debug_log("Done with setup.\r\n");
+
     
-    nrf_delay_ms(1000);
-
-    debug_log("Done with setup.  Entering main loop.\r\n\r\n");
-    
-    BLEstartAdvertising();
-
-    nrf_delay_ms(2);
-
-    while (true) {
-        app_sched_execute();
-        sd_app_evt_wait();
-    }
+		debug_log("Set the log location and press Button 1 to begin printing RSSI values...\r\n");
+	    while(nrf_gpio_pin_read(BUTTON_1) != 0);
+	    nrf_gpio_cfg_default(BUTTON_1);
+	    
+	    BLEstartAdvertising();
+	    debug_log("\r\n\r\nSTARTING RSSI SCAN\r\n\r\n");
+	    while (true) {
+	   	startScan(); 
+	    	nrf_delay_ms(4000);
+	    }
+	
 }
 
 void BLEonConnect()

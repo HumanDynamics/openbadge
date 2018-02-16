@@ -43,7 +43,9 @@ static unsigned short hexStringToShort(unsigned char * string)
 
 void scanner_init()
 {   
-    scan_params.active = 0;  //passive scanning, only looking for advertising packets
+	// changed this to active scan ********
+
+    scan_params.active = 1;  //passive scanning, only looking for advertising packets
     scan_params.selective = 0;  //non-selective, don't use whitelist
     scan_params.p_whitelist = NULL;  //no whitelist
     scan_params.interval = (SCAN_INTERVAL * 1000) / 625;   //scan_params uses interval in units of 0.625ms
@@ -73,9 +75,16 @@ uint32_t startScan()
 
 void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
 {
-    //debug_log("BLECH\r\n");
-    signed char rssi = advReport->rssi;
-    
+    ble_gap_addr_t MAC;
+    sd_ble_gap_address_get(&MAC);
+    int rssi_int = (int)advReport->rssi;
+    debug_log("%.2X:%.2X:%.2X:%.2X:%.2X:%.2X,%d\r\n", MAC.addr[5], MAC.addr[4], MAC.addr[3], 
+    									MAC.addr[2],MAC.addr[1], MAC.addr[0], rssi_int);
+	//debug_log("%d\r\n", rssi_int);
+    return;
+/*    
+signed char rssi = advReport->rssi;
+
     if (rssi < MINIMUM_RSSI)  {
         return;  // ignore signals that are too weak.
     }
@@ -147,7 +156,7 @@ void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
             scan.num++;
         }
     }
-    
+    */
     /*
     
     // Parse the broadcast packet.  (find+check name, find custom data if present)
@@ -267,11 +276,13 @@ void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
 }
 
 static void save_scan_results(void * p_event_data, uint16_t event_size) {
+/*
     debug_log("Saving scan results\r\n");
     updateScanner();
     scan_state = SCANNER_IDLE;
 
     Storer_ScheduleBufferedDataStorage();
+*/
 }
 
 void BLEonScanTimeout()
