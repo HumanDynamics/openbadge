@@ -67,18 +67,17 @@ with open("./BLE_range_test.log", "a") as log_file:
 			all_streams("-----------------------------\n" + str("%.3f," % time.time()) + "starting test")
 			started = True
 						
-			while valid_msg(line):	
-				all_streams(str("%.3f," % time.time()) + line[:-2])
+			while line != "":
+				if valid_msg(line):	
+					all_streams(str("%.3f," % time.time()) + line[:-2])
 				try:
 					line = ser.readline()
 				except serial.serialutil.SerialException:
 					print "Disconnected devkit"
 					break
 			else:
-				if line == "":
-					print "Disconnected badge from devkit"
-				else:
-					print "Invalid message. Try again with a fresh connection"
+				print "Disconnected badge from devkit"
+				#print "Invalid message. Try again with a fresh connection"
 	except KeyboardInterrupt:
 		# catch keyboard interupt to end test cleanly		
 		print " Caught keyboard interrupt"
