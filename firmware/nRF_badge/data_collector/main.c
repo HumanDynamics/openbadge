@@ -1,5 +1,3 @@
-
-
 #include <stdint.h>
 #include <string.h>
 #include <nrf51.h>
@@ -65,120 +63,38 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 /**
  * ============================================== MAIN ====================================================
  */
-int main(void)
-{    
-    #if defined(BOARD_PCA10028)  //NRF51DK
-        //If button 4 is pressed on startup, do nothing (mostly so that UART lines are freed on the DK board)
-        nrf_gpio_cfg_input(BUTTON_4,NRF_GPIO_PIN_PULLUP);  //button 4
-        if(nrf_gpio_pin_read(BUTTON_4) == 0)  //button pressed
-        {
-            nrf_gpio_pin_dir_set(LED_4,NRF_GPIO_PIN_DIR_OUTPUT);
-            nrf_gpio_pin_write(LED_4,LED_ON);
-            while(1);
-        }
-        nrf_gpio_cfg_default(BUTTON_4);
-    #endif
-    
+int main(void){
+
     debug_log_init();
-
-    debug_log("\r\n\r\n\r\n\r\nUART trace initialized.\r\n\r\n");
-
-    // TODO: Check the reset reason to make sure our noinit RAM is valid
-    if (mAppErrorData.error_occured) {
-        debug_log("CRASH! APP ERROR %lu @ %s:%lu\r\n", mAppErrorData.error_code,
-                  mAppErrorData.file_name, mAppErrorData.line_num);
-        mAppErrorData.error_occured = false;
-    }
-
     debug_log("Name: %.5s\r\n",DEVICE_NAME);
     debug_log("Firmware Version: %s, Branch: %s, Commit: %s\r\n", GIT_TAG, GIT_BRANCH, GIT_COMMIT);
-
-
-    // Define and set LEDs
-    nrf_gpio_pin_dir_set(LED_1,NRF_GPIO_PIN_DIR_OUTPUT);  //set LED pin to output
-    nrf_gpio_pin_write(LED_1,LED_ON);  //turn on LED
-    nrf_gpio_pin_dir_set(LED_2,NRF_GPIO_PIN_DIR_OUTPUT);  //set LED pin to output
-    nrf_gpio_pin_write(LED_2,LED_OFF);  //turn off LED
-
-    // Button
-    nrf_gpio_cfg_input(BUTTON_1,NRF_GPIO_PIN_PULLUP);  //button
     
-    // Initialize
- 
+	// Initialize
     BLE_init();
-
-    sd_power_mode_set(NRF_POWER_MODE_LOWPWR);  //set low power sleep mode
+    sd_power_mode_set(NRF_POWER_MODE_LOWPWR);
     adc_config();
     rtc_config();
     spi_init();
-
-
-    #if defined(TESTER_ENABLE) // tester mode is enabled
-        runSelfTests();
-        while(1);
-    #endif    // end of self tests
-    
-    
-    
-/*
-    debug_log("=DEVELOPMENT BADGE.  ONLY ERASES EEPROM=\r\n");
-    debug_log("=ERASING EEPROM...=\r\n");
-    ext_eeprom_wait();
-    unsigned char empty[EXT_CHUNK_SIZE + EXT_EEPROM_PADDING];
-    memset(empty,0,sizeof(empty));
-    for (int i = EXT_FIRST_CHUNK; i <= EXT_LAST_CHUNK; i++)  {
-        ext_eeprom_write(EXT_ADDRESS_OF_CHUNK(i),empty,sizeof(empty));
-        if (i % 10 == 0)  {
-            nrf_gpio_pin_toggle(LED_1);
-            nrf_gpio_pin_toggle(LED_2);
-        }
-        ext_eeprom_wait();
-    }
-    debug_log("  done.  \r\n");
-    nrf_gpio_pin_write(LED_1,LED_ON);
-    nrf_gpio_pin_write(LED_2,LED_ON);
-    while (1);
-    */
-
     APP_SCHED_INIT(SCHED_MAX_EVENT_DATA_SIZE, SCHED_QUEUE_SIZE);
-
     collector_init();
     storer_init();
     sender_init();
     scanner_init();
-    //BatteryMonitor_init();
-    
     BLEsetBadgeAssignment(getStoredBadgeAssignment());
     advertising_init();
+    debug_log("Done with setup.\r\nSet the log location and press Button 1 to begin printing RSSI values...\r\n");
 
-
-    // Blink once on start
-    nrf_gpio_pin_write(LED_1,LED_OFF);
-    nrf_delay_ms(200);
-    nrf_gpio_pin_write(LED_1, LED_ON);
-    nrf_delay_ms(200);
-    nrf_gpio_pin_write(LED_1, LED_OFF);
-    nrf_delay_ms(200);
-    nrf_gpio_pin_write(LED_1,LED_ON);
-    nrf_gpio_pin_write(LED_2,LED_ON);
-    nrf_delay_ms(200);
-    nrf_gpio_pin_write(LED_1,LED_OFF);
-    nrf_gpio_pin_write(LED_2,LED_OFF);
-
-    debug_log("Done with setup.\r\n");
-
-    
-		debug_log("Set the log location and press Button 1 to begin printing RSSI values...\r\n");
-	    while(nrf_gpio_pin_read(BUTTON_1) != 0);
-	    nrf_gpio_cfg_default(BUTTON_1);
-	    
-	    BLEstartAdvertising();
-	    debug_log("\r\n\r\nSTARTING RSSI SCAN\r\n\r\n");
-	    while (true) {
-	   	startScan(); 
-	    	nrf_delay_ms(4000);
-	    }
+    // setup button
+    nrf_gpio_cfg_input(BUTTON_1,NRF_GPIO_PIN_PULLUP);
+	while(nrf_gpio_pin_read(BUTTON_1) != 0);
+	nrf_gpio_cfg_default(BUTTON_1);
 	
+	// start scanning and printing values
+    BLEstartAdvertising();
+    while (true) {
+   		startScan(); 
+    	nrf_delay_ms(4000);
+    }	
 }
 
 void BLEonConnect()
