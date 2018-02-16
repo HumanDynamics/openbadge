@@ -75,12 +75,10 @@ uint32_t startScan()
 
 void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
 {
-    ble_gap_addr_t MAC;
-    sd_ble_gap_address_get(&MAC);
     int rssi_int = (int)advReport->rssi;
+	ble_gap_addr_t MAC = advReport->peer_addr;
     debug_log("%.2X:%.2X:%.2X:%.2X:%.2X:%.2X,%d\r\n", MAC.addr[5], MAC.addr[4], MAC.addr[3], 
     									MAC.addr[2],MAC.addr[1], MAC.addr[0], rssi_int);
-	//debug_log("%d\r\n", rssi_int);
     return;
 /*    
 signed char rssi = advReport->rssi;
