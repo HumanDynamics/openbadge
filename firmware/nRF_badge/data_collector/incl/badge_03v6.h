@@ -33,28 +33,6 @@
 #define SPIM0_SCK_PIN               3    // SPI SCK signal.
 #define INT_PIN_INPUT               25    // SPI SCK signal.
 
-#define SPIM0_SS_PIN_2              2    // accelerometer
-#define LIS2DH_WHO_AM_I_REGISTER 		0x0F
-#define LIS2DH_WHO_AM_I_VALUE       0x33
-#define CLICKTHRESHHOLD             20   //Threshhold for tap accel
-#define LIS3DH_REG_CLICKSRC         0x39
-#define LIS3DH_REG_CTRL1            0x20
-#define LIS3DH_REG_CTRL2            0x21
-#define LIS3DH_REG_CTRL3            0x22
-#define LIS3DH_REG_CTRL4            0x23
-#define LIS3DH_REG_CTRL5            0x24
-#define LIS3DH_REG_TEMPCFG          0x1F
-#define LIS3DH_REG_CLICKCFG         0x38
-#define LIS3DH_REG_CLICKTHS         0x3A
-#define LIS3DH_REG_TIMELIMIT        0x3B
-#define LIS3DH_REG_TIMELATENCY      0x3C
-#define LIS3DH_REG_TIMEWINDOW       0x3D
-#define LIS3DH_REG_ACTTHS           0x3E
-#define LIS3DH_REG_ACTDUR           0x3F
-#define INT1_THS                    0x32
-#define INT1_DURATION               0x00
-#define INT1_CFG                    0x30
-
 #define MIC_PIN ADC_CONFIG_PSEL_AnalogInput6  //GPIO P05
 #define MIC_AREF NRF_ADC_CONFIG_REF_EXT_REF1  //GPIO P06
 
