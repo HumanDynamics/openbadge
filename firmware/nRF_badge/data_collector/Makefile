@@ -4,7 +4,7 @@ ifndef NRF_SDK_PATH
 $(warning NRF_SDK_PATH environment variable undefined.  Default: /usr/local/nRF51_SDK_8.1.0_b6ed55f)
 endif
 
-NRF_SDK_PATH ?= /Users/bernalrojas/Desktop/HD/nrf51sdk/
+NRF_SDK_PATH ?= /usr/local/nRF51_SDK_8.1.0_b6ed55f
 SDK_PATH := $(NRF_SDK_PATH)
 
 export OUTPUT_FILENAME
