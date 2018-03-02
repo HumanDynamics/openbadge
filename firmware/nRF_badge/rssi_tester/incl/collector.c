@@ -113,7 +113,6 @@ void collectSample()
 
         Storer_ScheduleBufferedDataStorage();
     }
-    
     takingReadings = false;  // we finished taking readings for that sample
 }
 
