@@ -93,6 +93,7 @@ helpDetailed:
 #source files
 C_SOURCE_FILES += \
 main.c \
+incl/accel.c \
 incl/analog.c \
 incl/app_fifo_util.c \
 incl/rtc_timing.c \
