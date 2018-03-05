@@ -9,4 +9,4 @@ services:
       - .:/app
     privileged: true
     entrypoint: ["/app/compose/entry_point.sh"]
-    command: ["badge_03v4_noDebug","flashAPP"]
+    command: ["badge_03v6_noDebug","flashAPP"]
