@@ -7,8 +7,8 @@ import serial
 import serial.tools.list_ports
 import threading
 
-from ble_badge_connection import BLEBadgeConnection
-from badge import OpenBadge
+from BadgeFramework.ble_badge_connection import BLEBadgeConnection
+from BadgeFramework.badge import OpenBadge
 
 logging.basicConfig(filename="integration_test.log", level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -37,8 +37,7 @@ class IntegrationTest(unittest.TestCase):
 		Adafruit_BluefruitLE.get_provider().run_mainloop_with(self.runTest_MainLoop)
 
 	def runTest_startUART(self):
-		# ubmodem for Mac, empty string for linux?? 
-		uartPort = list(serial.tools.list_ports.grep(""))[0]
+		uartPort = list(serial.tools.list_ports.grep("cu.usbmodem"))[0]
 		self.uartSerial = serial.Serial(uartPort.device, 115200, timeout=1)
 
 		def uartRXTarget():
