@@ -134,7 +134,15 @@ void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
         bool prevSeen = false;
         for(int i=0; i<scan.num; i++)  {      // check through list of already seen badges
             if(ID == scan.IDs[i])  {
-                scan.rssiSums[i] += rssi;
+                
+                #if SAMPLE_MAX
+                    if(scan.rssiSums[i] < rssi){
+                        scan.rssiSums[i] = rssi;
+                    }
+                #else
+                    scan.rssiSums[i] += rssi;
+                #endif
+
                 scan.counts[i]++;
                 prevSeen = true;
                 break;
@@ -310,7 +318,13 @@ static void sortScanByRSSIDescending(void) {
     // Convert scan into an array of structs for sorting.
     for (int i = 0; i < scan.num; i++) {
         seenDevices[i].ID = scan.IDs[i];
-        seenDevices[i].rssi = (scan.rssiSums[i] / scan.counts[i]);
+        
+        #if SAMPLE_MAX    
+            seenDevices[i].rssi = scan.rssiSums[i];     // already the max after sample
+        #else
+            seenDevices[i].rssi = (scan.rssiSums[i] / scan.counts[i]);  // average the sample over window size
+        #endif
+
         seenDevices[i].count = scan.counts[i];
     }
 
@@ -319,7 +333,13 @@ static void sortScanByRSSIDescending(void) {
 
     for (int i = 0; i < scan.num; i++) {
         scan.IDs[i] = seenDevices[i].ID;
-        scan.rssiSums[i] = seenDevices[i].rssi * seenDevices[i].count;
+
+        #if SAMPLE_MAX
+            scan.rssiSums[i] = seenDevices[i].rssi * seenDevices[i].count;
+        #else
+            scan.rssiSums[i] = seenDevices[i].rssi * seenDevices[i].count;
+        #endif
+
         scan.counts[i] = seenDevices[i].count;
     }
 }
@@ -357,7 +377,14 @@ bool updateScanner()
             int numThisChunk = (numLeft <= SCAN_DEVICES_PER_CHUNK) ? numLeft : SCAN_DEVICES_PER_CHUNK;
             for(int i = 0; i < numThisChunk; i++)  {
                 scanBuffer[scan.to].devices[i].ID = scan.IDs[numSaved + i];
-                scanBuffer[scan.to].devices[i].rssi = scan.rssiSums[numSaved + i] / scan.counts[numSaved + i];
+
+                #if SAMPLE_MAX                                  
+                    scanBuffer[scan.to].devices[i].rssi = scan.rssiSums[numSaved + i];   // already equal to the max of the window as computed above
+                #else                                    
+                    scanBuffer[scan.to].devices[i].rssi = scan.rssiSums[numSaved + i] / scan.counts[numSaved + i];   // average over the window size
+                #endif
+
+
                 scanBuffer[scan.to].devices[i].count = scan.counts[numSaved + i];
                 debug_log("    bdg ID#%.4hX, rssi %d, count %d\r\n", scanBuffer[scan.to].devices[i].ID,
                                                                 (int)scanBuffer[scan.to].devices[i].rssi,
