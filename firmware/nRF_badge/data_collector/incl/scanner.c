@@ -4,6 +4,17 @@
 #include "battery.h"
 #include "scanner.h"
 
+#if MAX_AGGR
+	#define AGGR_SAMPLE(sample, datum) datum > sample ? datum: sample
+	#define PROCESS_SAMPLE(aggregated, count) aggregated
+	#define RESTORE_SAMPLE(processed, count) processed
+#else
+	#define AGGR_SAMPLE(sample, datum) datum+sample
+	#define PROCESS_SAMPLE(aggregated, count) aggregated/count 
+	#define RESTORE_SAMPLE(processed, count) processed*count 
+#endif
+
+
 static uint32_t mScanTimer;
 
 static void scan_task(void * p_context) {
@@ -73,7 +84,6 @@ uint32_t startScan()
 
 void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
 {
-    //debug_log("BLECH\r\n");
     signed char rssi = advReport->rssi;
     
     if (rssi < MINIMUM_RSSI)  {
@@ -130,21 +140,21 @@ void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
         }
     }
     
-    if (ID != BAD_ID && group == badgeAssignment.group && scan.num < MAX_SCAN_RESULTS)  {
-        bool prevSeen = false;
+   if (ID != BAD_ID && group == badgeAssignment.group && scan.num < MAX_SCAN_RESULTS)  {
+	
+	if(ID >= 16000){
+	    // Badge is a beacon
+	}else{
+	    // Regular badge
+	}
+
+	bool prevSeen = false;
         for(int i=0; i<scan.num; i++)  {      // check through list of already seen badges
             if(ID == scan.IDs[i])  {
-                
-                #if SAMPLE_MAX
-                    if(scan.rssiSums[i] < rssi){
-                        scan.rssiSums[i] = rssi;
-                    }
-                #else
-                    scan.rssiSums[i] += rssi;
-                #endif
-
-                scan.counts[i]++;
-                prevSeen = true;
+                //scan.rssiSums[i] += rssi;
+                //scan.counts[i]++;
+                scan.rssiSums[i] = AGGR_SAMPLE(scan.rssiSums[i], rssi)
+		prevSeen = true;
                 break;
             }
         }
@@ -318,13 +328,7 @@ static void sortScanByRSSIDescending(void) {
     // Convert scan into an array of structs for sorting.
     for (int i = 0; i < scan.num; i++) {
         seenDevices[i].ID = scan.IDs[i];
-        
-        #if SAMPLE_MAX    
-            seenDevices[i].rssi = scan.rssiSums[i];     // already the max after sample
-        #else
-            seenDevices[i].rssi = (scan.rssiSums[i] / scan.counts[i]);  // average the sample over window size
-        #endif
-
+        seenDevices[i].rssi = PROCESS_SAMPLE(scan.rssiSums[i], scan.counts[i]);
         seenDevices[i].count = scan.counts[i];
     }
 
@@ -333,13 +337,7 @@ static void sortScanByRSSIDescending(void) {
 
     for (int i = 0; i < scan.num; i++) {
         scan.IDs[i] = seenDevices[i].ID;
-
-        #if SAMPLE_MAX
-            scan.rssiSums[i] = seenDevices[i].rssi * seenDevices[i].count;
-        #else
-            scan.rssiSums[i] = seenDevices[i].rssi * seenDevices[i].count;
-        #endif
-
+        scan.rssiSums[i] = RESTORE_SAMPLE(seenDevices[i].rssi, seenDevices[i].count);  // seenDevices[i].rssi * seenDevices[i].count;
         scan.counts[i] = seenDevices[i].count;
     }
 }
@@ -377,14 +375,7 @@ bool updateScanner()
             int numThisChunk = (numLeft <= SCAN_DEVICES_PER_CHUNK) ? numLeft : SCAN_DEVICES_PER_CHUNK;
             for(int i = 0; i < numThisChunk; i++)  {
                 scanBuffer[scan.to].devices[i].ID = scan.IDs[numSaved + i];
-
-                #if SAMPLE_MAX                                  
-                    scanBuffer[scan.to].devices[i].rssi = scan.rssiSums[numSaved + i];   // already equal to the max of the window as computed above
-                #else                                    
-                    scanBuffer[scan.to].devices[i].rssi = scan.rssiSums[numSaved + i] / scan.counts[numSaved + i];   // average over the window size
-                #endif
-
-
+                scanBuffer[scan.to].devices[i].rssi = PROCESS_SAMPLE(scan.rssiSums[numSaved + i], scan.counts[numSaved + i]);
                 scanBuffer[scan.to].devices[i].count = scan.counts[numSaved + i];
                 debug_log("    bdg ID#%.4hX, rssi %d, count %d\r\n", scanBuffer[scan.to].devices[i].ID,
                                                                 (int)scanBuffer[scan.to].devices[i].rssi,
