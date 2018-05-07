@@ -65,7 +65,9 @@ void scanner_init()
     
     //scan_state = SCAN_IDLE;
 
-    app_timer_create(&mScanTimer, APP_TIMER_MODE_REPEATED, scan_task);
+    app_timer_create(&mScanTimer, APP_TIMER_MODE_REPEATED, scan_task); // makes an app timer that interrupts repeatedly to execute scan_task
+    startScanner(SCAN_WINDOW, SCAN_INTERVAL, SCAN_TIMEOUT, SCAN_PERIOD); // enables that timer with specific timing
+	
 }
 
 
@@ -84,6 +86,7 @@ uint32_t startScan()
 
 void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
 {
+
     signed char rssi = advReport->rssi;
     
     if (rssi < MINIMUM_RSSI)  {
@@ -140,29 +143,28 @@ void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
         }
     }
     
-   if (ID != BAD_ID && group == badgeAssignment.group && scan.num < MAX_SCAN_RESULTS)  {
-	
-	if(ID >= 16000){
-	    // Badge is a beacon
-	}else{
-	    // Regular badge
-	}
-
-	bool prevSeen = false;
-        for(int i=0; i<scan.num; i++)  {      // check through list of already seen badges
+   if (ID != BAD_ID && group == badgeAssignment.group){     // valid ID
+   
+	    bool prevSeen = false;
+        
+        for(int i = 0; i < scan.num; i++)  {      // check through list of already seen devices
             if(ID == scan.IDs[i])  {
-                //scan.rssiSums[i] += rssi;
-                //scan.counts[i]++;
-                scan.rssiSums[i] = AGGR_SAMPLE(scan.rssiSums[i], rssi)
-		prevSeen = true;
+                scan.rssiSums[i] = AGGR_SAMPLE(scan.rssiSums[i], rssi);
+                scan.counts[i]++;
+	            prevSeen = true;
                 break;
             }
         }
-        if(!prevSeen)  {                             // is it a new badge
-            scan.IDs[scan.num] = ID;
-            scan.rssiSums[scan.num] = rssi;
-            scan.counts[scan.num] = 1;
-            scan.num++;
+        
+        if(!prevSeen)  {        // is it a new device and do we have space for it    
+            if(scan.num < MAX_SCAN_RESULTS){
+                scan.IDs[scan.num] = ID;
+                scan.rssiSums[scan.num] = rssi;
+                scan.counts[scan.num] = 1;
+                scan.num++;
+                scan.numbeacons += ID >= BEACON_ID_THRESHOLD;
+                
+            }
         }
     }
     
@@ -323,21 +325,23 @@ static int compareSeenDeviceByRSSI(const void * a, const void * b) {
 // It sorts our global scan variable in place descendingly according to RSSI.
 // It's written this way so we can easily put it into the existing codebase with minimal changes.
 static void sortScanByRSSIDescending(void) {
-    seenDevice_t seenDevices[MAX_SCAN_RESULTS];
+    seenDevice_t seenDevices[scan.num];
 
-    // Convert scan into an array of structs for sorting.
+    // Convert scan into an array of structs for sorting 
     for (int i = 0; i < scan.num; i++) {
-        seenDevices[i].ID = scan.IDs[i];
-        seenDevices[i].rssi = PROCESS_SAMPLE(scan.rssiSums[i], scan.counts[i]);
-        seenDevices[i].count = scan.counts[i];
+        int index = i + (i < BEACON_ID_THRESHOLD)*scan.numbeacons;
+        seenDevices[index].ID = scan.IDs[i];
+        seenDevices[index].rssi = PROCESS_SAMPLE(scan.rssiSums[i], scan.counts[i]);
+        seenDevices[index].count = scan.counts[i];
     }
-
-    // Sort seen devices in place
-    qsort(seenDevices, (size_t) scan.num, sizeof(seenDevice_t), compareSeenDeviceByRSSI);
-
+    
+    int prioritized = (BEACON_PRIORITY < scan.numbeacons) ? BEACON_PRIORITY : scan.numbeacons;
+    qsort(seenDevices, scan.numbeacons, sizeof(int), compareSeenDeviceByRSSI);
+    qsort(seenDevices+prioritized, scan.num-prioritized, sizeof(int), compareSeenDeviceByRSSI);
+    
     for (int i = 0; i < scan.num; i++) {
         scan.IDs[i] = seenDevices[i].ID;
-        scan.rssiSums[i] = RESTORE_SAMPLE(seenDevices[i].rssi, seenDevices[i].count);  // seenDevices[i].rssi * seenDevices[i].count;
+        scan.rssiSums[i] = RESTORE_SAMPLE(seenDevices[i].rssi, seenDevices[i].count);
         scan.counts[i] = seenDevices[i].count;
     }
 }
@@ -375,6 +379,7 @@ bool updateScanner()
             int numThisChunk = (numLeft <= SCAN_DEVICES_PER_CHUNK) ? numLeft : SCAN_DEVICES_PER_CHUNK;
             for(int i = 0; i < numThisChunk; i++)  {
                 scanBuffer[scan.to].devices[i].ID = scan.IDs[numSaved + i];
+                debug_log("    before processing: rssi=%d, count=%d\n", scan.rssiSums[numSaved + i], scan.counts[numSaved + i]);
                 scanBuffer[scan.to].devices[i].rssi = PROCESS_SAMPLE(scan.rssiSums[numSaved + i], scan.counts[numSaved + i]);
                 scanBuffer[scan.to].devices[i].count = scan.counts[numSaved + i];
                 debug_log("    bdg ID#%.4hX, rssi %d, count %d\r\n", scanBuffer[scan.to].devices[i].ID,
