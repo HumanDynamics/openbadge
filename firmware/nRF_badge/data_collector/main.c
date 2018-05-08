@@ -3,6 +3,9 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
+
+
+#include <stdarg.h>
 //#include <nrf51822_peripherals.h> // needed for the peripheral defines!!! (e.g. UART_PRESENT) --> now in sdk_config.h
 //#include <nrf51.h> // includes the core_cm0 peripheral (NVIC_SystemReset)
 //#include <app_timer.h>
@@ -74,45 +77,11 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 #define SCHED_QUEUE_SIZE 100
 
 
-
-/*
-
-void uart_event_handle(app_uart_evt_t * p_event) {
-    if (p_event->evt_type == APP_UART_DATA_READY) {
-        uint8_t rx_byte;
-        while (app_uart_get(&rx_byte) == NRF_SUCCESS) {
-            
-        }
-    } else {
-       
-    }
-}
-
-void debug_log_init(void)
-{
-    uint32_t err_code = NRF_SUCCESS;
-    const app_uart_comm_params_t comm_params =  {
-        11, 
-        10, 
-        0, 
-        0, 
-        APP_UART_FLOW_CONTROL_DISABLED, 
-        false, 
-        0x01D7E000UL // from nrf51_bitfields.h
-    }; 
-        
-    APP_UART_FIFO_INIT(&comm_params, 
-                       32, 
-                       256,
-                       uart_event_handle,
-                       3,
-                       err_code);
-
-    UNUSED_VARIABLE(err_code);
-}
+nrf_drv_uart_t _instance;
 
 
-*/
+
+
 
 
 void handler (nrf_drv_uart_event_t * p_event, void * p_context){
@@ -121,13 +90,18 @@ void handler (nrf_drv_uart_event_t * p_event, void * p_context){
 
 
 // TODO: private printf-function!!
-/*
+
 uint8_t buf[200];
-void pprintf(args...){
-	sprintf(buf, args);
-	
+// https://stackoverflow.com/questions/4867229/code-for-printf-function-in-c
+// If you want to have float support, add "LDFLAGS += -u _printf_float" in Makefile!
+void pprintf(const char* format, ...){
+	va_list args;
+	va_start(args, format);
+	vsnprintf((char*)buf, sizeof(buf)/sizeof(buf[0]), format, args);
+	va_end(args);	
+	nrf_drv_uart_tx(&_instance, buf, strlen((char*)buf));
 }
-*/
+
 
 /**
  * ============================================== MAIN ====================================================
@@ -155,17 +129,15 @@ int main(void)
     config.pseltxd = 10;
 	
 	//nrf_drv_uart_t instance = NRF_DRV_UART_INSTANCE(1);	
-	nrf_drv_uart_t _instance;
+	
 	_instance.drv_inst_idx = UART0_INSTANCE_INDEX;//CONCAT_3(UART, 0, _INSTANCE_INDEX);
 	_instance.reg.p_uart = (NRF_UART_Type *) NRF_UART0;//_BASE;
 	nrf_drv_uart_init(&_instance, &config, handler);
 	
 	
 	
-	char* s = "Hallo!!!\n\r";
-	
 	while(1) {
-		nrf_drv_uart_tx(&_instance, (uint8_t*) s, strlen(s));
+		pprintf("Hallo %d, %.2f, 0x%x\n\r", 100, 0.9, 15);
 		nrf_delay_ms(1000);
 	}
 	

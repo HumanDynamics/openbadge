@@ -296,6 +296,9 @@ CFLAGS += -DGIT_TAG='"$(GIT_TAG)"'
 #enable SPI
 #CFLAGS += -DSPI_MASTER_0_ENABLE
 
+#Added Michael
+LDFLAGS += -u _printf_float
+
 # keep every function in separate section. This will allow linker to dump unused functions
 LDFLAGS += -Xlinker -Map=$(LISTING_DIRECTORY)/$(OUTPUT_FILENAME).map
 LDFLAGS += -mthumb -mabi=aapcs -L $(TEMPLATE_PATH) -T$(LINKER_SCRIPT)
