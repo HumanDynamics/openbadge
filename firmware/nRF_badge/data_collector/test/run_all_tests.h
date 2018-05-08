@@ -8,7 +8,7 @@ typedef void (*CASE_RUNNER)();
 typedef bool (*CASE_CHECKER)();
 
 typedef struct {
-    char **name;
+    char *name;
     CASE_GENERATOR gen;
     CASE_RUNNER run;
     CASE_CHECKER check;

@@ -75,7 +75,7 @@ bool check_scan(void){
 TEST_FILE scanner_tf(){
     TEST_FILE tf;
     char name[64] = "scanner_test.c";
-    *tf.name = name;
+    tf.name = name;
     tf.gen = make_test;
     tf.run = sortScanByRSSIDescending;
     tf.check = check_scan;

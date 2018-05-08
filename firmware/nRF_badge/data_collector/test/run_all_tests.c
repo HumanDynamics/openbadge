@@ -9,9 +9,8 @@
 
 //test source
 #include <scanner_test.h>
-//#include <run_all_tests.h>
 
-TEST_FILE (*test_files[NUM_TESTS])(void) = {scanner_tf};
+TEST_FILE test_files[NUM_TESTS] = {{scanner_tf}};
 
 int main(){
     
@@ -22,11 +21,12 @@ int main(){
     for(test = 0; test < NUM_TESTS; test++){
         srand(seed);
         
-        printf("Test %2d: %s ", test, *file.name);      
+        file = test_files[test];
+        printf("Test %2d: %s ", test, file.name);      
         
         casepass = 0;
         for(int iter = 0; iter < NUM_ITERS; iter++){
-            /*generate_case(file.gen);
+            generate_case(file.gen);
             run_case(file.run);
             
             if(check_case(file.check)){
@@ -37,7 +37,7 @@ int main(){
             }else{
                 break;
             }
-            */
+            
             seed = rand();
         }
         

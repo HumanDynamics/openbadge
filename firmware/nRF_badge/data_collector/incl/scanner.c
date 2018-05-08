@@ -5,13 +5,13 @@
 #include "scanner.h"
 
 #if MAX_AGGR
-	#define AGGR_SAMPLE(sample, datum) datum > sample ? datum: sample
+	#define AGGR_SAMPLE(sample, datum) (datum > sample ? datum: sample)
 	#define PROCESS_SAMPLE(aggregated, count) aggregated
 	#define RESTORE_SAMPLE(processed, count) processed
 #else
-	#define AGGR_SAMPLE(sample, datum) datum+sample
-	#define PROCESS_SAMPLE(aggregated, count) aggregated/count 
-	#define RESTORE_SAMPLE(processed, count) processed*count 
+	#define AGGR_SAMPLE(sample, datum) (datum+sample)
+	#define PROCESS_SAMPLE(aggregated, count) (aggregated/count) 
+	#define RESTORE_SAMPLE(processed, count) (processed*count) 
 #endif
 
 
@@ -66,7 +66,6 @@ void scanner_init()
     //scan_state = SCAN_IDLE;
 
     app_timer_create(&mScanTimer, APP_TIMER_MODE_REPEATED, scan_task); // makes an app timer that interrupts repeatedly to execute scan_task
-    startScanner(SCAN_WINDOW, SCAN_INTERVAL, SCAN_TIMEOUT, SCAN_PERIOD); // enables that timer with specific timing
 	
 }
 
@@ -76,6 +75,7 @@ uint32_t startScan()
     sd_ble_gap_scan_stop();  // stop any in-progress scans
     
     scan.num = 0;
+    scan.numbeacons = 0;
     scan.timestamp = now();
 
     scan_state = SCANNER_SCANNING;
@@ -126,7 +126,7 @@ void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
             memcpy(&badgeAdvData,&manufDataPtr[2],CUSTOM_ADV_DATA_LEN);  // skip past company ID; ensure data is properly aligned
             ID = badgeAdvData.ID;
             group = badgeAdvData.group;
-            debug_log("---Badge seen: group %d, ID %.4X, rssi %d.\r\n",(int)group,(int)ID,(int)rssi);
+            //debug_log("---Badge seen: group %d, ID %.4X, rssi %d.\r\n",(int)group,(int)ID,(int)rssi);
         }
     }
     else if (manufDataLen == IBEACON_MANUF_DATA_LEN)  {
@@ -162,7 +162,7 @@ void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
                 scan.rssiSums[scan.num] = rssi;
                 scan.counts[scan.num] = 1;
                 scan.num++;
-                scan.numbeacons += ID >= BEACON_ID_THRESHOLD;
+                scan.numbeacons += (ID >= BEACON_ID_THRESHOLD) ? 1 : 0;
                 
             }
         }
@@ -314,7 +314,7 @@ static int compareSeenDeviceByRSSI(const void * a, const void * b) {
     }
 
     // We should never get here?
-    // APP_ERROR_CHECK_BOOL(false);
+    APP_ERROR_CHECK_BOOL(false);
 
     return -1;
 }
@@ -333,7 +333,7 @@ static int compareSeenDeviceByID(const void * a, const void * b) {
     }
 
     // We should never get here?
-    // APP_ERROR_CHECK_BOOL(false);
+    APP_ERROR_CHECK_BOOL(false);
 
     return -1;
 }
@@ -373,6 +373,7 @@ bool updateScanner()
         int numSaved = 0;
         int chunksUsed = 0;
 
+
         if (scan.num > SCAN_DEVICES_PER_CHUNK) {
             // We have scanned more devices than we can store in a chunk, prune off the top SCAN_DEVICES_PER_CHUNK
             //   devices by RSSI values
@@ -397,12 +398,12 @@ bool updateScanner()
             int numThisChunk = (numLeft <= SCAN_DEVICES_PER_CHUNK) ? numLeft : SCAN_DEVICES_PER_CHUNK;
             for(int i = 0; i < numThisChunk; i++)  {
                 scanBuffer[scan.to].devices[i].ID = scan.IDs[numSaved + i];
-                debug_log("    before processing: rssi=%d, count=%d\n", scan.rssiSums[numSaved + i], scan.counts[numSaved + i]);
                 scanBuffer[scan.to].devices[i].rssi = PROCESS_SAMPLE(scan.rssiSums[numSaved + i], scan.counts[numSaved + i]);
                 scanBuffer[scan.to].devices[i].count = scan.counts[numSaved + i];
                 debug_log("    bdg ID#%.4hX, rssi %d, count %d\r\n", scanBuffer[scan.to].devices[i].ID,
                                                                 (int)scanBuffer[scan.to].devices[i].rssi,
                                                                 (int)scanBuffer[scan.to].devices[i].count );
+                
             }
             numSaved += numThisChunk;  
             
@@ -425,7 +426,6 @@ bool updateScanner()
         } while(numSaved < scan.num);
         
         debug_log("SCANNER: Done saving results.  used %d chunks.\r\n",chunksUsed);
-
     Storer_ScheduleBufferedDataStorage();
 
     return scannerActive;

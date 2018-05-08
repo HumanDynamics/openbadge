@@ -4,7 +4,7 @@
 #include <time.h>
 #include <string.h>
 
-#define NUM_TESTS 1000
+#define NUM_TESTS 10
 #define BEACON_PRIORITY 4
 #define BEACON_ID_THRESHOLD 16000
 #define MAX_AGGR true
@@ -44,7 +44,6 @@ void print_scan(void);
 void make_test(void);
 int check_scan(int);
 
-/*
 int seed;
 void main(){
     
@@ -63,7 +62,7 @@ void main(){
     printf("\nGOOD: %d  FAIL: %d\n\n", passed, NUM_TESTS-passed);
     
 }
-*/
+
 static void sortScanByRSSIDescending(void) {
     seenDevice_t seenDevices[scan.num];
 
@@ -183,6 +182,8 @@ int check_scan(int test){
     bool good = true;
     int prior = (BEACON_PRIORITY < scan.numbeacons) ? BEACON_PRIORITY : scan.numbeacons;
     
+    print_scan();
+    
     for(int i = 0; i < scan.num-1; i++){
         if(i < prior){
             if(scan.IDs[i] < BEACON_ID_THRESHOLD || (i < prior-1 && PROCESS_SAMPLE(scan.rssiSums[i], scan.counts[i]) < PROCESS_SAMPLE(scan.rssiSums[i+1], scan.counts[i+1]))){
@@ -197,13 +198,13 @@ int check_scan(int test){
         }
     }
     
-    /*
+    
     if(good){
         printf("Test %3d: GOOD seed: %d\t nbeac: %d  nbadg: %2d  prior: %d\n", test, seed, scan.numbeacons, scan.num-scan.numbeacons, prior);
     }else{
         printf("Test %3d: FAIL seed: %d\t nbeac: %d  nbadg: %2d  prior: %d\n", test, seed, scan.numbeacons, scan.num-scan.numbeacons, prior);
     }
-    */
+    
     return good;
 }
 
