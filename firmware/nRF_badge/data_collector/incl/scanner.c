@@ -301,8 +301,6 @@ void BLEonScanTimeout()
 
 }
 
-// Compare function for stdlib's QuickSort function that will sort a list of seenDevice_t by RSSI descendingly.
-// More information can be found here: http://www.cplusplus.com/reference/cstdlib/qsort/
 static int compareSeenDeviceByRSSI(const void * a, const void * b) {
     seenDevice_t * seenDeviceA = (seenDevice_t *) a;
     seenDevice_t * seenDeviceB = (seenDevice_t *) b;
@@ -316,7 +314,26 @@ static int compareSeenDeviceByRSSI(const void * a, const void * b) {
     }
 
     // We should never get here?
-    APP_ERROR_CHECK_BOOL(false);
+    // APP_ERROR_CHECK_BOOL(false);
+
+    return -1;
+}
+
+
+static int compareSeenDeviceByID(const void * a, const void * b) {
+    seenDevice_t * seenDeviceA = (seenDevice_t *) a;
+    seenDevice_t * seenDeviceB = (seenDevice_t *) b;
+
+    if (seenDeviceA->ID > seenDeviceB->ID) {
+        return -1; // We want device A before device B in our list.
+    } else if (seenDeviceA->ID == seenDeviceB->ID) {
+        return 0; // We don't care whether deviceA or deviceB comes first.
+    } else if (seenDeviceA->ID < seenDeviceB->ID) {
+        return 1; // We want device A to come after device B in our list.
+    }
+
+    // We should never get here?
+    // APP_ERROR_CHECK_BOOL(false);
 
     return -1;
 }
@@ -324,20 +341,20 @@ static int compareSeenDeviceByRSSI(const void * a, const void * b) {
 // This function is kind of hacky.
 // It sorts our global scan variable in place descendingly according to RSSI.
 // It's written this way so we can easily put it into the existing codebase with minimal changes.
-static void sortScanByRSSIDescending(void) {
+void sortScanByRSSIDescending(void) {
     seenDevice_t seenDevices[scan.num];
 
     // Convert scan into an array of structs for sorting 
     for (int i = 0; i < scan.num; i++) {
-        int index = i + (i < BEACON_ID_THRESHOLD)*scan.numbeacons;
-        seenDevices[index].ID = scan.IDs[i];
-        seenDevices[index].rssi = PROCESS_SAMPLE(scan.rssiSums[i], scan.counts[i]);
-        seenDevices[index].count = scan.counts[i];
+        seenDevices[i].ID = scan.IDs[i];
+        seenDevices[i].rssi = PROCESS_SAMPLE(scan.rssiSums[i], scan.counts[i]);
+        seenDevices[i].count = scan.counts[i];
     }
     
     int prioritized = (BEACON_PRIORITY < scan.numbeacons) ? BEACON_PRIORITY : scan.numbeacons;
-    qsort(seenDevices, scan.numbeacons, sizeof(int), compareSeenDeviceByRSSI);
-    qsort(seenDevices+prioritized, scan.num-prioritized, sizeof(int), compareSeenDeviceByRSSI);
+    qsort(seenDevices, (size_t)scan.num, sizeof(seenDevice_t), compareSeenDeviceByID);
+    qsort(seenDevices, (size_t)scan.numbeacons, sizeof(seenDevice_t), compareSeenDeviceByRSSI);
+    qsort(seenDevices+prioritized, (size_t)(scan.num-prioritized), sizeof(seenDevice_t), compareSeenDeviceByRSSI);
     
     for (int i = 0; i < scan.num; i++) {
         scan.IDs[i] = seenDevices[i].ID;
@@ -345,6 +362,7 @@ static void sortScanByRSSIDescending(void) {
         scan.counts[i] = seenDevices[i].count;
     }
 }
+
 
 bool updateScanner()
 {

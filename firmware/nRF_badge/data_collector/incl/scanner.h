@@ -191,6 +191,17 @@ signed char minimumRSSI;   // device seen on scan must reach this RSSI threshold
 
 #define MAX_AGGR true       // indicates the function (true=max/false=mean) used to aggregate samples
 
+#if MAX_AGGR
+	#define AGGR_SAMPLE(sample, datum) datum > sample ? datum: sample
+	#define PROCESS_SAMPLE(aggregated, count) aggregated
+	#define RESTORE_SAMPLE(processed, count) processed
+#else
+	#define AGGR_SAMPLE(sample, datum) datum+sample
+	#define PROCESS_SAMPLE(aggregated, count) aggregated/count 
+	#define RESTORE_SAMPLE(processed, count) processed*count 
+#endif
+
+void sortScanByRSSIDescending(void);
 
 struct
 {
