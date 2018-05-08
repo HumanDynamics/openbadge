@@ -266,6 +266,7 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
             isAdvertising = true;
             if(needAdvDataUpdate)
             {
+				debug_log("Set adv Data because GAP Timeout!\r\n");
                 setAdvData();
                 /*ble_advdata_t advdata;
                 constructAdvData(&advdata);

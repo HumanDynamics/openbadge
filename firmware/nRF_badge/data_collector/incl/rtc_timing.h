@@ -7,7 +7,7 @@
 #define APP_MAX_TIMERS         12
 #define APP_OP_QUEUE_SIZE      6
 
-#include "nrf_drv_config.h"
+//#include "nrf_drv_config.h"
 #include "nrf_soc.h"
 #include "app_error.h"
 

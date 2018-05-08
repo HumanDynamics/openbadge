@@ -24,7 +24,7 @@
 #include "debug_log.h"          //UART debugging logger
 //requires app_fifo, app_uart_fifo.c and retarget.c for printf to work properly
 
-#include "nrf_drv_config.h"
+//#include "nrf_drv_config.h"
 #include "boards.h"
 
 

@@ -36,7 +36,7 @@ void debug_log_init(void);
  *
  * @note Though this is currently a macro, it should be used used and treated as function.
  */
-#define debug_log printf
+#define debug_log(args...)  printf(args); 
 
 /**
  * @brief Dump auxiliary byte buffer to the debug trace.

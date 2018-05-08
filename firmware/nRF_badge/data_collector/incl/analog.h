@@ -3,7 +3,7 @@
 #ifndef ANALOG_H
 #define ANALOG_H
 
-#include "nrf_drv_config.h"
+//#include "nrf_drv_config.h"
 #include "nrf_soc.h"
 //#include "nrf_drv_rtc.h"
 //#include "app_error.h"

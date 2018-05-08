@@ -10,7 +10,7 @@
 
 #include "crc16.h"
 
-#include "nrf_drv_config.h"
+//#include "nrf_drv_config.h"
 
 #include "debug_log.h"          //UART debugging logger
 

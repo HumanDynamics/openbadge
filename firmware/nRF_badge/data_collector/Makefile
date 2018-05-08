@@ -5,7 +5,8 @@ $(warning NRF_SDK_PATH environment variable undefined.  Default: /usr/local/nRF5
 endif
 
 NRF_SDK_PATH ?= /usr/local/nRF51_SDK_8.1.0_b6ed55f
-SDK_PATH := $(NRF_SDK_PATH)
+# Michael: ADDED /nRF5_SDK_12.3.0_d7731ad
+SDK_PATH := $(NRF_SDK_PATH)/nRF5_SDK_12.3.0_d7731ad
 
 export OUTPUT_FILENAME
 #MAKEFILE_NAME := $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
@@ -89,50 +90,87 @@ helpDetailed:
 	@echo
 
 
+###################################################### SOURCE #####################################
+	
+#source files
+#C_SOURCE_FILES += \
+#main.c \
+#$(SDK_PATH)/components/toolchain/system_nrf51.c \  			# Needed for the Assembly file, because there is the SystemInit function!
+#$(SDK_PATH)/components/drivers_nrf/uart/nrf_drv_uart.c \		# the uart driver abstraction library/c-file
+#$(SDK_PATH)/components/drivers_nrf/common/nrf_drv_common.c \	# the function nrf_drv_common_irq_enable must be explicity included (maybe because it is called from an inline function)
+
 
 #source files
 C_SOURCE_FILES += \
 main.c \
-incl/accel.c \
-incl/analog.c \
-incl/app_fifo_util.c \
-incl/rtc_timing.c \
-incl/battery.c \
-incl/ble_setup.c \
-incl/debug_log.c \
-incl/ext_eeprom.c \
-incl/collector.c \
-incl/storer.c \
-incl/sender.c \
-incl/self_test.c \
-incl/scanner.c \
-incl/uart_commands.c \
-$(SDK_PATH)/components/libraries/crc16/crc16.c \
-$(SDK_PATH)/components/libraries/scheduler/app_scheduler.c \
-$(SDK_PATH)/components/libraries/timer/app_timer.c \
-$(SDK_PATH)/components/libraries/util/app_error.c \
-$(SDK_PATH)/components/libraries/util/nrf_assert.c \
-$(SDK_PATH)/components/libraries/uart/retarget.c \
-$(SDK_PATH)/components/drivers_nrf/hal/nrf_adc.c \
-$(SDK_PATH)/components/drivers_nrf/hal/nrf_delay.c \
-$(SDK_PATH)/components/drivers_nrf/uart/app_uart_fifo.c \
-$(SDK_PATH)/components/libraries/fifo/app_fifo.c \
-$(SDK_PATH)/components/drivers_nrf/common/nrf_drv_common.c \
-$(SDK_PATH)/components/drivers_nrf/gpiote/nrf_drv_gpiote.c \
-$(SDK_PATH)/components/drivers_nrf/ble_flash/ble_flash.c \
-$(SDK_PATH)/components/drivers_nrf/spi_master/spi_master.c \
-$(SDK_PATH)/components/drivers_nrf/pstorage/pstorage.c \
-$(SDK_PATH)/components/ble/common/ble_advdata.c \
-$(SDK_PATH)/components/ble/ble_advertising/ble_advertising.c \
-$(SDK_PATH)/components/ble/common/ble_srv_common.c \
 $(SDK_PATH)/components/toolchain/system_nrf51.c \
-$(SDK_PATH)/components/softdevice/common/softdevice_handler/softdevice_handler.c \
-$(SDK_PATH)/components/ble/ble_services/ble_bas/ble_bas.c \
-$(SDK_PATH)/components/ble/ble_services/ble_nus/ble_nus.c \
+$(SDK_PATH)/components/drivers_nrf/uart/nrf_drv_uart.c \
+$(SDK_PATH)/components/drivers_nrf/common/nrf_drv_common.c \
+#incl/accel.c \
+#incl/analog.c \
+#incl/app_fifo_util.c \
+#incl/rtc_timing.c \
+#incl/battery.c \
+#incl/ble_setup.c \
+#incl/debug_log.c \
+#incl/ext_eeprom.c \
+#incl/collector.c \
+#incl/storer.c \
+#incl/sender.c \
+#incl/self_test.c \
+#incl/scanner.c \
+#incl/uart_commands.c \
+#$(SDK_PATH)/components/libraries/crc16/crc16.c \
+#$(SDK_PATH)/components/libraries/scheduler/app_scheduler.c \
+#$(SDK_PATH)/components/libraries/timer/app_timer.c \
+#$(SDK_PATH)/components/libraries/util/app_error.c \
+#$(SDK_PATH)/components/libraries/util/nrf_assert.c \
+#$(SDK_PATH)/components/libraries/uart/retarget.c \
+#$(SDK_PATH)/components/drivers_nrf/hal/nrf_adc.c \
+#$(SDK_PATH)/components/drivers_nrf/hal/nrf_delay.c \
+#$(SDK_PATH)/components/drivers_nrf/uart/app_uart_fifo.c \
+#$(SDK_PATH)/components/libraries/fifo/app_fifo.c \
+#$(SDK_PATH)/components/drivers_nrf/common/nrf_drv_common.c \
+#$(SDK_PATH)/components/drivers_nrf/gpiote/nrf_drv_gpiote.c \
+#$(SDK_PATH)/components/drivers_nrf/ble_flash/ble_flash.c \
+#$(SDK_PATH)/components/drivers_nrf/spi_master/spi_master.c \
+#$(SDK_PATH)/components/drivers_nrf/pstorage/pstorage.c \
+#$(SDK_PATH)/components/ble/common/ble_advdata.c \
+#$(SDK_PATH)/components/ble/ble_advertising/ble_advertising.c \
+#$(SDK_PATH)/components/ble/common/ble_srv_common.c \
+#$(SDK_PATH)/components/toolchain/system_nrf51.c \
+#$(SDK_PATH)/components/softdevice/common/softdevice_handler/softdevice_handler.c \
+#$(SDK_PATH)/components/ble/ble_services/ble_bas/ble_bas.c \
+#$(SDK_PATH)/components/ble/ble_services/ble_nus/ble_nus.c \
+
+###################################################### SOURCE #####################################
 
 
 #assembly files
-ASM_SOURCE_FILES  = $(SDK_PATH)/components/toolchain/gcc/gcc_startup_nrf51.s
+#Changed Michael --> to .S!
+ASM_SOURCE_FILES  = $(SDK_PATH)/components/toolchain/gcc/gcc_startup_nrf51.S
+#ASM_SOURCE_FILES  = $(SDK_PATH)/components/toolchain/gcc/gcc_startup_nrf51.s
+
+###################################################### INCLUDE #####################################
+
+#includes
+# Doku:
+#INC_PATHS  = -Iconfig													# Include all files in the config directory
+#INC_PATHS += -Iincl													# Include all files in the incl directory
+#INC_PATHS += -I$(SDK_PATH)/components/device							# nrf51822_peripherals.h (for sdk_config.h), nrf.h, nrf51 (for main, because it includes the core_cm0 peripheral (NVIC_SystemReset))
+#INC_PATHS += -I$(SDK_PATH)/components/toolchain						# system_nrf51.h/.c for SystemInit of the assembly file
+#INC_PATHS += -I$(SDK_PATH)/components/toolchain/gcc					# the assembly startup-code: gcc_startup_nrf51
+#INC_PATHS += -I$(SDK_PATH)/components/toolchain/cmsis/include			# the core_cm0-files needed for other files, e.g. nrf51.h
+#INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/uart					# nrf_drv_uart.h/.c
+#INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/hal					# nrf_uart.h/.c (needed for nrf_drv_uart) 
+#INC_PATHS += -I$(SDK_PATH)/components/libraries/util					# app_error.h/.c, sdk_errors.h/.c, app_util_platform.h/.c (APP_PRIORITY_LOW...) 
+#INC_PATHS += -I$(SDK_PATH)/components/softdevice/s130/headers			# nrf_soc.h, nrf_nvic.h, nrf_errors.h (to interface with the softdevice)
+#INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/common				# nrf_drv_common.h/.c
+#INC_PATHS += -I$(SDK_PATH)/components/libraries/log					# nrf_log.h, nrf_log_ctrl.c (for almost any file)
+#INC_PATHS += -I$(SDK_PATH)/components/libraries/log/src				# nrf_log_internal (needed for nrf_log)
+#INC_PATHS += -I$(SDK_PATH)/components/boards							# boards.h (include in main.c, that there is a redirect to custom_board.h and so the badge_vxx-file)
+#INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/delay				# nrf_delay.h --> implementation directly in header --> no source file to add!
+
 
 #includes
 INC_PATHS  = -Iconfig
@@ -140,28 +178,49 @@ INC_PATHS += -Iincl
 INC_PATHS += -I$(SDK_PATH)/components/device
 INC_PATHS += -I$(SDK_PATH)/components/toolchain
 INC_PATHS += -I$(SDK_PATH)/components/toolchain/gcc
-INC_PATHS += -I$(SDK_PATH)/components/softdevice/s130/headers
-INC_PATHS += -I$(SDK_PATH)/components/softdevice/common/softdevice_handler
-INC_PATHS += -I$(SDK_PATH)/components/libraries/crc16/
-INC_PATHS += -I$(SDK_PATH)/components/libraries/util
-INC_PATHS += -I$(SDK_PATH)/components/libraries/fifo
-INC_PATHS += -I$(SDK_PATH)/components/libraries/scheduler
-INC_PATHS += -I$(SDK_PATH)/components/libraries/trace
-INC_PATHS += -I$(SDK_PATH)/components/libraries/timer
-INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/common
-INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/rtc
-INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/hal
+INC_PATHS += -I$(SDK_PATH)/components/toolchain/cmsis/include
 INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/uart
-INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/config
-INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/gpiote
-INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/ble_flash
-INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/spi_master
-INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/pstorage
-INC_PATHS += -I$(SDK_PATH)/components/ble/common
-INC_PATHS += -I$(SDK_PATH)/components/ble/ble_advertising
-INC_PATHS += -I$(SDK_PATH)/components/ble/ble_services/ble_bas
-INC_PATHS += -I$(SDK_PATH)/components/ble/ble_services/ble_nus
-INC_PATHS += -I$(SDK_PATH)/examples/bsp
+INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/hal
+INC_PATHS += -I$(SDK_PATH)/components/libraries/util
+INC_PATHS += -I$(SDK_PATH)/components/softdevice/s130/headers
+INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/common
+INC_PATHS += -I$(SDK_PATH)/components/libraries/log
+INC_PATHS += -I$(SDK_PATH)/components/libraries/log/src
+INC_PATHS += -I$(SDK_PATH)/components/boards
+INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/delay
+
+#INC_PATHS += -I$(SDK_PATH)/components/libraries/uart
+#INC_PATHS += -I$(SDK_PATH)/components/libraries/util
+#INC_PATHS += -I$(SDK_PATH)/components/softdevice/s130/headers
+#INC_PATHS += -I$(SDK_PATH)/components/libraries/log
+#INC_PATHS += -I$(SDK_PATH)/components/libraries/log/src
+#INC_PATHS += -I$(SDK_PATH)/components/softdevice/common/softdevice_handler
+#INC_PATHS += -I$(SDK_PATH)/components/libraries/crc16/
+#INC_PATHS += -I$(SDK_PATH)/components/libraries/util
+#INC_PATHS += -I$(SDK_PATH)/components/libraries/fifo
+#INC_PATHS += -I$(SDK_PATH)/components/libraries/scheduler
+#INC_PATHS += -I$(SDK_PATH)/components/libraries/trace
+#INC_PATHS += -I$(SDK_PATH)/components/libraries/timer
+#INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/common
+#INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/rtc
+#INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/hal
+#INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/config
+#INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/gpiote
+#INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/ble_flash
+#INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/spi_master
+#INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/pstorage
+#INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/delay
+#INC_PATHS += -I$(SDK_PATH)/components/boards
+#INC_PATHS += -I$(SDK_PATH)/components/ble/common
+#INC_PATHS += -I$(SDK_PATH)/components/ble/ble_advertising
+#INC_PATHS += -I$(SDK_PATH)/components/ble/ble_services/ble_bas
+#INC_PATHS += -I$(SDK_PATH)/components/ble/ble_services/ble_nus
+#INC_PATHS += -I$(SDK_PATH)/examples/bsp
+#INC_PATHS += -I$(SDK_PATH)/examples/bsp
+
+
+###################################################### INCLUDE #####################################
+
 
 OBJECT_DIRECTORY = _build
 LISTING_DIRECTORY = $(OBJECT_DIRECTORY)
@@ -233,8 +292,9 @@ CFLAGS += -DGIT_COMMIT='"$(GIT_COMMIT)"'
 CFLAGS += -DGIT_BRANCH='"$(GIT_BRANCH)"'
 CFLAGS += -DGIT_TAG='"$(GIT_TAG)"'
 
+#Removed Michael
 #enable SPI
-CFLAGS += -DSPI_MASTER_0_ENABLE
+#CFLAGS += -DSPI_MASTER_0_ENABLE
 
 # keep every function in separate section. This will allow linker to dump unused functions
 LDFLAGS += -Xlinker -Map=$(LISTING_DIRECTORY)/$(OUTPUT_FILENAME).map
@@ -265,10 +325,14 @@ C_OBJECTS = $(addprefix $(OBJECT_DIRECTORY)/, $(C_SOURCE_FILE_NAMES:.c=.o) )
 
 ASM_SOURCE_FILE_NAMES = $(notdir $(ASM_SOURCE_FILES))
 ASM_PATHS = $(call remduplicates, $(dir $(ASM_SOURCE_FILES) ))
-ASM_OBJECTS = $(addprefix $(OBJECT_DIRECTORY)/, $(ASM_SOURCE_FILE_NAMES:.s=.o) )
+#Changed Michael
+#ASM_OBJECTS = $(addprefix $(OBJECT_DIRECTORY)/, $(ASM_SOURCE_FILE_NAMES:.s=.o) )
+ASM_OBJECTS = $(addprefix $(OBJECT_DIRECTORY)/, $(ASM_SOURCE_FILE_NAMES:.S=.o) )
 
 vpath %.c $(C_PATHS)
-vpath %.s $(ASM_PATHS)
+#Changed Michael
+#vpath %.s $(ASM_PATHS)
+vpath %.S $(ASM_PATHS)
 
 OBJECTS = $(C_OBJECTS) $(ASM_OBJECTS)
 
@@ -292,7 +356,9 @@ $(OBJECT_DIRECTORY)/%.o: %.c
 	$(NO_ECHO)$(CC) $(CFLAGS) $(INC_PATHS) -c -o $@ $<
 
 # Assemble files
-$(OBJECT_DIRECTORY)/%.o: %.s
+#Changed Michael
+#$(OBJECT_DIRECTORY)/%.o: %.s
+$(OBJECT_DIRECTORY)/%.o: %.S
 	@echo Compiling file: $(notdir $<)
 	$(NO_ECHO)$(CC) $(ASMFLAGS) $(INC_PATHS) -c -o $@ $<
 
@@ -382,9 +448,11 @@ flashAPP.jlink:
 flashS130: flashS130.jlink
 	$(JLINK) $(OBJECT_DIRECTORY)/flashS130.jlink
 
+#Changed Michaelnew SDK-version!
 #create SoftDevice flashing script for JLinkExe
 flashS130.jlink:
-	printf "loadbin $(SDK_PATH)/components/softdevice/s130/hex/s130_softdevice.hex 0\nr\ng\nexit\n" > $(OBJECT_DIRECTORY)/flashS130.jlink
+	printf "loadbin $(SDK_PATH)/components/softdevice/s130/hex/s130_nrf51_2.0.1_softdevice.hex 0\nr\ng\nexit\n" > $(OBJECT_DIRECTORY)/flashS130.jlink
+	#printf "loadbin $(SDK_PATH)/components/softdevice/s130/hex/s130_softdevice.hex 0\nr\ng\nexit\n" > $(OBJECT_DIRECTORY)/flashS130.jlink
 
 
 #erase all flash

@@ -15,7 +15,7 @@
 #include "nrf51_bitfields.h"
 #include "app_util_platform.h"
 
-#include "nrf_drv_config.h"
+//#include "nrf_drv_config.h"
 #include "boards.h"
 
 #include "app_error.h"          // error handling
