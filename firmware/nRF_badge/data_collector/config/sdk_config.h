@@ -9,8 +9,9 @@
 // <h> nRF_Drivers 
 
 
-#include <nrf51822_peripherals.h> 
 
+//#include <nrf_peripherals.h> is included in every peripheral module, so don't need to include it here!
+//#include <nrf51822_peripherals.h>
 
 
 
@@ -18,7 +19,7 @@
 // <e> ADC_ENABLED - nrf_drv_adc - Driver for ADC peripheral (nRF51)
 //==========================================================
 #ifndef ADC_ENABLED
-#define ADC_ENABLED 0
+#define ADC_ENABLED 1
 #endif
 #if  ADC_ENABLED
 // <o> ADC_CONFIG_IRQ_PRIORITY  - Interrupt priority

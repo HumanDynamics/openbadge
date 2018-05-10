@@ -20,6 +20,8 @@
 #include "nrf_gpio.h"
 
 #include "nrf_delay.h"
+
+#include "adc_lib.h"
 /**
  * From Nordic SDK
  */
@@ -77,22 +79,41 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 #define SCHED_QUEUE_SIZE 100
 
 
+
+
+#define INIT_STRUCT(P_UART_BUFFER, RX_BUF_SIZE, TX_BUF_SIZE) \
+    do                                                                                             \
+    {                                                                                              \
+        static uint8_t     rx_buf[RX_BUF_SIZE];                                                    \
+        static uint8_t     tx_buf[TX_BUF_SIZE];                                                    \
+                                                                                                   \
+		(P_UART_BUFFER)->rx_buf      = rx_buf;                                                       \
+        (P_UART_BUFFER)->rx_buf_size = sizeof (rx_buf);                                              \
+        (P_UART_BUFFER)->tx_buf      = tx_buf;                                                       \
+        (P_UART_BUFFER)->tx_buf_size = sizeof (tx_buf);                                              \
+    } while (0)
+		
+typedef struct 
+{
+	uint8_t * rx_buf;      /**< Pointer to the RX buffer. */
+    uint32_t  rx_buf_size; /**< Size of the RX buffer. */
+    uint8_t * tx_buf;      /**< Pointer to the TX buffer. */
+    uint32_t  tx_buf_size; /**< Size of the TX buffer. */
+} uart_buffer_t;
+
+typedef struct {
+	uint8_t a;
+	uint8_t b;
+} test_struct;
+
+
 nrf_drv_uart_t _instance;
 
 
 
-
-
-
-void handler (nrf_drv_uart_event_t * p_event, void * p_context){
-
-}
-
-
-// TODO: private printf-function!!
-
 uint8_t buf[200];
 // https://stackoverflow.com/questions/4867229/code-for-printf-function-in-c
+// https://devzone.nordicsemi.com/f/nordic-q-a/28999/using-floats-with-sprintf-gcc-arm-none-eabi-nrf51822
 // If you want to have float support, add "LDFLAGS += -u _printf_float" in Makefile!
 void pprintf(const char* format, ...){
 	va_list args;
@@ -100,8 +121,38 @@ void pprintf(const char* format, ...){
 	vsnprintf((char*)buf, sizeof(buf)/sizeof(buf[0]), format, args);
 	va_end(args);	
 	nrf_drv_uart_tx(&_instance, buf, strlen((char*)buf));
+	nrf_delay_ms(100);
 }
 
+uint8_t rx_buffer[1];
+
+void handler (nrf_drv_uart_event_t * p_event, void * p_context){
+	switch(p_event -> type) {
+		case NRF_DRV_UART_EVT_TX_DONE: 
+		{
+			
+		}
+		break;
+		case NRF_DRV_UART_EVT_RX_DONE: 
+		{
+			nrf_drv_uart_rx(&_instance, rx_buffer, 1);
+			pprintf("%c", rx_buffer[0]);
+			
+		}
+		break;
+		case NRF_DRV_UART_EVT_ERROR: 
+		{
+						
+		}
+		break;
+		
+		
+	}
+}
+
+
+adc_instance_t mic_adc;
+adc_instance_t bat_adc;
 
 /**
  * ============================================== MAIN ====================================================
@@ -134,11 +185,57 @@ int main(void)
 	_instance.reg.p_uart = (NRF_UART_Type *) NRF_UART0;//_BASE;
 	nrf_drv_uart_init(&_instance, &config, handler);
 	
+	nrf_drv_uart_rx_enable(&_instance);
+	nrf_drv_uart_rx(&_instance, rx_buffer, 1);
+	
+	uart_buffer_t uart_buffer;
+	INIT_STRUCT(&uart_buffer, 10, 20);
+	
+	
+	
+	
+	mic_adc.adc_peripheral = 0;
+	mic_adc.nrf_adc_config.resolution 	= NRF_ADC_CONFIG_RES_8BIT;
+	mic_adc.nrf_adc_config.scaling		= NRF_ADC_CONFIG_SCALING_INPUT_FULL_SCALE;
+	mic_adc.nrf_adc_config.reference	= MIC_AREF; // NRF_ADC_CONFIG_REF_EXT_REF1;
+	mic_adc.nrf_adc_config_input		= MIC_PIN;	//NRF_ADC_CONFIG_INPUT_6; //ADC_CONFIG_PSEL_AnalogInput6;
+	
+	
+	bat_adc.adc_peripheral = 0;
+	bat_adc.nrf_adc_config.resolution 	= NRF_ADC_CONFIG_RES_10BIT;
+	bat_adc.nrf_adc_config.scaling		= NRF_ADC_CONFIG_SCALING_SUPPLY_ONE_THIRD;
+	bat_adc.nrf_adc_config.reference	= NRF_ADC_CONFIG_REF_VBG; // NRF_ADC_CONFIG_REF_EXT_REF1;
+	bat_adc.nrf_adc_config_input		= NRF_ADC_CONFIG_INPUT_DISABLED;	//ADC_CONFIG_PSEL_AnalogInput6;
+	
+	
+	pprintf("Starting...\n");
+	nrf_delay_ms(1000);
+	
+	adc_init(&mic_adc);
+	
+	adc_init(&bat_adc);
+	int32_t val = 0;
+	
+	
 	
 	
 	while(1) {
-		pprintf("Hallo %d, %.2f, 0x%x\n\r", 100, 0.9, 15);
-		nrf_delay_ms(1000);
+		adc_read_raw(&mic_adc, &val);
+		pprintf("Value: %d\n\r", val);
+		nrf_delay_ms(2000);
+		
+		adc_read_raw(&bat_adc, &val);
+		pprintf("Value: %d\n\r", val);
+		nrf_delay_ms(2000);
+		
+		float voltage;
+		adc_read_voltage(&bat_adc, &voltage, 1.2);
+		pprintf("Voltage: %.3f\n\r", voltage);
+		nrf_delay_ms(2000);
+		
+		
+		
+		
 	}
 	
 	

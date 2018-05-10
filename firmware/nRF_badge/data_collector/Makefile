@@ -98,14 +98,17 @@ helpDetailed:
 #$(SDK_PATH)/components/toolchain/system_nrf51.c \  			# Needed for the Assembly file, because there is the SystemInit function!
 #$(SDK_PATH)/components/drivers_nrf/uart/nrf_drv_uart.c \		# the uart driver abstraction library/c-file
 #$(SDK_PATH)/components/drivers_nrf/common/nrf_drv_common.c \	# the function nrf_drv_common_irq_enable must be explicity included (maybe because it is called from an inline function)
-
+#$(SDK_PATH)/components/drivers_nrf/hal/nrf_adc.c \				# the adc abstraction library
 
 #source files
 C_SOURCE_FILES += \
 main.c \
+incl/adc_lib.c \
+incl/spi_lib.c \
 $(SDK_PATH)/components/toolchain/system_nrf51.c \
 $(SDK_PATH)/components/drivers_nrf/uart/nrf_drv_uart.c \
 $(SDK_PATH)/components/drivers_nrf/common/nrf_drv_common.c \
+$(SDK_PATH)/components/drivers_nrf/hal/nrf_adc.c \
 #incl/accel.c \
 #incl/analog.c \
 #incl/app_fifo_util.c \
@@ -162,7 +165,7 @@ ASM_SOURCE_FILES  = $(SDK_PATH)/components/toolchain/gcc/gcc_startup_nrf51.S
 #INC_PATHS += -I$(SDK_PATH)/components/toolchain/gcc					# the assembly startup-code: gcc_startup_nrf51
 #INC_PATHS += -I$(SDK_PATH)/components/toolchain/cmsis/include			# the core_cm0-files needed for other files, e.g. nrf51.h
 #INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/uart					# nrf_drv_uart.h/.c
-#INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/hal					# nrf_uart.h/.c (needed for nrf_drv_uart) 
+#INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/hal					# nrf_uart.h/.c (needed for nrf_drv_uart), nrf_adc.h/.c 
 #INC_PATHS += -I$(SDK_PATH)/components/libraries/util					# app_error.h/.c, sdk_errors.h/.c, app_util_platform.h/.c (APP_PRIORITY_LOW...) 
 #INC_PATHS += -I$(SDK_PATH)/components/softdevice/s130/headers			# nrf_soc.h, nrf_nvic.h, nrf_errors.h (to interface with the softdevice)
 #INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/common				# nrf_drv_common.h/.c
@@ -170,7 +173,7 @@ ASM_SOURCE_FILES  = $(SDK_PATH)/components/toolchain/gcc/gcc_startup_nrf51.S
 #INC_PATHS += -I$(SDK_PATH)/components/libraries/log/src				# nrf_log_internal (needed for nrf_log)
 #INC_PATHS += -I$(SDK_PATH)/components/boards							# boards.h (include in main.c, that there is a redirect to custom_board.h and so the badge_vxx-file)
 #INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/delay				# nrf_delay.h --> implementation directly in header --> no source file to add!
-
+#INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/spi_master			# nrf_drv_spi.c/.h --> implementation of SPI master driver
 
 #includes
 INC_PATHS  = -Iconfig
@@ -188,6 +191,8 @@ INC_PATHS += -I$(SDK_PATH)/components/libraries/log
 INC_PATHS += -I$(SDK_PATH)/components/libraries/log/src
 INC_PATHS += -I$(SDK_PATH)/components/boards
 INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/delay
+INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/spi_master
+
 
 #INC_PATHS += -I$(SDK_PATH)/components/libraries/uart
 #INC_PATHS += -I$(SDK_PATH)/components/libraries/util
@@ -274,6 +279,8 @@ badge_03v6_noDebug: CFLAGS += -UDEBUG_LOG_ENABLE
 #======= Other compiler flags
 CFLAGS += -DSOFTDEVICE_PRESENT
 CFLAGS += -DNRF51
+# Added Michel (for the nrf_peripherals.h to include the nrf51822_peripherals)
+CFLAGS += -DNRF51822	
 CFLAGS += -DS130
 CFLAGS += -DBLE_STACK_SUPPORT_REQD
 CFLAGS += -DSWI_DISABLE0
