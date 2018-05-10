@@ -5,15 +5,6 @@
 #include "nrf_drv_spi.h"
 #include "nrf_gpio.h"
 
-// Could be retrieved from ADC_COUNT of nrf51822_peripherals..
-
-/*
-// Has to be an increasing number < ADC_PERIPHERAL, because used as array-indizes
-typedef enum {
-	SPI0 = 0,
-	SPI1 = 1,
-} spi_peripheral_t;
-*/
 
 
 typedef enum {
@@ -26,12 +17,12 @@ typedef enum {
 
 typedef enum
 {
-    SPI_TRANSFER_DONE, ///< Transfer done.
+    SPI_TRANSFER_DONE, /**< Transfer done */
 } spi_evt_type_t;
 
 typedef struct
 {
-    spi_evt_type_t  type;      ///< Event type.
+    spi_evt_type_t  type;      /**< Event type */
 } spi_evt_t;
 
 
@@ -43,13 +34,11 @@ typedef void (*spi_handler_t)(spi_evt_t const * p_event);
 
 
 
-typedef struct {
-	int32_t 				spi_instance_id;		// Setted by the Init-function!
-	nrf_drv_spi_t			nrf_drv_spi_instance;	// Setted by the Init-function!
-	
-	
-	uint8_t			 		spi_peripheral;			// Needed to check whether the same peripheral is already in use!
-	nrf_drv_spi_config_t	nrf_drv_spi_config;	
+typedef struct {	
+	uint8_t			 		spi_peripheral;			/**< Set to the desired spi peripheral. The Peripheral has to be enabled in the sdk_config.h file */
+	nrf_drv_spi_config_t	nrf_drv_spi_config;		/**< Set the SPI configuration (possible parameters in nrf_drv_spi.h)  */	
+	int32_t 				spi_instance_id;		/**< Instance index: Setted by the init-function (do not set!) */
+	nrf_drv_spi_t			nrf_drv_spi_instance;	/**< The initialized low level spi instance: Setted by the init-function (do not set!) */
 } spi_instance_t;
 
 
@@ -57,9 +46,12 @@ ret_code_t spi_init(spi_instance_t* spi_instance);
 
 ret_code_t spi_send_IT(const spi_instance_t* spi_instance, spi_handler_t spi_handler, const uint8_t* tx_data, uint32_t tx_data_len);
 
+ret_code_t spi_send(const spi_instance_t* spi_instance, const uint8_t* tx_data, uint32_t tx_data_len);
 
-ret_code_t spi_send(const spi_instance_t* spi_instance, uint8_t* tx_data, uint32_t tx_data_len);
+ret_code_t spi_send_receive_IT(const spi_instance_t* spi_instance, spi_handler_t spi_handler, const uint8_t* tx_data, uint32_t tx_data_len, uint8_t* rx_data, uint32_t rx_data_len);
 
+ret_code_t spi_send_receive(const spi_instance_t* spi_instance, const uint8_t* tx_data, uint32_t tx_data_len, uint8_t* rx_data, uint32_t rx_data_len);
 
+spi_operation_t spi_get_status(const spi_instance_t* spi_instance);
 
 #endif

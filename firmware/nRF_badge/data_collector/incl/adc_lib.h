@@ -1,14 +1,11 @@
 #ifndef __ADC_LIB_H
 #define __ADC_LIB_H
 
-//#include <stdio.h>
-//#include <stdlib.h>
-//#include <stdbool.h>
-//#include <stdint.h>
-
 
 #include "nrf_adc.h"
 
+
+#include "sdk_errors.h"	// Needed for the definition of ret_code_t and the error-codes
 
 
 typedef enum {
@@ -18,18 +15,18 @@ typedef enum {
 
 
 typedef struct {
-	int32_t 				adc_instance_id;		// Setted by the Init-function!
-	uint8_t			 		adc_peripheral;			// Needed to check whether the same peripheral is already in use!
-	nrf_adc_config_t 		nrf_adc_config;
-	nrf_adc_config_input_t 	nrf_adc_config_input;
+	uint8_t			 		adc_peripheral;			/**< Set to the desired adc peripheral (should be 0 in case of ADC). The Peripheral has to be enabled in the sdk_config.h file */
+	nrf_adc_config_t 		nrf_adc_config;			/**< Set the adc configuration: resolution, scaling, reference (possible parameters in nrf_adc.h) */
+	nrf_adc_config_input_t 	nrf_adc_config_input;	/**< Set the adc input (possible parameters in nrf_adc.h) */
+	int32_t 				adc_instance_id;		/**< Instance index: Setted by the init-function (do not set!) */
 } adc_instance_t;
 
 
-void adc_init(adc_instance_t* adc_instance);
+ret_code_t adc_init(adc_instance_t* adc_instance);
 
-void adc_read_raw(const adc_instance_t* adc_instance, int32_t* raw);
+ret_code_t adc_read_raw(const adc_instance_t* adc_instance, int32_t* raw);
 
-void adc_read_voltage(const adc_instance_t* adc_instance, float* voltage, float ref_voltage);
+ret_code_t adc_read_voltage(const adc_instance_t* adc_instance, float* voltage, float ref_voltage);
 
 
 #endif

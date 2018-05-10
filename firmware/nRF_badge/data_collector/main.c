@@ -22,6 +22,9 @@
 #include "nrf_delay.h"
 
 #include "adc_lib.h"
+
+#include "spi_lib.h"
+
 /**
  * From Nordic SDK
  */
@@ -154,6 +157,24 @@ void handler (nrf_drv_uart_event_t * p_event, void * p_context){
 adc_instance_t mic_adc;
 adc_instance_t bat_adc;
 
+spi_instance_t acc_spi;
+
+spi_instance_t ext_spi;
+
+
+	//==== Funcion read registers ====
+uint8_t readRegister8(uint8_t reg){
+  uint8_t txBuf[1] = {reg | 0x80}; //Array to send
+  uint8_t rxBuf[2] = {0,0}; //Array to receive
+  spi_send_receive_IT(&acc_spi, NULL, txBuf,sizeof(txBuf),rxBuf,2);
+  
+  //spi_master_send_recv(SPI_MASTER_0,txBuf,sizeof(txBuf),rxBuf,2); //Send and receive over SPI protocol
+  //while(spi_busy()); //Wait while spi is bussy
+  return rxBuf[1]; // Value retorned from spi register
+}
+
+
+
 /**
  * ============================================== MAIN ====================================================
  */
@@ -218,6 +239,42 @@ int main(void)
 	
 	
 	
+	acc_spi.spi_peripheral = 0;
+	acc_spi.nrf_drv_spi_config.frequency 	= NRF_DRV_SPI_FREQ_8M;
+	acc_spi.nrf_drv_spi_config.bit_order 	= NRF_DRV_SPI_BIT_ORDER_MSB_FIRST;
+	acc_spi.nrf_drv_spi_config.mode			= NRF_DRV_SPI_MODE_3;
+	acc_spi.nrf_drv_spi_config.orc			= 0;
+	acc_spi.nrf_drv_spi_config.irq_priority = 3;
+	acc_spi.nrf_drv_spi_config.ss_pin 		= 2;
+	acc_spi.nrf_drv_spi_config.miso_pin		= 1;
+	acc_spi.nrf_drv_spi_config.mosi_pin		= 4;
+	acc_spi.nrf_drv_spi_config.sck_pin		= 3;
+	
+	ret_code_t ret = spi_init(&acc_spi);
+	
+	pprintf("SPI Init ret: %d\n\r", ret);
+	
+	ext_spi.spi_peripheral = 0;
+	ext_spi.nrf_drv_spi_config.frequency 	= NRF_DRV_SPI_FREQ_8M;
+	ext_spi.nrf_drv_spi_config.bit_order 	= NRF_DRV_SPI_BIT_ORDER_MSB_FIRST;
+	ext_spi.nrf_drv_spi_config.mode			= NRF_DRV_SPI_MODE_3;
+	ext_spi.nrf_drv_spi_config.orc			= 0;
+	ext_spi.nrf_drv_spi_config.irq_priority = 3;
+	ext_spi.nrf_drv_spi_config.ss_pin 		= 0;
+	ext_spi.nrf_drv_spi_config.miso_pin		= 1;
+	ext_spi.nrf_drv_spi_config.mosi_pin		= 4;
+	ext_spi.nrf_drv_spi_config.sck_pin		= 3;
+	
+	uint8_t read_byte_1 = readRegister8(0x0F);
+	ret = spi_init(&ext_spi);
+	
+	pprintf("SPI Init ret: %d\n\r", ret);
+
+	
+	
+	uint8_t read_byte = readRegister8(0x0F);
+	
+	pprintf("Read Byte: 0x%X\n\r", read_byte);
 	
 	while(1) {
 		adc_read_raw(&mic_adc, &val);
@@ -234,8 +291,11 @@ int main(void)
 		nrf_delay_ms(2000);
 		
 		
+		uint8_t read_byte_1 = readRegister8(0x0F);
 		
-		
+		uint8_t read_byte_2 = readRegister8(0x0F);
+	
+		pprintf("Read Bytes: 0x%X, 0x%X\n\r", read_byte_1, read_byte_2);
 	}
 	
 	

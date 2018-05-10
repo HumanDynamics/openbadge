@@ -99,6 +99,7 @@ helpDetailed:
 #$(SDK_PATH)/components/drivers_nrf/uart/nrf_drv_uart.c \		# the uart driver abstraction library/c-file
 #$(SDK_PATH)/components/drivers_nrf/common/nrf_drv_common.c \	# the function nrf_drv_common_irq_enable must be explicity included (maybe because it is called from an inline function)
 #$(SDK_PATH)/components/drivers_nrf/hal/nrf_adc.c \				# the adc abstraction library
+#$(SDK_PATH)/components/drivers_nrf/spi_master/nrf_drv_spi.c \  # the spi driver abstraction library
 
 #source files
 C_SOURCE_FILES += \
@@ -109,6 +110,7 @@ $(SDK_PATH)/components/toolchain/system_nrf51.c \
 $(SDK_PATH)/components/drivers_nrf/uart/nrf_drv_uart.c \
 $(SDK_PATH)/components/drivers_nrf/common/nrf_drv_common.c \
 $(SDK_PATH)/components/drivers_nrf/hal/nrf_adc.c \
+$(SDK_PATH)/components/drivers_nrf/spi_master/nrf_drv_spi.c \
 #incl/accel.c \
 #incl/analog.c \
 #incl/app_fifo_util.c \

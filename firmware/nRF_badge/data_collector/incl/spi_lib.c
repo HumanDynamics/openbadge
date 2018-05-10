@@ -87,6 +87,7 @@ ret_code_t spi_init(spi_instance_t* spi_instance) {
 	// Small hack of handling the SS-Pin manually:
 	// local copy of the ss_pin
 	uint8_t ss_pin = (spi_instance->nrf_drv_spi_config).ss_pin;
+	
 	// Set the ss_pin to unused, so that the nrf_drv_spi-library doesn't use/set this pin!
 	(spi_instance->nrf_drv_spi_config).ss_pin = NRF_DRV_SPI_PIN_NOT_USED;
 	
@@ -131,6 +132,9 @@ ret_code_t spi_init(spi_instance_t* spi_instance) {
 	// Reset the pin again to the former value, so that the functions of this module can use it for manually set/reset the SS-Pin!
 	(spi_instance->nrf_drv_spi_config).ss_pin = ss_pin;
 	
+	nrf_gpio_pin_set(ss_pin);
+    nrf_gpio_cfg_output(ss_pin);
+	
 	// TODO: check ret-value (if there was no instance for it, also)
 	pprintf("SPI Init ret: %d\n", ret);
 	
@@ -144,6 +148,7 @@ ret_code_t spi_init(spi_instance_t* spi_instance) {
 	
 	return NRF_SUCCESS;
 }
+
 
 
 ret_code_t spi_send_IT(const spi_instance_t* spi_instance, spi_handler_t spi_handler, const uint8_t* tx_data, uint32_t tx_data_len) {
@@ -180,7 +185,7 @@ ret_code_t spi_send_IT(const spi_instance_t* spi_instance, spi_handler_t spi_han
 }
 
 
-ret_code_t spi_send(const spi_instance_t* spi_instance, uint8_t* tx_data, uint32_t tx_data_len) {
+ret_code_t spi_send(const spi_instance_t* spi_instance, const uint8_t* tx_data, uint32_t tx_data_len) {
 
 	ret_code_t ret = spi_send_IT(spi_instance, NULL, tx_data, tx_data_len);
 	if(ret != NRF_SUCCESS) {
@@ -193,3 +198,61 @@ ret_code_t spi_send(const spi_instance_t* spi_instance, uint8_t* tx_data, uint32
 	
 	return NRF_SUCCESS;
 }
+
+
+ret_code_t spi_send_receive_IT(const spi_instance_t* spi_instance, spi_handler_t spi_handler, const uint8_t* tx_data, uint32_t tx_data_len, uint8_t* rx_data, uint32_t rx_data_len) {
+	
+	
+	// Check if there is already an operation working on this peripheral, if so return (because it should not/could not do read and write parallel)
+	if(spi_operations[spi_instance->spi_peripheral] != SPI_NO_OPERATION) {
+		return NRF_ERROR_BUSY;
+	}
+	
+	// Set that we are now sending!
+	spi_operations[spi_instance->spi_peripheral] = SPI_SEND_RECEIVE_OPERATION;
+	
+	// Set the send Handler for the send operation!
+	spi_handlers_send_IT			[spi_instance->spi_peripheral] = NULL;
+	spi_handlers_send_receive_IT	[spi_instance->spi_peripheral] = spi_handler;
+	
+	
+	// "activate" the SS-PIN
+	nrf_gpio_pin_clear((spi_instance->nrf_drv_spi_config).ss_pin);
+	
+	ret_code_t ret = nrf_drv_spi_transfer(&(spi_instance->nrf_drv_spi_instance), tx_data, tx_data_len, rx_data, rx_data_len);	
+	
+	// ret could be: NRF_SUCCESS, NRF_ERROR_BUSY and NRF_ERROR_INVALID_ADDR
+	
+	// If there is no success, "deactivate" the SS-PIN and clear the SPI operation 
+	if(ret != NRF_SUCCESS) {
+		nrf_gpio_pin_set((spi_instance->nrf_drv_spi_config).ss_pin);
+		spi_operations[spi_instance->spi_peripheral] = SPI_NO_OPERATION;
+	}
+	
+	return ret;
+}
+
+ret_code_t spi_send_receive(const spi_instance_t* spi_instance, const uint8_t* tx_data, uint32_t tx_data_len, uint8_t* rx_data, uint32_t rx_data_len) {
+
+	ret_code_t ret = spi_send_receive_IT(spi_instance, NULL, tx_data, tx_data_len, rx_data, rx_data_len);
+	if(ret != NRF_SUCCESS) {
+		return ret;
+	}
+	
+	
+	// Waiting until the SPI operation has finished!
+	while(spi_operations[spi_instance->spi_peripheral] != SPI_NO_OPERATION);
+	
+	return NRF_SUCCESS;
+}
+
+
+
+spi_operation_t spi_get_status(const spi_instance_t* spi_instance){
+	return spi_operations[spi_instance->spi_peripheral];
+}
+
+
+
+
+
