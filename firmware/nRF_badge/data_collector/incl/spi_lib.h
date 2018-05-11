@@ -9,8 +9,8 @@
 
 typedef enum {
 	SPI_NO_OPERATION 			= 0,
-	SPI_SEND_OPERATION 			= (1 << 0),	
-	SPI_SEND_RECEIVE_OPERATION 	= (1 << 1),	
+	SPI_TRANSMIT_OPERATION 			= (1 << 0),	
+	SPI_TRANSMIT_RECEIVE_OPERATION 	= (1 << 1),	
 } spi_operation_t;
 
 
@@ -44,13 +44,13 @@ typedef struct {
 
 ret_code_t spi_init(spi_instance_t* spi_instance);
 
-ret_code_t spi_send_IT(const spi_instance_t* spi_instance, spi_handler_t spi_handler, const uint8_t* tx_data, uint32_t tx_data_len);
+ret_code_t spi_transmit_IT(const spi_instance_t* spi_instance, spi_handler_t spi_handler, const uint8_t* tx_data, uint32_t tx_data_len);
 
-ret_code_t spi_send(const spi_instance_t* spi_instance, const uint8_t* tx_data, uint32_t tx_data_len);
+ret_code_t spi_transmit(const spi_instance_t* spi_instance, const uint8_t* tx_data, uint32_t tx_data_len);
 
-ret_code_t spi_send_receive_IT(const spi_instance_t* spi_instance, spi_handler_t spi_handler, const uint8_t* tx_data, uint32_t tx_data_len, uint8_t* rx_data, uint32_t rx_data_len);
+ret_code_t spi_transmit_receive_IT(const spi_instance_t* spi_instance, spi_handler_t spi_handler, const uint8_t* tx_data, uint32_t tx_data_len, uint8_t* rx_data, uint32_t rx_data_len);
 
-ret_code_t spi_send_receive(const spi_instance_t* spi_instance, const uint8_t* tx_data, uint32_t tx_data_len, uint8_t* rx_data, uint32_t rx_data_len);
+ret_code_t spi_transmit_receive(const spi_instance_t* spi_instance, const uint8_t* tx_data, uint32_t tx_data_len, uint8_t* rx_data, uint32_t rx_data_len);
 
 spi_operation_t spi_get_status(const spi_instance_t* spi_instance);
 

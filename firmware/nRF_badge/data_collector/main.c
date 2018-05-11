@@ -25,6 +25,19 @@
 
 #include "spi_lib.h"
 
+
+
+
+/**
+TODO:
+	implement app_timer.h again self!!! with input paramter of the IRQ-PRIORITY!!!!
+	it's ok because it is in the include path first!!! --> Not neeeded!!!
+
+*/
+
+
+#include "app_util_platform.h"
+
 /**
  * From Nordic SDK
  */
@@ -166,7 +179,7 @@ spi_instance_t ext_spi;
 uint8_t readRegister8(uint8_t reg){
   uint8_t txBuf[1] = {reg | 0x80}; //Array to send
   uint8_t rxBuf[2] = {0,0}; //Array to receive
-  spi_send_receive_IT(&acc_spi, NULL, txBuf,sizeof(txBuf),rxBuf,2);
+  spi_transmit_receive_IT(&acc_spi, NULL, txBuf,sizeof(txBuf),rxBuf,2);
   
   //spi_master_send_recv(SPI_MASTER_0,txBuf,sizeof(txBuf),rxBuf,2); //Send and receive over SPI protocol
   //while(spi_busy()); //Wait while spi is bussy
@@ -265,7 +278,7 @@ int main(void)
 	ext_spi.nrf_drv_spi_config.mosi_pin		= 4;
 	ext_spi.nrf_drv_spi_config.sck_pin		= 3;
 	
-	uint8_t read_byte_1 = readRegister8(0x0F);
+	
 	ret = spi_init(&ext_spi);
 	
 	pprintf("SPI Init ret: %d\n\r", ret);

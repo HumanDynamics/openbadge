@@ -4,8 +4,8 @@
 // TODO: 
 // - document
 // - input checking
-// - error codes
 // - the IRQ-disable/enable at check!!
+// - add receive_IT?!
 
 // - remove
 extern void pprintf(const char* format, ...);
@@ -151,7 +151,7 @@ ret_code_t spi_init(spi_instance_t* spi_instance) {
 
 
 
-ret_code_t spi_send_IT(const spi_instance_t* spi_instance, spi_handler_t spi_handler, const uint8_t* tx_data, uint32_t tx_data_len) {
+ret_code_t spi_transmit_IT(const spi_instance_t* spi_instance, spi_handler_t spi_handler, const uint8_t* tx_data, uint32_t tx_data_len) {
 	
 	
 	// Check if there is already an operation working on this peripheral, if so return (because it should not/could not do read and write parallel)
@@ -160,7 +160,7 @@ ret_code_t spi_send_IT(const spi_instance_t* spi_instance, spi_handler_t spi_han
 	}
 	
 	// Set that we are now sending!
-	spi_operations[spi_instance->spi_peripheral] = SPI_SEND_OPERATION;
+	spi_operations[spi_instance->spi_peripheral] = SPI_TRANSMIT_OPERATION;
 	
 	// Set the send Handler for the send operation!
 	spi_handlers_send_IT			[spi_instance->spi_peripheral] = spi_handler;
@@ -185,9 +185,9 @@ ret_code_t spi_send_IT(const spi_instance_t* spi_instance, spi_handler_t spi_han
 }
 
 
-ret_code_t spi_send(const spi_instance_t* spi_instance, const uint8_t* tx_data, uint32_t tx_data_len) {
+ret_code_t spi_transmit(const spi_instance_t* spi_instance, const uint8_t* tx_data, uint32_t tx_data_len) {
 
-	ret_code_t ret = spi_send_IT(spi_instance, NULL, tx_data, tx_data_len);
+	ret_code_t ret = spi_transmit_IT(spi_instance, NULL, tx_data, tx_data_len);
 	if(ret != NRF_SUCCESS) {
 		return ret;
 	}
@@ -200,7 +200,7 @@ ret_code_t spi_send(const spi_instance_t* spi_instance, const uint8_t* tx_data, 
 }
 
 
-ret_code_t spi_send_receive_IT(const spi_instance_t* spi_instance, spi_handler_t spi_handler, const uint8_t* tx_data, uint32_t tx_data_len, uint8_t* rx_data, uint32_t rx_data_len) {
+ret_code_t spi_transmit_receive_IT(const spi_instance_t* spi_instance, spi_handler_t spi_handler, const uint8_t* tx_data, uint32_t tx_data_len, uint8_t* rx_data, uint32_t rx_data_len) {
 	
 	
 	// Check if there is already an operation working on this peripheral, if so return (because it should not/could not do read and write parallel)
@@ -209,7 +209,7 @@ ret_code_t spi_send_receive_IT(const spi_instance_t* spi_instance, spi_handler_t
 	}
 	
 	// Set that we are now sending!
-	spi_operations[spi_instance->spi_peripheral] = SPI_SEND_RECEIVE_OPERATION;
+	spi_operations[spi_instance->spi_peripheral] = SPI_TRANSMIT_RECEIVE_OPERATION;
 	
 	// Set the send Handler for the send operation!
 	spi_handlers_send_IT			[spi_instance->spi_peripheral] = NULL;
@@ -232,9 +232,9 @@ ret_code_t spi_send_receive_IT(const spi_instance_t* spi_instance, spi_handler_t
 	return ret;
 }
 
-ret_code_t spi_send_receive(const spi_instance_t* spi_instance, const uint8_t* tx_data, uint32_t tx_data_len, uint8_t* rx_data, uint32_t rx_data_len) {
+ret_code_t spi_transmit_receive(const spi_instance_t* spi_instance, const uint8_t* tx_data, uint32_t tx_data_len, uint8_t* rx_data, uint32_t rx_data_len) {
 
-	ret_code_t ret = spi_send_receive_IT(spi_instance, NULL, tx_data, tx_data_len, rx_data, rx_data_len);
+	ret_code_t ret = spi_transmit_receive_IT(spi_instance, NULL, tx_data, tx_data_len, rx_data, rx_data_len);
 	if(ret != NRF_SUCCESS) {
 		return ret;
 	}

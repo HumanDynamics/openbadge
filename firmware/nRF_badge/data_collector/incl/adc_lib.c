@@ -4,7 +4,6 @@
 // TODO: 
 // - document
 // - input checking
-// - error codes
 // - do the parameterstuff (NRF_ADC_CONFIG_INPUT_DISABLED, ) as own definition?!
 
 // - remove
