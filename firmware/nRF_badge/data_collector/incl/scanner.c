@@ -10,8 +10,8 @@
 	#define RESTORE_SAMPLE(processed, count) processed
 #else
 	#define AGGR_SAMPLE(sample, datum) (datum+sample)
-	#define PROCESS_SAMPLE(aggregated, count) (aggregated/count) 
-	#define RESTORE_SAMPLE(processed, count) (processed*count) 
+	#define PROCESS_SAMPLE(aggregated, count) ((aggregated)/(count))
+	#define RESTORE_SAMPLE(processed, count) ((processed)*(count))
 #endif
 
 
@@ -126,7 +126,7 @@ void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
             memcpy(&badgeAdvData,&manufDataPtr[2],CUSTOM_ADV_DATA_LEN);  // skip past company ID; ensure data is properly aligned
             ID = badgeAdvData.ID;
             group = badgeAdvData.group;
-            //debug_log("---Badge seen: group %d, ID %.4X, rssi %d.\r\n",(int)group,(int)ID,(int)rssi);
+            debug_log("---Badge seen: group %d, ID %.4X, rssi %d.\r\n",(int)group,(int)ID,(int)rssi);
         }
     }
     else if (manufDataLen == IBEACON_MANUF_DATA_LEN)  {
@@ -341,21 +341,30 @@ static int compareSeenDeviceByID(const void * a, const void * b) {
 // This function is kind of hacky.
 // It sorts our global scan variable in place descendingly according to RSSI.
 // It's written this way so we can easily put it into the existing codebase with minimal changes.
+// We first store the closest beacons (up to BEACON_PRIORITY), and then use the remaining space
+// for all other beacons and badges
+static seenDevice_t seenDevices[MAX_SCAN_RESULTS];
 void sortScanByRSSIDescending(void) {
-    seenDevice_t seenDevices[scan.num];
-
     // Convert scan into an array of structs for sorting 
     for (int i = 0; i < scan.num; i++) {
         seenDevices[i].ID = scan.IDs[i];
         seenDevices[i].rssi = PROCESS_SAMPLE(scan.rssiSums[i], scan.counts[i]);
         seenDevices[i].count = scan.counts[i];
     }
-    
+
+    // Number of beacons that are going to be prioritized
     int prioritized = (BEACON_PRIORITY < scan.numbeacons) ? BEACON_PRIORITY : scan.numbeacons;
+
+    // Place beacons on top
     qsort(seenDevices, (size_t)scan.num, sizeof(seenDevice_t), compareSeenDeviceByID);
+
+    // Sort beacons by RSSI
     qsort(seenDevices, (size_t)scan.numbeacons, sizeof(seenDevice_t), compareSeenDeviceByRSSI);
+
+    // Keep prioritized beacons on top, sort the remaining beacons and badges by RSSI
     qsort(seenDevices+prioritized, (size_t)(scan.num-prioritized), sizeof(seenDevice_t), compareSeenDeviceByRSSI);
-    
+
+    // Translate back to the original scan structure
     for (int i = 0; i < scan.num; i++) {
         scan.IDs[i] = seenDevices[i].ID;
         scan.rssiSums[i] = RESTORE_SAMPLE(seenDevices[i].rssi, seenDevices[i].count);

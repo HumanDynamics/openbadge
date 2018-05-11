@@ -63,8 +63,8 @@ void main(){
     
 }
 
-static void sortScanByRSSIDescending(void) {
-    seenDevice_t seenDevices[scan.num];
+static seenDevice_t seenDevices[MAX_SCAN_RESULTS];
+void sortScanByRSSIDescending(void) {
 
     // Convert scan into an array of structs for sorting 
     for (int i = 0; i < scan.num; i++) {
