@@ -17,12 +17,12 @@ extern void pprintf(const char* format, ...);
 #define SPI_PERIPHERAL_NUMBER 		SPI_COUNT	// automatically imported through nrf_peripherals.h
 
 static volatile spi_operation_t  	spi_operations[SPI_PERIPHERAL_NUMBER] 	= {0};
-static spi_instance_t				spi_instances[SPI_PERIPHERAL_NUMBER] 	= {{0}};
-static uint32_t 					spi_instance_number = 1; 	// Starts at 1 because the above init of the arrays are always to 0
+static spi_instance_t				spi_instances[SPI_PERIPHERAL_NUMBER] 	= {{0}};	// Currently active instances
+static uint32_t 					spi_instance_number = 1; 	// Starts at 1 because the above init of the arrays are always to 0. And so the check 
 
 // To have all the handlers to be independent of the initialization!!
-static spi_handler_t				spi_handlers_send_IT			[SPI_PERIPHERAL_NUMBER];
-static spi_handler_t				spi_handlers_send_receive_IT	[SPI_PERIPHERAL_NUMBER];
+static spi_handler_t				spi_handlers_transmit_IT			[SPI_PERIPHERAL_NUMBER];
+static spi_handler_t				spi_handlers_transmit_receive_IT	[SPI_PERIPHERAL_NUMBER];
 
 
 /**
@@ -44,11 +44,11 @@ static void spi_0_event_handler(nrf_drv_spi_evt_t* p_event) {
 		// We are now ready with the operation
 		spi_operations[0] = SPI_NO_OPERATION;
 		
-		if(spi_handlers_send_IT[0] != NULL) {
-			spi_handlers_send_IT[0](&evt);
+		if(spi_handlers_transmit_IT[0] != NULL) {
+			spi_handlers_transmit_IT[0](&evt);
 		}
-		if(spi_handlers_send_receive_IT[0] != NULL) {
-			spi_handlers_send_IT[0](&evt);
+		if(spi_handlers_transmit_receive_IT[0] != NULL) {
+			spi_handlers_transmit_IT[0](&evt);
 		}
 	}
 }
@@ -67,11 +67,11 @@ static void spi_1_event_handler(nrf_drv_spi_evt_t* p_event) {
 		
 		spi_operations[1] = SPI_NO_OPERATION;
 		
-		if(spi_handlers_send_IT[1] != NULL) {
-			spi_handlers_send_IT[1](&evt);
+		if(spi_handlers_transmit_IT[1] != NULL) {
+			spi_handlers_transmit_IT[1](&evt);
 		}
-		if(spi_handlers_send_receive_IT[1] != NULL) {
-			spi_handlers_send_IT[1](&evt);
+		if(spi_handlers_transmit_receive_IT[1] != NULL) {
+			spi_handlers_transmit_IT[1](&evt);
 		}
 	}
 }
@@ -81,7 +81,7 @@ static void spi_1_event_handler(nrf_drv_spi_evt_t* p_event) {
 ret_code_t spi_init(spi_instance_t* spi_instance) {	
 	
 	
-	spi_instance->spi_instance_id 						= spi_instance_number;
+	
 	
 	
 	// Small hack of handling the SS-Pin manually:
@@ -94,7 +94,7 @@ ret_code_t spi_init(spi_instance_t* spi_instance) {
 	ret_code_t ret = NRF_SUCCESS;
 	
 	
-	if(spi_instance->spi_peripheral == 0) {
+	if(spi_instance->spi_peripheral == 0) {		
 		
 		#if SPI0_ENABLED
 		spi_instance->nrf_drv_spi_instance.p_registers 	= NRF_SPI0; 
@@ -129,19 +129,19 @@ ret_code_t spi_init(spi_instance_t* spi_instance) {
 		ret = NRF_ERROR_INVALID_PARAM;		
 	}
 	
-	// Reset the pin again to the former value, so that the functions of this module can use it for manually set/reset the SS-Pin!
-	(spi_instance->nrf_drv_spi_config).ss_pin = ss_pin;
-	
-	nrf_gpio_pin_set(ss_pin);
-    nrf_gpio_cfg_output(ss_pin);
-	
-	// TODO: check ret-value (if there was no instance for it, also)
-	pprintf("SPI Init ret: %d\n", ret);
-	
 	// ret could be: NRF_SUCCESS, NRF_ERROR_INVALID_STATE, NRF_ERROR_BUSY and NRF_INVALID_PARAM
 	if(ret == NRF_ERROR_INVALID_PARAM) { 
 		return ret;
 	}
+	
+	spi_instance->spi_instance_id 						= spi_instance_number;
+	
+	// Reset the pin again to the former value, so that the functions of this module can use it for manually set/reset the SS-Pin!
+	(spi_instance->nrf_drv_spi_config).ss_pin = ss_pin;	
+	
+	
+	nrf_gpio_pin_set(ss_pin);
+    nrf_gpio_cfg_output(ss_pin);
 	
 	
 	spi_instance_number++;
@@ -162,9 +162,12 @@ ret_code_t spi_transmit_IT(const spi_instance_t* spi_instance, spi_handler_t spi
 	// Set that we are now sending!
 	spi_operations[spi_instance->spi_peripheral] = SPI_TRANSMIT_OPERATION;
 	
-	// Set the send Handler for the send operation!
-	spi_handlers_send_IT			[spi_instance->spi_peripheral] = spi_handler;
-	spi_handlers_send_receive_IT	[spi_instance->spi_peripheral] = NULL;
+	// Set the instance-array entry to the current instance, to retrieve the ss_pin in the IRQ-handler!
+	spi_instances[spi_instance->spi_peripheral] = *spi_instance;
+	
+	// Set the send Handler for the send operation, set the other one to NULL!
+	spi_handlers_transmit_IT			[spi_instance->spi_peripheral] = spi_handler;
+	spi_handlers_transmit_receive_IT	[spi_instance->spi_peripheral] = NULL;
 	
 	static uint8_t tmp; // Dummy for RX 
 	
@@ -211,9 +214,12 @@ ret_code_t spi_transmit_receive_IT(const spi_instance_t* spi_instance, spi_handl
 	// Set that we are now sending!
 	spi_operations[spi_instance->spi_peripheral] = SPI_TRANSMIT_RECEIVE_OPERATION;
 	
+	// Set the instance-array entry to the current instance, to retrieve the ss_pin in the IRQ-handler!
+	spi_instances[spi_instance->spi_peripheral] = *spi_instance;
+	
 	// Set the send Handler for the send operation!
-	spi_handlers_send_IT			[spi_instance->spi_peripheral] = NULL;
-	spi_handlers_send_receive_IT	[spi_instance->spi_peripheral] = spi_handler;
+	spi_handlers_transmit_IT			[spi_instance->spi_peripheral] = NULL;
+	spi_handlers_transmit_receive_IT	[spi_instance->spi_peripheral] = spi_handler;
 	
 	
 	// "activate" the SS-PIN

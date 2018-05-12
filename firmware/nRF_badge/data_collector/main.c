@@ -25,6 +25,8 @@
 
 #include "spi_lib.h"
 
+#include "uart_lib.h"
+
 
 
 
@@ -109,13 +111,7 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
         (P_UART_BUFFER)->tx_buf_size = sizeof (tx_buf);                                              \
     } while (0)
 		
-typedef struct 
-{
-	uint8_t * rx_buf;      /**< Pointer to the RX buffer. */
-    uint32_t  rx_buf_size; /**< Size of the RX buffer. */
-    uint8_t * tx_buf;      /**< Pointer to the TX buffer. */
-    uint32_t  tx_buf_size; /**< Size of the TX buffer. */
-} uart_buffer_t;
+
 
 typedef struct {
 	uint8_t a;
@@ -213,8 +209,27 @@ int main(void)
     config.pselrxd = 11;
     config.pseltxd = 10;
 	
-	//nrf_drv_uart_t instance = NRF_DRV_UART_INSTANCE(1);	
 	
+	uart_instance_t uart_instance;
+	uart_instance.uart_peripheral = 0;
+	uart_instance.nrf_drv_uart_config = config;
+	uart_init(&uart_instance);
+	
+	
+	//char data[] = "aaaaa\n\r";
+	char data_rx[5];
+	while(1) {
+		uart_receive(&uart_instance, (uint8_t*) data_rx, 5);
+		uart_transmit(&uart_instance, (uint8_t*) data_rx, 5);
+		nrf_delay_ms(1000);
+		
+	}
+	
+	
+	
+	
+	//nrf_drv_uart_t instance = NRF_DRV_UART_INSTANCE(1);	
+	/*
 	_instance.drv_inst_idx = UART0_INSTANCE_INDEX;//CONCAT_3(UART, 0, _INSTANCE_INDEX);
 	_instance.reg.p_uart = (NRF_UART_Type *) NRF_UART0;//_BASE;
 	nrf_drv_uart_init(&_instance, &config, handler);
@@ -224,6 +239,8 @@ int main(void)
 	
 	uart_buffer_t uart_buffer;
 	INIT_STRUCT(&uart_buffer, 10, 20);
+	
+	*/
 	
 	
 	

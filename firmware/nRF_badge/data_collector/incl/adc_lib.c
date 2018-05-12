@@ -16,14 +16,19 @@ extern void pprintf(const char* format, ...);
 
 static volatile adc_operation_t  	adc_operations[ADC_PERIPHERAL_NUMBER] 	= {0};
 static adc_instance_t				adc_instances[ADC_PERIPHERAL_NUMBER] 	= {{0}};
-static uint32_t 					adc_instance_number = 1; 	// Starts at 1 because the above init of the arrays are always to 0
+static uint32_t 					adc_instance_number = 1; 	// Starts at 1 because the above init of the arrays are always to 0 (otherwise the check of which instance is currently working would fail)
 
 
 
 ret_code_t adc_init(adc_instance_t* adc_instance) {	
 
 	// Check if the peripheral selected peripheral exists!
-	if(adc_instance->adc_peripheral != 0) {
+	if(adc_instance->adc_peripheral == 0) {
+		#if ADC_ENABLED
+		#else		
+		return NRF_ERROR_INVALID_PARAM;
+		#endif
+	} else {
 		return NRF_ERROR_INVALID_PARAM;
 	}
 

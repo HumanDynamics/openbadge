@@ -37,7 +37,7 @@ typedef void (*spi_handler_t)(spi_evt_t const * p_event);
 typedef struct {	
 	uint8_t			 		spi_peripheral;			/**< Set to the desired spi peripheral. The Peripheral has to be enabled in the sdk_config.h file */
 	nrf_drv_spi_config_t	nrf_drv_spi_config;		/**< Set the SPI configuration (possible parameters in nrf_drv_spi.h)  */	
-	int32_t 				spi_instance_id;		/**< Instance index: Setted by the init-function (do not set!) */
+	uint32_t 				spi_instance_id;		/**< Instance index: Setted by the init-function (do not set!) */
 	nrf_drv_spi_t			nrf_drv_spi_instance;	/**< The initialized low level spi instance: Setted by the init-function (do not set!) */
 } spi_instance_t;
 
