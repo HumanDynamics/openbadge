@@ -44,11 +44,11 @@ typedef struct {
 
 ret_code_t spi_init(spi_instance_t* spi_instance);
 
-ret_code_t spi_transmit_IT(const spi_instance_t* spi_instance, spi_handler_t spi_handler, const uint8_t* tx_data, uint32_t tx_data_len);
+ret_code_t spi_transmit_bkgnd(const spi_instance_t* spi_instance, spi_handler_t spi_handler, const uint8_t* tx_data, uint32_t tx_data_len);
 
 ret_code_t spi_transmit(const spi_instance_t* spi_instance, const uint8_t* tx_data, uint32_t tx_data_len);
 
-ret_code_t spi_transmit_receive_IT(const spi_instance_t* spi_instance, spi_handler_t spi_handler, const uint8_t* tx_data, uint32_t tx_data_len, uint8_t* rx_data, uint32_t rx_data_len);
+ret_code_t spi_transmit_receive_bkgnd(const spi_instance_t* spi_instance, spi_handler_t spi_handler, const uint8_t* tx_data, uint32_t tx_data_len, uint8_t* rx_data, uint32_t rx_data_len);
 
 ret_code_t spi_transmit_receive(const spi_instance_t* spi_instance, const uint8_t* tx_data, uint32_t tx_data_len, uint8_t* rx_data, uint32_t rx_data_len);
 
