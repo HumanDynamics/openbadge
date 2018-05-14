@@ -165,7 +165,7 @@ ret_code_t spi_transmit_bkgnd(const spi_instance_t* spi_instance, spi_handler_t 
 	
 	// Set the send Handler for the send operation, set the other one to NULL!
 	spi_handlers_transmit_bkgnd				[spi_instance->spi_peripheral] = spi_handler;
-	spi_handlers_transmit_receive__bkgnd	[spi_instance->spi_peripheral] = NULL;
+	spi_handlers_transmit_receive_bkgnd	[spi_instance->spi_peripheral] = NULL;
 	
 	static uint8_t tmp; // Dummy for RX 
 	
