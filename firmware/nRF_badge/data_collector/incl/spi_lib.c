@@ -15,7 +15,7 @@
 #define SPI_PERIPHERAL_NUMBER 		SPI_COUNT	// automatically imported through nrf_peripherals.h
 
 static volatile spi_operation_t  	spi_operations[SPI_PERIPHERAL_NUMBER] 	= {0};
-static spi_instance_t *				spi_instances[SPI_PERIPHERAL_NUMBER] 	= {0};	// Currently active instances
+static spi_instance_t *				spi_instances[SPI_PERIPHERAL_NUMBER] 	= {NULL};	// Currently active instances
 static uint32_t 					spi_instance_number = 1; 	// Starts at 1 because the above init of the arrays are always to 0. And so the check 
 
 // To have all the handlers to be independent of the initialization!!
@@ -36,7 +36,7 @@ static void spi_0_event_handler(nrf_drv_spi_evt_t* p_event) {
 		spi_evt_t evt;
 		evt.type = SPI_TRANSFER_DONE;
 		
-		// The SS-Pin has to be "deacitvated" again!
+		// The SS-Pin has to be "deacitvated" again (here we assume, that spi_instances[0] is not NULL!)
 		nrf_gpio_pin_set((*spi_instances[0]).nrf_drv_spi_config.ss_pin);
 		
 		// We are now ready with the operation
@@ -60,7 +60,7 @@ static void spi_1_event_handler(nrf_drv_spi_evt_t* p_event) {
 		spi_evt_t evt;
 		evt.type = SPI_TRANSFER_DONE;
 		
-		// The SS-Pin has to be "deacitvated" again!
+		// The SS-Pin has to be "deacitvated" again! (here we assume, that spi_instances[0] is not NULL!)
 		nrf_gpio_pin_set((*spi_instances[1]).nrf_drv_spi_config.ss_pin);
 		
 		spi_operations[1] = SPI_NO_OPERATION;

@@ -17,7 +17,7 @@
 
 
 static volatile uart_operation_t  	uart_operations[UART_PERIPHERAL_NUMBER] 	= {0};
-static uart_instance_t *			uart_instances[UART_PERIPHERAL_NUMBER] 	= {0}; // We need to save the instances, to use them in the IRQ-handler for UART_RECEIVE_BUFFER_OPERATION
+static uart_instance_t *			uart_instances[UART_PERIPHERAL_NUMBER] 	= {NULL}; // We need to save the instances, to use them in the IRQ-handler for UART_RECEIVE_BUFFER_OPERATION
 static uint32_t 					uart_instance_number = 1; 	// Starts at 1 because the above init of the arrays are always to 0
 
 // To have all the handlers to be independent of the initialization!!
@@ -60,7 +60,7 @@ static void uart_0_event_handler(nrf_drv_uart_event_t * p_event, void * p_contex
 				uart_transmit_operations[0].remaining_data_len = remaining_data_len - MAX_BYTES_PER_TRANSMIT_OPERATION;
 			}
 			
-			// Start sending the remaining bytes
+			// Start sending the remaining bytes (here we assume that uart_instances[0] != NULL!
 			nrf_drv_uart_tx(&((*uart_instances[0]).nrf_drv_uart_instance), p_remaining_data, remaining_data_len);
 			
 			
@@ -82,7 +82,7 @@ static void uart_0_event_handler(nrf_drv_uart_event_t * p_event, void * p_contex
 		if(uart_operations[0] & UART_RECEIVE_OPERATION) {
 			evt.type = UART_RECEIVE_DONE;
 			
-			// And disable the receive process!
+			// And disable the receive process  (here we assume that uart_instances[0] != NULL!
 			nrf_drv_uart_rx_disable(&((*uart_instances[0]).nrf_drv_uart_instance));
 			
 			// Clear the UART_RECEIVE_OPERATION flag
@@ -95,6 +95,8 @@ static void uart_0_event_handler(nrf_drv_uart_event_t * p_event, void * p_contex
 			
 		} else if(uart_operations[0] & UART_RECEIVE_BUFFER_OPERATION) {
 			evt.type = UART_DATA_AVAILABLE;
+			
+			// (here we assume that uart_instances[0] != NULL!
 			
 			
 			nrf_drv_uart_rx( &((*uart_instances[0]).nrf_drv_uart_instance), (uint8_t*) &uart_receive_buffer_operations[0], 1);
@@ -248,28 +250,32 @@ ret_code_t uart_printf(uart_instance_t* uart_instance, const char* format, ...) 
 
 
 ret_code_t uart_transmit_bkgnd(uart_instance_t* uart_instance, uart_handler_t uart_handler, const uint8_t* tx_data, uint32_t tx_data_len) {
+	
+	// Get the peripheral_index
+	uint8_t peripheral_index = uart_instance->uart_peripheral;
+	
 	// Check if there is an ongoing transmit operation. Not check if there is no operation, because we can transmit while receiving!
-	if((uart_operations[uart_instance->uart_peripheral] & UART_TRANSMIT_OPERATION)) {
+	if((uart_operations[peripheral_index] & UART_TRANSMIT_OPERATION)) {
 		return NRF_ERROR_BUSY;
 	} 
 	
 	// Set the UART_TRANSMIT_OPERATION flag
-	uart_operations[uart_instance->uart_peripheral] |= UART_TRANSMIT_OPERATION;
+	uart_operations[peripheral_index] |= UART_TRANSMIT_OPERATION;
 	
 	// Set the current uart instance (it is needed in transmit-case, because we must handle remaining bytes to transmit in IRQ-Handler)
-	uart_instances[uart_instance->uart_peripheral] = uart_instance;
+	uart_instances[peripheral_index] = uart_instance;
 	
 	// Set the handler that has to be called
-	uart_handlers_transmit_bkgnd[uart_instance->uart_peripheral] = uart_handler;
+	uart_handlers_transmit_bkgnd[peripheral_index] = uart_handler;
 	
 	
 	// Check the data length of the data to transmit. If bigger than 255, the transmission has to be splitted in smaller parts.
 	if(tx_data_len <= MAX_BYTES_PER_TRANSMIT_OPERATION) {
-		uart_transmit_operations[uart_instance->uart_peripheral].p_remaining_data = NULL;
-		uart_transmit_operations[uart_instance->uart_peripheral].remaining_data_len = 0;
+		uart_transmit_operations[peripheral_index].p_remaining_data = NULL;
+		uart_transmit_operations[peripheral_index].remaining_data_len = 0;
 	} else {
-		uart_transmit_operations[uart_instance->uart_peripheral].p_remaining_data = tx_data + MAX_BYTES_PER_TRANSMIT_OPERATION;
-		uart_transmit_operations[uart_instance->uart_peripheral].remaining_data_len = tx_data_len - MAX_BYTES_PER_TRANSMIT_OPERATION;	
+		uart_transmit_operations[peripheral_index].p_remaining_data = tx_data + MAX_BYTES_PER_TRANSMIT_OPERATION;
+		uart_transmit_operations[peripheral_index].remaining_data_len = tx_data_len - MAX_BYTES_PER_TRANSMIT_OPERATION;	
 		tx_data_len = MAX_BYTES_PER_TRANSMIT_OPERATION; 	// Correct the data len sent with the first transmission
 	}
 	
@@ -283,7 +289,7 @@ ret_code_t uart_transmit_bkgnd(uart_instance_t* uart_instance, uart_handler_t ua
 		nrf_drv_uart_tx_abort(&(uart_instance->nrf_drv_uart_instance));	
 	
 		// Clear the Transmit operation
-		uart_operations[uart_instance->uart_peripheral] &= ~(UART_TRANSMIT_OPERATION);
+		uart_operations[peripheral_index] &= ~(UART_TRANSMIT_OPERATION);
 	}
 
 	return ret;	
@@ -291,34 +297,43 @@ ret_code_t uart_transmit_bkgnd(uart_instance_t* uart_instance, uart_handler_t ua
 
 
 ret_code_t uart_transmit_abort_bkgnd(uart_instance_t* uart_instance) {
+	// Get the peripheral_index
+	uint8_t peripheral_index = uart_instance->uart_peripheral;
+	
 	// Check if there is an ongoing transmit operation. If there is no transmit operation, directly return 
-	if((uart_operations[uart_instance->uart_peripheral] & UART_TRANSMIT_OPERATION) == 0) {
+	if((uart_operations[peripheral_index] & UART_TRANSMIT_OPERATION) == 0) {
 		return NRF_SUCCESS;
 	}
 	
 	// You should only be able to abort an transmit operation, if your own instance is currently running. So check if the instance id is the same
-	if((*uart_instances[uart_instance->uart_peripheral]).uart_instance_id != uart_instance->uart_instance_id) {
-		return NRF_ERROR_INVALID_STATE;
-	}
+	if((uart_instances[peripheral_index] != NULL) && ((*uart_instances[peripheral_index]).uart_instance_id != uart_instance->uart_instance_id)) {
+			return NRF_ERROR_INVALID_STATE;
+	} 
+	// If NULL (it shouldn't be NULL here, because we have an ongoing operation) -> just proceed as normal..
+
+
 	
 	// Now stop the ongoing transmit operation
 	nrf_drv_uart_tx_abort(&(uart_instance->nrf_drv_uart_instance));	
 	
 	// Clear the Transmit operation
-	uart_operations[uart_instance->uart_peripheral] &= ~(UART_TRANSMIT_OPERATION);
+	uart_operations[peripheral_index] &= ~(UART_TRANSMIT_OPERATION);
 	
 	return NRF_SUCCESS;
 }
 
 
 ret_code_t uart_transmit(uart_instance_t* uart_instance, const uint8_t* tx_data, uint32_t tx_data_len) {
+	// Get the peripheral_index
+	uint8_t peripheral_index = uart_instance->uart_peripheral;
+	
 	ret_code_t ret = uart_transmit_bkgnd(uart_instance, NULL, tx_data, tx_data_len);
 	if(ret != NRF_SUCCESS) {
 		return ret;
 	}
 
 	// Waiting until the UART operation has finished!
-	while(uart_operations[uart_instance->uart_peripheral] & UART_TRANSMIT_OPERATION);	
+	while(uart_operations[peripheral_index] & UART_TRANSMIT_OPERATION);	
 	
 	return NRF_SUCCESS;	
 }
@@ -327,21 +342,24 @@ ret_code_t uart_transmit(uart_instance_t* uart_instance, const uint8_t* tx_data,
 
 
 ret_code_t uart_receive_bkgnd(uart_instance_t* uart_instance, uart_handler_t uart_handler, uint8_t* rx_data, uint32_t rx_data_len) {
+	// Get the peripheral_index
+	uint8_t peripheral_index = uart_instance->uart_peripheral;
+	
 	
 	// Check whether there is an ongoing receive or receive-buffer operation
-	if((uart_operations[uart_instance->uart_peripheral] & UART_RECEIVE_OPERATION) || (uart_operations[uart_instance->uart_peripheral] & UART_RECEIVE_BUFFER_OPERATION)) {
+	if((uart_operations[peripheral_index] & UART_RECEIVE_OPERATION) || (uart_operations[peripheral_index] & UART_RECEIVE_BUFFER_OPERATION)) {
 		return NRF_ERROR_BUSY;
 	}
 	
 	// Set the UART_RECEIVE_OPERATION flag
-	uart_operations[uart_instance->uart_peripheral] |= UART_RECEIVE_OPERATION;
+	uart_operations[peripheral_index] |= UART_RECEIVE_OPERATION;
 	
 	// Set the current uart instance (it is not needed in receive-case, because we need it only in receive-buffer case)
-	uart_instances[uart_instance->uart_peripheral] = uart_instance;
+	uart_instances[peripheral_index] = uart_instance;
 	
 	// Set the handler that has to be called, reset the receive-buffer handler!
-	uart_handlers_receive_bkgnd[uart_instance->uart_peripheral] = uart_handler;
-	uart_handlers_receive_buffer_bkgnd[uart_instance->uart_peripheral] = NULL;		// We actually don't need to do this, but ok..
+	uart_handlers_receive_bkgnd[peripheral_index] = uart_handler;
+	uart_handlers_receive_buffer_bkgnd[peripheral_index] = NULL;		// We actually don't need to do this, but ok..
 	
 	
 	nrf_drv_uart_rx_enable(&(uart_instance->nrf_drv_uart_instance));
@@ -358,7 +376,7 @@ ret_code_t uart_receive_bkgnd(uart_instance_t* uart_instance, uart_handler_t uar
 		nrf_drv_uart_rx_disable(&(uart_instance->nrf_drv_uart_instance));
 	
 	
-		uart_operations[uart_instance->uart_peripheral] &= ~(UART_RECEIVE_OPERATION);
+		uart_operations[peripheral_index] &= ~(UART_RECEIVE_OPERATION);
 	}
 	
 	return ret;
@@ -368,15 +386,20 @@ ret_code_t uart_receive_bkgnd(uart_instance_t* uart_instance, uart_handler_t uar
 
 ret_code_t uart_receive_abort_bkgnd(uart_instance_t* uart_instance) {
 	
+	// Get the peripheral_index
+	uint8_t peripheral_index = uart_instance->uart_peripheral;
+	
 	// Check if there is an ongoing receive operation. If there is no receive operation, directly return 
-	if((uart_operations[uart_instance->uart_peripheral] & UART_RECEIVE_OPERATION)  == 0) {
+	if((uart_operations[peripheral_index] & UART_RECEIVE_OPERATION)  == 0) {
 		return NRF_SUCCESS;
 	}
 	
 	// You should only be able to abort an receive operation, if your own instance is currently running. So check if the instance id is the same
-	if((*uart_instances[uart_instance->uart_peripheral]).uart_instance_id != uart_instance->uart_instance_id) {
-		return NRF_ERROR_INVALID_STATE;
+	if((uart_instances[peripheral_index] != NULL) && ((*uart_instances[peripheral_index]).uart_instance_id != uart_instance->uart_instance_id)) {
+			return NRF_ERROR_INVALID_STATE;
 	}
+	// If NULL (it shouldn't be NULL here, because we have an ongoing operation) -> just proceed as normal..
+
 	
 	// Now stop the ongoing receive operation
 	nrf_drv_uart_rx_abort(&(uart_instance->nrf_drv_uart_instance));
@@ -384,7 +407,7 @@ ret_code_t uart_receive_abort_bkgnd(uart_instance_t* uart_instance) {
 	nrf_drv_uart_rx_disable(&(uart_instance->nrf_drv_uart_instance));
 	
 	// Clear the Receive operation
-	uart_operations[uart_instance->uart_peripheral] &= ~(UART_RECEIVE_OPERATION);
+	uart_operations[peripheral_index] &= ~(UART_RECEIVE_OPERATION);
 	
 	return NRF_SUCCESS;
 	
@@ -392,6 +415,10 @@ ret_code_t uart_receive_abort_bkgnd(uart_instance_t* uart_instance) {
 
 
 ret_code_t uart_receive(uart_instance_t* uart_instance, uint8_t* rx_data, uint32_t rx_data_len) {
+	
+	// Get the peripheral_index
+	uint8_t peripheral_index = uart_instance->uart_peripheral;
+	
 	ret_code_t ret = uart_receive_bkgnd(uart_instance, NULL, rx_data, rx_data_len);	
 	
 	if(ret != NRF_SUCCESS) {
@@ -399,7 +426,7 @@ ret_code_t uart_receive(uart_instance_t* uart_instance, uint8_t* rx_data, uint32
 	}
 
 	// Waiting until the UART operation has finished!
-	while(uart_operations[uart_instance->uart_peripheral] & UART_RECEIVE_OPERATION);	
+	while(uart_operations[peripheral_index] & UART_RECEIVE_OPERATION);	
 	
 	return NRF_SUCCESS;	
 }
@@ -408,6 +435,11 @@ ret_code_t uart_receive(uart_instance_t* uart_instance, uint8_t* rx_data, uint32
 
 
 ret_code_t uart_receive_buffer_bkgnd(uart_instance_t* uart_instance,  uart_handler_t uart_handler){
+	
+	// Get the peripheral_index
+	uint8_t peripheral_index = uart_instance->uart_peripheral;
+	
+	
 	// Check if rx-buffer is not NUL, because it is needed for buffering the incoming data
 	if(uart_instance->uart_buffer.rx_buf == NULL) 
 		return NRF_ERROR_NULL;
@@ -416,15 +448,15 @@ ret_code_t uart_receive_buffer_bkgnd(uart_instance_t* uart_instance,  uart_handl
 		return NRF_ERROR_NO_MEM;
 	
 	// Check whether there is an ongoing receive or receive-buffer operation
-	if((uart_operations[uart_instance->uart_peripheral] & UART_RECEIVE_OPERATION) || (uart_operations[uart_instance->uart_peripheral] & UART_RECEIVE_BUFFER_OPERATION)) {
+	if((uart_operations[peripheral_index] & UART_RECEIVE_OPERATION) || (uart_operations[peripheral_index] & UART_RECEIVE_BUFFER_OPERATION)) {
 		return NRF_ERROR_BUSY;
 	}
 	
 	// Set the UART_RECEIVE_OPERATION flag
-	uart_operations[uart_instance->uart_peripheral] |= UART_RECEIVE_BUFFER_OPERATION;
+	uart_operations[peripheral_index] |= UART_RECEIVE_BUFFER_OPERATION;
 	
 	// Set the current uart instance (because we need it to reinitiate a receive operation)
-	uart_instances[uart_instance->uart_peripheral] = uart_instance;
+	uart_instances[peripheral_index] = uart_instance;
 	
 	// Reset the receive-read and -write index of the uart-buffer
 	(uart_instance->uart_buffer).rx_buf_read_index = 0;
@@ -432,14 +464,14 @@ ret_code_t uart_receive_buffer_bkgnd(uart_instance_t* uart_instance,  uart_handl
 	
 	
 	// Set the handler that has to be called, reset the receive handler!
-	uart_handlers_receive_bkgnd[uart_instance->uart_peripheral] = NULL;					// We actually don't need to do this, but ok..
-	uart_handlers_receive_buffer_bkgnd[uart_instance->uart_peripheral] = uart_handler;
+	uart_handlers_receive_bkgnd[peripheral_index] = NULL;					// We actually don't need to do this, but ok..
+	uart_handlers_receive_buffer_bkgnd[peripheral_index] = uart_handler;
 	
 	// Enable the receive process
 	nrf_drv_uart_rx_enable(&(uart_instance->nrf_drv_uart_instance));
 	
 	// Start the receive and buffer the data in the 1 Byte buffer
-	ret_code_t ret = nrf_drv_uart_rx(&(uart_instance->nrf_drv_uart_instance), (uint8_t*) &uart_receive_buffer_operations[uart_instance->uart_peripheral], 1);
+	ret_code_t ret = nrf_drv_uart_rx(&(uart_instance->nrf_drv_uart_instance), (uint8_t*) &uart_receive_buffer_operations[peripheral_index], 1);
 	
 	// If no success clear the UART_RECEIVE_BUFFER_OPERATION flag
 	if(ret != NRF_SUCCESS) {		
@@ -450,7 +482,7 @@ ret_code_t uart_receive_buffer_bkgnd(uart_instance_t* uart_instance,  uart_handl
 		nrf_drv_uart_rx_disable(&(uart_instance->nrf_drv_uart_instance));
 	
 	
-		uart_operations[uart_instance->uart_peripheral] &= ~(UART_RECEIVE_BUFFER_OPERATION);
+		uart_operations[peripheral_index] &= ~(UART_RECEIVE_BUFFER_OPERATION);
 	}
 	
 	return ret;
@@ -458,15 +490,22 @@ ret_code_t uart_receive_buffer_bkgnd(uart_instance_t* uart_instance,  uart_handl
 }
 
 ret_code_t uart_receive_buffer_abort_bkgnd(uart_instance_t* uart_instance) {
+	
+	// Get the peripheral_index
+	uint8_t peripheral_index = uart_instance->uart_peripheral;
+	
 	// Check if there is an ongoing receive-buffer operation. If there is no receive-buffer operation, directly return 
-	if((uart_operations[uart_instance->uart_peripheral] & UART_RECEIVE_BUFFER_OPERATION)  == 0) {
+	if((uart_operations[peripheral_index] & UART_RECEIVE_BUFFER_OPERATION)  == 0) {
 		return NRF_SUCCESS;
 	}
 	
 	// You should only be able to abort an receive-buffer operation, if your own instance is currently running. So check if the instance id is the same
-	if((*uart_instances[uart_instance->uart_peripheral]).uart_instance_id != uart_instance->uart_instance_id) {
-		return NRF_ERROR_INVALID_STATE;
+	if((uart_instances[peripheral_index] != NULL) && ((*uart_instances[peripheral_index]).uart_instance_id != uart_instance->uart_instance_id)) {
+			return NRF_ERROR_INVALID_STATE;
 	}
+	// If NULL (it shouldn't be NULL here, because we have an ongoing operation) -> just proceed as normal..
+
+	
 	
 	// Now stop the ongoing receive operation
 	nrf_drv_uart_rx_abort(&(uart_instance->nrf_drv_uart_instance));
@@ -474,7 +513,7 @@ ret_code_t uart_receive_buffer_abort_bkgnd(uart_instance_t* uart_instance) {
 	nrf_drv_uart_rx_disable(&(uart_instance->nrf_drv_uart_instance));
 	
 	// Clear the Receive operation
-	uart_operations[uart_instance->uart_peripheral] &= ~(UART_RECEIVE_BUFFER_OPERATION);
+	uart_operations[peripheral_index] &= ~(UART_RECEIVE_BUFFER_OPERATION);
 	
 	return NRF_SUCCESS;
 	
@@ -507,7 +546,7 @@ ret_code_t uart_receive_buffer_get(uart_instance_t* uart_instance,  uint8_t* dat
 		return NRF_ERROR_NOT_FOUND;
 	
 	*data_byte = (uart_instance->uart_buffer).rx_buf[(uart_instance->uart_buffer).rx_buf_read_index];
-	(uart_instance->uart_buffer).rx_buf_read_index++;
+	(uart_instance->uart_buffer).rx_buf_read_index = ((uart_instance->uart_buffer).rx_buf_read_index + 1) %  (uart_instance->uart_buffer).rx_buf_size;
 	
 	return NRF_SUCCESS;
 }

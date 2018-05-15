@@ -15,7 +15,7 @@ extern void pprintf(const char* format, ...);
 #define ADC_PERIPHERAL_NUMBER 		ADC_COUNT
 
 static volatile adc_operation_t  	adc_operations[ADC_PERIPHERAL_NUMBER] 	= {0};
-static adc_instance_t *				adc_instances[ADC_PERIPHERAL_NUMBER] 	= {0};
+static adc_instance_t *				adc_instances[ADC_PERIPHERAL_NUMBER] 	= {NULL};
 static uint32_t 					adc_instance_number = 1; 	// Starts at 1 because the above init of the arrays are always to 0 (otherwise the check of which instance is currently working would fail)
 
 
@@ -42,19 +42,21 @@ ret_code_t adc_init(adc_instance_t* adc_instance) {
 
 ret_code_t adc_read_raw(adc_instance_t* adc_instance, int32_t* raw){
 	
+	uint8_t peripheral_index = adc_instance->adc_peripheral;
+	
 	// Check if there is an operation ongoing on this peripheral
-	if(adc_operations[adc_instance->adc_peripheral] != ADC_NO_OPERATION){
+	if(adc_operations[peripheral_index] != ADC_NO_OPERATION){
 		return NRF_ERROR_BUSY;
 	}
 	
 	// Set the operation
-	adc_operations[adc_instance->adc_peripheral] = ADC_READING_OPERATION;
+	adc_operations[peripheral_index] = ADC_READING_OPERATION;
 	
 	// Check if it is my instance that was working before?
-	if((*adc_instances[adc_instance->adc_peripheral]).adc_instance_id != adc_instance->adc_instance_id){
-		
+	if((adc_instances[peripheral_index] == NULL) || ((*adc_instances[peripheral_index]).adc_instance_id != adc_instance->adc_instance_id)) { 
+
 		// Set the instance to the current instance!
-		adc_instances[adc_instance->adc_peripheral] = adc_instance;
+		adc_instances[peripheral_index] = adc_instance;
 		
 		// If not, we have to reconfigure the instance/adc_config!
 		nrf_adc_configure((nrf_adc_config_t *)  &(adc_instance->nrf_adc_config)); 
@@ -72,7 +74,7 @@ ret_code_t adc_read_raw(adc_instance_t* adc_instance, int32_t* raw){
 	nrf_adc_conversion_event_clean();
     nrf_adc_stop();
 	
-	adc_operations[adc_instance->adc_peripheral] = ADC_NO_OPERATION;
+	adc_operations[peripheral_index] = ADC_NO_OPERATION;
 	
 	return NRF_SUCCESS;
 	
@@ -112,9 +114,9 @@ void adc_power_off(uint8_t adc_peripheral){
 
 void adc_power_on(uint8_t adc_peripheral){
 	// Check if the adc_instance is valid?
-	if((*adc_instances[adc_peripheral]).adc_instance_id > 0){
-		nrf_adc_configure((nrf_adc_config_t *)  &((*adc_instances[adc_peripheral]).nrf_adc_config)); 
-		nrf_adc_input_select((*adc_instances[adc_peripheral]).nrf_adc_config_input);
+	if((adc_instances[adc_peripheral] != NULL) && ((*adc_instances[adc_peripheral]).adc_instance_id > 0)){
+			nrf_adc_configure((nrf_adc_config_t *)  &((*adc_instances[adc_peripheral]).nrf_adc_config)); 
+			nrf_adc_input_select((*adc_instances[adc_peripheral]).nrf_adc_config_input);
 	}
 }
 
