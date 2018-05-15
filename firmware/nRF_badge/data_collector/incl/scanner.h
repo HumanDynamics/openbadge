@@ -180,21 +180,25 @@ typedef enum scan_state_t
 volatile scan_state_t scan_state;
 
 
+#define MAX_SCAN_RESULTS    300    // max number of individual devices that will be reported in a scan
+#define MAX_SCAN_COUNT      127      // maximum number of RSSI readings for one device reported in a scan
 
-#define MAX_SCAN_RESULTS 100     // maximum number of devices that will be reported in a scan
-                                // ^^ temporarily capped to never be more than one chunk's worth
-#define MAX_SCAN_COUNT 127      // maximum number of RSSI readings for one device reported in a scan
-
+#define BEACON_PRIORITY     4       // always store at least this many beacons
+#define BEACON_ID_THRESHOLD 16000   // IDs at or above this threshold signify a beacon. IDs below this are badges
 #define MINIMUM_RSSI (-120)
 signed char minimumRSSI;   // device seen on scan must reach this RSSI threshold to be acknowledged
 
 
+#define MAX_AGGR true       // indicates the function (true=max/false=mean) used to aggregate samples
+
+
+void sortScanByRSSIDescending(void);
+
 struct
 {
     int to;
-    
     volatile int timestamp;
-    volatile int num;
+    volatile int num, numbeacons;
     volatile unsigned short IDs[MAX_SCAN_RESULTS];
     volatile signed short rssiSums[MAX_SCAN_RESULTS];
     volatile signed char counts[MAX_SCAN_RESULTS];

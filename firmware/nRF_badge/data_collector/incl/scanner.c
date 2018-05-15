@@ -4,6 +4,17 @@
 #include "battery.h"
 #include "scanner.h"
 
+#if MAX_AGGR
+	#define AGGR_SAMPLE(sample, datum) (datum > sample ? datum: sample)
+	#define PROCESS_SAMPLE(aggregated, count) aggregated
+	#define RESTORE_SAMPLE(processed, count) processed
+#else
+	#define AGGR_SAMPLE(sample, datum) (datum+sample)
+	#define PROCESS_SAMPLE(aggregated, count) ((aggregated)/(count))
+	#define RESTORE_SAMPLE(processed, count) ((processed)*(count))
+#endif
+
+
 static uint32_t mScanTimer;
 
 static void scan_task(void * p_context) {
@@ -54,7 +65,8 @@ void scanner_init()
     
     //scan_state = SCAN_IDLE;
 
-    app_timer_create(&mScanTimer, APP_TIMER_MODE_REPEATED, scan_task);
+    app_timer_create(&mScanTimer, APP_TIMER_MODE_REPEATED, scan_task); // makes an app timer that interrupts repeatedly to execute scan_task
+	
 }
 
 
@@ -63,6 +75,7 @@ uint32_t startScan()
     sd_ble_gap_scan_stop();  // stop any in-progress scans
     
     scan.num = 0;
+    scan.numbeacons = 0;
     scan.timestamp = now();
 
     scan_state = SCANNER_SCANNING;
@@ -73,7 +86,7 @@ uint32_t startScan()
 
 void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
 {
-    //debug_log("BLECH\r\n");
+
     signed char rssi = advReport->rssi;
     
     if (rssi < MINIMUM_RSSI)  {
@@ -130,21 +143,28 @@ void BLEonAdvReport(ble_gap_evt_adv_report_t* advReport)
         }
     }
     
-    if (ID != BAD_ID && group == badgeAssignment.group && scan.num < MAX_SCAN_RESULTS)  {
-        bool prevSeen = false;
-        for(int i=0; i<scan.num; i++)  {      // check through list of already seen badges
+   if (ID != BAD_ID && group == badgeAssignment.group){     // valid ID
+   
+	    bool prevSeen = false;
+        
+        for(int i = 0; i < scan.num; i++)  {      // check through list of already seen devices
             if(ID == scan.IDs[i])  {
-                scan.rssiSums[i] += rssi;
+                scan.rssiSums[i] = AGGR_SAMPLE(scan.rssiSums[i], rssi);
                 scan.counts[i]++;
-                prevSeen = true;
+	            prevSeen = true;
                 break;
             }
         }
-        if(!prevSeen)  {                             // is it a new badge
-            scan.IDs[scan.num] = ID;
-            scan.rssiSums[scan.num] = rssi;
-            scan.counts[scan.num] = 1;
-            scan.num++;
+        
+        if(!prevSeen)  {        // is it a new device and do we have space for it    
+            if(scan.num < MAX_SCAN_RESULTS){
+                scan.IDs[scan.num] = ID;
+                scan.rssiSums[scan.num] = rssi;
+                scan.counts[scan.num] = 1;
+                scan.num++;
+                scan.numbeacons += (ID >= BEACON_ID_THRESHOLD) ? 1 : 0;
+                
+            }
         }
     }
     
@@ -281,8 +301,6 @@ void BLEonScanTimeout()
 
 }
 
-// Compare function for stdlib's QuickSort function that will sort a list of seenDevice_t by RSSI descendingly.
-// More information can be found here: http://www.cplusplus.com/reference/cstdlib/qsort/
 static int compareSeenDeviceByRSSI(const void * a, const void * b) {
     seenDevice_t * seenDeviceA = (seenDevice_t *) a;
     seenDevice_t * seenDeviceB = (seenDevice_t *) b;
@@ -301,28 +319,59 @@ static int compareSeenDeviceByRSSI(const void * a, const void * b) {
     return -1;
 }
 
+
+static int compareSeenDeviceByID(const void * a, const void * b) {
+    seenDevice_t * seenDeviceA = (seenDevice_t *) a;
+    seenDevice_t * seenDeviceB = (seenDevice_t *) b;
+
+    if (seenDeviceA->ID > seenDeviceB->ID) {
+        return -1; // We want device A before device B in our list.
+    } else if (seenDeviceA->ID == seenDeviceB->ID) {
+        return 0; // We don't care whether deviceA or deviceB comes first.
+    } else if (seenDeviceA->ID < seenDeviceB->ID) {
+        return 1; // We want device A to come after device B in our list.
+    }
+
+    // We should never get here?
+    APP_ERROR_CHECK_BOOL(false);
+
+    return -1;
+}
+
 // This function is kind of hacky.
 // It sorts our global scan variable in place descendingly according to RSSI.
 // It's written this way so we can easily put it into the existing codebase with minimal changes.
-static void sortScanByRSSIDescending(void) {
-    seenDevice_t seenDevices[MAX_SCAN_RESULTS];
-
-    // Convert scan into an array of structs for sorting.
+// We first store the closest beacons (up to BEACON_PRIORITY), and then use the remaining space
+// for all other beacons and badges
+static seenDevice_t seenDevices[MAX_SCAN_RESULTS];
+void sortScanByRSSIDescending(void) {
+    // Convert scan into an array of structs for sorting 
     for (int i = 0; i < scan.num; i++) {
         seenDevices[i].ID = scan.IDs[i];
-        seenDevices[i].rssi = (scan.rssiSums[i] / scan.counts[i]);
+        seenDevices[i].rssi = PROCESS_SAMPLE(scan.rssiSums[i], scan.counts[i]);
         seenDevices[i].count = scan.counts[i];
     }
 
-    // Sort seen devices in place
-    qsort(seenDevices, (size_t) scan.num, sizeof(seenDevice_t), compareSeenDeviceByRSSI);
+    // Number of beacons that are going to be prioritized
+    int prioritized = (BEACON_PRIORITY < scan.numbeacons) ? BEACON_PRIORITY : scan.numbeacons;
 
+    // Place beacons on top
+    qsort(seenDevices, (size_t)scan.num, sizeof(seenDevice_t), compareSeenDeviceByID);
+
+    // Sort beacons by RSSI
+    qsort(seenDevices, (size_t)scan.numbeacons, sizeof(seenDevice_t), compareSeenDeviceByRSSI);
+
+    // Keep prioritized beacons on top, sort the remaining beacons and badges by RSSI
+    qsort(seenDevices+prioritized, (size_t)(scan.num-prioritized), sizeof(seenDevice_t), compareSeenDeviceByRSSI);
+
+    // Translate back to the original scan structure
     for (int i = 0; i < scan.num; i++) {
         scan.IDs[i] = seenDevices[i].ID;
-        scan.rssiSums[i] = seenDevices[i].rssi * seenDevices[i].count;
+        scan.rssiSums[i] = RESTORE_SAMPLE(seenDevices[i].rssi, seenDevices[i].count);
         scan.counts[i] = seenDevices[i].count;
     }
 }
+
 
 bool updateScanner()
 {
@@ -332,6 +381,7 @@ bool updateScanner()
         
         int numSaved = 0;
         int chunksUsed = 0;
+
 
         if (scan.num > SCAN_DEVICES_PER_CHUNK) {
             // We have scanned more devices than we can store in a chunk, prune off the top SCAN_DEVICES_PER_CHUNK
@@ -357,11 +407,12 @@ bool updateScanner()
             int numThisChunk = (numLeft <= SCAN_DEVICES_PER_CHUNK) ? numLeft : SCAN_DEVICES_PER_CHUNK;
             for(int i = 0; i < numThisChunk; i++)  {
                 scanBuffer[scan.to].devices[i].ID = scan.IDs[numSaved + i];
-                scanBuffer[scan.to].devices[i].rssi = scan.rssiSums[numSaved + i] / scan.counts[numSaved + i];
+                scanBuffer[scan.to].devices[i].rssi = PROCESS_SAMPLE(scan.rssiSums[numSaved + i], scan.counts[numSaved + i]);
                 scanBuffer[scan.to].devices[i].count = scan.counts[numSaved + i];
                 debug_log("    bdg ID#%.4hX, rssi %d, count %d\r\n", scanBuffer[scan.to].devices[i].ID,
                                                                 (int)scanBuffer[scan.to].devices[i].rssi,
                                                                 (int)scanBuffer[scan.to].devices[i].count );
+                
             }
             numSaved += numThisChunk;  
             
@@ -384,7 +435,6 @@ bool updateScanner()
         } while(numSaved < scan.num);
         
         debug_log("SCANNER: Done saving results.  used %d chunks.\r\n",chunksUsed);
-
     Storer_ScheduleBufferedDataStorage();
 
     return scannerActive;
