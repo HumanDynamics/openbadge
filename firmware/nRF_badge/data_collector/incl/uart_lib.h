@@ -3,9 +3,20 @@
 
 
 #include <stdarg.h>		// Needed for the printf-function
+#include <stdio.h>		// Needed for the vsnprintf-function
+#include <string.h>		// Needed for the printf-function
 #include "nrf_drv_uart.h"
 
 
+
+
+
+
+/**
+* It is so annoying that the nrf_drv_uart-library don't accepts UART TX transfers with size > 256!!
+* Therefore, a wrapper function with IRQ handling and so on has to be written!
+
+*/
 
 
 
@@ -43,7 +54,7 @@ typedef enum
 
 typedef struct
 {
-    uart_evt_type_t  type;      /**< Event type */
+	uart_evt_type_t  type;      /**< Event type */
 } uart_evt_t;
 
 
@@ -70,6 +81,36 @@ typedef struct {
 
 
 
+#define UART_INIT(P_UART_INSTANCE, P_RET_CODE) 	\
+    do                                                                                             	\
+    {                                                                                              	\
+		uart_buffer_t 	uart_buffer;																\
+		uart_buffer.rx_buf 				= NULL;														\
+		uart_buffer.tx_buf 				= NULL;														\
+																									\
+		(P_UART_INSTANCE)->uart_buffer = uart_buffer;												\
+		(*(P_RET_CODE)) = uart_init(P_UART_INSTANCE);												\
+    } while (0)
+
+
+#define UART_BUFFER_INIT(P_UART_INSTANCE, RX_BUF_SIZE, TX_BUF_SIZE, P_RET_CODE) 	\
+    do                                                                                             	\
+    {                                                                                              	\
+		uart_buffer_t 	uart_buffer;																\
+        static uint8_t     		rx_buf[RX_BUF_SIZE];                                               	\
+        static uint8_t     		tx_buf[TX_BUF_SIZE];                                               	\
+																									\
+		uart_buffer.rx_buf 				= rx_buf;													\
+		uart_buffer.rx_buf_size 		= RX_BUF_SIZE;												\
+		uart_buffer.rx_buf_read_index 	= 0;														\
+		uart_buffer.rx_buf_write_index 	= 0;														\
+		uart_buffer.tx_buf 				= tx_buf;													\
+		uart_buffer.tx_buf_size			= TX_BUF_SIZE;												\
+																									\
+		(P_UART_INSTANCE)->uart_buffer = uart_buffer;												\
+		(*(P_RET_CODE)) = uart_init(P_UART_INSTANCE);												\
+    } while (0)
+
 
 
 /**@brief Macro for initialization of the UART buffer 
@@ -86,31 +127,7 @@ typedef struct {
  * @note Since this macro allocates a buffer and registers the module as a GPIOTE user when flow
  *       control is enabled, it must only be called once.
  */
- /*
-#define UART_BUFFER_INIT(P_UART_BUFFER, RX_BUF_SIZE, TX_BUF_SIZE) \
-    do                                                                                             \
-    {                                                                                              \
-        static uint8_t     rx_buf[RX_BUF_SIZE];                                                    \
-        static uint8_t     tx_buf[TX_BUF_SIZE];                                                    \
-                                                                                                   \
-		(P_UART_BUFFER)->rx_buf      = rx_buf;                                                     \
-        (P_UART_BUFFER)->rx_buf_size = sizeof (rx_buf);                                            \
-		(P_UART_BUFFER)->rx_buf_read_index = 0;                                            		   \
-		(P_UART_BUFFER)->rx_buf_write_index = 0;                                            	   \
-        (P_UART_BUFFER)->tx_buf      = tx_buf;                                                     \
-        (P_UART_BUFFER)->tx_buf_size = sizeof (tx_buf);                                            \
-    } while (0)
 
-#define UART_INIT(P_UART_INSTANCE_ID, P_UART_CONFIG, RX_BUF_SIZE, TX_BUF_SIZE) \
-    do                                                                                             \
-    {                                                                                              \
-        static uart_buffer_t uart_buffer;                                         			       \
-        UART_BUFFER_INIT(&uart_buffer, RX_BUF_SIZE, TX_BUF_SIZE);                                  \
-                                                                                                   \
-		uart_init(P_UART_INSTANCE_ID, P_UART_CONFIG, &uart_buffer);                                \
-    } while (0)
-
-		*/
 		
 		
 
@@ -118,13 +135,39 @@ typedef struct {
 		
 ret_code_t uart_init(uart_instance_t* uart_instance);
 
-ret_code_t uart_transmit_IT(const uart_instance_t* uart_instance, uart_handler_t uart_handler, const uint8_t* tx_data, uint32_t tx_data_len);
 
-ret_code_t uart_transmit(const uart_instance_t* uart_instance, const uint8_t* tx_data, uint32_t tx_data_len);
+ret_code_t uart_printf_bkgnd(uart_instance_t* uart_instance, uart_handler_t uart_handler, const char* format, ...);
 
-ret_code_t uart_receive_IT(const uart_instance_t* uart_instance, uart_handler_t uart_handler, uint8_t* rx_data, uint32_t rx_data_len);
+ret_code_t uart_printf_abort_bkgnd(uart_instance_t* uart_instance);
 
-ret_code_t uart_receive(const uart_instance_t* uart_instance, uint8_t* rx_data, uint32_t rx_data_len);
+ret_code_t uart_printf(uart_instance_t* uart_instance, const char* format, ...);
+
+
+ret_code_t uart_transmit_bkgnd(uart_instance_t* uart_instance, uart_handler_t uart_handler, const uint8_t* tx_data, uint32_t tx_data_len);
+
+ret_code_t uart_transmit_abort_bkgnd(uart_instance_t* uart_instance);
+
+ret_code_t uart_transmit(uart_instance_t* uart_instance, const uint8_t* tx_data, uint32_t tx_data_len);
+
+
+ret_code_t uart_receive_bkgnd(uart_instance_t* uart_instance, uart_handler_t uart_handler, uint8_t* rx_data, uint32_t rx_data_len);
+
+ret_code_t uart_receive_abort_bkgnd(uart_instance_t* uart_instance);
+
+ret_code_t uart_receive(uart_instance_t* uart_instance, uint8_t* rx_data, uint32_t rx_data_len);
+
+
+ret_code_t uart_receive_buffer_bkgnd(uart_instance_t* uart_instance,  uart_handler_t uart_handler);
+
+ret_code_t uart_receive_buffer_abort_bkgnd(uart_instance_t* uart_instance);
+
+ret_code_t uart_receive_buffer_get(uart_instance_t* uart_instance,  uint8_t* data_byte);
+
+
+
+
+
+
 
 /*
 
