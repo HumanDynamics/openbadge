@@ -24,9 +24,9 @@ typedef struct {
 
 ret_code_t adc_init(adc_instance_t* adc_instance);
 
-ret_code_t adc_read_raw(const adc_instance_t* adc_instance, int32_t* raw);
+ret_code_t adc_read_raw(adc_instance_t* adc_instance, int32_t* raw);
 
-ret_code_t adc_read_voltage(const adc_instance_t* adc_instance, float* voltage, float ref_voltage);
+ret_code_t adc_read_voltage( adc_instance_t* adc_instance, float* voltage, float ref_voltage);
 
 
 #endif

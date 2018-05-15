@@ -15,7 +15,7 @@
 #define SPI_PERIPHERAL_NUMBER 		SPI_COUNT	// automatically imported through nrf_peripherals.h
 
 static volatile spi_operation_t  	spi_operations[SPI_PERIPHERAL_NUMBER] 	= {0};
-static spi_instance_t				spi_instances[SPI_PERIPHERAL_NUMBER] 	= {{0}};	// Currently active instances
+static spi_instance_t *				spi_instances[SPI_PERIPHERAL_NUMBER] 	= {0};	// Currently active instances
 static uint32_t 					spi_instance_number = 1; 	// Starts at 1 because the above init of the arrays are always to 0. And so the check 
 
 // To have all the handlers to be independent of the initialization!!
@@ -37,7 +37,7 @@ static void spi_0_event_handler(nrf_drv_spi_evt_t* p_event) {
 		evt.type = SPI_TRANSFER_DONE;
 		
 		// The SS-Pin has to be "deacitvated" again!
-		nrf_gpio_pin_set(spi_instances[0].nrf_drv_spi_config.ss_pin);
+		nrf_gpio_pin_set((*spi_instances[0]).nrf_drv_spi_config.ss_pin);
 		
 		// We are now ready with the operation
 		spi_operations[0] = SPI_NO_OPERATION;
@@ -61,7 +61,7 @@ static void spi_1_event_handler(nrf_drv_spi_evt_t* p_event) {
 		evt.type = SPI_TRANSFER_DONE;
 		
 		// The SS-Pin has to be "deacitvated" again!
-		nrf_gpio_pin_set(spi_instances[1].nrf_drv_spi_config.ss_pin);
+		nrf_gpio_pin_set((*spi_instances[1]).nrf_drv_spi_config.ss_pin);
 		
 		spi_operations[1] = SPI_NO_OPERATION;
 		
@@ -149,7 +149,7 @@ ret_code_t spi_init(spi_instance_t* spi_instance) {
 
 
 
-ret_code_t spi_transmit_bkgnd(const spi_instance_t* spi_instance, spi_handler_t spi_handler, const uint8_t* tx_data, uint32_t tx_data_len) {
+ret_code_t spi_transmit_bkgnd( spi_instance_t* spi_instance, spi_handler_t spi_handler, const uint8_t* tx_data, uint32_t tx_data_len) {
 	
 	
 	// Check if there is already an operation working on this peripheral, if so return (because it should not/could not do read and write parallel)
@@ -161,7 +161,7 @@ ret_code_t spi_transmit_bkgnd(const spi_instance_t* spi_instance, spi_handler_t 
 	spi_operations[spi_instance->spi_peripheral] = SPI_TRANSMIT_OPERATION;
 	
 	// Set the instance-array entry to the current instance, to retrieve the ss_pin in the IRQ-handler!
-	spi_instances[spi_instance->spi_peripheral] = *spi_instance;
+	spi_instances[spi_instance->spi_peripheral] = spi_instance;
 	
 	// Set the send Handler for the send operation, set the other one to NULL!
 	spi_handlers_transmit_bkgnd				[spi_instance->spi_peripheral] = spi_handler;
@@ -186,7 +186,7 @@ ret_code_t spi_transmit_bkgnd(const spi_instance_t* spi_instance, spi_handler_t 
 }
 
 
-ret_code_t spi_transmit(const spi_instance_t* spi_instance, const uint8_t* tx_data, uint32_t tx_data_len) {
+ret_code_t spi_transmit(spi_instance_t* spi_instance, const uint8_t* tx_data, uint32_t tx_data_len) {
 
 	ret_code_t ret = spi_transmit_bkgnd(spi_instance, NULL, tx_data, tx_data_len);
 	if(ret != NRF_SUCCESS) {
@@ -201,7 +201,7 @@ ret_code_t spi_transmit(const spi_instance_t* spi_instance, const uint8_t* tx_da
 }
 
 
-ret_code_t spi_transmit_receive_bkgnd(const spi_instance_t* spi_instance, spi_handler_t spi_handler, const uint8_t* tx_data, uint32_t tx_data_len, uint8_t* rx_data, uint32_t rx_data_len) {
+ret_code_t spi_transmit_receive_bkgnd(spi_instance_t* spi_instance, spi_handler_t spi_handler, const uint8_t* tx_data, uint32_t tx_data_len, uint8_t* rx_data, uint32_t rx_data_len) {
 	
 	
 	// Check if there is already an operation working on this peripheral, if so return (because it should not/could not do read and write parallel)
@@ -213,7 +213,7 @@ ret_code_t spi_transmit_receive_bkgnd(const spi_instance_t* spi_instance, spi_ha
 	spi_operations[spi_instance->spi_peripheral] = SPI_TRANSMIT_RECEIVE_OPERATION;
 	
 	// Set the instance-array entry to the current instance, to retrieve the ss_pin in the IRQ-handler!
-	spi_instances[spi_instance->spi_peripheral] = *spi_instance;
+	spi_instances[spi_instance->spi_peripheral] = spi_instance;
 	
 	// Set the send Handler for the send operation!
 	spi_handlers_transmit_bkgnd			[spi_instance->spi_peripheral] = NULL;
@@ -236,7 +236,7 @@ ret_code_t spi_transmit_receive_bkgnd(const spi_instance_t* spi_instance, spi_ha
 	return ret;
 }
 
-ret_code_t spi_transmit_receive(const spi_instance_t* spi_instance, const uint8_t* tx_data, uint32_t tx_data_len, uint8_t* rx_data, uint32_t rx_data_len) {
+ret_code_t spi_transmit_receive(spi_instance_t* spi_instance, const uint8_t* tx_data, uint32_t tx_data_len, uint8_t* rx_data, uint32_t rx_data_len) {
 
 	ret_code_t ret = spi_transmit_receive_bkgnd(spi_instance, NULL, tx_data, tx_data_len, rx_data, rx_data_len);
 	if(ret != NRF_SUCCESS) {
@@ -251,8 +251,8 @@ ret_code_t spi_transmit_receive(const spi_instance_t* spi_instance, const uint8_
 }
 
 
-// Actually 
-spi_operation_t spi_get_status(const spi_instance_t* spi_instance){
+// Actually this could/should be the peripheral ID?!
+spi_operation_t spi_get_status(spi_instance_t* spi_instance){
 	return spi_operations[spi_instance->spi_peripheral];
 }
 
