@@ -6,17 +6,15 @@
 
 //#define TEST
 
-#ifdef TEST
-static void test(void) {
-	printf("aaaa\n");
-}
-#endif
 
-#ifndef TEST
-static void test(void) {
-	printf("bbbb\n");
+static void test(uint8_t a) {
+	if(a == 0 || a == 1) {
+		printf("aaaa\n");
+	}
 }
-#endif
+
+
+
 
 int main(void)
 {
@@ -24,7 +22,13 @@ int main(void)
 	
 	uint8_t a = 0;
 	
-	if(a == 0 || a == 1)
-		test();
+	test(a);
+	
+	a ++;
+	
+	test(a);
+	
+	a++;
+	test(a);
 	
 }
