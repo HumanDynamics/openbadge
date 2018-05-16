@@ -16,7 +16,8 @@ RUN apt-get update && apt-get install -y \
   git \
   cmake \
   minicom screen \
-  vim
+  vim \
+  lcov
 
 RUN mkdir -p /opt/downloads
 
