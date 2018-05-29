@@ -100,6 +100,8 @@ helpDetailed:
 #$(SDK_PATH)/components/drivers_nrf/common/nrf_drv_common.c \	# the function nrf_drv_common_irq_enable must be explicity included (maybe because it is called from an inline function)
 #$(SDK_PATH)/components/drivers_nrf/hal/nrf_adc.c \				# the adc abstraction library
 #$(SDK_PATH)/components/drivers_nrf/spi_master/nrf_drv_spi.c \  # the spi driver abstraction library
+#$(SDK_PATH)/components/libraries/fstorage/fstorage.c \			# the flash abstraction library
+
 
 #source files
 C_SOURCE_FILES += \
@@ -107,11 +109,13 @@ main.c \
 incl/adc_lib.c \
 incl/spi_lib.c \
 incl/uart_lib.c \
+incl/flash_lib.c \
 $(SDK_PATH)/components/toolchain/system_nrf51.c \
 $(SDK_PATH)/components/drivers_nrf/uart/nrf_drv_uart.c \
 $(SDK_PATH)/components/drivers_nrf/common/nrf_drv_common.c \
 $(SDK_PATH)/components/drivers_nrf/hal/nrf_adc.c \
 $(SDK_PATH)/components/drivers_nrf/spi_master/nrf_drv_spi.c \
+$(SDK_PATH)/components/libraries/fstorage/fstorage.c \
 #incl/accel.c \
 #incl/analog.c \
 #incl/app_fifo_util.c \
@@ -177,6 +181,8 @@ ASM_SOURCE_FILES  = $(SDK_PATH)/components/toolchain/gcc/gcc_startup_nrf51.S
 #INC_PATHS += -I$(SDK_PATH)/components/boards							# boards.h (include in main.c, that there is a redirect to custom_board.h and so the badge_vxx-file)
 #INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/delay				# nrf_delay.h --> implementation directly in header --> no source file to add!
 #INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/spi_master			# nrf_drv_spi.c/.h --> implementation of SPI master driver
+#INC_PATHS += -I$(SDK_PATH)/components/libraries/fstorage				# fstorage.c/.h
+#INC_PATHS += -I$(SDK_PATH)/components/libraries/experimental_section_vars 		# needed for fstorage.c
 
 #includes
 INC_PATHS  = -Iconfig
@@ -195,6 +201,8 @@ INC_PATHS += -I$(SDK_PATH)/components/libraries/log/src
 INC_PATHS += -I$(SDK_PATH)/components/boards
 INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/delay
 INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/spi_master
+INC_PATHS += -I$(SDK_PATH)/components/libraries/fstorage
+INC_PATHS += -I$(SDK_PATH)/components/libraries/experimental_section_vars
 
 
 #INC_PATHS += -I$(SDK_PATH)/components/libraries/uart

@@ -27,6 +27,7 @@
 
 #include "uart_lib.h"
 
+#include "flash_lib.h"
 
 
 
@@ -127,40 +128,7 @@ uint8_t buf[200];
 // https://stackoverflow.com/questions/4867229/code-for-printf-function-in-c
 // https://devzone.nordicsemi.com/f/nordic-q-a/28999/using-floats-with-sprintf-gcc-arm-none-eabi-nrf51822
 // If you want to have float support, add "LDFLAGS += -u _printf_float" in Makefile!
-void pprintf(const char* format, ...){
-	va_list args;
-	va_start(args, format);
-	vsnprintf((char*)buf, sizeof(buf)/sizeof(buf[0]), format, args);
-	va_end(args);	
-	nrf_drv_uart_tx(&_instance, buf, strlen((char*)buf));
-	nrf_delay_ms(100);
-}
 
-uint8_t rx_buffer[1];
-
-void handler (nrf_drv_uart_event_t * p_event, void * p_context){
-	switch(p_event -> type) {
-		case NRF_DRV_UART_EVT_TX_DONE: 
-		{
-			
-		}
-		break;
-		case NRF_DRV_UART_EVT_RX_DONE: 
-		{
-			nrf_drv_uart_rx(&_instance, rx_buffer, 1);
-			pprintf("%c", rx_buffer[0]);
-			
-		}
-		break;
-		case NRF_DRV_UART_EVT_ERROR: 
-		{
-						
-		}
-		break;
-		
-		
-	}
-}
 
 
 adc_instance_t mic_adc;
@@ -170,6 +138,8 @@ spi_instance_t acc_spi;
 
 spi_instance_t ext_spi;
 
+
+uart_instance_t uart_instance;
 
 	//==== Funcion read registers ====
 uint8_t readRegister8(uint8_t reg){
@@ -182,6 +152,27 @@ uint8_t readRegister8(uint8_t reg){
   return rxBuf[1]; // Value retorned from spi register
 }
 
+
+volatile uint8_t uart_transmit_done = 0;
+volatile uint8_t uart_receive_buffer_done = 0;
+
+
+void uart_handler(uart_evt_t const * p_event) {
+	
+	if(p_event->type == UART_TRANSMIT_DONE) {
+		uart_transmit_done = 1;
+	}
+	if(p_event->type == UART_DATA_AVAILABLE)
+		uart_receive_buffer_done = 1;
+	
+	
+}
+
+
+
+
+#define size_tx 1000 
+char data_tx[size_tx];
 
 
 /**
@@ -200,7 +191,7 @@ int main(void)
 	
 	
 	
-	config.baudrate = (nrf_uart_baudrate_t) 0x01D7E000UL; // from nrf51_bitfields.h 
+	config.baudrate = (nrf_uart_baudrate_t) NRF_UART_BAUDRATE_115200; // 0x01D7E000UL; // from nrf51_bitfields.h 
     config.hwfc = NRF_UART_HWFC_DISABLED;
     config.interrupt_priority = 3;
     config.parity = NRF_UART_PARITY_EXCLUDED;
@@ -210,21 +201,62 @@ int main(void)
     config.pseltxd = 10;
 	
 	
-	uart_instance_t uart_instance;
+	
 	uart_instance.uart_peripheral = 0;
 	uart_instance.nrf_drv_uart_config = config;
-	uart_init(&uart_instance);
 	
+	ret_code_t ret;
+	UART_BUFFER_INIT(&uart_instance, 32, 200, &ret);
+	
+	
+	
+	flash_init();
+	
+	uint32_t a = 0;
+	flash_store(a, &a, 1);
+	
+	
+
 	
 	//char data[] = "aaaaa\n\r";
-	char data_rx[5];
+	//char data_rx[1000];
+	
+		
+	
+	
+	for(uint32_t i = 0; i < size_tx; i++)
+		data_tx[i] = (i % 10) + 65 ;
+	
+	uart_transmit(&uart_instance, (uint8_t*) data_tx, 400);
+	
+	
+	uart_printf(&uart_instance, "Printf-Test: ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ%d\n\r", 11);
+	
+	
+	
+	uart_printf(&uart_instance, "Ret init: %d\n\r", ret);
+	
+	/*
 	while(1) {
-		uart_receive(&uart_instance, (uint8_t*) data_rx, 5);
-		uart_transmit(&uart_instance, (uint8_t*) data_rx, 5);
-		nrf_delay_ms(1000);
+		
+		
+		ret = uart_receive(&uart_instance, (uint8_t*) data_rx, 10);
+		ret = uart_receive_buffer_bkgnd(&uart_instance, uart_handler);
+		uart_transmit_done=0;
+		//uart_transmit_bkgnd(&uart_instance, NULL, (uint8_t*) data_tx, 400);	
+		uart_printf_bkgnd(&uart_instance, NULL, "Printf-Test: %d\n\r", ret);
+		nrf_delay_ms(2);
+		uart_printf_abort_bkgnd(&uart_instance);
+		
+		nrf_delay_ms(5000);
+		//uart_printf(&uart_instance, "\n\rTransmit status (done: %d, %p), rxtx Pointer to data: %p, bytes transfered: %u\n\r", uart_transmit_done, &data_tx[0], uart_rxtx.p_data, uart_rxtx.bytes);
+		//uart_printf(&uart_instance, "Transmit error  Mask: %u\n\r", uart_error.error_mask);
+		
+		
+		//nrf_delay_ms(1000);
 		
 	}
-	
+	*/
 	
 	
 	
@@ -259,7 +291,7 @@ int main(void)
 	bat_adc.nrf_adc_config_input		= NRF_ADC_CONFIG_INPUT_DISABLED;	//ADC_CONFIG_PSEL_AnalogInput6;
 	
 	
-	pprintf("Starting...\n");
+	uart_printf(&uart_instance,"Starting...\n");
 	nrf_delay_ms(1000);
 	
 	adc_init(&mic_adc);
@@ -280,9 +312,9 @@ int main(void)
 	acc_spi.nrf_drv_spi_config.mosi_pin		= 4;
 	acc_spi.nrf_drv_spi_config.sck_pin		= 3;
 	
-	ret_code_t ret = spi_init(&acc_spi);
+	ret = spi_init(&acc_spi);
 	
-	pprintf("SPI Init ret: %d\n\r", ret);
+	uart_printf(&uart_instance,"SPI Init ret: %d\n\r", ret);
 	
 	ext_spi.spi_peripheral = 0;
 	ext_spi.nrf_drv_spi_config.frequency 	= NRF_DRV_SPI_FREQ_8M;
@@ -298,26 +330,26 @@ int main(void)
 	
 	ret = spi_init(&ext_spi);
 	
-	pprintf("SPI Init ret: %d\n\r", ret);
+	uart_printf(&uart_instance,"SPI Init ret: %d\n\r", ret);
 
 	
 	
 	uint8_t read_byte = readRegister8(0x0F);
 	
-	pprintf("Read Byte: 0x%X\n\r", read_byte);
+	uart_printf(&uart_instance,"Read Byte: 0x%X\n\r", read_byte);
 	
 	while(1) {
 		adc_read_raw(&mic_adc, &val);
-		pprintf("Value: %d\n\r", val);
+		uart_printf(&uart_instance,"Value: %d\n\r", val);
 		nrf_delay_ms(2000);
 		
 		adc_read_raw(&bat_adc, &val);
-		pprintf("Value: %d\n\r", val);
+		uart_printf(&uart_instance,"Value: %d\n\r", val);
 		nrf_delay_ms(2000);
 		
 		float voltage;
 		adc_read_voltage(&bat_adc, &voltage, 1.2);
-		pprintf("Voltage: %.3f\n\r", voltage);
+		uart_printf(&uart_instance,"Voltage: %.3f\n\r", voltage);
 		nrf_delay_ms(2000);
 		
 		
@@ -325,7 +357,7 @@ int main(void)
 		
 		uint8_t read_byte_2 = readRegister8(0x0F);
 	
-		pprintf("Read Bytes: 0x%X, 0x%X\n\r", read_byte_1, read_byte_2);
+		uart_printf(&uart_instance,"Read Bytes: 0x%X, 0x%X\n\r", read_byte_1, read_byte_2);
 	}
 	
 	
@@ -336,6 +368,7 @@ int main(void)
 	//app_error_save_and_stop(1,2,3);
 
 	while(1);
+	
 /*
     #if defined(BOARD_PCA10028)  //NRF51DK
         //If button 4 is pressed on startup, do nothing (mostly so that UART lines are freed on the DK board)
