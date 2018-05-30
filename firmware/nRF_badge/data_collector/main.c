@@ -27,6 +27,7 @@
 
 #include "uart_lib.h"
 
+#include "softdevice_handler.h"
 #include "flash_lib.h"
 
 
@@ -182,10 +183,10 @@ int main(void)
 {
 
 	nrf_gpio_pin_dir_set(LED_1,NRF_GPIO_PIN_DIR_OUTPUT);  //set LED pin to output
-    nrf_gpio_pin_write(LED_1,LED_OFF);  //turn on LED
+    nrf_gpio_pin_write(LED_1,LED_ON);  //turn on LED
 	
 	nrf_gpio_pin_dir_set(LED_2,NRF_GPIO_PIN_DIR_OUTPUT);  //set LED pin to output
-    nrf_gpio_pin_write(LED_2,LED_ON);  //turn on LED
+    nrf_gpio_pin_write(LED_2,LED_OFF);  //turn on LED
 
 	nrf_drv_uart_config_t config = NRF_DRV_UART_DEFAULT_CONFIG;
 	
@@ -208,12 +209,33 @@ int main(void)
 	ret_code_t ret;
 	UART_BUFFER_INIT(&uart_instance, 32, 200, &ret);
 	
+	uart_printf(&uart_instance, "Start...\n\r");
+
+	
+	nrf_gpio_pin_dir_set(LED_2,NRF_GPIO_PIN_DIR_OUTPUT);  //set LED pin to output
+    nrf_gpio_pin_write(LED_2,LED_ON);  //turn on LED
+	
+	// Always initialize everything!!
+	nrf_clock_lf_cfg_t clock_lf_cfg =  {.source        = NRF_CLOCK_LF_SRC_XTAL,            
+										.rc_ctiv       = 0,                                
+										.rc_temp_ctiv  = 0,                                
+										.xtal_accuracy = NRF_CLOCK_LF_XTAL_ACCURACY_20_PPM};
+										
+
+	SOFTDEVICE_HANDLER_INIT(&clock_lf_cfg, NULL);
+
+	
 	
 	
 	flash_init();
 	
-	uint32_t a = 0;
-	flash_store(a, &a, 1);
+	flash_selftest();
+	
+	
+	
+	
+	
+	while(1);
 	
 	
 
@@ -228,6 +250,7 @@ int main(void)
 		data_tx[i] = (i % 10) + 65 ;
 	
 	uart_transmit(&uart_instance, (uint8_t*) data_tx, 400);
+	
 	
 	
 	uart_printf(&uart_instance, "Printf-Test: ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ%d\n\r", 11);

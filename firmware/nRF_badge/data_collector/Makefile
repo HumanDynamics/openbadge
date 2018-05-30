@@ -101,8 +101,12 @@ helpDetailed:
 #$(SDK_PATH)/components/drivers_nrf/hal/nrf_adc.c \				# the adc abstraction library
 #$(SDK_PATH)/components/drivers_nrf/spi_master/nrf_drv_spi.c \  # the spi driver abstraction library
 #$(SDK_PATH)/components/libraries/fstorage/fstorage.c \			# the flash abstraction library
-
-
+#$(SDK_PATH)/components/softdevice/common/softdevice_handler/softdevice_handler.c \	# needed for 
+#$(SDK_PATH)/components/libraries/util/app_error.c \			# needed for softdevice_handler.c
+#$(SDK_PATH)/components/libraries/util/app_error_weak.c \		# needed for app_error.c
+#$(SDK_PATH)/components/drivers_nrf/clock/nrf_drv_clock.c \		# needed for softdevice_handler.c
+#$(SDK_PATH)/components/libraries\util\app_util_platform.c \	# needed for the initialization of the softdevice via SOFTDEVICE_HANDLER_INIT()
+ 
 #source files
 C_SOURCE_FILES += \
 main.c \
@@ -110,12 +114,19 @@ incl/adc_lib.c \
 incl/spi_lib.c \
 incl/uart_lib.c \
 incl/flash_lib.c \
+incl/system_event_lib.c \
 $(SDK_PATH)/components/toolchain/system_nrf51.c \
 $(SDK_PATH)/components/drivers_nrf/uart/nrf_drv_uart.c \
 $(SDK_PATH)/components/drivers_nrf/common/nrf_drv_common.c \
 $(SDK_PATH)/components/drivers_nrf/hal/nrf_adc.c \
 $(SDK_PATH)/components/drivers_nrf/spi_master/nrf_drv_spi.c \
 $(SDK_PATH)/components/libraries/fstorage/fstorage.c \
+$(SDK_PATH)/components/softdevice/common/softdevice_handler/softdevice_handler.c \
+$(SDK_PATH)/components/libraries/util/app_error.c \
+$(SDK_PATH)/components/libraries/util/app_error_weak.c \
+$(SDK_PATH)/components/drivers_nrf/clock/nrf_drv_clock.c \
+$(SDK_PATH)/components/libraries/util/app_util_platform.c \
+
 #incl/accel.c \
 #incl/analog.c \
 #incl/app_fifo_util.c \
@@ -183,6 +194,9 @@ ASM_SOURCE_FILES  = $(SDK_PATH)/components/toolchain/gcc/gcc_startup_nrf51.S
 #INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/spi_master			# nrf_drv_spi.c/.h --> implementation of SPI master driver
 #INC_PATHS += -I$(SDK_PATH)/components/libraries/fstorage				# fstorage.c/.h
 #INC_PATHS += -I$(SDK_PATH)/components/libraries/experimental_section_vars 		# needed for fstorage.c
+#INC_PATHS += -I$(SDK_PATH)/components/softdevice/common/softdevice_handler		# needed for system_event_lib.h/.c
+#INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/clock				# needed for softdevice_handler.c
+
 
 #includes
 INC_PATHS  = -Iconfig
@@ -203,6 +217,8 @@ INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/delay
 INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/spi_master
 INC_PATHS += -I$(SDK_PATH)/components/libraries/fstorage
 INC_PATHS += -I$(SDK_PATH)/components/libraries/experimental_section_vars
+INC_PATHS += -I$(SDK_PATH)/components/softdevice/common/softdevice_handler
+INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/clock
 
 
 #INC_PATHS += -I$(SDK_PATH)/components/libraries/uart
