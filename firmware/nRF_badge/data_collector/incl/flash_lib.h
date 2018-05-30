@@ -6,22 +6,28 @@
 // https://infocenter.nordicsemi.com/index.jsp?topic=%2Fcom.nordic.infocenter.sdk5.v12.0.0%2Flib_fstorage.html&cp=4_0_0_3_32
 
 
+/** @file
+ *
+ * @brief Flash abstraction library.
+ *
+ * @details It enables to erase pages, store and read word data into the flash memory by using the fstorage-library.
+ *			The erase and store operations are asynchronous/non-blocking functions. To check the status of the operation,
+ *			just call the flash_get_store_operation() or flash_get_erase_operation().
+ *			This underlying fstorage module uses the softdevice, so the application has to initialize it. Furthermore,
+ *			for retrieving system events (needed by fstorage) the system_event_lib-module is used.
+ *
+ * @note    It is important to erase a flash page before storing data into it. This library doesn't report an error, if the data haven't been stored correctly.
+ *			In case the flash page was erased before, the data should actually be stored correctly, but to be on the safe side, read out the data again and check.
+ *
+ */
+
+
 #include <stdbool.h>
 #include "sdk_common.h"	// Needed for the definition of ret_code_t and the error-codes
 
 
-
-
 #define NUM_PAGES 30	// TODO: define this by the linker script with enough space for new program code!
 
-
-
-// TODO: Dispatch system event to fstorage-module!
-// - Move UART, SPI, ADC opertation enum from .h into .c and also the includes that needn't to be public! 
-
-
-// Although the value is not stored correctly, there is no error. So it is very important to erase the page first!
-// Dispatches the events through the system_event_lib
 
 
 typedef enum {
@@ -145,13 +151,25 @@ flash_store_operation_t flash_get_store_operation(void);
 ret_code_t flash_read(uint32_t word_num, uint32_t* p_words, uint16_t length_words);
 
 
-
-bool flash_selftest(void);
-
-
+/**@brief   Function for reading number of words in one page.
+ *
+ * @retval  Number of words in one page.
+ */
 uint32_t flash_get_page_size_words(void);
 
+/**@brief   Function for reading available number of pages.
+ *
+ * @retval  Number of available pages.
+ */
 uint32_t flash_get_page_number(void);
+
+
+/**@brief   Function for testing the flash module.
+ *
+ * @retval  0	If selftest failed.
+ * @retval  1	If selftest passed.
+ */
+bool flash_selftest(void);
 
 
 #endif

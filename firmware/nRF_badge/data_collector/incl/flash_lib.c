@@ -12,21 +12,12 @@
 #include "system_event_lib.h"	// Needed to register an system event handler!
 
 
-#define FLASH_ENABLE_STORE_CHECK 1
+
 
 
 #include "uart_lib.h"
 extern uart_instance_t uart_instance;
 
-typedef struct {
-	uint32_t word_num;
-	const uint32_t* p_store_words;			// Pointer to the next data that has to be sent
-	uint32_t length_words;				// Number of bytes that are pending to be sent 
-} flash_store_operation_context_t;
-
-
-
-static volatile flash_store_operation_context_t flash_store_operation_context;
 
 static volatile flash_store_operation_t flash_store_operation = FLASH_STORE_NO_OPERATION;
 
@@ -47,23 +38,8 @@ static void fs_evt_handler(fs_evt_t const * const evt, fs_ret_t result)
 		}
 		
 		if(flash_store_operation == FLASH_STORE_OPERATION) {
-			#if FLASH_ENABLE_STORE_CHECK
 			
-			//uart_printf_bkgnd(&uart_instance, NULL, "Check if data are stored correctly: %p, %p, %d\n\r",flash_store_operation_context.p_store_words, address_of_word(flash_store_operation_context.word_num), flash_store_operation_context.length_words);
-			
-			// Check if the data are stored as expected!
-			if(memcmp(flash_store_operation_context.p_store_words, address_of_word(flash_store_operation_context.word_num), flash_store_operation_context.length_words) == 0) {
-			#endif
-				
-				flash_store_operation = FLASH_STORE_NO_OPERATION;
-				
-			#if FLASH_ENABLE_STORE_CHECK
-			} else {
-				flash_store_operation = FLASH_STORE_ERROR;
-			}	
-			#endif
-			
-			
+			flash_store_operation = FLASH_STORE_NO_OPERATION;			
 		}
 		
     } else {	// An error occurred during the operation!
@@ -178,10 +154,6 @@ ret_code_t flash_store(uint32_t word_num, const uint32_t* p_words, uint16_t leng
 	
 	
 	flash_store_operation = FLASH_STORE_OPERATION;
-	
-	flash_store_operation_context.word_num = word_num;
-	flash_store_operation_context.p_store_words = p_words;
-	flash_store_operation_context.length_words = length_words;
 	
 	
 	// Call the fstorage library for the actual storage operation.
@@ -327,40 +299,27 @@ bool flash_selftest(void) {
 	}
 	
 	// Although the value is not stored correctly, there is no error. So it is very important to erase the page first!
-	
-	
-	
-	// Check if the stored word is the correct word!
-	flash_read(0, &read_word, 1);
-	
-#if FLASH_ENABLE_STORE_CHECK	
-	if(store_operation == FLASH_STORE_ERROR) {
-		uart_printf(&uart_instance, "Storing error as expected, because tried to write on the same position another word!\n\r");
-	} else {
-		if(read_word != write_word) {
-			uart_printf(&uart_instance, "Store failed!  Written: 0x%X, Read: 0x%X\n\r", write_word, read_word);
-			return 0;
-		}
-	}
-#else
-		
 	if(store_operation == FLASH_STORE_ERROR) {
 		uart_printf(&uart_instance, "Storing error!\n\r");
 		return 0;
 	}
 	
+	
+	// Check if the stored word is the correct word!
+	flash_read(0, &read_word, 1);	
+	
 	if(read_word == write_word) {
 		uart_printf(&uart_instance, "Store word should actually fail!! Written: 0x%X, Read: 0x%X\n\r", write_word, read_word);
 		return 0;
 	}
-#endif
+
 	
 	
 	uart_printf(&uart_instance, "Store different word at same position behaves as expected!\n\r");
 	
 	
 //******************** Test a overflowing write operation over 2 pages *************************#
-	#define WORD_NUMBER	3100
+	#define WORD_NUMBER	5
 	uint32_t write_address = (flash_get_page_size_words())-1;
 	uint32_t write_words[WORD_NUMBER];
 	ret = flash_store(write_address, write_words, WORD_NUMBER);
