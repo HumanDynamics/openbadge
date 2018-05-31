@@ -123,7 +123,7 @@ void runSelfTests(){
     {
         // ====== Feature Motion detect ======
         //tap_accel(); //For tap detection reading register
-        motion_interruput(); //For internal movement dectection reading interrupt pin
+        motion_interrupt(); //For internal movement detection reading interrupt pin
 
         // ====== Feature Mic ======
         testMicAddSample();// update reading

@@ -28,7 +28,7 @@ void acc_self_test();
 void setDataRate();
 void accel_test();
 void tap_accel();
-void motion_interruput();
+void motion_interrupt();
 void accel_spi_init();
 void accel_init();
 void accel_set_int_tap();

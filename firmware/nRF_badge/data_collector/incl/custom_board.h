@@ -24,7 +24,8 @@
 //NRF51DK has common cathode LEDs, i.e. gpio LOW turns LED on.
 #ifdef BOARD_PCA10028
 #define LED_ON 0
-    #define LED_OFF 1
+#define LED_OFF 1
+
 //Badges are common anode, the opposite.
 #else
 #define LED_ON 1
