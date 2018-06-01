@@ -1,22 +1,18 @@
 #include "adc_lib.h"
 
 
-// TODO: 
-// - document
-// - input checking
-// - do the parameterstuff (NRF_ADC_CONFIG_INPUT_DISABLED, ) as own definition?!
-
-// - remove
-extern void pprintf(const char* format, ...);
-
-
-
-
 #define ADC_PERIPHERAL_NUMBER 		ADC_COUNT
 
-static volatile adc_operation_t  	adc_operations[ADC_PERIPHERAL_NUMBER] 	= {0};
-static adc_instance_t *				adc_instances[ADC_PERIPHERAL_NUMBER] 	= {NULL};
-static uint32_t 					adc_instance_number = 1; 	// Starts at 1 because the above init of the arrays are always to 0 (otherwise the check of which instance is currently working would fail)
+
+typedef enum {
+	ADC_NO_OPERATION 		= 0,			/**< Currently no adc operation ongoing. */
+	ADC_READING_OPERATION 	= (1 << 0),		/**< Currently there is an adc operation ongoing. */
+} adc_operation_t;
+
+
+static volatile adc_operation_t  	adc_operations[ADC_PERIPHERAL_NUMBER] 	= {0};		// Array to save the current adc_operations (needed to check if there is an ongoing adc operation)
+static const adc_instance_t *		adc_instances[ADC_PERIPHERAL_NUMBER] 	= {NULL};	// Array of Pointer to the current adc_instances (needed to check whether the configuration and input-selection has to be done again)
+static uint32_t 					adc_instance_number = 1; 	// Starts at 1 because the above init of the arrays are always to 0 (otherwise the check of the adc_instance_id would not work)
 
 
 
@@ -24,6 +20,7 @@ ret_code_t adc_init(adc_instance_t* adc_instance) {
 
 	// Check if the peripheral selected peripheral exists!
 	if(adc_instance->adc_peripheral == 0) {
+		
 		#if ADC_ENABLED
 		#else		
 		return NRF_ERROR_INVALID_PARAM;
@@ -40,7 +37,7 @@ ret_code_t adc_init(adc_instance_t* adc_instance) {
 
 
 
-ret_code_t adc_read_raw(adc_instance_t* adc_instance, int32_t* raw){
+ret_code_t adc_read_raw(const adc_instance_t* adc_instance, int32_t* raw){
 	
 	uint8_t peripheral_index = adc_instance->adc_peripheral;
 	
@@ -67,20 +64,22 @@ ret_code_t adc_read_raw(adc_instance_t* adc_instance, int32_t* raw){
 	}
 		
 
-	
+	// Do the ADC conversion on the configured channel
 	nrf_adc_start();
 	while(!nrf_adc_conversion_finished());
 	*raw = nrf_adc_result_get();
 	nrf_adc_conversion_event_clean();
     nrf_adc_stop();
 	
+	
+	// Reset the ADC Operation
 	adc_operations[peripheral_index] = ADC_NO_OPERATION;
 	
 	return NRF_SUCCESS;
 	
 }
 
-ret_code_t adc_read_voltage(adc_instance_t* adc_instance, float* voltage, float ref_voltage) {
+ret_code_t adc_read_voltage(const adc_instance_t* adc_instance, float* voltage, float ref_voltage) {
 	int32_t raw = 0;
 	
 	ret_code_t ret = adc_read_raw(adc_instance, &raw);
@@ -105,7 +104,6 @@ ret_code_t adc_read_voltage(adc_instance_t* adc_instance, float* voltage, float 
 
 /**
 * You can not switch of only one instance, but the whole peripheral, that is responsible for this instance.
-*
 */
 void adc_power_off(uint8_t adc_peripheral){
 	nrf_adc_input_select(NRF_ADC_CONFIG_INPUT_DISABLED);
