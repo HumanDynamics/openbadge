@@ -108,7 +108,7 @@ static uint32_t const * address_of_word(uint32_t word_num)
 
 
 
-ret_code_t flash_erase(uint32_t page_num, uint16_t num_pages) {
+ret_code_t flash_erase_bkgnd(uint32_t page_num, uint16_t num_pages) {
 	
 	// We have already an ongoing operation!
 	if(flash_store_operation == FLASH_STORE_OPERATION || flash_erase_operation == FLASH_ERASE_OPERATION) {
@@ -140,9 +140,34 @@ ret_code_t flash_erase(uint32_t page_num, uint16_t num_pages) {
 	return ret;
 }
 
+ret_code_t flash_erase(uint32_t page_num, uint16_t num_pages) {
+	ret_code_t ret = flash_erase_bkgnd(page_num, num_pages);
+	
+	// Return if erase operation was not started successfully
+	if(ret != NRF_SUCCESS) {
+		return ret;
+	}
+	
+	// Wait for the store operation to terminate.
+	while(flash_get_erase_operation() == FLASH_ERASE_OPERATION);
+	
+	// Return an error if the erase operation was not successful.
+	if(flash_get_erase_operation() == FLASH_ERASE_ERROR) {
+		return NRF_ERROR_TIMEOUT; 
+	}
+	
+	return NRF_SUCCESS;
+	
+}
 
 
-ret_code_t flash_store(uint32_t word_num, const uint32_t* p_words, uint16_t length_words) {	
+flash_erase_operation_t flash_get_erase_operation(void) {
+	return flash_erase_operation;
+}
+
+
+
+ret_code_t flash_store_bkgnd(uint32_t word_num, const uint32_t* p_words, uint16_t length_words) {	
 	
 	// Check if there is already an ongoing operation!
 	if(flash_store_operation == FLASH_STORE_OPERATION || flash_erase_operation == FLASH_ERASE_OPERATION) {
@@ -180,7 +205,30 @@ ret_code_t flash_store(uint32_t word_num, const uint32_t* p_words, uint16_t leng
 	return ret;
 }
 
+ret_code_t flash_store(uint32_t word_num, const uint32_t* p_words, uint16_t length_words) {
+	// Call the non-blocking flash store function.
+	ret_code_t ret = flash_store_bkgnd(word_num, p_words, length_words);
+	
+	// Return if store operation was not started successfully
+	if(ret != NRF_SUCCESS) {
+		return ret;
+	}
+	
+	// Wait for the store operation to terminate.
+	while(flash_get_store_operation() == FLASH_STORE_OPERATION);
+	
+	// Return an error if the store operation was not successful.
+	if(flash_get_store_operation() == FLASH_STORE_ERROR) {
+		return NRF_ERROR_TIMEOUT; 
+	}
+	
+	return NRF_SUCCESS;
+	
+}
 
+flash_store_operation_t flash_get_store_operation(void) {
+	return flash_store_operation;
+}
 
 
 ret_code_t flash_read(uint32_t word_num, uint32_t* p_words, uint16_t length_words) {
@@ -189,7 +237,6 @@ ret_code_t flash_read(uint32_t word_num, uint32_t* p_words, uint16_t length_word
 	}
 	return NRF_SUCCESS;
 }
-
 
 
 uint32_t flash_get_page_size_words(void) {
@@ -207,31 +254,25 @@ uint32_t flash_get_page_number(void) {
 
 
 
-flash_store_operation_t flash_get_store_operation(void) {
-	return flash_store_operation;
-}
-
-flash_erase_operation_t flash_get_erase_operation(void) {
-	return flash_erase_operation;
-}
-
 
 bool flash_selftest(void) {
 	
 	uart_printf(&uart_instance, "Started flash selftest...\n\r");
+	
+	uart_printf(&uart_instance, "Flash page addresses: From: %p to %p\n\r", address_of_page(0), address_of_page(NUM_PAGES));
 	
 	uart_printf(&uart_instance, "Page size words: %u, Number of pages: %u\n\r", flash_get_page_size_words(), flash_get_page_number());
 	
 	
 	// Just a dummy write to test erasing..
 	uint32_t tmp = 0xABCD1234;		
-	flash_store(0, &tmp, 1);
+	flash_store_bkgnd(0, &tmp, 1);
 
 	while(flash_get_store_operation() == FLASH_STORE_OPERATION);
 	
 	
 //******************** Test erasing 2 pages *************************	
-	ret_code_t ret = flash_erase(0, 2);
+	ret_code_t ret = flash_erase_bkgnd(0, 2);
 	uart_printf(&uart_instance, "Started erasing: Ret %d\n\r", ret);
 	if(ret != NRF_SUCCESS) {
 		uart_printf(&uart_instance, "Start erasing failed!\n\r");
@@ -254,7 +295,7 @@ bool flash_selftest(void) {
 //******************** Test write a word *************************	
 	uint32_t write_word = 0x1234ABCD;	// Should be != 0xFFFFFFFF --> next test will assume this!
 	
-	ret = flash_store(0, &write_word, 1);
+	ret = flash_store_bkgnd(0, &write_word, 1);
 	uart_printf(&uart_instance, "Started storing to flash at word 0: 0x%X, Ret: %d\n\r", write_word, ret);
 	if(ret != NRF_SUCCESS) {
 		uart_printf(&uart_instance, "Start storing word failed!\n\r");
@@ -285,25 +326,21 @@ bool flash_selftest(void) {
 //******************** Test writing to the same position another value *************************
 	write_word = 0xFFFFFFFF;	
 	
+	
+	uart_printf(&uart_instance, "Storing to flash at word 0: 0x%X, Ret: %d\n\r", write_word, ret);
+	
 	ret = flash_store(0, &write_word, 1);
-	uart_printf(&uart_instance, "Started storing to flash at word 0: 0x%X, Ret: %d\n\r", write_word, ret);
+	//ret = flash_store_bkgnd(0, &write_word, 1);
+	
+
 	if(ret != NRF_SUCCESS) {
-		uart_printf(&uart_instance, "Start storing word failed!\n\r");
+		if(ret == NRF_ERROR_TIMEOUT) {
+			uart_printf(&uart_instance, "Storing word timed out!\n\r");
+		} else {
+			uart_printf(&uart_instance, "Storing word failed!\n\r");
+		}
 		return 0;
 	}
-	
-	store_operation = flash_get_store_operation();
-	//TODO: Check with timeout!
-	while(store_operation == FLASH_STORE_OPERATION) {
-		store_operation = flash_get_store_operation();
-	}
-	
-	// Although the value is not stored correctly, there is no error. So it is very important to erase the page first!
-	if(store_operation == FLASH_STORE_ERROR) {
-		uart_printf(&uart_instance, "Storing error!\n\r");
-		return 0;
-	}
-	
 	
 	// Check if the stored word is the correct word!
 	flash_read(0, &read_word, 1);	
@@ -320,9 +357,9 @@ bool flash_selftest(void) {
 	
 //******************** Test a overflowing write operation over 2 pages *************************#
 	#define WORD_NUMBER	5
-	uint32_t write_address = (flash_get_page_size_words())-1;
+	uint32_t write_address = (flash_get_page_size_words())-2;
 	uint32_t write_words[WORD_NUMBER];
-	ret = flash_store(write_address, write_words, WORD_NUMBER);
+	ret = flash_store_bkgnd(write_address, write_words, WORD_NUMBER);
 	uart_printf(&uart_instance, "Started storing words at address: %u, Ret: %d\n\r",write_address, ret);
 	if(ret != NRF_SUCCESS) {
 		uart_printf(&uart_instance, "Start storing words failed!\n\r");

@@ -13,8 +13,8 @@
  * @details It enables to erase pages, store and read word data into the flash memory by using the fstorage-library.
  *			The erase and store operations are asynchronous/non-blocking functions. To check the status of the operation,
  *			just call the flash_get_store_operation() or flash_get_erase_operation().
- *			This underlying fstorage module uses the softdevice, so the application has to initialize it. Furthermore,
- *			for retrieving system events (needed by fstorage) the system_event_lib-module is used.
+ *			This underlying fstorage module uses the softdevice, so the application has to initialize it before using this module. 
+ *			Furthermore, for retrieving system events (needed by fstorage) the system_event_lib-module is used.
  *
  * @note    It is important to erase a flash page before storing data into it. This library doesn't report an error, if the data haven't been stored correctly.
  *			In case the flash page was erased before, the data should actually be stored correctly, but to be on the safe side, read out the data again and check.
@@ -46,8 +46,7 @@ typedef enum {
 
 
 
-// Initializes the module with certain parameters specified in sdk_config.h and so on..
-/**@brief   Function for initializing the module.
+/**@brief   Function for initializing the flash module.
  *
  * @details This functions initializes the underlying fstorage-module with the specified parameters.
  *			The parameters for the fstorage-module are specified in the config-file: sdk_config.h.
@@ -62,7 +61,7 @@ ret_code_t flash_init(void);
 
 
 
-/**@brief   Function for erasing pages in flash.
+/**@brief   Function for erasing pages in flash in asyncronous/non-blocking/background mode.
  *
  * @details Function uses the fstorage-library to erase pages in flash memory.
  *			This is a non-blocking function. So you can just check the status of the ongoing erase operation
@@ -78,6 +77,23 @@ ret_code_t flash_init(void);
  * @retval  NRF_ERROR_BUSY				If there is already an ongoing operation (erase or store).
  * @retval 	NRF_ERROR_INTERNAL	    	If the module is not initialized or has a false configuration.
  * @retval  NRF_ERROR_INVALID_PARAM		If the specified input parameters are bad.
+ */
+ret_code_t flash_erase_bkgnd(uint32_t page_num, uint16_t num_pages);
+
+
+/**@brief   Function for erasing pages in flash in blocking mode.
+ *
+ * @details Function uses internally flash_erase_bkgnd() for erasing the data
+ *			and the flash_get_erase_operation() to wait until the operation has terminated.
+ *
+ * @param[in]   page_num	   	The index of the first page to erase.
+ * @param[in]   num_pages		Number of pages to erase.
+ *
+ * @retval  NRF_SUCCESS             	If the operation was started successfully.
+ * @retval  NRF_ERROR_BUSY				If there is already an ongoing operation (erase or store).
+ * @retval 	NRF_ERROR_INTERNAL	    	If the module is not initialized or has a false configuration.
+ * @retval  NRF_ERROR_INVALID_PARAM		If the specified input parameters are bad.
+ * @retval  NRF_ERROR_TIMEOUT			If the erase operation timed out.
  */
 ret_code_t flash_erase(uint32_t page_num, uint16_t num_pages);
 
@@ -97,7 +113,7 @@ flash_erase_operation_t flash_get_erase_operation(void);
 
 
 
-/**@brief   Function for storing data in flash.
+/**@brief   Function for storing data in flash in asyncronous/non-blocking/background mode.
  *
  * @details Function uses the fstorage-library to store data into flash memory. 
  *			The fstorage library possibly splits the data into smaller chunks, 
@@ -118,6 +134,25 @@ flash_erase_operation_t flash_get_erase_operation(void);
  * @retval  NRF_ERROR_BUSY				If there is already an ongoing operation (erase or store).
  * @retval 	NRF_ERROR_INTERNAL	    	If the module is not initialized or has a false configuration.
  * @retval  NRF_ERROR_INVALID_PARAM		If the specified input parameters are bad.
+ */
+ret_code_t flash_store_bkgnd(uint32_t word_num, const uint32_t* p_words, uint16_t length_words);
+
+
+/**@brief   Function for storing data in flash in blocking mode.
+ *
+ * @details Function uses internally flash_store_bkgnd() for storing the data
+ *			and the flash_get_store_operation() to wait until the operation has terminated.
+ *	
+ *
+ * @param[in]   word_num	   	The 32bit address where to store the data. Starts at 0 .
+ * @param[in]   p_words         Pointer to the data to store in flash (32 bit words).
+ * @param[in]   length_words    Length of the data to store, in words.
+ *
+ * @retval  NRF_SUCCESS             	If the operation was started successfully.
+ * @retval  NRF_ERROR_BUSY				If there is already an ongoing operation (erase or store).
+ * @retval 	NRF_ERROR_INTERNAL	    	If the module is not initialized or has a false configuration.
+ * @retval  NRF_ERROR_INVALID_PARAM		If the specified input parameters are bad.
+ * @retval  NRF_ERROR_TIMEOUT			If the store operation timed out.
  */
 ret_code_t flash_store(uint32_t word_num, const uint32_t* p_words, uint16_t length_words);
 
