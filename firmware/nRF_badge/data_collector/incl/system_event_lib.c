@@ -3,12 +3,15 @@
 #include "softdevice_handler.h"
 
 
-static volatile system_event_handler_t event_handlers[MAX_NUMBER_SYSTEM_EVENT_HANDLER];
-static volatile uint32_t number_system_event_handler = 0;
+static volatile system_event_handler_t event_handlers[MAX_NUMBER_SYSTEM_EVENT_HANDLER];	/**< Array to save the application system event handlers that are called when a system event is generated. */
+static volatile uint32_t number_system_event_handler = 0;								/**< Number of registered application system event handlers. */
 
 
 
-
+/**@brief Internal system event callback for calling the registered application system event handlers.
+ *
+ * @param[in]	sys_evt		The generated system_event that should be transfered to the application system event handlers.
+ */
 static void system_event_dispatch(uint32_t sys_evt)
 {	
 	// Call all the registered event handlers

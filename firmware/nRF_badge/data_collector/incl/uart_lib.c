@@ -2,44 +2,51 @@
 
 
 
-// TODO: reimplement the function with index at begin of function!
-// ANd rename Pointer to tx/rx_data to p_rx_data usw.. 
-// Alles auch bei SPI und ADC Lib machen!
-
-// It was important to switch to uart_instance_t* -Array, because we needed to write to the indexes to the real object!
+#include <stdarg.h>		// Needed for the printf-function
+#include <stdio.h>		// Needed for the vsnprintf-function
+#include <string.h>		// Needed for the printf-function
 
 
-#define MAX_BYTES_PER_TRANSMIT_OPERATION	255
+#define UART_PERIPHERAL_NUMBER 			UART_COUNT	/**< Number of activated uart peripherals in sdk_config.h. */
 
 
-#define UART_PERIPHERAL_NUMBER 		UART_COUNT	// automatically imported through nrf_peripherals.h
+#define MAX_BYTES_PER_TRANSMIT_OPERATION	255		/**< Maximum number of bytes transmitted in each transmission step (large packets are split). */
 
 
 
-static volatile uart_operation_t  	uart_operations[UART_PERIPHERAL_NUMBER] 	= {0};
-static uart_instance_t *			uart_instances[UART_PERIPHERAL_NUMBER] 	= {NULL}; // We need to save the instances, to use them in the IRQ-handler for UART_RECEIVE_BUFFER_OPERATION
-static uint32_t 					uart_instance_number = 1; 	// Starts at 1 because the above init of the arrays are always to 0
+static volatile uart_operation_t  	uart_operations[UART_PERIPHERAL_NUMBER] 	= {0};	/**< Array to save the current uart_operations (needed to check if there is an ongoing uart operation on the peripheral) */
+static uart_instance_t *			uart_instances[UART_PERIPHERAL_NUMBER] 	= {NULL}; 	/**< Array of pointers to the current uart_instances (needed for rescheduling transmit or one byte receive operations) */
+static uint32_t 					uart_instance_number = 1; 							/**< uart_instance_number starts at 1 not 0 because all entries in the uart_instances-arrays are 0. So the check for the uart_instance_id-element may not work correctly. */ 
 
 // To have all the handlers to be independent of the initialization!!
-static uart_handler_t				uart_handlers_transmit_bkgnd		[UART_PERIPHERAL_NUMBER];
-static uart_handler_t				uart_handlers_receive_bkgnd			[UART_PERIPHERAL_NUMBER];
-static uart_handler_t				uart_handlers_receive_buffer_bkgnd	[UART_PERIPHERAL_NUMBER];
+static uart_handler_t				uart_handlers_transmit_bkgnd		[UART_PERIPHERAL_NUMBER];	/**< Array to save the application handlers for the transmit operation */
+static uart_handler_t				uart_handlers_receive_bkgnd			[UART_PERIPHERAL_NUMBER];	/**< Array to save the application handlers for the receive operation */
+static uart_handler_t				uart_handlers_receive_buffer_bkgnd	[UART_PERIPHERAL_NUMBER];	/**< Array to save the application handlers for the receive-buffer operation */
 
 
+/**@brief UART transmit operation type. Needed to reschedule transmit operation that are too long. */
 typedef struct {
-	const uint8_t* p_remaining_data;			// Pointer to the next data that has to be sent
-	uint32_t remaining_data_len;				// Number of bytes that are pending to be sent 
+	const uint8_t* p_remaining_data;			/**< Pointer to the next data that has to be sent */
+	uint32_t remaining_data_len;				/**< Number of bytes that are pending to be sent */
 } uart_transmit_operation_t;
 
 
 
+static volatile uart_transmit_operation_t		uart_transmit_operations			[UART_PERIPHERAL_NUMBER];	/**< Array is needed to keep track of already sent data packets, to reschedule a transmit on the remaining bytes */
+static volatile uint8_t							uart_receive_buffer_operations		[UART_PERIPHERAL_NUMBER];	/**< This is actually the buffer for one receive operation (1 Byte Buffer) */
 
 
-static volatile uart_transmit_operation_t		uart_transmit_operations			[UART_PERIPHERAL_NUMBER];	// This array is needed to keep track of already sent data packets, to reschedule a transmit on the remaining bytes
-static volatile uint8_t							uart_receive_buffer_operations		[UART_PERIPHERAL_NUMBER];	// This is actually the buffer for one receive operation (1 Byte Buffer)
-
-
-
+/**@brief Function for handling the uart interrupts internally.
+ *
+ * @details This handler (only one because there is only one uart peripheral)
+ * 			does different things depending on the current operation.
+ *			If TRANSMIT_OPERATION, it checks for remaining bytes to transmit 
+ *			and reschedules the transmit of the remaining bytes, otherwise it calls 
+ *			the specified application handler (if it is not NULL) with event: UART_TRANSMIT_DONE or UART_ERROR. 
+ *			If RECEIVE_OPERATION, the specified application handler (if it is not NULL) with event: UART_RECEIVE_DONE or UART_ERROR. 
+ *			If UART_RECEIVE_BUFFER_OPERATION, the one byte receive function is rescheduled and calls
+ *			the specified application handler (if it is not NULL) with event: UART_RECEIVE_DONE or UART_ERROR.
+ */
 #if UART0_ENABLED
 static void uart_0_event_handler(nrf_drv_uart_event_t * p_event, void * p_context) {
 	uart_evt_t evt;
@@ -98,17 +105,14 @@ static void uart_0_event_handler(nrf_drv_uart_event_t * p_event, void * p_contex
 			
 			// (here we assume that uart_instances[0] != NULL!
 			
-			
+			// Reschedule the one byte receive operation
 			nrf_drv_uart_rx( &((*uart_instances[0]).nrf_drv_uart_instance), (uint8_t*) &uart_receive_buffer_operations[0], 1);
 	
 			
 			// If you want you can check here if ((write_index + 1)%MAX == read_index) --> don't insert new elements into the buffer (until they have been read)
 			// This is the case, if we have so much bytes, that our fifo will overflow --> of course in this case the new data get lost (but might be better than losing all the old data)
-		
-			// But you can just store size - 1 elements with this check!		
-
-			
-		
+			// But you can just store size - 1 elements with this check!
+				
 			if(((*uart_instances[0]).uart_buffer.rx_buf_write_index + 1) % (*uart_instances[0]).uart_buffer.rx_buf_size != (*uart_instances[0]).uart_buffer.rx_buf_read_index) {
 				
 				
@@ -214,7 +218,7 @@ ret_code_t uart_printf_bkgnd(uart_instance_t* uart_instance, uart_handler_t uart
 }
 
 
-ret_code_t uart_printf_abort_bkgnd(uart_instance_t* uart_instance) {
+ret_code_t uart_printf_abort_bkgnd(const uart_instance_t* uart_instance) {
 	return uart_transmit_abort_bkgnd(uart_instance);	
 }
 
@@ -281,7 +285,13 @@ ret_code_t uart_transmit_bkgnd(uart_instance_t* uart_instance, uart_handler_t ua
 	
 
 	ret_code_t ret = nrf_drv_uart_tx(&(uart_instance->nrf_drv_uart_instance), tx_data, tx_data_len);
-
+	
+	// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INVALID_ADDR or NRF_ERROR_FORBIDDEN
+	
+	// Set error code to internal to reduce error codes
+	if(ret == NRF_ERROR_FORBIDDEN)
+		ret = NRF_ERROR_INTERNAL;
+	
 	// If no success clear the UART_TRANSMIT_OPERATION flag
 	
 	if(ret != NRF_SUCCESS) {		
@@ -296,7 +306,7 @@ ret_code_t uart_transmit_bkgnd(uart_instance_t* uart_instance, uart_handler_t ua
 }
 
 
-ret_code_t uart_transmit_abort_bkgnd(uart_instance_t* uart_instance) {
+ret_code_t uart_transmit_abort_bkgnd(const uart_instance_t* uart_instance) {
 	// Get the peripheral_index
 	uint8_t peripheral_index = uart_instance->uart_peripheral;
 	
@@ -324,8 +334,6 @@ ret_code_t uart_transmit_abort_bkgnd(uart_instance_t* uart_instance) {
 
 
 ret_code_t uart_transmit(uart_instance_t* uart_instance, const uint8_t* tx_data, uint32_t tx_data_len) {
-	// Get the peripheral_index
-	uint8_t peripheral_index = uart_instance->uart_peripheral;
 	
 	ret_code_t ret = uart_transmit_bkgnd(uart_instance, NULL, tx_data, tx_data_len);
 	if(ret != NRF_SUCCESS) {
@@ -333,7 +341,7 @@ ret_code_t uart_transmit(uart_instance_t* uart_instance, const uint8_t* tx_data,
 	}
 
 	// Waiting until the UART operation has finished!
-	while(uart_operations[peripheral_index] & UART_TRANSMIT_OPERATION);	
+	while(uart_get_operation(uart_instance) & UART_TRANSMIT_OPERATION);	
 	
 	return NRF_SUCCESS;	
 }
@@ -366,6 +374,11 @@ ret_code_t uart_receive_bkgnd(uart_instance_t* uart_instance, uart_handler_t uar
 	
 	ret_code_t ret = nrf_drv_uart_rx(&(uart_instance->nrf_drv_uart_instance), rx_data, rx_data_len);
 	
+	// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_FORBIDDEN, NRF_ERROR_INTERNAL and NRF_ERROR_INVALID_ADDR
+	
+	// Set error code to internal to reduce error codes
+	if(ret == NRF_ERROR_FORBIDDEN || ret == NRF_ERROR_INTERNAL)
+		ret = NRF_ERROR_INTERNAL;
 	
 	// If no success clear the UART_RECEIVE_OPERATION flag
 	if(ret != NRF_SUCCESS) {		
@@ -384,7 +397,7 @@ ret_code_t uart_receive_bkgnd(uart_instance_t* uart_instance, uart_handler_t uar
 }
 
 
-ret_code_t uart_receive_abort_bkgnd(uart_instance_t* uart_instance) {
+ret_code_t uart_receive_abort_bkgnd(const uart_instance_t* uart_instance) {
 	
 	// Get the peripheral_index
 	uint8_t peripheral_index = uart_instance->uart_peripheral;
@@ -416,9 +429,6 @@ ret_code_t uart_receive_abort_bkgnd(uart_instance_t* uart_instance) {
 
 ret_code_t uart_receive(uart_instance_t* uart_instance, uint8_t* rx_data, uint32_t rx_data_len) {
 	
-	// Get the peripheral_index
-	uint8_t peripheral_index = uart_instance->uart_peripheral;
-	
 	ret_code_t ret = uart_receive_bkgnd(uart_instance, NULL, rx_data, rx_data_len);	
 	
 	if(ret != NRF_SUCCESS) {
@@ -426,7 +436,7 @@ ret_code_t uart_receive(uart_instance_t* uart_instance, uint8_t* rx_data, uint32
 	}
 
 	// Waiting until the UART operation has finished!
-	while(uart_operations[peripheral_index] & UART_RECEIVE_OPERATION);	
+	while(uart_get_operation(uart_instance) & UART_RECEIVE_OPERATION);	
 	
 	return NRF_SUCCESS;	
 }
@@ -473,6 +483,13 @@ ret_code_t uart_receive_buffer_bkgnd(uart_instance_t* uart_instance,  uart_handl
 	// Start the receive and buffer the data in the 1 Byte buffer
 	ret_code_t ret = nrf_drv_uart_rx(&(uart_instance->nrf_drv_uart_instance), (uint8_t*) &uart_receive_buffer_operations[peripheral_index], 1);
 	
+	// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_FORBIDDEN, NRF_ERROR_INTERNAL and NRF_ERROR_INVALID_ADDR
+	
+	// Set error code to internal to reduce error codes
+	if(ret == NRF_ERROR_FORBIDDEN || ret == NRF_ERROR_INTERNAL)
+		ret = NRF_ERROR_INTERNAL;
+	
+	
 	// If no success clear the UART_RECEIVE_BUFFER_OPERATION flag
 	if(ret != NRF_SUCCESS) {		
 		
@@ -489,7 +506,7 @@ ret_code_t uart_receive_buffer_bkgnd(uart_instance_t* uart_instance,  uart_handl
 	
 }
 
-ret_code_t uart_receive_buffer_abort_bkgnd(uart_instance_t* uart_instance) {
+ret_code_t uart_receive_buffer_abort_bkgnd(const uart_instance_t* uart_instance) {
 	
 	// Get the peripheral_index
 	uint8_t peripheral_index = uart_instance->uart_peripheral;
@@ -519,8 +536,11 @@ ret_code_t uart_receive_buffer_abort_bkgnd(uart_instance_t* uart_instance) {
 	
 }
 
-
-static uint32_t uart_receive_buffer_get_elements(uart_instance_t* uart_instance) {
+/**@brief Functions for retrieving the number of elements in the circular rx-buffer.
+ *
+ * @retval Number of elements in circular rx-buffer.
+ */
+static uint32_t uart_receive_buffer_get_elements(const uart_instance_t* uart_instance) {
 	uint32_t size = (uart_instance->uart_buffer).rx_buf_size;
 	uint32_t read_index = (uart_instance->uart_buffer).rx_buf_read_index;
 	uint32_t write_index = (uart_instance->uart_buffer).rx_buf_write_index;
@@ -539,7 +559,7 @@ ret_code_t uart_receive_buffer_get(uart_instance_t* uart_instance,  uint8_t* dat
 	
 	// It is important that we are now assuming that it's in the current instance, but we have not really a reference to it
 	
-	// Just reads out a byte from the fifo
+	// Just reads out a byte from the circular buffer
 	uint32_t elements = uart_receive_buffer_get_elements(uart_instance);
 	
 	if(elements == 0)
@@ -553,36 +573,7 @@ ret_code_t uart_receive_buffer_get(uart_instance_t* uart_instance,  uint8_t* dat
 
 
 
-
-
-
-
-/* TODO: Do the receive_stuff, with the buffer and the indexes. Init function for uart with buffer (with MACRO).
-Initialize uart_buffer to NULL if not initalized through the right init function.
-
-Check at the beginning of printf, and receive_buffer if there is a buffer present != NULL to do the stuff!
-
-Again insert the instance to use it in the IRQ-handler to restart the reception.
-
-And reread the code of uart, spi and adc again (e.g. the instance array!!)
-
-
-*/
-
-
-
-/*
-
-// https://stackoverflow.com/questions/4867229/code-for-printf-function-in-c
-// https://devzone.nordicsemi.com/f/nordic-q-a/28999/using-floats-with-sprintf-gcc-arm-none-eabi-nrf51822
-// If you want to have float support, add "LDFLAGS += -u _printf_float" in Makefile!
-void uart_printf() {
-	va_list args;
-	va_start(args, format);
-	vsnprintf((char*)buf, UART_TX_BUFFER_SIZE, format, args);
-	va_end(args);	
-	nrf_drv_uart_tx(&_instance, buf, strlen((char*)buf));
+uart_operation_t uart_get_operation(const uart_instance_t* uart_instance) {
+	return uart_operations[uart_instance->uart_peripheral];
 }
-*/
-
 

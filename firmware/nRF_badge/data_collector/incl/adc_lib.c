@@ -1,24 +1,24 @@
 #include "adc_lib.h"
 
 
-#define ADC_PERIPHERAL_NUMBER 		ADC_COUNT
+#define ADC_PERIPHERAL_NUMBER 		ADC_COUNT			 /**< Number of activated adc peripherals in sdk_config.h. */
 
-
+/**@brief The different ADC operations. These operations will be used to set the peripheral busy or not. */
 typedef enum {
 	ADC_NO_OPERATION 		= 0,			/**< Currently no adc operation ongoing. */
 	ADC_READING_OPERATION 	= (1 << 0),		/**< Currently there is an adc operation ongoing. */
 } adc_operation_t;
 
 
-static volatile adc_operation_t  	adc_operations[ADC_PERIPHERAL_NUMBER] 	= {0};		// Array to save the current adc_operations (needed to check if there is an ongoing adc operation)
-static const adc_instance_t *		adc_instances[ADC_PERIPHERAL_NUMBER] 	= {NULL};	// Array of Pointer to the current adc_instances (needed to check whether the configuration and input-selection has to be done again)
-static uint32_t 					adc_instance_number = 1; 	// Starts at 1 because the above init of the arrays are always to 0 (otherwise the check of the adc_instance_id would not work)
+static volatile adc_operation_t  	adc_operations[ADC_PERIPHERAL_NUMBER] 	= {0};		/**< Array to save the current adc_operations (needed to check if there is an ongoing adc operation) */
+static const adc_instance_t *		adc_instances[ADC_PERIPHERAL_NUMBER] 	= {NULL};	/**< Array of pointers to the current adc_instances (needed to check whether the configuration and input-selection has to be done again) */
+static uint32_t 					adc_instance_number = 1; 							/**< adc_instance_number starts at 1 not 0 because all entries in the spi_instances-arrays are 0. So the check for the adc_instance_id-element may not work correctly. */ 
 
 
 
 ret_code_t adc_init(adc_instance_t* adc_instance) {	
 
-	// Check if the peripheral selected peripheral exists!
+	// Check if the selected peripheral exists
 	if(adc_instance->adc_peripheral == 0) {
 		
 		#if ADC_ENABLED
@@ -91,24 +91,22 @@ ret_code_t adc_read_voltage(const adc_instance_t* adc_instance, float* voltage, 
 	nrf_adc_config_scaling_t		scaling		= (adc_instance->nrf_adc_config).scaling;
 	nrf_adc_config_resolution_t		resolution 	= (adc_instance->nrf_adc_config).resolution;
 	
-	// Compute the resolution and scaling based on the ADC-Channel setting
+	// Compute the actual value of resolution and scaling based on the ADC-Channel setting
 	uint32_t resolution_as_number = (resolution == NRF_ADC_CONFIG_RES_8BIT) ? 256 : ((resolution == NRF_ADC_CONFIG_RES_9BIT)? 512 : 1024 );
     float scaling_as_number = (scaling == NRF_ADC_CONFIG_SCALING_INPUT_TWO_THIRDS || scaling == NRF_ADC_CONFIG_SCALING_SUPPLY_TWO_THIRDS) ? 0.66666666 : ((scaling == NRF_ADC_CONFIG_SCALING_INPUT_ONE_THIRD|| scaling == NRF_ADC_CONFIG_SCALING_SUPPLY_ONE_THIRD) ? 0.33333333 : 1);
     
-	
+	// Compute the voltage in mV
 	*voltage = (raw * (ref_voltage / ((float) resolution_as_number)))/scaling_as_number;
 	
 	return NRF_SUCCESS;
 }
 
 
-/**
-* You can not switch of only one instance, but the whole peripheral, that is responsible for this instance.
-*/
+// TODO: Power off/on
+// You can not switch of only one instance, but the whole peripheral, that is responsible for this instance.
 void adc_power_off(uint8_t adc_peripheral){
 	nrf_adc_input_select(NRF_ADC_CONFIG_INPUT_DISABLED);
 }
-
 
 void adc_power_on(uint8_t adc_peripheral){
 	// Check if the adc_instance is valid?

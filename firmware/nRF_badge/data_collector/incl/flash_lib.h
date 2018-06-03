@@ -61,7 +61,7 @@ ret_code_t flash_init(void);
 
 
 
-/**@brief   Function for erasing pages in flash in asyncronous/non-blocking/background mode.
+/**@brief   Function for erasing pages in flash in asynchronous/non-blocking/background mode.
  *
  * @details Function uses the fstorage-library to erase pages in flash memory.
  *			This is a non-blocking function. So you can just check the status of the ongoing erase operation
@@ -113,7 +113,7 @@ flash_erase_operation_t flash_get_erase_operation(void);
 
 
 
-/**@brief   Function for storing data in flash in asyncronous/non-blocking/background mode.
+/**@brief   Function for storing data in flash in asynchronous/non-blocking/background mode.
  *
  * @details Function uses the fstorage-library to store data into flash memory. 
  *			The fstorage library possibly splits the data into smaller chunks, 
