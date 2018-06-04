@@ -1,9 +1,9 @@
 #include "accel.h"
 #include "self_test.h"
 
-bool self_test_enable= false;
+bool self_test_enable = false;
 
-
+#ifdef EXIST_ACCL
 // ====== Accel LIS2DH and SPI functions ======
 volatile bool transmission_completed_spi = false;
 //=== event handler ====
@@ -192,3 +192,5 @@ void motion_interrupt(){
      nrf_gpio_pin_write(GREEN_LED,LED_OFF);  //turn off LED
     }
 }
+
+#endif //EXIST_ACCL
