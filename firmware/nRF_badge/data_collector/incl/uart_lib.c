@@ -3,8 +3,9 @@
 
 
 #include <stdarg.h>		// Needed for the printf-function
-#include <stdio.h>		// Needed for the vsnprintf-function
 #include <string.h>		// Needed for the printf-function
+#include <stdio.h>		// Needed for the vsnprintf-function
+
 
 
 #define UART_PERIPHERAL_NUMBER 			UART_COUNT	/**< Number of activated uart peripherals in sdk_config.h. */
@@ -18,7 +19,6 @@ static volatile uart_operation_t  	uart_operations[UART_PERIPHERAL_NUMBER] 	= {0
 static uart_instance_t *			uart_instances[UART_PERIPHERAL_NUMBER] 	= {NULL}; 	/**< Array of pointers to the current uart_instances (needed for rescheduling transmit or one byte receive operations) */
 static uint32_t 					uart_instance_number = 1; 							/**< uart_instance_number starts at 1 not 0 because all entries in the uart_instances-arrays are 0. So the check for the uart_instance_id-element may not work correctly. */ 
 
-// To have all the handlers to be independent of the initialization!!
 static uart_handler_t				uart_handlers_transmit_bkgnd		[UART_PERIPHERAL_NUMBER];	/**< Array to save the application handlers for the transmit operation */
 static uart_handler_t				uart_handlers_receive_bkgnd			[UART_PERIPHERAL_NUMBER];	/**< Array to save the application handlers for the receive operation */
 static uart_handler_t				uart_handlers_receive_buffer_bkgnd	[UART_PERIPHERAL_NUMBER];	/**< Array to save the application handlers for the receive-buffer operation */

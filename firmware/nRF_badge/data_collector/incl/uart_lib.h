@@ -10,14 +10,13 @@
  * @details It enables to call the UART peripheral from different contexts. 
  *			If the selected UART peripheral is currently in use, it will inform the other context by returning NRF_ERROR_BUSY.
  *			It is possible to transmit and receive/receive-buffer data parallel.
- *			There are two different receive-modes: normal receive and receive-buffer operation.
+ *			There are two different receive-modes: normal receive and receive-buffer.
  *			In normal receive operation a predefined amount of data is received.
  *			In receive-buffer operation a variable amount of data can be received, 
  *			the received data are buffered in the internal circular rx-buffer.
- *			To get the bytes from the circular rx-buffer the uart_receive_buffer_get() can be used.
- *
+ *			To get the bytes from the circular rx-buffer the uart_receive_buffer_get()-function can be used.
  *			Furthermore, there is the capability to use a printf-styled function, to transmit formatted data via UART.
- *			For the printf-functions the tx-buffer must be initialized.
+ *			For the printf-functions the tx-buffer in uart_buffer must be initialized.
  *			If float/double should be supported, the linker has to be configured accordingly: LDFLAGS += -u _printf_float.
  */
 
@@ -84,7 +83,7 @@ typedef void (*uart_handler_t)(uart_evt_t const * p_event);
  *			uart_instance.nrf_drv_uart_config.pselcts				= 0;							// Set the uart CTS-pin.
  *			uart_instance.nrf_drv_uart_config.pselrts				= 0;							// Set the uart RTS-pin.
  *			uart_instance.nrf_drv_uart_config.pselrxd				= 11;							// Set the uart RXD-pin.
- *			uart_instance.nrf_drv_uart_config .pseltxd				= 10;							// Set the uart TXD-pin.
+ *			uart_instance.nrf_drv_uart_config.pseltxd				= 10;							// Set the uart TXD-pin.
  *
  *			ret_code_t ret;
  *			UART_BUFFER_INIT(&uart_instance, &ret);													// Initialize the uart_instance.
@@ -104,12 +103,12 @@ typedef struct {
 
 
 
-/**@brief Macro for initialization of the uart instance without a uart-buffer.
+/**@brief Macro for initializing the uart instance without a uart-buffer.
  *
  * @details This macro calls the uart_init()-function for initializing the uart instance.
  *			Furthermore, it sets the rx- and tx-buffer of uart_buffer to NULL. 
  *
- * @note 	It is important that all the printf- and recevie_buffer-functions won't work if UART_INIT() is used for initialization.
+ * @note 	It is important that all the printf- and receive_buffer-functions won't work if UART_INIT() is used for initialization.
  *
  * @param[in,out]	P_UART_INSTANCE		Pointer to a preconfigured uart instance.
  * @param[out]  	P_RET_CODE       	Pointer where the return value of uart_init() is written to.
@@ -128,10 +127,10 @@ typedef struct {
 		
 		
 		
-/**@brief Macro for initialization of the uart instance with uart-buffer so that the printf- and recevie_buffer-functions could work.
+/**@brief Macro for initializing the uart instance with uart-buffer so that the printf- and recevie_buffer-functions could work.
  *
  * @details This macro calls the uart_init()-function for initializing the uart instance.
- *			Furthermore, it initializes the uart_buffer 
+ *			Furthermore, it initializes the uart_buffer so that the printf- and receive_buffer-functions can be used.
  *
  * @param[in,out]	P_UART_INSTANCE		Pointer to a preconfigured uart instance.
  * @param[in]		RX_BUF_SIZE			Size of the static allocated circular receive-buffer.
@@ -159,7 +158,7 @@ typedef struct {
 
 /**@brief   Function for initializing an instance for the uart peripheral.
  *
- * @details 
+ * @details Initializes the low level uart driver. It allows only one instance per peripheral.
  *			
  * @note 	Always initialize with the Macros UART_BUFFER_INIT() or UART_INIT(). 
  *			Only one instance per peripheral is allowed because it makes no sense to have more than one.
@@ -168,7 +167,7 @@ typedef struct {
  *
  * @retval  NRF_SUCCESS    				If the adc_instance was successfully initialized.
  * @retval  NRF_ERROR_INVALID_PARAM  	If the specified peripheral is not correct.
- * @retval  NRF_ERROR_INVALID_STATE  	If the peripheral was already intialized.
+ * @retval  NRF_ERROR_INVALID_STATE  	If the peripheral was already initialized.
  */
 ret_code_t uart_init(uart_instance_t* uart_instance);
 
@@ -176,7 +175,7 @@ ret_code_t uart_init(uart_instance_t* uart_instance);
 
 /**@brief   Function for printing formatted data in asynchronous/non-blocking/background mode.
  *
- * @details This is a non-blocking functions. If there is already an ongoing uart transmit operation this function returns NRF_ERROR_BUSY.
+ * @details This is a non-blocking function. If there is already an ongoing uart transmit operation this function returns NRF_ERROR_BUSY.
  *			Internally this function calls uart_transmit_bkgnd().
  * 			If the operation was started successfully and terminates, 
  *			the provided uart_handler is called with event: UART_TRANSMIT_DONE or UART_ERROR.
@@ -187,7 +186,7 @@ ret_code_t uart_init(uart_instance_t* uart_instance);
  * @param[in]   uart_instance	Pointer to an initialized uart instance. 	   	
  * @param[in]   uart_handler 	Handler function that should be called if the operation is done, with event: UART_TRANSMIT_DONE or UART_ERROR. Could also be NULL if no handler should be called.   	
  * @param[in]   format         	The format string.
- * @param[in]   ...    			Variable input paramters, needed by the format string.
+ * @param[in]   ...    			Variable input parameters, needed by the format string.
  *
  * @retval  NRF_SUCCESS             If the operation was started successfully.
  * @retval  NRF_ERROR_BUSY			If there is already an ongoing transmit/printf operation.
@@ -237,9 +236,9 @@ ret_code_t uart_printf(uart_instance_t* uart_instance, const char* format, ...);
 
 /**@brief   Function for transmitting data in asynchronous/non-blocking/background mode.
  *
- * @details This is a non-blocking functions. If there is already an ongoing uart transmit operation this function returns NRF_ERROR_BUSY.
+ * @details This is a non-blocking function. If there is already an ongoing uart transmit operation this function returns NRF_ERROR_BUSY.
  *			If the tx_data_len is >= 255 the packet is splitted and the remaining bytes will be transmitted via the internal uart interrupt.
- *			That must be done because nrf_drv_uart-library don't accepts UART TX transfers with size >= 256. (That is so annoying). 
+ *			That must be done because nrf_drv_uart-library don't accepts UART TX transfers with size >= 256. (That is very disappointing). 
  * 			If the operation was started successfully and terminates, 
  *			the provided uart_handler is called with event: UART_TRANSMIT_DONE or UART_ERROR.
  *
@@ -290,10 +289,12 @@ ret_code_t uart_transmit(uart_instance_t* uart_instance, const uint8_t* tx_data,
 
 /**@brief   Function for receiving a fixed amount of data in asynchronous/non-blocking/background mode.
  *
- * @details 	It starts the operation in background. 
- *				The function returns NRF_ERROR_BUSY if there is a receive or receive-buffer operation ongoing.
+ * @details 	This is a non-blocking function. The function returns NRF_ERROR_BUSY, 
+ * 				if there is already a receive or receive-buffer operation ongoing.
  *				If the uart peripheral received the specified amount of data, 
- *				the uart_handler will be called, with events: UART_RECEIVE_DONE or UART_ERROR.
+ *				the uart_handler will be called, with event: UART_RECEIVE_DONE or UART_ERROR.
+ *
+ * @warning 	The receive data must be kept in memory until the operation has terminated.
  *
  * @param[in]   uart_instance	Pointer to an initialized uart instance. 	
  * @param[in]   uart_handler 	Handler function that should be called if the operation is done, with event: UART_RECEIVE_DONE or UART_ERROR. Could also be NULL if no handler should be called.   	 
@@ -336,14 +337,18 @@ ret_code_t uart_receive_abort_bkgnd(const uart_instance_t* uart_instance);
 ret_code_t uart_receive(uart_instance_t* uart_instance, uint8_t* rx_data, uint32_t rx_data_len);
 
 
-/**@brief   Function for starting the receive of an variable length of data in asynchronous/non-blocking/background mode.
+/**@brief   Function for starting the receive to buffer of an variable length of data in asynchronous/non-blocking/background mode.
  *
- * @details 	It starts the operation in background. 
- *				The function returns NRF_ERROR_BUSY if there is a receive or receive-buffer operation ongoing.
- *				If the uart peripheral received a byte, it is inserted in the circular rx-buffer and
+ * @details 	This is a non-blocking function. The function returns NRF_ERROR_BUSY, 
+ * 				if there is a receive or receive-buffer operation ongoing.
+ *				If the uart peripheral receives a byte, it is inserted in the circular rx-buffer and
  *				the specified uart_handler will be called, with events: UART_DATA_AVAILABLE or UART_ERROR.
  *				The one byte receive operation is rescheduled internally via the interrupt handler. 
  *				The data-bytes of the circular rx-buffer could be read via the uart_receive_buffer_get()-function.
+ *				It is only possible to receive so many bytes at once (without calling uart_receive_buffer_get())
+ *				as specified during the initialization of the rx-buffer in uart_buffer.
+ *
+ * @note 		This function works only when the uart instance was initialized with UART_BUFFER_INIT() and the specified rx_buf-size is big enough.
  *				
  *
  * @param[in]   uart_instance	Pointer to an initialized uart instance. 	
@@ -370,7 +375,7 @@ ret_code_t uart_receive_buffer_abort_bkgnd(const uart_instance_t* uart_instance)
 
 /**@brief   Function for aborting the receive buffer operation.
  *
- * @details		This functions pops an element from the circular rx-fifo (until there is no new element).
+ * @details		This functions pops an element from the circular rx-fifo (as long as there are elements in the circular rx-buffer).
  *
  * @param[in]   uart_instance			Pointer to an initialized uart instance. 
  * @param[out]  data_byte				Pointer to a one byte memory, where the bytes from the circular rx-buffer should be stored to.  

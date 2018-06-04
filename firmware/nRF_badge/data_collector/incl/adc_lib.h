@@ -44,7 +44,7 @@ typedef struct {
 /**@brief   Function for initializing an instance for the adc peripheral.
  *
  * @details This functions actually only checks the specified adc_peripheral and sets the adc_instance_id of adc_instance.
- *			The application must set adc_peripheral = 0 of the adc_instance. 
+ *			The application must set adc_peripheral = 0 of the adc_instance (because currently only one adc peripheral is available).
  *			Furthermore, the application has to set nrf_adc_config, nrf_adc_config_input of adc_instance before calling this function.
  *
  *
@@ -59,7 +59,7 @@ ret_code_t adc_init(adc_instance_t* adc_instance);
 /**@brief   Function for reading a raw ADC value on the input of the specified adc_instance in blocking mode.
  *
  * @details This function reads out the raw ADC value of the specified adc_instance in blocking mode.
- *			It tries to minimize the calls of configuration and input-selection calls, to be more efficiently.
+ *			It tries to minimize the configuration and input-selection calls to be more efficiently.
  *
  * @param[in]   adc_instance		Pointer to an initialized adc_instance.
  * @param[out]  raw					Pointer to memory, where the sampled ADC value, depending on the configuration of the adc_instance and the input voltage, is stored.
@@ -76,8 +76,8 @@ ret_code_t adc_read_raw(const adc_instance_t* adc_instance, int32_t* raw);
  *			converts the raw value to a voltage in respect to the reference voltage. 
  *
  * @param[in]   adc_instance		Pointer to an initialized adc_instance.
- * @param[out]  voltage				Pointer to memory, where the voltage value is stored.
- * @param[in]   ref_voltage			The reference voltage of the adc_instance.
+ * @param[out]  voltage				Pointer to memory, where the voltage in mV value is stored.
+ * @param[in]   ref_voltage			The reference voltage in mV of the adc_instance.
  *
  * @retval  NRF_SUCCESS    			If the ADC read was successful.
  * @retval  NRF_ERROR_BUSY  		If the selected ADC peripheral is currently in use.

@@ -28,7 +28,7 @@ static spi_handler_t				spi_handlers_transmit_receive_bkgnd	[SPI_PERIPHERAL_NUMB
 
 /**@brief Functions for handling the spi interrupts internally.
  *
- * @details These handlers (for each peripheral there is an own handler) deactivate the ss-pin and calls the
+ * @details These handlers (for each peripheral there is an own handler) deactivate the ss-pin and call the
  * 			specified application handlers (if they are not NULL). 
  */
 #if SPI0_ENABLED

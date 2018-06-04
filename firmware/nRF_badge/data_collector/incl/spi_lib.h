@@ -9,10 +9,10 @@
  *
  * @details It enables to call the SPI peripherals from different contexts. 
  *			If the selected SPI peripheral is currently in use, it will inform the other context by returning NRF_ERROR_BUSY.
- *			Each spi peripheral is specified by the values of nrf_drv_spi_config except ss_pin. The ss_pin could be set independently for each spi instance.
- *			So it is important that every spi instance that uses the same spi peripheral has the same configuration except ss_pin.
+ *			Each spi peripheral is specified by the values of nrf_drv_spi_config except the ss_pin. The ss_pin could be set independently for each spi instance.
+ *			So it is important that every spi instance that uses the same spi peripheral has the same configuration except the ss_pin.
  *
- *			There are two functions transmit and transmit_receive. The second can be used to read data from the slave.
+ *			There are actually two main capabilities: transmit and transmit_receive. The second can be used to receive data from the slave while transmitting.
  */
  
 
@@ -80,7 +80,7 @@ typedef struct {
  *
  * @details This functions actually checks if the specified spi_peripheral exists and sets the spi_instance_id of spi_instance.
  *			The application must set the spi_peripheral to a peripheral index that is activated in sdk_config.h.
- *			Furthermore, this function handles the slave-select pin intialization manually (because the nrf_drv_spi can't handle multiple slave select pins on the same peripheral)
+ *			Furthermore, this function handles the slave-select pin initialization manually (because the nrf_drv_spi-library can't handle multiple slave select pins on the same peripheral).
  *			 
  *
  * @param[in,out]   spi_instance		Pointer to an preconfigured spi_instance.
@@ -93,7 +93,7 @@ ret_code_t spi_init(spi_instance_t* spi_instance);
 
 /**@brief   Function for transmitting data in asynchronous/non-blocking/background mode.
  *
- * @details This is a non-blocking functions. If there is already an ongoing spi operation this function returns NRF_ERROR_BUSY.
+ * @details This is a non-blocking function. If there is already an ongoing spi operation this function returns NRF_ERROR_BUSY.
  * 			If the operation was started successfully and terminates, the provided spi_handler is called with event: SPI_TRANSFER_DONE.
  *	
  * @warning The transmit data must be kept in memory until the operation has terminated.
@@ -128,7 +128,7 @@ ret_code_t spi_transmit(const spi_instance_t* spi_instance, const uint8_t* tx_da
 
 /**@brief   Function for transmitting and receiving data in asynchronous/non-blocking/background mode.
  *
- * @details This is a non-blocking functions. If there is already an ongoing spi operation this function returns NRF_ERROR_BUSY.
+ * @details This is a non-blocking function. If there is already an ongoing spi operation this function returns NRF_ERROR_BUSY.
  * 			If the operation was started successfully and terminates, the provided spi_handler is called with event: SPI_TRANSFER_DONE.
  *	
  * @warning The transmit and receive data must be kept in memory until the operation has terminated.

@@ -103,7 +103,7 @@ ret_code_t flash_erase(uint32_t page_num, uint16_t num_pages);
  * @details This function returns the current flash_erase_operation_t. 
  *			The application can check the status through this function, 
  *			to decide whether the erasing operation is done, or to reschedule
- *			the erasinf operation of the former pages because of an error while erasing.
+ *			the erasing operation of the former pages because of an error while erasing.
  *
  * @retval FLASH_ERASE_NO_OPERATION 	If there is currently no erase operation in process.
  * @retval FLASH_ERASE_OPERATION		If there is currently a erase operation in process.
