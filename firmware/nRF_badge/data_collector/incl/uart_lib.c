@@ -179,10 +179,7 @@ ret_code_t uart_init(uart_instance_t* uart_instance) {
 	}
 	
 	
-	// ret should be NRF_SUCCESS or NRF_ERROR_INVALID_STATE (we don't allow different instances on the UART, because it makes no sense!)
-	if(ret != NRF_SUCCESS) {
-		return ret;
-	}
+	// ret could be NRF_SUCCESS or NRF_ERROR_INVALID_STATE (we allow different instances on the same peripheral (because if the same uart peripheral is used by different modules)
 	
 	
 	uart_instance->uart_instance_id = uart_instance_number;

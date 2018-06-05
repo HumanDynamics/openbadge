@@ -158,10 +158,10 @@ typedef struct {
 
 /**@brief   Function for initializing an instance for the uart peripheral.
  *
- * @details Initializes the low level uart driver. It allows only one instance per peripheral.
+ * @details Initializes the low level uart driver. It allows multiple instances on the same peripheral
+ *			(it assumes that the configuration is the same for all the different instances on the same peripheral)
  *			
  * @note 	Always initialize with the Macros UART_BUFFER_INIT() or UART_INIT(). 
- *			Only one instance per peripheral is allowed because it makes no sense to have more than one.
  *
  * @param[in,out]   uart_instance		Pointer to an preconfigured uart_instance.
  *
