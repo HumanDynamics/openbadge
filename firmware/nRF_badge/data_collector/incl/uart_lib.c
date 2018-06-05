@@ -161,25 +161,19 @@ static void uart_0_event_handler(nrf_drv_uart_event_t * p_event, void * p_contex
 
 
 ret_code_t uart_init(uart_instance_t* uart_instance) {
-	
-	
-	ret_code_t ret = NRF_SUCCESS;
-	
+		
 	// Check if the selected uart peripheral exists
 	if(uart_instance->uart_peripheral == 0) {
 		#if UART0_ENABLED
 		uart_instance->nrf_drv_uart_instance.drv_inst_idx = UART0_INSTANCE_INDEX; 
 		uart_instance->nrf_drv_uart_instance.reg.p_uart = (NRF_UART_Type *) NRF_UART0;
-		ret = nrf_drv_uart_init(&(uart_instance->nrf_drv_uart_instance), &(uart_instance->nrf_drv_uart_config), uart_0_event_handler);
+		nrf_drv_uart_init(&(uart_instance->nrf_drv_uart_instance), &(uart_instance->nrf_drv_uart_config), uart_0_event_handler);
 		#else
 		return NRF_ERROR_INVALID_PARAM;
 		#endif
 	} else {
 		return NRF_ERROR_INVALID_PARAM;
 	}
-	
-	
-	// ret could be NRF_SUCCESS or NRF_ERROR_INVALID_STATE (we allow different instances on the same peripheral (because if the same uart peripheral is used by different modules)
 	
 	
 	uart_instance->uart_instance_id = uart_instance_number;
