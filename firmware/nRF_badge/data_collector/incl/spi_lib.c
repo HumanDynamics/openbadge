@@ -49,7 +49,7 @@ static void spi_0_event_handler(nrf_drv_spi_evt_t* p_event) {
 			spi_handlers_transmit_bkgnd[0](&evt);
 		}
 		if(spi_handlers_transmit_receive_bkgnd[0] != NULL) {
-			spi_handlers_transmit_bkgnd[0](&evt);
+			spi_handlers_transmit_receive_bkgnd[0](&evt);
 		}
 	}
 }
@@ -72,7 +72,7 @@ static void spi_1_event_handler(nrf_drv_spi_evt_t* p_event) {
 			spi_handlers_transmit_bkgnd[1](&evt);
 		}
 		if(spi_handlers_transmit_receive_bkgnd[1] != NULL) {
-			spi_handlers_transmit_bkgnd[1](&evt);
+			spi_handlers_transmit_receive_bkgnd[1](&evt);
 		}
 	}
 }
