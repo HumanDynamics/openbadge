@@ -5,6 +5,8 @@
 #include <stdbool.h>
 
 
+#include "nrf_drv_common.h"
+
 #include <stdarg.h>
 //#include <nrf51822_peripherals.h> // needed for the peripheral defines!!! (e.g. UART_PRESENT) --> now in sdk_config.h
 //#include <nrf51.h> // includes the core_cm0 peripheral (NVIC_SystemReset)
@@ -25,10 +27,14 @@
 
 #include "spi_lib.h"
 
-#include "uart_lib.h"
+//#include "uart_lib.h"
 
 #include "softdevice_handler.h"
 #include "flash_lib.h"
+
+#include "eeprom_lib.h"
+
+#include "debug_lib.h"
 
 
 
@@ -140,7 +146,6 @@ spi_instance_t acc_spi;
 spi_instance_t ext_spi;
 
 
-uart_instance_t uart_instance;
 
 	//==== Funcion read registers ====
 uint8_t readRegister8(uint8_t reg){
@@ -154,33 +159,15 @@ uint8_t readRegister8(uint8_t reg){
 }
 
 
-volatile uint8_t uart_transmit_done = 0;
-volatile uint8_t uart_receive_buffer_done = 0;
-
-
-void uart_handler(uart_evt_t const * p_event) {
-	
-	if(p_event->type == UART_TRANSMIT_DONE) {
-		uart_transmit_done = 1;
-	}
-	if(p_event->type == UART_DATA_AVAILABLE)
-		uart_receive_buffer_done = 1;
-	
-	
-}
-
-
-
-
-#define size_tx 1000 
-char data_tx[size_tx];
-
 
 /**
  * ============================================== MAIN ====================================================
  */
 int main(void)
 {
+	
+	
+// TODO: - Move UART, SPI, ADC opertation enum from .h into .c and also the includes that needn't to be public! 
 
 	nrf_gpio_pin_dir_set(LED_1,NRF_GPIO_PIN_DIR_OUTPUT);  //set LED pin to output
     nrf_gpio_pin_write(LED_1,LED_ON);  //turn on LED
@@ -188,28 +175,12 @@ int main(void)
 	nrf_gpio_pin_dir_set(LED_2,NRF_GPIO_PIN_DIR_OUTPUT);  //set LED pin to output
     nrf_gpio_pin_write(LED_2,LED_OFF);  //turn on LED
 
-	nrf_drv_uart_config_t config = NRF_DRV_UART_DEFAULT_CONFIG;
-	
-	
-	
-	config.baudrate = (nrf_uart_baudrate_t) NRF_UART_BAUDRATE_115200; // 0x01D7E000UL; // from nrf51_bitfields.h 
-    config.hwfc = NRF_UART_HWFC_DISABLED;
-    config.interrupt_priority = 3;
-    config.parity = NRF_UART_PARITY_EXCLUDED;
-    config.pselcts = 0;
-    config.pselrts = 0;
-    config.pselrxd = 11;
-    config.pseltxd = 10;
-	
-	
-	
-	uart_instance.uart_peripheral = 0;
-	uart_instance.nrf_drv_uart_config = config;
-	
 	ret_code_t ret;
-	UART_BUFFER_INIT(&uart_instance, 32, 200, &ret);
+	(void) ret;
 	
-	uart_printf(&uart_instance, "Start...\n\r");
+	debug_init();
+	
+	debug_log("Start...\n\r");
 
 	
 	nrf_gpio_pin_dir_set(LED_2,NRF_GPIO_PIN_DIR_OUTPUT);  //set LED pin to output
@@ -226,13 +197,18 @@ int main(void)
 
 	
 	
+
+	
+	
 	
 	flash_init();
 	
 	flash_selftest();
 	
 	
+	ret = eeprom_init();
 	
+	eeprom_selftest();
 	
 	
 	while(1);
@@ -246,18 +222,11 @@ int main(void)
 		
 	
 	
-	for(uint32_t i = 0; i < size_tx; i++)
-		data_tx[i] = (i % 10) + 65 ;
-	
-	uart_transmit(&uart_instance, (uint8_t*) data_tx, 400);
+	debug_log("Printf-Test: ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ%d\n\r", 11);
 	
 	
 	
-	uart_printf(&uart_instance, "Printf-Test: ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ%d\n\r", 11);
-	
-	
-	
-	uart_printf(&uart_instance, "Ret init: %d\n\r", ret);
+	debug_log("Ret init: %d\n\r", ret);
 	
 	/*
 	while(1) {
@@ -314,7 +283,7 @@ int main(void)
 	bat_adc.nrf_adc_config_input		= NRF_ADC_CONFIG_INPUT_DISABLED;	//ADC_CONFIG_PSEL_AnalogInput6;
 	
 	
-	uart_printf(&uart_instance,"Starting...\n");
+	debug_log("Starting...\n");
 	nrf_delay_ms(1000);
 	
 	adc_init(&mic_adc);
@@ -337,7 +306,7 @@ int main(void)
 	
 	ret = spi_init(&acc_spi);
 	
-	uart_printf(&uart_instance,"SPI Init ret: %d\n\r", ret);
+	debug_log("SPI Init ret: %d\n\r", ret);
 	
 	ext_spi.spi_peripheral = 0;
 	ext_spi.nrf_drv_spi_config.frequency 	= NRF_DRV_SPI_FREQ_8M;
@@ -353,34 +322,30 @@ int main(void)
 	
 	ret = spi_init(&ext_spi);
 	
-	uart_printf(&uart_instance,"SPI Init ret: %d\n\r", ret);
+	debug_log("SPI Init ret: %d\n\r", ret);
 
 	
 	
 	uint8_t read_byte = readRegister8(0x0F);
+	(void) read_byte;
 	
-	uart_printf(&uart_instance,"Read Byte: 0x%X\n\r", read_byte);
+	debug_log("Read Byte: 0x%X\n\r", read_byte);
 	
 	while(1) {
 		adc_read_raw(&mic_adc, &val);
-		uart_printf(&uart_instance,"Value: %d\n\r", val);
+		debug_log("Value: %d\n\r", val);
 		nrf_delay_ms(2000);
 		
 		adc_read_raw(&bat_adc, &val);
-		uart_printf(&uart_instance,"Value: %d\n\r", val);
+		debug_log("Value: %d\n\r", val);
 		nrf_delay_ms(2000);
 		
 		float voltage;
 		adc_read_voltage(&bat_adc, &voltage, 1.2);
-		uart_printf(&uart_instance,"Voltage: %.3f\n\r", voltage);
+		debug_log("Voltage: %.3f\n\r", voltage);
 		nrf_delay_ms(2000);
 		
 		
-		uint8_t read_byte_1 = readRegister8(0x0F);
-		
-		uint8_t read_byte_2 = readRegister8(0x0F);
-	
-		uart_printf(&uart_instance,"Read Bytes: 0x%X, 0x%X\n\r", read_byte_1, read_byte_2);
 	}
 	
 	
