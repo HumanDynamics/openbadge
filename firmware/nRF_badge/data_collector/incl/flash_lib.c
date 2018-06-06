@@ -17,10 +17,7 @@
 #include "debug_lib.h"
 
 
-static volatile flash_store_operation_t flash_store_operation = FLASH_STORE_NO_OPERATION;
-
-static volatile flash_erase_operation_t flash_erase_operation = FLASH_ERASE_NO_OPERATION;
-
+static volatile flash_operation_t flash_operation = FLASH_NO_OPERATION;
 
 static uint32_t const * address_of_page(uint16_t page_num);
 static uint32_t const * address_of_word(uint32_t word_num);
@@ -33,24 +30,22 @@ static uint32_t const * address_of_word(uint32_t word_num);
 static void fs_evt_handler(fs_evt_t const * const evt, fs_ret_t result)
 {
     if (result == FS_SUCCESS) {	// Operation was successful!
-		if(flash_erase_operation == FLASH_ERASE_OPERATION) {
-			flash_erase_operation = FLASH_ERASE_NO_OPERATION;
+		if(flash_get_operation() & FLASH_ERASE_OPERATION) {
+			flash_operation &= ~FLASH_ERASE_OPERATION;
 		}
 		
-		if(flash_store_operation == FLASH_STORE_OPERATION) {
-			
-			flash_store_operation = FLASH_STORE_NO_OPERATION;			
+		if(flash_get_operation() & FLASH_STORE_OPERATION) {
+			flash_operation &= ~FLASH_STORE_OPERATION;			
 		}
-		
     } else {	// An error occurred during the operation!
 	
 		// Set the Error of the specific operation
-		if(flash_erase_operation == FLASH_ERASE_OPERATION) {
-			flash_erase_operation = FLASH_ERASE_ERROR;
+		if(flash_get_operation() & FLASH_ERASE_OPERATION) {
+			flash_operation |= FLASH_ERASE_ERROR;
 		}
 		
-		if(flash_store_operation == FLASH_STORE_OPERATION) {
-			flash_store_operation = FLASH_STORE_ERROR;
+		if(flash_get_operation() & FLASH_STORE_OPERATION) {
+			flash_operation |= FLASH_STORE_ERROR;
 		}
 	}
 }
@@ -120,12 +115,14 @@ static uint32_t const * address_of_word(uint32_t word_num)
 
 ret_code_t flash_erase_bkgnd(uint32_t page_num, uint16_t num_pages) {
 	
-	// We have already an ongoing operation!
-	if(flash_store_operation == FLASH_STORE_OPERATION || flash_erase_operation == FLASH_ERASE_OPERATION) {
+	// Check if we have already an ongoing operation
+	if((flash_get_operation() & FLASH_STORE_OPERATION) || (flash_get_operation() & FLASH_ERASE_OPERATION)) {
 		return NRF_ERROR_BUSY;
 	}
 	
-	flash_erase_operation = FLASH_ERASE_OPERATION;
+	flash_operation |= FLASH_ERASE_OPERATION;
+	// Reset the Error flag (if it exists)
+	flash_operation &= ~FLASH_ERASE_ERROR;
 	
 	// Call the fstorage library for the actual erase operation.
 	fs_ret_t status_erase = fs_erase(&fs_config, address_of_page(page_num), num_pages, NULL);
@@ -135,8 +132,8 @@ ret_code_t flash_erase_bkgnd(uint32_t page_num, uint16_t num_pages) {
 	ret_code_t ret = NRF_SUCCESS;
 	if(status_erase != FS_SUCCESS) {
 		
-		// Reset to no Operation
-		flash_erase_operation = FLASH_ERASE_NO_OPERATION;
+		// Reset the erase operation
+		flash_operation &= ~FLASH_ERASE_OPERATION;
 		
 		if(status_erase == FS_ERR_QUEUE_FULL) {
 			ret = NRF_ERROR_BUSY;
@@ -159,10 +156,10 @@ ret_code_t flash_erase(uint32_t page_num, uint16_t num_pages) {
 	}
 	
 	// Wait for the store operation to terminate.
-	while(flash_get_erase_operation() == FLASH_ERASE_OPERATION);
+	while(flash_get_operation() & FLASH_ERASE_OPERATION);
 	
 	// Return an error if the erase operation was not successful.
-	if(flash_get_erase_operation() == FLASH_ERASE_ERROR) {
+	if(flash_get_operation() & FLASH_ERASE_ERROR) {
 		return NRF_ERROR_TIMEOUT; 
 	}
 	
@@ -171,16 +168,11 @@ ret_code_t flash_erase(uint32_t page_num, uint16_t num_pages) {
 }
 
 
-flash_erase_operation_t flash_get_erase_operation(void) {
-	return flash_erase_operation;
-}
-
-
 
 ret_code_t flash_store_bkgnd(uint32_t word_num, const uint32_t* p_words, uint16_t length_words) {	
 	
-	// Check if there is already an ongoing operation!
-	if(flash_store_operation == FLASH_STORE_OPERATION || flash_erase_operation == FLASH_ERASE_OPERATION) {
+	// Check if we have already an ongoing operation
+	if((flash_get_operation() & FLASH_STORE_OPERATION) || (flash_get_operation() & FLASH_ERASE_OPERATION)) {
 		return NRF_ERROR_BUSY;
 	}
 	
@@ -188,8 +180,9 @@ ret_code_t flash_store_bkgnd(uint32_t word_num, const uint32_t* p_words, uint16_
 		return NRF_ERROR_INVALID_PARAM;
 	
 	
-	flash_store_operation = FLASH_STORE_OPERATION;
-	
+	flash_operation |= FLASH_STORE_OPERATION;
+	// Reset the Error flag (if it exists)
+	flash_operation &= ~FLASH_STORE_ERROR;
 	
 	// Call the fstorage library for the actual storage operation.
 	fs_ret_t status_store = fs_store(&fs_config, address_of_word(word_num), p_words, length_words, NULL);
@@ -200,8 +193,8 @@ ret_code_t flash_store_bkgnd(uint32_t word_num, const uint32_t* p_words, uint16_
 	ret_code_t ret = NRF_SUCCESS;
 	if(status_store != FS_SUCCESS) {
 		
-		// Reset to no Operation
-		flash_store_operation = FLASH_STORE_NO_OPERATION;
+		// Reset the store operation
+		flash_operation &= ~FLASH_STORE_OPERATION;
 		
 		if(status_store == FS_ERR_QUEUE_FULL) {
 			ret = NRF_ERROR_BUSY;
@@ -225,10 +218,10 @@ ret_code_t flash_store(uint32_t word_num, const uint32_t* p_words, uint16_t leng
 	}
 	
 	// Wait for the store operation to terminate.
-	while(flash_get_store_operation() == FLASH_STORE_OPERATION);
+	while(flash_get_operation() & FLASH_STORE_OPERATION);
 	
 	// Return an error if the store operation was not successful.
-	if(flash_get_store_operation() == FLASH_STORE_ERROR) {
+	if(flash_get_operation() & FLASH_STORE_ERROR) {
 		return NRF_ERROR_TIMEOUT; 
 	}
 	
@@ -236,8 +229,8 @@ ret_code_t flash_store(uint32_t word_num, const uint32_t* p_words, uint16_t leng
 	
 }
 
-flash_store_operation_t flash_get_store_operation(void) {
-	return flash_store_operation;
+flash_operation_t flash_get_operation(void) {
+	return flash_operation;
 }
 
 
@@ -277,7 +270,9 @@ bool flash_selftest(void) {
 	
 	debug_log("Started flash selftest...\n\r");
 	
-	debug_log("Flash page addresses: From: %p to %p\n\r", address_of_page(0), address_of_page(NUM_PAGES));
+	debug_log("Flash page addresses: From %p to %p\n\r", address_of_page(0), address_of_page(NUM_PAGES-1));
+	
+	debug_log("Flash word addresses: From %p to %p\n\r", address_of_word(0), address_of_word(flash_get_page_size_words()*flash_get_page_number()-1));
 	
 	debug_log("Page size words: %u, Number of pages: %u\n\r", flash_get_page_size_words(), flash_get_page_number());
 	
@@ -286,7 +281,7 @@ bool flash_selftest(void) {
 	uint32_t tmp = 0xABCD1234;		
 	flash_store_bkgnd(0, &tmp, 1);
 
-	while(flash_get_store_operation() == FLASH_STORE_OPERATION);
+	while(flash_get_operation() & FLASH_STORE_OPERATION);
 	
 	
 //******************** Test erasing 2 pages *************************	
@@ -297,12 +292,12 @@ bool flash_selftest(void) {
 		return 0;
 	}
 	
-	flash_erase_operation_t erase_operation = flash_get_erase_operation();
+	flash_operation_t erase_operation = flash_get_operation();
 	//TODO: Check with timeout!
-	while(erase_operation == FLASH_ERASE_OPERATION) {
-		erase_operation = flash_get_erase_operation();
+	while(erase_operation & FLASH_ERASE_OPERATION) {
+		erase_operation = flash_get_operation();
 	}
-	if(erase_operation == FLASH_ERASE_ERROR) {
+	if(erase_operation & FLASH_ERASE_ERROR) {
 		debug_log("Erasing error!\n\r");
 		return 0;
 	}
@@ -311,21 +306,22 @@ bool flash_selftest(void) {
 	
 	
 //******************** Test write a word *************************	
+	#define FLASH_TEST_ADDRESS (flash_get_page_size_words()*flash_get_page_number())
 	uint32_t write_word = 0x1234ABCD;	// Should be != 0xFFFFFFFF --> next test will assume this!
 	
-	ret = flash_store_bkgnd(0, &write_word, 1);
+	ret = flash_store_bkgnd(FLASH_TEST_ADDRESS, &write_word, 1);
 	debug_log("Started storing to flash at word 0: 0x%X, Ret: %d\n\r", write_word, ret);
 	if(ret != NRF_SUCCESS) {
 		debug_log("Start storing word failed!\n\r");
 		return 0;
 	}
 	
-	flash_store_operation_t store_operation = flash_get_store_operation();
+	flash_operation_t store_operation = flash_get_operation();
 	//TODO: Check with timeout!
-	while(store_operation == FLASH_STORE_OPERATION) {
-		store_operation = flash_get_store_operation();
+	while(store_operation & FLASH_STORE_OPERATION) {
+		store_operation = flash_get_operation();
 	}
-	if(store_operation == FLASH_STORE_ERROR) {
+	if(store_operation & FLASH_STORE_ERROR) {
 		debug_log("Storing error!\n\r");
 		return 0;
 	}
@@ -334,7 +330,7 @@ bool flash_selftest(void) {
 	// Read the word again:	
 	uint32_t read_word;
 	// Check if the stored word is the correct word!
-	ret = flash_read(0, &read_word, 1);
+	ret = flash_read(FLASH_TEST_ADDRESS, &read_word, 1);
 	if(ret != NRF_SUCCESS) {
 		debug_log("Read failed!\n\r");
 		return 0;
@@ -354,7 +350,7 @@ bool flash_selftest(void) {
 	
 	debug_log("Storing to flash at word 0: 0x%X, Ret: %d\n\r", write_word, ret);
 	
-	ret = flash_store(0, &write_word, 1);
+	ret = flash_store(FLASH_TEST_ADDRESS, &write_word, 1);
 	//ret = flash_store_bkgnd(0, &write_word, 1);
 	
 
@@ -368,7 +364,7 @@ bool flash_selftest(void) {
 	}
 	
 	// Check if the stored word is the correct word!
-	ret = flash_read(0, &read_word, 1);
+	ret = flash_read(FLASH_TEST_ADDRESS, &read_word, 1);
 	if(ret != NRF_SUCCESS) {
 		debug_log("Read failed!\n\r");
 		return 0;
@@ -395,12 +391,12 @@ bool flash_selftest(void) {
 		return 0;
 	}
 	
-	store_operation = flash_get_store_operation();
+	store_operation = flash_get_operation();
 	//TODO: Check with timeout!
-	while(store_operation == FLASH_STORE_OPERATION) {
-		store_operation = flash_get_store_operation();
+	while(store_operation & FLASH_STORE_OPERATION) {
+		store_operation = flash_get_operation();
 	}
-	if(store_operation == FLASH_STORE_ERROR) {
+	if(store_operation & FLASH_STORE_ERROR) {
 		debug_log("Storing words error!\n\r");
 		return 0;
 	}

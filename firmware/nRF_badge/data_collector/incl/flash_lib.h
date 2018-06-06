@@ -12,7 +12,7 @@
  *
  * @details It enables to erase pages, store and read word data into the flash memory by using the fstorage-library.
  *			The erase and store operations are asynchronous/non-blocking functions. To check the status of the operation,
- *			just call the flash_get_store_operation() or flash_get_erase_operation().
+ *			just call flash_get_operation().
  *			This underlying fstorage module uses the softdevice, so the application has to initialize it before using this module. 
  *			Furthermore, for retrieving system events (needed by fstorage) the system_event_lib-module is used.
  *
@@ -26,23 +26,18 @@
 #include "sdk_common.h"	// Needed for the definition of ret_code_t and the error-codes
 
 
-#define NUM_PAGES 30	// TODO: define this by the linker script with enough space for new program code!
-
-// TODO: Could be merged to one operation --> No because it is reseted if e.g. a store operation failed and after that a erase operation is scheduled.
-// Two different operation types to report errors!
+// TODO: define this by the linker script with enough space for new program code!
+#define NUM_PAGES 30	
 
 
 typedef enum {
-	FLASH_STORE_NO_OPERATION 			= 0,			/**< Currently no store operation ongoing. */
+	FLASH_NO_OPERATION 					= 0,			/**< Currently no store operation ongoing. */
 	FLASH_STORE_OPERATION 				= (1 << 0),		/**< Currently there is an ongoing store operation. */
-	FLASH_STORE_ERROR					= (1 << 1),		/**< There was an error while storing the former data. */
-} flash_store_operation_t;
+	FLASH_ERASE_OPERATION 				= (1 << 1),		/**< Currently there is an ongoing erase operation. */
+	FLASH_STORE_ERROR					= (1 << 2),		/**< There was an error while storing the former data. */
+	FLASH_ERASE_ERROR					= (1 << 3),		/**< There was an error while erasing the former pages. */
+} flash_operation_t;
 
-typedef enum {
-	FLASH_ERASE_NO_OPERATION			= 0,			/**< Currently no erase operation ongoing. */
-	FLASH_ERASE_OPERATION 				= (1 << 0),		/**< Currently there is an ongoing erase operation. */
-	FLASH_ERASE_ERROR					= (1 << 1),		/**< There was an error while storing the former pages. */
-} flash_erase_operation_t;
 
 
 
@@ -100,18 +95,6 @@ ret_code_t flash_erase_bkgnd(uint32_t page_num, uint16_t num_pages);
 ret_code_t flash_erase(uint32_t page_num, uint16_t num_pages);
 
 
-/**@brief   Function for retrieving the current erase status/operation.
- *
- * @details This function returns the current flash_erase_operation_t. 
- *			The application can check the status through this function, 
- *			to decide whether the erasing operation is done, or to reschedule
- *			the erasing operation of the former pages because of an error while erasing.
- *
- * @retval FLASH_ERASE_NO_OPERATION 	If there is currently no erase operation in process.
- * @retval FLASH_ERASE_OPERATION		If there is currently a erase operation in process.
- * @retval FLASH_ERASE_ERROR			If an error occured while erasing the former pages. So the application can reschedule the erase of the former pages.			    	
- */
-flash_erase_operation_t flash_get_erase_operation(void);
 
 
 
@@ -161,16 +144,21 @@ ret_code_t flash_store(uint32_t word_num, const uint32_t* p_words, uint16_t leng
 
 /**@brief   Function for retrieving the current store status/operation.
  *
- * @details This function returns the current flash_store_operation_t. 
+ * @details This function returns the current flash_operation_t (and combinations of them).
+ *			E.g. There can be the case FLASH_STORE_OPERATION and FLASH_ERASE_ERROR is set at the same time (if the 
+ *			former scheduled erase operation failed).
  *			The application can check the status through this function, 
- *			to decide whether the storing operation is done, or to reschedule
- *			the storing operation of the former data because of an error while storing.
+ *			to decide whether the operation is done, or to reschedule
+ *			the operation of the former data/pages because of an error while storing/erasing.
+ *
  *
  * @retval FLASH_STORE_NO_OPERATION 	If there is currently no store operation in process.
  * @retval FLASH_STORE_OPERATION		If there is currently a store operation in process.
- * @retval FLASH_STORE_ERROR			If an error occured while storing the former data. So the application can reschedule the storage of the former data.			    	
+ * @retval FLASH_ERASE_OPERATION		If there is currently a store operation in process.
+ * @retval FLASH_STORE_ERROR			If an error occured while storing the former data. So the application can reschedule the storage of the former data.	
+ * @retval FLASH_ERASE_ERROR			If an error occured while erasing the former pages. So the application can reschedule the erase of the former pages.	
  */
-flash_store_operation_t flash_get_store_operation(void);
+flash_operation_t flash_get_operation(void);
 
 
 
