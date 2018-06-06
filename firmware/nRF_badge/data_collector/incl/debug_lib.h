@@ -12,6 +12,7 @@
  *
  * @details This module can be used to print formatted debug data to the UART-module.
  *			Internally the module uses the uart_lib-module to format and print stuff via UART.
+ *			If debug is not enabled, the function calls are replaced by empty functions, causing the compiler to remove them.
  */
  
 
