@@ -20,7 +20,7 @@
 #ifdef DEBUG_ENABLE
 
 #include "uart_lib.h"
-uart_instance_t* p_debug_uart_instance;
+uart_instance_t* p_debug_uart_instance; /**< Pointer to an initialized uart_instance used for the uart_printf operation. */
 
 
 /**

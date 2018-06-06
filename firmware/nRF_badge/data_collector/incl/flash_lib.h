@@ -8,7 +8,7 @@
 
 /** @file
  *
- * @brief Flash abstraction library.
+ * @brief Internal flash abstraction library.
  *
  * @details It enables to erase pages, store and read word data into the flash memory by using the fstorage-library.
  *			The erase and store operations are asynchronous/non-blocking functions. To check the status of the operation,
@@ -29,7 +29,12 @@
 // TODO: define this by the linker script with enough space for new program code!
 #define NUM_PAGES 30	
 
-
+/**@brief The different EEPROM operations. These operations will be used to set the peripheral busy or not.
+ *
+ * @note  	When retrieving the current operation via flash_get_operation(). There could be more than one operation set at the same time.
+ *			E.g. there can be FLASH_STORE_OPERATION and FLASH_ERASE_ERROR set at the same time (if the 
+ *			former scheduled erase operation failed and we scheduled a store operation after that).
+ */
 typedef enum {
 	FLASH_NO_OPERATION 					= 0,			/**< Currently no store operation ongoing. */
 	FLASH_STORE_OPERATION 				= (1 << 0),		/**< Currently there is an ongoing store operation. */
@@ -145,8 +150,8 @@ ret_code_t flash_store(uint32_t word_num, const uint32_t* p_words, uint16_t leng
 /**@brief   Function for retrieving the current store status/operation.
  *
  * @details This function returns the current flash_operation_t (and combinations of them).
- *			E.g. There can be the case FLASH_STORE_OPERATION and FLASH_ERASE_ERROR is set at the same time (if the 
- *			former scheduled erase operation failed).
+ *			E.g. there can be FLASH_STORE_OPERATION and FLASH_ERASE_ERROR set at the same time (if the 
+ *			former scheduled erase operation failed and we scheduled a store operation after that).
  *			The application can check the status through this function, 
  *			to decide whether the operation is done, or to reschedule
  *			the operation of the former data/pages because of an error while storing/erasing.

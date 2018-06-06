@@ -45,7 +45,7 @@ typedef void (*system_event_handler_t)(uint32_t sys_evt);
 void system_event_init(void);
 
 
-/**@brief   Function to register am application system event handler.
+/**@brief   Function to register an application system event handler.
  *
  * @retval NRF_SUCCESS				If the registration was succesful.
  * @retval NRF_ERROR_NO_MEM			If the registration failed because there are too many registered system_event_handlers.	    	
