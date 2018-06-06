@@ -1,10 +1,12 @@
 #include "eeprom_lib.h"
 
 #include "spi_lib.h"
+#include "nrf_drv_common.h"
 
 
 #include "uart_lib.h"
 extern uart_instance_t uart_instance;
+
 
 
 #define CMD_WREN	0b00000110	/**< Write enable command code */
@@ -13,7 +15,7 @@ extern uart_instance_t uart_instance;
 #define CMD_WRITE	0b00000010	/**< Write to memory array command code */
 #define CMD_READ	0b00000011	/**< Read from memory array command code */
 
-
+#define EEPROM_SIZE	(1024*256)	/**< Size of the external EEPROM in bytes */
 
 
 
@@ -94,6 +96,8 @@ static ret_code_t eeprom_write_enable(void) {
 	// SPI transmit in blocking mode
 	ret_code_t ret = spi_transmit(&spi_instance, tx_buf, 1);
 	
+	while(eeprom_get_operation() != EEPROM_NO_OPERATION);
+	
 	// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INVALID_ADDR (the last one can't happen here)
 	if(ret != NRF_SUCCESS) {
 		ret = NRF_ERROR_BUSY;
@@ -122,6 +126,8 @@ static ret_code_t eeprom_global_unprotect(void) {
 	// SPI transmit in blocking mode
 	ret = spi_transmit(&spi_instance, tx_buf, 2);
 	
+	while(eeprom_get_operation() != EEPROM_NO_OPERATION);
+	
 	// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INVALID_ADDR (the last one can't happen here)
     if(ret != NRF_SUCCESS)
 		ret = NRF_ERROR_BUSY;
@@ -148,8 +154,6 @@ static ret_code_t eeprom_read_status(uint8_t* eeprom_status) {
 	
 	
 	*eeprom_status = rx_buf[1];
-	
-	//uart_printf(&uart_instance, "EEPROM status %d\n\r", *eeprom_status);
 	
 	return ret;
 }
@@ -182,7 +186,8 @@ static bool eeprom_is_busy(void) {
 ret_code_t eeprom_store_bkgnd(uint32_t address, uint8_t* tx_data, uint32_t length_tx_data) {
 	
 	// Check if the specified address is valid. The EEPROM has 256kByte of memory.
-	if(address >= (1024*256) + length_tx_data) 
+	// Furthermore check if the data pointer is in RAM, not in read only-Memory
+	if((address + length_tx_data > (EEPROM_SIZE)) ||  !nrf_drv_is_in_RAM(tx_data))
 		return NRF_ERROR_INVALID_PARAM;
 	
 	
@@ -233,13 +238,13 @@ ret_code_t eeprom_store_bkgnd(uint32_t address, uint8_t* tx_data, uint32_t lengt
 	// Start a blocking spi transmission
 	ret = spi_transmit(&spi_instance, first_transmit, len);
 	
-	// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INVALID_ADDR (the last one can't happen here)
-	if(ret != NRF_SUCCESS) {
-		
+	// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INVALID_ADDR
+	if(ret == NRF_ERROR_INVALID_ADDR)
+		ret = NRF_ERROR_INVALID_PARAM;
+	if(ret != NRF_SUCCESS) {		
 		// Reset the eeprom operation
 		eeprom_operation = EEPROM_NO_OPERATION;
-		
-		return NRF_ERROR_BUSY;
+		return ret;
 	}
 	
 	// Wait until the first 4 data bytes are stored into the EEPROM (important to not just check if they have been transmitted via spi!)
@@ -278,13 +283,13 @@ ret_code_t eeprom_store_bkgnd(uint32_t address, uint8_t* tx_data, uint32_t lengt
 		ret = spi_transmit_bkgnd(&spi_instance, spi_event_handler, tx_data, len);
 		//ret = spi_transmit(&spi_instance, tx_data, len);
 		
-		// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INVALID_ADDR (the last one can't happen here)
+		// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INVALID_ADDR
+		if(ret == NRF_ERROR_INVALID_ADDR)
+			ret = NRF_ERROR_INVALID_PARAM;
 		if(ret != NRF_SUCCESS) {
-			
 			// Reset the eeprom operation
 			eeprom_operation = EEPROM_NO_OPERATION;
-			
-			return NRF_ERROR_BUSY;
+			return ret;
 		}
 		
 	}
@@ -313,7 +318,10 @@ ret_code_t eeprom_store(uint32_t address, uint8_t* tx_data, uint32_t length_tx_d
 
 
 ret_code_t eeprom_read_bkgnd(uint32_t address, uint8_t* rx_data, uint32_t length_rx_data) {
-	if(address >= (1024*256) + length_rx_data) 
+	
+	// Check if the specified address is valid. The EEPROM has 256kByte of memory.
+	// Furthermore check if the data pointer is in RAM, not in read only-Memory
+	if((address + length_rx_data > (EEPROM_SIZE) ) ||  !nrf_drv_is_in_RAM(rx_data))
 		return NRF_ERROR_INVALID_PARAM;
 
 	// Check if the EEPROM has already an ongoing operation.
@@ -345,13 +353,13 @@ ret_code_t eeprom_read_bkgnd(uint32_t address, uint8_t* rx_data, uint32_t length
 	// Do a blocking transmit receive operation
 	ret_code_t ret = spi_transmit_receive(&spi_instance, tx_header, 4, first_receive, len);
 	
-	// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INVALID_ADDR (the last one can't happen here)
-	if(ret != NRF_SUCCESS) {
-		
+	// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INVALID_ADDR
+	if(ret == NRF_ERROR_INVALID_ADDR)
+		ret = NRF_ERROR_INVALID_PARAM;
+	if(ret != NRF_SUCCESS) {		
 		// Reset the eeprom operation
 		eeprom_operation = EEPROM_NO_OPERATION;
-		
-		return NRF_ERROR_BUSY;
+		return ret;
 	}
 	
 	while(eeprom_get_operation() != EEPROM_NO_OPERATION);
@@ -387,13 +395,13 @@ ret_code_t eeprom_read_bkgnd(uint32_t address, uint8_t* rx_data, uint32_t length
 		ret = spi_transmit_receive_bkgnd(&spi_instance, spi_event_handler, tx_header, 4, rx_data, len);
 
 
-		// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INVALID_ADDR (the last one can't happen here)
+		// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INVALID_ADDR
+		if(ret == NRF_ERROR_INVALID_ADDR)
+			ret = NRF_ERROR_INVALID_PARAM;
 		if(ret != NRF_SUCCESS) {
-			
 			// Reset the eeprom operation
 			eeprom_operation = EEPROM_NO_OPERATION;
-			
-			return NRF_ERROR_BUSY;
+			return ret;
 		}
 	}
 	
@@ -437,6 +445,10 @@ eeprom_operation_t eeprom_get_operation(void) {
 
 
 
+uint32_t eeprom_get_size(void) {
+	return EEPROM_SIZE;
+}
+
 bool eeprom_selftest(void) {
 	
 	#define EEPROM_TEST_DATA_LEN	40
@@ -454,7 +466,7 @@ bool eeprom_selftest(void) {
 	
 	
 	
-	while(eeprom_get_operation() != EEPROM_NO_OPERATION);
+//********************** Read and write Tests ***********************
 	ret_code_t ret = eeprom_store(EEPROM_TEST_ADDRESS, (uint8_t*) data, EEPROM_TEST_DATA_LEN);
 	uart_printf(&uart_instance, "Test store, Ret: %d\n\r", ret);
 	if(ret != NRF_SUCCESS) {
@@ -466,7 +478,7 @@ bool eeprom_selftest(void) {
 	
 	ret = eeprom_read(EEPROM_TEST_ADDRESS, rx_data, EEPROM_TEST_DATA_LEN);
 	rx_data[EEPROM_TEST_DATA_LEN] = 0;
-	rx_data[10] = 10;
+	
 	uart_printf(&uart_instance, "Test read, Ret: %d, Read: %s\n\r", ret, rx_data);
 	if(ret != NRF_SUCCESS) {
 		uart_printf(&uart_instance, "Read failed!\n\r");
@@ -479,8 +491,36 @@ bool eeprom_selftest(void) {
 		return 0;
 	}
 	
+//********************* No RAM memory tests *************************
+	char* test = "HELLO";
+	ret = eeprom_store(EEPROM_TEST_ADDRESS, (uint8_t*) test, 5);
+	
+	uart_printf(&uart_instance, "Test store non RAM data, Ret: %d\n\r", ret);
+	if(ret != NRF_ERROR_INVALID_PARAM) {
+		uart_printf(&uart_instance, "Test store non RAM data failed!\n\r");
+		return 0;
+	}
+	
+	
+	ret = eeprom_read(EEPROM_TEST_ADDRESS, (uint8_t*) test, 5);
+	
+	uart_printf(&uart_instance, "Test read to non RAM data, Ret: %d\n\r", ret);
+	if(ret != NRF_ERROR_INVALID_PARAM) {
+		uart_printf(&uart_instance, "Test read to non RAM data failed!\n\r");
+		return 0;
+	}
+
+//******************* False address test **************************
+	ret = eeprom_store(EEPROM_SIZE - 2, (uint8_t*) data, EEPROM_TEST_DATA_LEN);
+	
+	uart_printf(&uart_instance, "Test invalid address, Ret: %d\n\r", ret);
+	if(ret != NRF_ERROR_INVALID_PARAM) {
+		uart_printf(&uart_instance, "Test invalid address failed!\n\r");
+		return 0;
+	}
 	
 	uart_printf(&uart_instance, "EEPROM Test passed!");
+	
 	
 	return 1;
 }

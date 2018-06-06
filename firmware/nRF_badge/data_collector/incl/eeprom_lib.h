@@ -45,8 +45,10 @@ ret_code_t eeprom_read_bkgnd(uint32_t address, uint8_t* rx_data, uint32_t length
 
 ret_code_t eeprom_read(uint32_t address, uint8_t* rx_data, uint32_t length_rx_data);
 
-
 eeprom_operation_t eeprom_get_operation(void);
+
+uint32_t eeprom_get_size(void);
+
 
 bool eeprom_selftest(void);
 

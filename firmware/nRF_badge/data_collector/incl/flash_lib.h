@@ -28,6 +28,8 @@
 
 #define NUM_PAGES 30	// TODO: define this by the linker script with enough space for new program code!
 
+// TODO: Could be merged to one operation --> No because it is reseted if e.g. a store operation failed and after that a erase operation is scheduled.
+// Two different operation types to report errors!
 
 
 typedef enum {
@@ -181,7 +183,8 @@ flash_store_operation_t flash_get_store_operation(void);
  * @param[in]  	p_words			Pointer to memory where the words should be stored to.
  * @param[in]  	length_words	Number of words to read.
  *
- * @retval  NRF_SUCCESS         If the operation was  successfully.
+ * @retval  NRF_SUCCESS         		If the operation was successfully.
+ * @retval 	NRF_ERROR_INVALID_PARAM		If the p_words pointer is not in RAM section or the word_num (address) is invalid.
  */
 ret_code_t flash_read(uint32_t word_num, uint32_t* p_words, uint16_t length_words);
 

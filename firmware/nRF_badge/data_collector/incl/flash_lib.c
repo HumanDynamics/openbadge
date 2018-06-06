@@ -7,6 +7,8 @@
 									// Otherwise there will be a warning at compilation. Furthermore the function has to be called at least once (through FS_PAGE_END_ADDR), 
 									// which is done in flash_get_page_size()
 
+#include "nrf_drv_common.h"			// Needed for data in RAM check
+
 
 
 #include "system_event_lib.h"	// Needed to register an system event handler!
@@ -29,7 +31,9 @@ static uint32_t const * address_of_word(uint32_t word_num);
 
 
 
-// The event handler for fstorage events.
+/**
+ *@brief Function for handling fstorage events.
+ */
 static void fs_evt_handler(fs_evt_t const * const evt, fs_ret_t result)
 {
     if (result == FS_SUCCESS) {	// Operation was successful!
@@ -89,14 +93,18 @@ ret_code_t flash_init(void) {
 }
 
 
-// Retrieve the address of a page.
+/**
+ *@brief Retrieve the address of a page.
+ */
 static uint32_t const * address_of_page(uint16_t page_num)
 {
     return fs_config.p_start_addr + (page_num * FS_PAGE_SIZE_WORDS);
 }
 
 
-// Retrieve the address of a word.
+/**
+ *@brief Retrieve the address of a word.
+ */
 static uint32_t const * address_of_word(uint32_t word_num)
 {
     return fs_config.p_start_addr + (word_num);
@@ -232,6 +240,14 @@ flash_store_operation_t flash_get_store_operation(void) {
 
 
 ret_code_t flash_read(uint32_t word_num, uint32_t* p_words, uint16_t length_words) {
+	
+	
+	if(!nrf_drv_is_in_RAM(p_words))
+		return NRF_ERROR_INVALID_PARAM;
+	
+	if(word_num + length_words > (FS_PAGE_SIZE_WORDS*NUM_PAGES))
+		return NRF_ERROR_INVALID_PARAM;
+	
 	for(uint32_t i = 0; i < length_words; i++) {
 		p_words[i] = *(address_of_word(word_num + i));		
 	}
@@ -312,9 +328,16 @@ bool flash_selftest(void) {
 		return 0;
 	}
 	
+	
+	// Read the word again:	
 	uint32_t read_word;
 	// Check if the stored word is the correct word!
-	flash_read(0, &read_word, 1);
+	ret = flash_read(0, &read_word, 1);
+	if(ret != NRF_SUCCESS) {
+		uart_printf(&uart_instance, "Read failed!\n\r");
+		return 0;
+	}
+	
 	if(read_word != write_word) {
 		uart_printf(&uart_instance, "Stored word is not the right word!\n\r");
 		return 0;
@@ -343,7 +366,11 @@ bool flash_selftest(void) {
 	}
 	
 	// Check if the stored word is the correct word!
-	flash_read(0, &read_word, 1);	
+	ret = flash_read(0, &read_word, 1);
+	if(ret != NRF_SUCCESS) {
+		uart_printf(&uart_instance, "Read failed!\n\r");
+		return 0;
+	}	
 	
 	if(read_word == write_word) {
 		uart_printf(&uart_instance, "Store word should actually fail!! Written: 0x%X, Read: 0x%X\n\r", write_word, read_word);
@@ -355,7 +382,7 @@ bool flash_selftest(void) {
 	uart_printf(&uart_instance, "Store different word at same position behaves as expected!\n\r");
 	
 	
-//******************** Test a overflowing write operation over 2 pages *************************#
+//******************** Test a overflowing write operation over 2 pages *************************
 	#define WORD_NUMBER	5
 	uint32_t write_address = (flash_get_page_size_words())-2;
 	uint32_t write_words[WORD_NUMBER];
@@ -377,7 +404,11 @@ bool flash_selftest(void) {
 	}
 	// Check if the stored words are correct!
 	uint32_t read_words[WORD_NUMBER];
-	flash_read(write_address, read_words, WORD_NUMBER);
+	ret = flash_read(write_address, read_words, WORD_NUMBER);
+	if(ret != NRF_SUCCESS) {
+		uart_printf(&uart_instance, "Read failed!\n\r");
+		return 0;
+	}	
 	//uart_printf(&uart_instance, "Written words:  0x%X, 0x%X, Read out words: 0x%X, 0x%X\n\r", write_words[0], write_words[1], read_words[0], read_words[1]);
 	
 	if(memcmp((uint8_t*)&write_words[0], (uint8_t*)&read_words[0], sizeof(uint32_t)*WORD_NUMBER) != 0) {
@@ -386,6 +417,39 @@ bool flash_selftest(void) {
 	}
 	
 	uart_printf(&uart_instance, "Storing words success!\n\r");	
+	
+//******************* Test read to non RAM memory **************************************
+
+
+	char* non_ram = "ABCD";
+	uint32_t* p_non_ram = (uint32_t*) non_ram;
+	
+	ret = flash_read(0, p_non_ram, 1);
+	if(ret == NRF_SUCCESS) {
+		uart_printf(&uart_instance, "No RAM memory test failed!\n\r");
+		return 0;
+	}	
+
+
+//******************* False address test **************************
+	
+	ret = flash_store(flash_get_page_size_words()*flash_get_page_number()-2, write_words, WORD_NUMBER);
+	uart_printf(&uart_instance, "Test invalid address store, Ret: %d\n\r", ret);
+	if(ret != NRF_ERROR_INVALID_PARAM) {
+		uart_printf(&uart_instance, "Test invalid address store failed!\n\r");
+		return 0;
+	}
+	
+	ret = flash_read(flash_get_page_size_words()*flash_get_page_number()-2, write_words, WORD_NUMBER);
+	uart_printf(&uart_instance, "Test invalid address read, Ret: %d\n\r", ret);
+	if(ret != NRF_ERROR_INVALID_PARAM) {
+		uart_printf(&uart_instance, "Test invalid address read failed!\n\r");
+		return 0;
+	}
+	
+	
+	
+	
 	
 	uart_printf(&uart_instance, "Flash test successful!!\n\r");	
 	
