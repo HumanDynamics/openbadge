@@ -155,7 +155,7 @@ ret_code_t flash_erase(uint32_t page_num, uint16_t num_pages) {
 		return ret;
 	}
 	
-	// Wait for the store operation to terminate.
+	// Wait for the erase operation to terminate.
 	while(flash_get_operation() & FLASH_ERASE_OPERATION);
 	
 	// Return an error if the erase operation was not successful.
@@ -238,6 +238,9 @@ ret_code_t flash_read(uint32_t word_num, uint32_t* p_words, uint16_t length_word
 	
 	
 	if(!nrf_drv_is_in_RAM(p_words))
+		return NRF_ERROR_INVALID_PARAM;
+	
+	if(p_words == NULL)
 		return NRF_ERROR_INVALID_PARAM;
 	
 	if(word_num + length_words > (FS_PAGE_SIZE_WORDS*NUM_PAGES))

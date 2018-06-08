@@ -178,7 +178,7 @@ flash_operation_t flash_get_operation(void);
  * @param[in]  	length_words	Number of words to read.
  *
  * @retval  NRF_SUCCESS         		If the operation was successfully.
- * @retval 	NRF_ERROR_INVALID_PARAM		If the p_words pointer is not in RAM section or the word_num (address) is invalid.
+ * @retval 	NRF_ERROR_INVALID_PARAM		If the p_words pointer is not in RAM section, the word_num (address) is invalid or p_word is NULL.
  */
 ret_code_t flash_read(uint32_t word_num, uint32_t* p_words, uint16_t length_words);
 
