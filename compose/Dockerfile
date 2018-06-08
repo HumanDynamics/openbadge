@@ -17,8 +17,7 @@ RUN apt-get update && apt-get install -y \
   cmake \
   minicom screen \
   vim \
-  lcov \
-  nano
+  lcov
 
 RUN mkdir -p /opt/downloads
 
@@ -46,7 +45,9 @@ copy compose/JLink_Linux_V616i_x86_64.deb /opt/downloads/JLink_Linux_V616i_x86_6
 RUN dpkg -i downloads/JLink_Linux_V616i_x86_64.deb
 
 # Free RTOS
+ENV RTOS_PATH=/opt/RTOS
 RUN wget http://interactive.freertos.org/attachments/token/r6d5gt3998niuc4/?name=Posix_GCC_Simulator_6.0.4.zip -O downloads/Posix_GCC_Simulator_6.0.4.zip
-RUN unzip downloads/Posix_GCC_Simulator_6.0.4.zip -d /usr/local
+RUN unzip downloads/Posix_GCC_Simulator_6.0.4.zip -d $RTOS_PATH
+ENV RTOS_PATH=/opt/RTOS/Posix_GCC_Simulator/FreeRTOS_Posix
 #Fix an error in makefile
-RUN sed -i "/	gcc -pthread -lrt -o\"FreeRTOS_Posix\" \$(OBJS) \$(USER_OBJS) \$(LIBS)/c\	gcc -pthread -o\"FreeRTOS_Posix\" \$(OBJS) \$(USER_OBJS) \io$(LIBS) -lrt" /usr/local/Posix_GCC_Simulator/FreeRTOS_Posix/Release/makefile
+RUN sed -i "/	gcc -pthread -lrt -o\"FreeRTOS_Posix\" \$(OBJS) \$(USER_OBJS) \$(LIBS)/c\	gcc -pthread -o\"FreeRTOS_Posix\" \$(OBJS) \$(USER_OBJS) \$(LIBS) -lrt" $RTOS_PATH/Release/makefile

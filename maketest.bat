@@ -1,0 +1,1 @@
+docker-compose run nrf make test badge_03v6 run
