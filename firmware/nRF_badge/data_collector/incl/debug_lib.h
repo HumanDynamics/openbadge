@@ -19,8 +19,7 @@
 
 #ifdef DEBUG_ENABLE
 
-#include "uart_lib.h"
-uart_instance_t* p_debug_uart_instance; /**< Pointer to an initialized uart_instance used for the uart_printf operation. */
+#include "stdint.h"
 
 
 /**
@@ -35,11 +34,10 @@ void debug_init(void);
  * @brief Function for logging debug messages.
  *
  * @details This function logs messages over UART. The module must be initialized before using this function.
+ *			The function internally uses the tx-buffer of the uart_instance and generates the formatted message via vsnprintf.
  *
- * @note Although it is a macro, it can be used like a normal function
  */
- 
-#define debug_log(args...)  uart_printf(p_debug_uart_instance, args)
+void debug_log( const char* format, ...); 
 
 /**
  * @brief Dump auxiliary byte buffer to the debug trace.

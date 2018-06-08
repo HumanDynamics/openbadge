@@ -306,7 +306,7 @@ bool flash_selftest(void) {
 	
 	
 //******************** Test write a word *************************	
-	#define FLASH_TEST_ADDRESS (flash_get_page_size_words()*flash_get_page_number())
+	#define FLASH_TEST_ADDRESS 0 //(flash_get_page_size_words()*flash_get_page_number())
 	uint32_t write_word = 0x1234ABCD;	// Should be != 0xFFFFFFFF --> next test will assume this!
 	
 	ret = flash_store_bkgnd(FLASH_TEST_ADDRESS, &write_word, 1);

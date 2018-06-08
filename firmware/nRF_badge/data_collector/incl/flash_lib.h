@@ -23,7 +23,8 @@
 
 
 #include <stdbool.h>
-#include "sdk_common.h"	// Needed for the definition of ret_code_t and the error-codes
+//#include "sdk_common.h"	// Needed for the definition of ret_code_t and the error-codes
+#include "sdk_errors.h"		// Needed for the definition of ret_code_t and the error-codes
 
 
 // TODO: define this by the linker script with enough space for new program code!

@@ -14,7 +14,7 @@
  */
  
 #include <stdbool.h>
-#include "sdk_common.h"	// Needed for the definition of ret_code_t and the error-codes
+#include "sdk_errors.h"	// Needed for the definition of ret_code_t and the error-codes
  
  
 /**@brief The different EEPROM operations. These operations will be used to set the peripheral busy or not. */
