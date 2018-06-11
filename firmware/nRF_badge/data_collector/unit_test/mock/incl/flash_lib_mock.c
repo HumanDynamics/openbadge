@@ -10,7 +10,7 @@
 
 
 #define FLASH_PAGE_SIZE_WORDS	256						/**< Number of words in one page (nrf51: 256, nrf52: 1024) */
-#define	FLASH_FILE_PATH			"mock/incl/FLASH.txt"	/**< Path to the flash file */
+#define	FLASH_FILE_PATH			"../mock/incl/_build/FLASH.txt"	/**< Path to the flash file, relative to build directory */
 
 
 
@@ -74,7 +74,7 @@ ret_code_t flash_init(void) {
 	
 	
 	
-	debug_log("Flash initialized\n");
+	//debug_log("Flash initialized\n");
 	return NRF_SUCCESS;
 }
 

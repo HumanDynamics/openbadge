@@ -13,6 +13,8 @@
 # but shouldn't modify.
 
 
+#GTest Assert/Expect: https://github.com/google/googletest/blob/master/googletest/docs/Primer.md or http://cheezyworld.com/wp-content/uploads/2010/12/PlainGoogleQuickTestReferenceGuide1.pdf
+
 
 
 
@@ -26,7 +28,9 @@ TEST_DIR = tests
 MOCK_DIR = mock
 
 # Where the builded files will be stored to.
-BUILD_DIRECTORY = _build
+BUILD_DIR = _build
+
+LCOV_DIR = $(BUILD_DIR)/LCOV
 
 # Points to the root of Google Test, relative to where this file is.
 # Remember to tweak this if you move this file.
@@ -38,6 +42,7 @@ NO_ECHO := @
 # All tests produced by this Makefile.  Remember to add new tests you
 # created to the list.
 TESTS = sample1_unittest \
+		eeprom_lib_mock_unittest \
 
 FIRMWARE_SRCS = $(FIRMWARE_DIR)/incl/sample1.c \
 #$(FIRMWARE_DIR)/incl/
@@ -98,13 +103,17 @@ GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
 help:
 	@echo
 	@echo "The following targets are available:"
-	@echo "  - Boards/options:  NRF51DK   badge_03   badge_03_noDebug"
+	@echo "  - Compile options: NRF51DK   badge_03   badge_03_noDebug"
 	@echo "                     badge_03v2_rigado   badge_03v2_dynastream"
 	@echo "                     badge_03v2_rigado_noDebug	badge_03v2_rigado_tester"
 	@echo "                     badge_03v4	 badge_03v4_noDebug   badge_03v4_tester"
 	@echo "                     badge_03v6	 badge_03v6_noDebug   badge_03v6_tester"
-	@echo "  - Actions:         flashUnlock  flashErase  flashS130  flashAPP"
 	@echo "  - Info:            help  helpDetailed"
+	@echo
+	@echo "  - Run tests (after compilation):"
+	@echo "                     ${RUN_TESTS} run_all_tests"
+	@echo 
+	@echo "  - LCOV:            Enable with LCOV=TRUE as make parameter (for compiling and running tests)"
 	@echo
 
 helpDetailed:
@@ -127,11 +136,6 @@ helpDetailed:
 	@echo "   - badge_03v6_noDebug: compile for Badge 03v6 board, UART disabled"
 	@echo "   - badge_03v6_tester:  compile for Badge 03v6 board, UART disabled"
 	@echo " -----"
-	@echo "   - flashUnlock:        set flags required to enable erasing/programming of flash"
-	@echo "                           (only required for brand new NRF51 chips)"
-	@echo "   - flashErase:         erase all flash (including softdevice)"
-	@echo "   - flashS130:          flash S130 (BLE simultaneous central/peripheral) softdevice"
-	@echo "   - flashAPP:           flash the badge firmware (after the softdevice)"
 	@echo
 
 
@@ -181,7 +185,6 @@ badge_03v2_rigado_noDebug: CFLAGS += -UDEBUG_LOG_ENABLE
 badge_03v4_noDebug: CFLAGS += -UDEBUG_LOG_ENABLE
 badge_03v6_noDebug: CFLAGS += -UDEBUG_LOG_ENABLE
 
-#CFLAGS += --std=gnu99
 CFLAGS += -Wall -Werror -O3
 # keep every function in separate section. This will allow linker to dump unused functions
 CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing
@@ -194,26 +197,102 @@ CXXFLAGS += $(CFLAGS)
 
 
 
+#$(info LCOV=${LCOV}. To enable LCOV, call make with parameter LCOV=TRUE.)
+
 TESTS_OBJECTS = $(addsuffix .o, $(TESTS))
 TESTS_SRCS = $(addsuffix .cc, $(addprefix $(TEST_DIR)/, $(TESTS)))
-$(info $$(TESTS_OBJECTS) is [${TESTS_OBJECTS}])
-$(info $$(TESTS_SRCS) is [${TESTS_SRCS}])
+
 
 MOCK_SRCS = $(shell find $(MOCK_DIR) -name '*.c*')
 
 FIRMWARE_FILES = $(notdir $(FIRMWARE_SRCS))
 FIRMWARE_OBJECTS += $(FIRMWARE_FILES:.c=.o)
-$(info $$(FIRMWARE_OBJECTS) is [${FIRMWARE_OBJECTS}])
+
+
+RUN_TESTS = $(addprefix run_, $(TESTS))
 
 
 
 
-
-all : $(TESTS)
+all : print_lcov_help $(TESTS)
+	
 
 clean :
-	rm -f $(TESTS) gtest.a gtest_main.a *.o
+	$(NO_ECHO)rm -f $(addprefix $(BUILD_DIR)/, $(addprefix run_, $(TESTS))) gtest.a gtest_main.a *.o *.gcda *.gcno *.gcov *.info
+	$(NO_ECHO)rm -f -r $(BUILD_DIR)
+	$(NO_ECHO)mkdir $(BUILD_DIR)
+	$(NO_ECHO)rm -f -r $(LCOV_DIR)
+	$(NO_ECHO)mkdir $(LCOV_DIR)
 
+	
+# a command to clear after build and enter build-directory
+clean_after_build :
+	$(NO_ECHO)rm -f gtest.a gtest_main.a *.o 
+	@echo "Build done. Now you can run tests with \"make [${RUN_TESTS}]\" or \"make run_all_tests\""
+	
+
+
+
+# Target for running all unit tests
+run_all_tests : print_lcov_help $(RUN_TESTS)
+
+
+
+# Target for running one specific unit test
+#https://stackoverflow.com/questions/5377297/how-to-manually-call-another-target-from-a-make-target/5378242?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
+THIS_FILE := $(lastword $(MAKEFILE_LIST))
+
+$(RUN_TESTS) :
+ifeq ($(LCOV), TRUE) 
+	$(NO_ECHO)cp -f $(LCOV_DIR)/*.gcno .
+endif
+	@echo 
+	@echo ====================================================================
+	@echo Run test: $@
+	@echo ====================================================================
+	$(NO_ECHO)(cd $(BUILD_DIR)/ ;	./$@)
+	@echo ====================================================================
+ifeq ($(LCOV), TRUE) 
+# Call the lcov_genhtml-target with parameter LCOV_DIR_CUR
+	$(NO_ECHO)$(MAKE) -f $(THIS_FILE) lcov_genhtml LCOV_DIR_CUR=$(LCOV_DIR)/$@ > /dev/null
+else
+	$(NO_ECHO)rm -f *.gcda
+endif
+
+
+
+print_lcov_help:
+ifeq ($(LCOV), TRUE)
+else
+	@echo To enable LCOV, call make with parameter LCOV=TRUE.
+endif
+	
+#Adding coverage information flags to compiler	
+lcov_flags :
+ifeq ($(LCOV), TRUE)
+	@echo Compiling with lcov/gcov flags..
+	$(eval CXXFLAGS += -fprofile-arcs -ftest-coverage)
+endif
+
+# Generating the 
+lcov_genhtml :
+ifeq ($(LCOV), TRUE)
+	@echo Generating LCOV HTML file...
+	gcov $(TESTS) 2> /dev/null
+	rm -f -r $(LCOV_DIR_CUR)
+	mkdir $(LCOV_DIR_CUR)
+	lcov -c -d . -o $(LCOV_DIR_CUR)/coverage.info 2> /dev/null
+	lcov --remove $(LCOV_DIR_CUR)/coverage.info "/usr*" "googletest*" "_build*" -o $(LCOV_DIR_CUR)/coverage.info > /dev/null
+	genhtml $(LCOV_DIR_CUR)/coverage.info -o $(LCOV_DIR_CUR) > /dev/null
+# Delete the gcda and gcno data again
+	rm -f *.gcda *.gcno
+else
+#	@echo "Try to generate LCOV-HTML but LCOV is not enabled!"
+endif	
+
+	
+	
+	
 # Builds gtest.a and gtest_main.a.
 
 # Usually you shouldn't tweak such internal variables, indicated by a
@@ -241,7 +320,6 @@ gtest_main.a : gtest-all.o gtest_main.o
 	
 	
 	
-	
 
 	
 	
@@ -249,23 +327,25 @@ gtest_main.a : gtest-all.o gtest_main.o
 	
 #==============================  Board option rules  ===================================
 
-NRF51DK: clean all
+compile: clean lcov_flags all clean_after_build
 
-badge_03: clean all
-badge_03_noDebug: clean all
+NRF51DK: compile
 
-badge_03v2_rigado: clean all
-badge_03v2_rigado_noDebug: clean all
-badge_03v2_rigado_tester: clean all
-badge_03v2_dynastream: clean all
+badge_03: compile
+badge_03_noDebug: compile
 
-badge_03v4: clean all
-badge_03v4_noDebug: clean all
-badge_03v4_tester: clean all
+badge_03v2_rigado: compile
+badge_03v2_rigado_noDebug: compile
+badge_03v2_rigado_tester: compile
+badge_03v2_dynastream: compile
 
-badge_03v6: clean all
-badge_03v6_noDebug: clean all
-badge_03v6_tester: clean all
+badge_03v4: compile
+badge_03v4_noDebug: compile
+badge_03v4_tester: compile
+
+badge_03v6: compile
+badge_03v6_noDebug: compile
+badge_03v6_tester: compile
 
 
 
@@ -285,5 +365,8 @@ $(FIRMWARE_OBJECTS): $(TESTS_OBJECTS)
 	$(NO_ECHO)$(CXX) $(CPPFLAGS) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) $(CXXFLAGS) -c $(FIRMWARE_SRCS)
 
 $(TESTS): $(FIRMWARE_OBJECTS) gtest_main.a
-	$(NO_ECHO)$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(MOCK_SRCS) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) -lpthread $(TESTS_OBJECTS) $(FIRMWARE_OBJECTS) gtest_main.a -o $(BUILD_DIRECTORY)/$@
-	$(NO_ECHO)rm -f $(TESTS) gtest.a gtest_main.a *.o
+	$(NO_ECHO)$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(MOCK_SRCS) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) -lpthread $@.o $(FIRMWARE_OBJECTS) gtest_main.a -o $(BUILD_DIR)/run_$@
+# Move all the gcov (gcno) files to another dir
+ifeq ($(LCOV), TRUE)
+	$(NO_ECHO)mv *.gcno $(LCOV_DIR)
+endif

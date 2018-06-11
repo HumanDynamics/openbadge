@@ -9,7 +9,7 @@
 
 
 #define EEPROM_SIZE				(1024*256)				/**< Size of the external EEPROM in bytes */
-#define	EEPROM_FILE_PATH		"mock/incl/EEPROM.txt"	/**< Path to the EEPROM file */
+#define	EEPROM_FILE_PATH		"../mock/incl/_build/EEPROM.txt"	/**< Path to the EEPROM file, relative to build directory */
 
 
 
@@ -23,6 +23,8 @@ static volatile eeprom_operation_t eeprom_operation = EEPROM_NO_OPERATION; /**< 
 
 
 
+static uint8_t init_done = 0;
+
 /**@brief   Function for initializing the in the simulated EEPROM module.
  *
  * @details If there is no EEPROM file there this function creates one and initializes the file with 0xFF.
@@ -32,6 +34,8 @@ static volatile eeprom_operation_t eeprom_operation = EEPROM_NO_OPERATION; /**< 
  * @retval  NRF_ERROR_INTERNAL  If there was an error while creating, writing or reading the file.
  */
 ret_code_t eeprom_init(void) {
+	
+	init_done = 1;
 	
 	// https://stackoverflow.com/questions/30133210/check-if-file-is-empty-or-not-in-c?rq=1&utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
 	struct stat fileStat;
@@ -66,7 +70,7 @@ ret_code_t eeprom_init(void) {
 	
 	
 	
-	debug_log("EEPROM initialized\n");	
+	//debug_log("EEPROM initialized\n");	
 	return  NRF_SUCCESS;
 }
 
@@ -82,6 +86,15 @@ ret_code_t eeprom_init(void) {
  * @retval  NRF_ERROR_INVALID_PARAM  	If the specified parameters are bad.
  */
 ret_code_t eeprom_store_bkgnd(uint32_t address, uint8_t* tx_data, uint32_t length_tx_data) {
+	
+	
+	//return NRF_ERROR_INTERNAL;
+	
+	if(init_done == 0) {
+		return NRF_ERROR_INTERNAL;
+	}
+		
+	
 	
 	// Check if the specified address is valid. The EEPROM has 256kByte of memory.
 	if((address + length_tx_data > (EEPROM_SIZE)))
