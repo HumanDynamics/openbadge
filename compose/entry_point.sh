@@ -2,7 +2,7 @@
 set -e
 if [ "$1" = 'make' ]; then
 	if [ "$2" = 'test' ]; then
-		cd /app/firmware/nRF_badge/data_collector/test
+		cd /app/firmware/nRF_badge/data_collector/unit_test
 		exec "$@"
 	else
 		cd /app/firmware/nRF_badge/data_collector

@@ -115,6 +115,9 @@ help:
 	@echo 
 	@echo "  - LCOV:            Enable with LCOV=TRUE as make parameter (for compiling and running tests)"
 	@echo
+	@echo "  - LCOV remove zero called files:"
+	@echo "                     Enable with LCOV_RM_ZERO=TRUE as make parameter (for running tests) LCOV=TRUE is prerequisite"
+	@echo
 
 helpDetailed:
 	@echo
@@ -213,6 +216,8 @@ RUN_TESTS = $(addprefix run_, $(TESTS))
 
 
 
+test : clean
+
 
 all : print_lcov_help $(TESTS)
 	
@@ -253,10 +258,18 @@ endif
 	$(NO_ECHO)(cd $(BUILD_DIR)/ ;	./$@)
 	@echo ====================================================================
 ifeq ($(LCOV), TRUE) 
+ifeq ($(LCOV_RM_ZERO), TRUE) 	
+	@echo Creating LCOV data and removing zero called files...
+else 
+	@echo Creating LCOV data with zero called files...
+endif
 # Call the lcov_genhtml-target with parameter LCOV_DIR_CUR
 	$(NO_ECHO)$(MAKE) -f $(THIS_FILE) lcov_genhtml LCOV_DIR_CUR=$(LCOV_DIR)/$@ > /dev/null
 else
 	$(NO_ECHO)rm -f *.gcda
+ifeq ($(LCOV_RM_ZERO), TRUE) 	
+	@echo Enable LCOV data generation with LCOV=TRUE, to remove zero called files with LCOV_RM_ZERO=TRUE!
+endif
 endif
 
 
@@ -265,6 +278,10 @@ print_lcov_help:
 ifeq ($(LCOV), TRUE)
 else
 	@echo To enable LCOV, call make with parameter LCOV=TRUE.
+endif
+ifeq ($(LCOV_RM_ZERO), TRUE) 	
+else
+	@echo To remove zero called files in LCOV, call make with parameter LCOV_RM_ZERO=TRUE.
 endif
 	
 #Adding coverage information flags to compiler	
@@ -283,14 +300,37 @@ ifeq ($(LCOV), TRUE)
 	mkdir $(LCOV_DIR_CUR)
 	lcov -c -d . -o $(LCOV_DIR_CUR)/coverage.info 2> /dev/null
 	lcov --remove $(LCOV_DIR_CUR)/coverage.info "/usr*" "googletest*" "_build*" -o $(LCOV_DIR_CUR)/coverage.info > /dev/null
+# Call the lcov_remove_zero_called-target with parameter LCOV_DIR_CUR
+	$(NO_ECHO)$(MAKE) -f $(THIS_FILE) lcov_remove_zero_called LCOV_DIR_CUR=$(LCOV_DIR_CUR) > /dev/null
 	genhtml $(LCOV_DIR_CUR)/coverage.info -o $(LCOV_DIR_CUR) > /dev/null
 # Delete the gcda and gcno data again
 	rm -f *.gcda *.gcno
-else
-#	@echo "Try to generate LCOV-HTML but LCOV is not enabled!"
 endif	
 
-	
+
+
+# https://github.com/s-oravec/quilt/wiki/LCOV-Trace-File
+lcov_remove_zero_called :
+ifeq ($(LCOV), TRUE)
+ifeq ($(LCOV_RM_ZERO), TRUE)
+	@echo Removing zero called files...
+	$(NO_ECHO)cp $(LCOV_DIR_CUR)/coverage.info $(LCOV_DIR_CUR)/coverage.info.tmp
+	@while read line; \
+	do \
+		case "$$line" in \
+		*SF:*) \
+			cur_src_file="$${line#*:}";;\
+		*FNH:0*) \
+			echo "$$cur_src_file";\
+			lcov --remove $(LCOV_DIR_CUR)/coverage.info "$$cur_src_file" -o $(LCOV_DIR_CUR)/coverage.info;; \
+		esac \
+	done <$(LCOV_DIR_CUR)/coverage.info.tmp
+	$(NO_ECHO)rm -f $(LCOV_DIR_CUR)/coverage.info.tmp
+endif
+endif	
+
+#	lcov --remove $(LCOV_DIR_CUR)/coverage.info "$$cur_src_file" -o $(LCOV_DIR_CUR)/coverage.info;; \
+# 	remove_src_files=expr "$$remove_src_files $$cur_src_file";\
 	
 	
 # Builds gtest.a and gtest_main.a.

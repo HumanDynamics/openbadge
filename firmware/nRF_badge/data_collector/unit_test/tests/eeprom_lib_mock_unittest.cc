@@ -7,7 +7,6 @@
 
 #define EEPROM_SIZE_TEST	(256*1024)
 
-
 namespace {
 
 
@@ -26,7 +25,7 @@ TEST(EEPROMInitTest, SizeCheck) {
 
 TEST(EEPROMStoreTest, ReturnValues) {
 	uint8_t data[10];	
-	ret_code_t ret = eeprom_store_bkgnd(0, data, 10);
+	ret_code_t ret = eeprom_store(0, data, 10);
 	EXPECT_EQ(ret, NRF_SUCCESS);
 	
 	ret = eeprom_store_bkgnd(0, data, EEPROM_SIZE_TEST+1);
