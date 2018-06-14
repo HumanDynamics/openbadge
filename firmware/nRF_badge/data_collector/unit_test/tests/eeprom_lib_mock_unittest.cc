@@ -21,32 +21,65 @@ TEST(EEPROMInitTest, SizeCheck) {
 	ASSERT_EQ(size, EEPROM_SIZE_TEST);
 }
 
-
-
-TEST(EEPROMStoreTest, ReturnValues) {
-	uint8_t data[10];	
-	ret_code_t ret = eeprom_store(0, data, 10);
+TEST(EEPROMStoreTest, StartOfEEPROMTest) {
+	char store_data[] = "Test data!";
+	int len = sizeof(store_data);
+	ret_code_t ret = eeprom_store(0, (uint8_t*) store_data, len);
 	EXPECT_EQ(ret, NRF_SUCCESS);
 	
-	ret = eeprom_store_bkgnd(0, data, EEPROM_SIZE_TEST+1);
-	EXPECT_EQ(ret, NRF_ERROR_INVALID_PARAM);
+	char read_data[len];
+	ret = eeprom_read(0, (uint8_t*) read_data, len);
+	EXPECT_EQ(ret, NRF_SUCCESS);
+	EXPECT_STREQ(read_data, store_data);	
 }
 
 
 
 
+TEST(EEPROMStoreTest, EndOfEEPROMTest) {
+	char store_data[] = "Test data!";
+	int len = sizeof(store_data);
+	ret_code_t ret = eeprom_store(EEPROM_SIZE_TEST-len, (uint8_t*) store_data, len);
+	EXPECT_EQ(ret, NRF_SUCCESS);
+	
+	char read_data[len];
+	ret = eeprom_read(EEPROM_SIZE_TEST-len, (uint8_t*) read_data, len);
+	EXPECT_EQ(ret, NRF_SUCCESS);
+	EXPECT_STREQ(read_data, store_data);	
+}
+
+TEST(EEPROMStoreTest, StoreAllOfEEPROMTest) {
+	char store_data[EEPROM_SIZE_TEST];
+	int len = sizeof(store_data);
+	memset((uint8_t*) store_data, 0xAB, len);
+	
+	ret_code_t ret = eeprom_store(0, (uint8_t*) store_data, len);
+	EXPECT_EQ(ret, NRF_SUCCESS);
+	
+	char read_data[len];
+	ret = eeprom_read(0, (uint8_t*) read_data, len);
+	
+	EXPECT_EQ(ret, NRF_SUCCESS);
+	EXPECT_TRUE(memcmp(read_data, store_data, len) == 0);	
+}
+
+TEST(EEPROMAddressTest, FalseAddressTest) {
+	char store_data[20];
+	int len = sizeof(store_data);
+	memset((uint8_t*) store_data, 0xDE, len);
+	
+	ret_code_t ret = eeprom_store(EEPROM_SIZE_TEST-len+1, (uint8_t*) store_data, len);
+	EXPECT_EQ(ret, NRF_ERROR_INVALID_PARAM);
+	
+	char read_data[len];
+	ret = eeprom_read(EEPROM_SIZE_TEST-len+1, (uint8_t*) read_data, len);
+	EXPECT_EQ(ret, NRF_ERROR_INVALID_PARAM);
+}
+
+TEST(EEPROMOperationTest, NoOperationTest) {
+	eeprom_operation_t eeprom_operation = eeprom_get_operation();
+	EXPECT_EQ(eeprom_operation, EEPROM_NO_OPERATION);
+}
 
 
-};  // namespace
-
-// Step 3. Call RUN_ALL_TESTS() in main().
-//
-// We do this by linking in src/gtest_main.cc file, which consists of
-// a main() function which calls RUN_ALL_TESTS() for us.
-//
-// This runs all the tests you've defined, prints the result, and
-// returns 0 if successful, or 1 otherwise.
-//
-// Did you notice that we didn't register the tests?  The
-// RUN_ALL_TESTS() macro magically knows about all the tests we
-// defined.  Isn't this convenient?
+};  

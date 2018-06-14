@@ -13,7 +13,7 @@
 # but shouldn't modify.
 
 
-#GTest Assert/Expect: https://github.com/google/googletest/blob/master/googletest/docs/Primer.md or http://cheezyworld.com/wp-content/uploads/2010/12/PlainGoogleQuickTestReferenceGuide1.pdf
+#GTest Assert/Expect: https://github.com/google/googletest/blob/master/googletest/docs/primer.md or http://cheezyworld.com/wp-content/uploads/2010/12/PlainGoogleQuickTestReferenceGuide1.pdf
 
 
 
@@ -41,11 +41,12 @@ NO_ECHO := @
 
 # All tests produced by this Makefile.  Remember to add new tests you
 # created to the list.
-TESTS = sample1_unittest \
+TESTS = flash_lib_mock_unittest \
 		eeprom_lib_mock_unittest \
+				
+FIRMWARE_SRCS = 
+#$(FIRMWARE_DIR)/incl/sample1.c \
 
-FIRMWARE_SRCS = $(FIRMWARE_DIR)/incl/sample1.c \
-#$(FIRMWARE_DIR)/incl/
 
 
 
@@ -198,15 +199,18 @@ CFLAGS += -fno-builtin --short-enums
 CXXFLAGS += $(CFLAGS)
 
 
-
-
 #$(info LCOV=${LCOV}. To enable LCOV, call make with parameter LCOV=TRUE.)
 
 TESTS_OBJECTS = $(addsuffix .o, $(TESTS))
 TESTS_SRCS = $(addsuffix .cc, $(addprefix $(TEST_DIR)/, $(TESTS)))
 
 
-MOCK_SRCS = $(shell find $(MOCK_DIR) -name '*.c*')
+MOCK_SRCS += $(shell find $(MOCK_DIR) -name '*.c*')
+MOCK_FILES_C = $(notdir $(shell find $(MOCK_DIR) -name '*.c'))
+MOCK_FILES_CC = $(notdir $(shell find $(MOCK_DIR) -name '*.cc'))
+MOCK_OBJECTS += $(MOCK_FILES_C:.c=.o)
+MOCK_OBJECTS += $(MOCK_FILES_CC:.cc=.o)
+#$(info MOCK_OBJECTS=${MOCK_OBJECTS})
 
 FIRMWARE_FILES = $(notdir $(FIRMWARE_SRCS))
 FIRMWARE_OBJECTS += $(FIRMWARE_FILES:.c=.o)
@@ -389,24 +393,23 @@ badge_03v6_tester: compile
 
 
 
-
-
-
-
 	
 # Builds a sample test.  A test should link with either gtest.a or
 # gtest_main.a, depending on whether it defines its own main()
 # function.
 
-$(TESTS_OBJECTS):
-	$(NO_ECHO)$(CXX) $(CPPFLAGS) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) $(CXXFLAGS) -c $(TESTS_SRCS)
+$(MOCK_OBJECTS):
+	$(NO_ECHO)$(CXX) $(CPPFLAGS) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) $(CXXFLAGS) -c $(MOCK_SRCS)
 
-$(FIRMWARE_OBJECTS): $(TESTS_OBJECTS)
+$(FIRMWARE_OBJECTS):
 	$(NO_ECHO)$(CXX) $(CPPFLAGS) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) $(CXXFLAGS) -c $(FIRMWARE_SRCS)
 
-$(TESTS): $(FIRMWARE_OBJECTS) gtest_main.a
-	$(NO_ECHO)$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(MOCK_SRCS) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) -lpthread $@.o $(FIRMWARE_OBJECTS) gtest_main.a -o $(BUILD_DIR)/run_$@
-# Move all the gcov (gcno) files to another dir
+$(TESTS_OBJECTS): $(MOCK_OBJECTS) $(FIRMWARE_OBJECTS)
+	$(NO_ECHO)$(CXX) $(CPPFLAGS) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) $(CXXFLAGS) -c $(TESTS_SRCS)
+
+$(TESTS): $(TESTS_OBJECTS) gtest_main.a
+	$(NO_ECHO)$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) -lpthread $@.o $(FIRMWARE_OBJECTS) $(MOCK_OBJECTS) gtest_main.a -o $(BUILD_DIR)/run_$@
 ifeq ($(LCOV), TRUE)
-	$(NO_ECHO)mv *.gcno $(LCOV_DIR)
+# move .gcno files (only if exist) and don't raise an error
+	$(NO_ECHO)-mv *.gcno $(LCOV_DIR) 2>/dev/null || :
 endif

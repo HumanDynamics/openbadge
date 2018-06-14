@@ -2,15 +2,13 @@
 
 #include "debug_lib.h"
 
-#include "stdio.h"		// For reading and writing to file
-#include "sys/stat.h"	// For checking size of the file
+
 #include "string.h"		// For memset
 
 
 
 
 #define FLASH_PAGE_SIZE_WORDS	256						/**< Number of words in one page (nrf51: 256, nrf52: 1024) */
-#define	FLASH_FILE_PATH			"../mock/incl/_build/FLASH.txt"	/**< Path to the flash file, relative to build directory */
 
 
 
@@ -22,7 +20,6 @@ static uint32_t flash_words[FLASH_NUM_WORDS];	/**< Simulator of the internal fla
 
 
 
-static FILE* file_descriptor;											/**< File descriptor of the flash file */
 
 static volatile flash_operation_t flash_operation = FLASH_NO_OPERATION;	/**< The current flash operation ((in simulation it is actually not really used/set) */
 
@@ -34,44 +31,12 @@ static volatile flash_operation_t flash_operation = FLASH_NO_OPERATION;	/**< The
  *			
  *
  * @retval  NRF_SUCCESS    		If the module was successfully initialized.
- * @retval  NRF_ERROR_INTERNAL  If there was an error while creating, writing or reading the file.
  */
 ret_code_t flash_init(void) {
 	
 	
-	struct stat fileStat;
-	int ret_stat = stat(FLASH_FILE_PATH, &fileStat);
 	
-	// Check if FLASH-File does not exist or has the false size.
-	if(ret_stat != 0 || fileStat.st_size != FLASH_SIZE) {	
-		debug_log("FLASH file does not exist or has the false size. Try creating one..\n");
-		memset(flash_words, 0xFF, FLASH_SIZE);
-		file_descriptor= fopen(FLASH_FILE_PATH, "wb");
-		if(file_descriptor == NULL) {	// if we can not generate the file, return an error.
-			debug_log("Could not generate Flash-file: %s\n", FLASH_FILE_PATH);
-			return NRF_ERROR_INTERNAL;
-		}
-		fwrite(flash_words, sizeof(uint32_t), FLASH_NUM_WORDS, file_descriptor);
-		fclose(file_descriptor);
-	}
-	
-	// Read data in from the file
-	file_descriptor= fopen(FLASH_FILE_PATH, "rb");
-	if(file_descriptor == NULL) {	// if we can not generate the file, return an error.
-		debug_log("Could not read from Flash-file: %s\n", FLASH_FILE_PATH);
-		return NRF_ERROR_INTERNAL;
-	}
-	
-	size_t result = fread(flash_words, sizeof(uint32_t), FLASH_NUM_WORDS, file_descriptor);
-	
-	if(result != FLASH_NUM_WORDS) {
-		debug_log("Could not read %u words from Flash-file: %s\n", FLASH_NUM_WORDS, FLASH_FILE_PATH);
-		fclose(file_descriptor);
-		return NRF_ERROR_INTERNAL;
-	}
-	fclose(file_descriptor);
-	
-	
+	memset(flash_words, 0xFF, FLASH_SIZE);
 	
 	
 	//debug_log("Flash initialized\n");
@@ -86,7 +51,7 @@ ret_code_t flash_init(void) {
  *			
  *
  * @retval  NRF_SUCCESS    				If the erased the pages successfully.
- * @retval  NRF_ERROR_BUSY  			If there was an error with opening the file or there is already an ongoing Flash operation.
+ * @retval  NRF_ERROR_BUSY  			If there is already an ongoing Flash operation.
  * @retval  NRF_ERROR_INVALID_PARAM  	If the specified parameters are bad.
  */
 ret_code_t flash_erase_bkgnd(uint32_t page_num, uint16_t num_pages) {
@@ -112,18 +77,6 @@ ret_code_t flash_erase_bkgnd(uint32_t page_num, uint16_t num_pages) {
 	memset(&flash_words[start_word_address], 0xFF, number_of_words*sizeof(uint32_t));
 	
 	
-	// Write the changes to file
-	if((file_descriptor = fopen(FLASH_FILE_PATH, "r+b")) == NULL) //open the file for updating
-		return NRF_ERROR_BUSY;	// TODO, probably other error code?
-		
-	fseek(file_descriptor, start_word_address*(sizeof(uint32_t)), SEEK_SET);	//set the stream pointer address bytes from the start.
-	
-	fwrite(&flash_words[start_word_address], sizeof(uint32_t), number_of_words, file_descriptor);
-	
-	fclose(file_descriptor);
-	
-	
-	
 	flash_operation = (flash_operation_t) (flash_operation & ~FLASH_ERASE_OPERATION);
 	
 	return NRF_SUCCESS;
@@ -133,8 +86,9 @@ ret_code_t flash_erase_bkgnd(uint32_t page_num, uint16_t num_pages) {
 /**@brief   Function for erasing a page in the simulated flash (it is actually the same as flash_erase_bkgnd()).
  *
  * @retval  NRF_SUCCESS    				If the erased the pages successfully.
- * @retval  NRF_ERROR_BUSY  			If there was an error with opening the file or there is already an ongoing Flash operation.
+ * @retval  NRF_ERROR_BUSY  			If there is already an ongoing Flash operation.
  * @retval  NRF_ERROR_INVALID_PARAM  	If the specified parameters are bad.
+ * @retval  NRF_ERROR_TIMEOUT  			If the operation timed out (should not happen).
  */
 ret_code_t flash_erase(uint32_t page_num, uint16_t num_pages) {
 	ret_code_t ret = flash_erase_bkgnd(page_num, num_pages);
@@ -165,7 +119,7 @@ ret_code_t flash_erase(uint32_t page_num, uint16_t num_pages) {
  *			
  *
  * @retval  NRF_SUCCESS    				If the store operation was successfully.
- * @retval  NRF_ERROR_BUSY  			If there was an error with opening the file or there is already an ongoing Flash operation.
+ * @retval  NRF_ERROR_BUSY  			If there is already an ongoing Flash operation.
  * @retval  NRF_ERROR_INVALID_PARAM  	If the specified parameters are bad.
  */
 ret_code_t flash_store_bkgnd(uint32_t word_num, const uint32_t* p_words, uint16_t length_words) {	
@@ -185,7 +139,7 @@ ret_code_t flash_store_bkgnd(uint32_t word_num, const uint32_t* p_words, uint16_
 
 	flash_operation = (flash_operation_t) (flash_operation | FLASH_STORE_OPERATION);
 	// Reset the Error flag (if it exists)
-	flash_operation = (flash_operation_t) (flash_operation % ~FLASH_STORE_ERROR);
+	flash_operation = (flash_operation_t) (flash_operation & ~FLASH_STORE_ERROR);
 	
 	
 	uint32_t start_word_address = word_num;
@@ -195,20 +149,6 @@ ret_code_t flash_store_bkgnd(uint32_t word_num, const uint32_t* p_words, uint16_
 	for(uint16_t i = 0; i < number_of_words; i++) {
 		flash_words[start_word_address + i] = flash_words[start_word_address + i] & p_words[i];
 	}
-	
-	// Write the changes to file
-	if((file_descriptor = fopen(FLASH_FILE_PATH, "r+b")) == NULL) //open the file for updating
-		return NRF_ERROR_BUSY;	// TODO, probably other error code?
-		
-	fseek(file_descriptor, start_word_address*(sizeof(uint32_t)), SEEK_SET);	//set the stream pointer address bytes from the start.
-	
-	fwrite(&flash_words[start_word_address], sizeof(uint32_t), number_of_words, file_descriptor);
-	
-	fclose(file_descriptor);
-	
-	
-	
-	
 	
 	// Reset the store operation
 	flash_operation = (flash_operation_t) (flash_operation & ~FLASH_STORE_OPERATION);	
@@ -220,8 +160,9 @@ ret_code_t flash_store_bkgnd(uint32_t word_num, const uint32_t* p_words, uint16_
 /**@brief   Function for storing words to simulated flash (it is actually the same as flash_store_bkgnd()).
  *
  * @retval  NRF_SUCCESS    				If the store operation was successfully.
- * @retval  NRF_ERROR_BUSY  			If there was an error with opening the file or there is already an ongoing Flash operation.
+ * @retval  NRF_ERROR_BUSY  			If there is already an ongoing Flash operation.
  * @retval  NRF_ERROR_INVALID_PARAM  	If the specified parameters are bad.
+ * @retval  NRF_ERROR_TIMEOUT  			If the operation timed out (should not happen).
  */
 ret_code_t flash_store(uint32_t word_num, const uint32_t* p_words, uint16_t length_words) {
 	// Call the non-blocking flash store function.
@@ -280,10 +221,3 @@ uint32_t flash_get_page_number(void) {
 	return NUM_PAGES;
 }
 
-
-
-
-bool flash_selftest(void) {	
-	
-	return 1;
-}
