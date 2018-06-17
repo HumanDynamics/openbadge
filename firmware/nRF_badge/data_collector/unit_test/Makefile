@@ -43,9 +43,10 @@ NO_ECHO := @
 # created to the list.
 TESTS = flash_lib_mock_unittest \
 		eeprom_lib_mock_unittest \
+		storage1_lib_unittest \
 				
-FIRMWARE_SRCS = 
-#$(FIRMWARE_DIR)/incl/sample1.c \
+FIRMWARE_SRCS = $(FIRMWARE_DIR)/incl/storage1_lib.c \
+
 
 
 
@@ -189,10 +190,14 @@ badge_03v2_rigado_noDebug: CFLAGS += -UDEBUG_LOG_ENABLE
 badge_03v4_noDebug: CFLAGS += -UDEBUG_LOG_ENABLE
 badge_03v6_noDebug: CFLAGS += -UDEBUG_LOG_ENABLE
 
-CFLAGS += -Wall -Werror -O3
+CFLAGS += -DSOFTDEVICE_PRESENT
+CFLAGS += -DNRF51
+CFLAGS += -DNRF51822	
+
+CFLAGS += -Wall -Werror
 # keep every function in separate section. This will allow linker to dump unused functions
-CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing
-CFLAGS += -fno-builtin --short-enums
+#CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing
+#CFLAGS += -fno-builtin --short-enums
 
 
 # Add the CFLAGS to the CXXFLAGS
@@ -245,12 +250,12 @@ clean_after_build :
 # Target for running all unit tests
 run_all_tests : print_lcov_help $(RUN_TESTS)
 
+# Make the run_..-targets Phony.
+.PHONY: $(RUN_TESTS)
 
-
-# Target for running one specific unit test
-#https://stackoverflow.com/questions/5377297/how-to-manually-call-another-target-from-a-make-target/5378242?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
 THIS_FILE := $(lastword $(MAKEFILE_LIST))
 
+# Target for running one specific unit test
 $(RUN_TESTS) :
 ifeq ($(LCOV), TRUE) 
 	$(NO_ECHO)cp -f $(LCOV_DIR)/*.gcno .
@@ -267,6 +272,7 @@ ifeq ($(LCOV_RM_ZERO), TRUE)
 else 
 	@echo Creating LCOV data with zero called files...
 endif
+# https://stackoverflow.com/questions/5377297/how-to-manually-call-another-target-from-a-make-target/5378242?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
 # Call the lcov_genhtml-target with parameter LCOV_DIR_CUR
 	$(NO_ECHO)$(MAKE) -f $(THIS_FILE) lcov_genhtml LCOV_DIR_CUR=$(LCOV_DIR)/$@ > /dev/null
 else
