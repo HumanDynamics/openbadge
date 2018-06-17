@@ -17,7 +17,7 @@ extern uart_instance_t uart_instance;
 #define CMD_WRITE	0b00000010	/**< Write to memory array command code */
 #define CMD_READ	0b00000011	/**< Read from memory array command code */
 
-#define EEPROM_SIZE	(1024*256)	/**< Size of the external EEPROM in bytes */
+
 
 
 static ret_code_t eeprom_read_status(uint8_t* eeprom_status);
@@ -201,6 +201,9 @@ ret_code_t eeprom_store_bkgnd(uint32_t address, uint8_t* tx_data, uint32_t lengt
 		return NRF_ERROR_INVALID_PARAM;
 	
 	
+	if(tx_data == NULL)
+		return NRF_ERROR_INVALID_PARAM;
+	
 	// Check if the EEPROM has already an ongoing operation.
 	if(eeprom_get_operation() != EEPROM_NO_OPERATION) {
 		return NRF_ERROR_BUSY;
@@ -336,10 +339,15 @@ ret_code_t eeprom_read_bkgnd(uint32_t address, uint8_t* rx_data, uint32_t length
 	if((address + length_rx_data > (EEPROM_SIZE) ) ||  !nrf_drv_is_in_RAM(rx_data))
 		return NRF_ERROR_INVALID_PARAM;
 
+	if(rx_data == NULL)
+		return NRF_ERROR_INVALID_PARAM;
+	
 	// Check if the EEPROM has already an ongoing operation.
 	if(eeprom_get_operation() != EEPROM_NO_OPERATION) {
 		return NRF_ERROR_BUSY;
 	}
+	
+	
 	
 	// Set the eeprom operation to read
 	eeprom_operation = EEPROM_READ_OPERATION;
@@ -537,7 +545,7 @@ bool eeprom_selftest(void) {
 		return 0;
 	}
 	
-	debug_log("EEPROM Test passed!");
+	debug_log("EEPROM test successful!!\n\r");	
 	
 	
 	return 1;

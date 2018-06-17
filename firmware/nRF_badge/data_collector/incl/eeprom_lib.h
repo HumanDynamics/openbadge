@@ -15,7 +15,9 @@
  
 #include <stdbool.h>
 #include "sdk_errors.h"	// Needed for the definition of ret_code_t and the error-codes
- 
+
+
+#define EEPROM_SIZE	(1024*256)	/**< Size of the external EEPROM in bytes */
  
 /**@brief The different EEPROM operations. These operations will be used to set the peripheral busy or not. */
  typedef enum {

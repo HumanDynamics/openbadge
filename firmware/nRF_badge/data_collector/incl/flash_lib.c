@@ -3,9 +3,6 @@
 
 #include "fstorage.h"
 
-#include "fstorage_internal_defs.h" // Needs to be included here, because of the "static/private" function declaration of fs_flash_page_end_addr(). 
-									// Otherwise there will be a warning at compilation. Furthermore the function has to be called at least once (through FS_PAGE_END_ADDR), 
-									// which is done in flash_get_page_size()
 
 #include "nrf_drv_common.h"			// Needed for data in RAM check
 
@@ -41,10 +38,12 @@ static void fs_evt_handler(fs_evt_t const * const evt, fs_ret_t result)
 	
 		// Set the Error of the specific operation
 		if(flash_get_operation() & FLASH_ERASE_OPERATION) {
+			flash_operation &= ~FLASH_ERASE_OPERATION;
 			flash_operation |= FLASH_ERASE_ERROR;
 		}
 		
 		if(flash_get_operation() & FLASH_STORE_OPERATION) {
+			flash_operation &= ~FLASH_STORE_OPERATION;		
 			flash_operation |= FLASH_STORE_ERROR;
 		}
 	}
@@ -57,7 +56,7 @@ static void fs_evt_handler(fs_evt_t const * const evt, fs_ret_t result)
 FS_REGISTER_CFG(fs_config_t fs_config) =
 {
     .callback  = fs_evt_handler, /**< Function for event callbacks. */
-    .num_pages = NUM_PAGES,      /**< Number of physical flash pages required. */
+    .num_pages = FLASH_NUM_PAGES,      /**< Number of physical flash pages required. */
     .priority  = 0xFE            /**< Priority for flash usage. */
 };
 
@@ -92,7 +91,7 @@ ret_code_t flash_init(void) {
  */
 static uint32_t const * address_of_page(uint16_t page_num)
 {
-    return fs_config.p_start_addr + (page_num * FS_PAGE_SIZE_WORDS);
+    return fs_config.p_start_addr + (page_num * FLASH_PAGE_SIZE_WORDS);
 }
 
 
@@ -243,7 +242,7 @@ ret_code_t flash_read(uint32_t word_num, uint32_t* p_words, uint16_t length_word
 	if(p_words == NULL)
 		return NRF_ERROR_INVALID_PARAM;
 	
-	if(word_num + length_words > (FS_PAGE_SIZE_WORDS*NUM_PAGES))
+	if(word_num + length_words > (FLASH_PAGE_SIZE_WORDS*FLASH_NUM_PAGES))
 		return NRF_ERROR_INVALID_PARAM;
 	
 	for(uint32_t i = 0; i < length_words; i++) {
@@ -254,16 +253,12 @@ ret_code_t flash_read(uint32_t word_num, uint32_t* p_words, uint16_t length_word
 
 
 uint32_t flash_get_page_size_words(void) {
-	// This has to be done, otherwise there will be a warning at compile time that the fs_flash_page_end_addr()-function is unused!
-	// This call is done in flash_get_page_size(), because flash_get_page_size() is the only function that needs the fstorage_internal_defs.h File
-	(void) FS_PAGE_END_ADDR;	
 	
-	
-	return FS_PAGE_SIZE_WORDS;	
+	return FLASH_PAGE_SIZE_WORDS;	
 }
 
 uint32_t flash_get_page_number(void) {
-	return NUM_PAGES;
+	return FLASH_NUM_PAGES;
 }
 
 
@@ -273,7 +268,7 @@ bool flash_selftest(void) {
 	
 	debug_log("Started flash selftest...\n\r");
 	
-	debug_log("Flash page addresses: From %p to %p\n\r", address_of_page(0), address_of_page(NUM_PAGES-1));
+	debug_log("Flash page addresses: From %p to %p\n\r", address_of_page(0), address_of_page(FLASH_NUM_PAGES-1));
 	
 	debug_log("Flash word addresses: From %p to %p\n\r", address_of_word(0), address_of_word(flash_get_page_size_words()*flash_get_page_number()-1));
 	

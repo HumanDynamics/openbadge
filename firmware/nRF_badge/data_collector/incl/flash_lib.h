@@ -28,7 +28,13 @@
 
 
 // TODO: define this by the linker script with enough space for new program code!
-#define NUM_PAGES 30	
+#define FLASH_NUM_PAGES 30	
+#if   	defined (NRF51)
+#define FLASH_PAGE_SIZE_WORDS	256						/**< Number of words in one page (nrf51: 256) */
+#elif (defined (NRF52) || defined(NRF52840_XXAA))
+#define FLASH_PAGE_SIZE_WORDS	1024					/**< Number of words in one page (nrf52: 1024) */
+#endif
+
 
 /**@brief The different EEPROM operations. These operations will be used to set the peripheral busy or not.
  *
