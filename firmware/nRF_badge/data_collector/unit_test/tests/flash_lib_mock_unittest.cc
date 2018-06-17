@@ -30,7 +30,7 @@ TEST(FlashInitTest, SizeCheck) {
 TEST(FlashStoreTest, StartOfFlashTest) {
 	char store_data[] = "Test data!!";
 	int len = sizeof(store_data);
-	ASSERT_EQ(len%4, 0);
+	ASSERT_EQ(len%sizeof(uint32_t), 0);
 	int word_num = len/sizeof(uint32_t);
 	ret_code_t ret = flash_store(0, (uint32_t*) store_data, word_num);
 	EXPECT_EQ(ret, NRF_SUCCESS);
@@ -45,7 +45,7 @@ TEST(FlashStoreTest, StartOfFlashTest) {
 TEST(FlashStoreTest, EndOfFlashTest) {
 	char store_data[] = "ABCDEFGHIJK";
 	int len = sizeof(store_data);
-	ASSERT_EQ(len%4, 0);
+	ASSERT_EQ(len%sizeof(uint32_t), 0);
 	int word_num = len/sizeof(uint32_t);
 	int address = flash_get_page_number()*flash_get_page_size_words()-word_num;
 	ret_code_t ret = flash_store(address, (uint32_t*) store_data, word_num);
@@ -65,7 +65,7 @@ TEST(FlashEraseTest, StartOfFlash) {
 	
 	char store_data[12];
 	int len = sizeof(store_data);
-	ASSERT_EQ(len%4, 0);
+	ASSERT_EQ(len%sizeof(uint32_t), 0);
 	memset(store_data, 0x01, len);
 	int word_num = len/sizeof(uint32_t);
 	int address = 0;	
@@ -92,7 +92,7 @@ TEST(FlashEraseTest, EndOfFlash) {
 	
 	char store_data[12];
 	int len = sizeof(store_data);
-	ASSERT_EQ(len%4, 0);
+	ASSERT_EQ(len%sizeof(uint32_t), 0);
 	memset(store_data, 0x11, len);
 	int word_num = len/sizeof(uint32_t);
 	int address = flash_get_page_number()*flash_get_page_size_words()-word_num;
@@ -139,14 +139,14 @@ TEST(FlashStoreTest, WriteTwiceToStartOfFlashTest) {
 }
 
 
-TEST(FlashStoreTest, MultiPageStoreTest) {
+TEST(FlashStoreEraseTest, MultiPageTest) {
 	ret_code_t ret = flash_erase(1, 3);
 	EXPECT_EQ(ret, NRF_SUCCESS);
 	
 
-	char store_data[flash_get_page_size_words()*sizeof(uint32_t)*2];
+	char store_data[flash_get_page_size_words()*2*sizeof(uint32_t)];
 	int len = sizeof(store_data);
-	ASSERT_EQ(len%4, 0);
+	ASSERT_EQ(len%sizeof(uint32_t), 0);
 	memset(store_data, 0x22, len);
 	int word_num = len/sizeof(uint32_t);
 	int address = flash_get_page_size_words() + 10;
@@ -154,6 +154,15 @@ TEST(FlashStoreTest, MultiPageStoreTest) {
 	EXPECT_EQ(ret, NRF_SUCCESS);
 	
 	char read_data[len];
+	ret = flash_read(address, (uint32_t*) read_data, word_num);
+	EXPECT_EQ(ret, NRF_SUCCESS);
+	EXPECT_TRUE(memcmp(store_data, read_data, len)==0);	
+	
+	
+	ret = flash_erase(2, 1);
+	EXPECT_EQ(ret, NRF_SUCCESS);
+	
+	memset(&store_data[(flash_get_page_size_words()-10)*sizeof(uint32_t)], 0xFF, flash_get_page_size_words()*sizeof(uint32_t));
 	ret = flash_read(address, (uint32_t*) read_data, word_num);
 	EXPECT_EQ(ret, NRF_SUCCESS);
 	EXPECT_TRUE(memcmp(store_data, read_data, len)==0);	
@@ -167,7 +176,7 @@ TEST(FlashStoreTest, StoreAllOfFlashTest) {
 
 	char store_data[flash_get_page_size_words()*flash_get_page_number()*sizeof(uint32_t)];
 	int len = sizeof(store_data);
-	ASSERT_EQ(len%4, 0);
+	ASSERT_EQ(len%sizeof(uint32_t), 0);
 	memset(store_data, 0x44, len);
 	int word_num = len/sizeof(uint32_t);
 	int address = 0;
@@ -182,13 +191,13 @@ TEST(FlashStoreTest, StoreAllOfFlashTest) {
 }
 
 TEST(FlashAddressTest, FalseAddressTest) {
-	ret_code_t ret = flash_erase(0, flash_get_page_number());
-	EXPECT_EQ(ret, NRF_SUCCESS);
 	
-
+	ret_code_t ret = flash_erase(0, flash_get_page_number() + 1);
+	EXPECT_EQ(ret, NRF_ERROR_INVALID_PARAM);
+	
 	char store_data[12];
 	int len = sizeof(store_data);
-	ASSERT_EQ(len%4, 0);
+	ASSERT_EQ(len%sizeof(uint32_t), 0);
 	memset(store_data, 0x88, len);
 	int word_num = len/sizeof(uint32_t);
 	int address = flash_get_page_size_words()*flash_get_page_number()-word_num+1;
@@ -201,12 +210,16 @@ TEST(FlashAddressTest, FalseAddressTest) {
 	
 }
 
+TEST(FlashNullPointerTest, ReturnValueTest) {
 
-TEST(FlashOperationTest, NoOperationTest) {
-	flash_operation_t flash_operation = flash_get_operation();
-	EXPECT_EQ(flash_operation, FLASH_NO_OPERATION);
+
+	ret_code_t ret = flash_store(0, NULL, 1);
+	EXPECT_EQ(ret, NRF_ERROR_INVALID_PARAM);
+	
+	ret = flash_read(0, NULL, 1);
+	EXPECT_EQ(ret, NRF_ERROR_INVALID_PARAM);
+	
 }
-
 
 
 

@@ -7,8 +7,6 @@
 #include "string.h"		// For memset
 
 
-#define EEPROM_SIZE				(1024*256)				/**< Size of the external EEPROM in bytes */
-
 
 static uint8_t eeprom_data[EEPROM_SIZE];	/**< Simulator of the external EEPROM data bytes */
 
@@ -51,6 +49,10 @@ ret_code_t eeprom_store_bkgnd(uint32_t address, uint8_t* tx_data, uint32_t lengt
 	// Check if the specified address is valid. The EEPROM has 256kByte of memory.
 	if((address + length_tx_data > (EEPROM_SIZE)))
 		return NRF_ERROR_INVALID_PARAM;
+	
+	if(tx_data == NULL) 
+		return NRF_ERROR_INVALID_PARAM;
+	
 	
 	// Check if the EEPROM has already an ongoing operation.
 	if(eeprom_get_operation() != EEPROM_NO_OPERATION) {

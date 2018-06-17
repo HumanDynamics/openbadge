@@ -76,9 +76,15 @@ TEST(EEPROMAddressTest, FalseAddressTest) {
 	EXPECT_EQ(ret, NRF_ERROR_INVALID_PARAM);
 }
 
-TEST(EEPROMOperationTest, NoOperationTest) {
-	eeprom_operation_t eeprom_operation = eeprom_get_operation();
-	EXPECT_EQ(eeprom_operation, EEPROM_NO_OPERATION);
+TEST(EEPROMNullPointerTest, ReturnValueTest) {
+
+
+	ret_code_t ret = eeprom_store(0, NULL, 1);
+	EXPECT_EQ(ret, NRF_ERROR_INVALID_PARAM);
+	
+	ret = eeprom_read(0, NULL, 1);
+	EXPECT_EQ(ret, NRF_ERROR_INVALID_PARAM);
+	
 }
 
 

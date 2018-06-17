@@ -8,12 +8,8 @@
 
 
 
-#define FLASH_PAGE_SIZE_WORDS	256						/**< Number of words in one page (nrf51: 256, nrf52: 1024) */
-
-
-
-#define FLASH_SIZE				(FLASH_PAGE_SIZE_WORDS*NUM_PAGES*sizeof(uint32_t))	/**< Flash size in bytes */
-#define FLASH_NUM_WORDS			(FLASH_PAGE_SIZE_WORDS*NUM_PAGES)					/**< Flash size in words */
+#define FLASH_SIZE			(FLASH_PAGE_SIZE_WORDS*FLASH_NUM_PAGES*sizeof(uint32_t))	/**< Flash size in bytes */
+#define FLASH_NUM_WORDS		(FLASH_PAGE_SIZE_WORDS*FLASH_NUM_PAGES)					/**< Flash size in words */
 
 
 static uint32_t flash_words[FLASH_NUM_WORDS];	/**< Simulator of the internal flash words */
@@ -218,6 +214,6 @@ uint32_t flash_get_page_size_words(void) {
 }
 
 uint32_t flash_get_page_number(void) {
-	return NUM_PAGES;
+	return FLASH_NUM_PAGES;
 }
 
