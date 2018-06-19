@@ -117,6 +117,7 @@ incl/flash_lib.c \
 incl/system_event_lib.c \
 incl/eeprom_lib.c \
 incl/debug_lib.c \
+incl/storage1_lib.c \
 $(SDK_PATH)/components/toolchain/system_nrf51.c \
 $(SDK_PATH)/components/drivers_nrf/uart/nrf_drv_uart.c \
 $(SDK_PATH)/components/drivers_nrf/common/nrf_drv_common.c \

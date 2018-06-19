@@ -36,6 +36,8 @@
 
 #include "debug_lib.h"
 
+#include "storage1_lib.h"
+
 
 
 /**
@@ -195,10 +197,7 @@ int main(void)
 
 	SOFTDEVICE_HANDLER_INIT(&clock_lf_cfg, NULL);
 
-	
-	
 
-	
 	
 	
 	flash_init();
