@@ -44,8 +44,10 @@ NO_ECHO := @
 TESTS = flash_lib_mock_unittest \
 		eeprom_lib_mock_unittest \
 		storage1_lib_unittest \
+		storage2_lib_unittest \
 				
 FIRMWARE_SRCS = $(FIRMWARE_DIR)/incl/storage1_lib.c \
+				$(FIRMWARE_DIR)/incl/storage2_lib.c \
 
 
 
@@ -202,6 +204,7 @@ CFLAGS += -Wall -Werror
 
 # Add the CFLAGS to the CXXFLAGS
 CXXFLAGS += $(CFLAGS)
+CXXFLAGS += -DUNIT_TEST
 
 
 #$(info LCOV=${LCOV}. To enable LCOV, call make with parameter LCOV=TRUE.)

@@ -6,8 +6,14 @@
 #define STORAGE1_SIZE	(FLASH_PAGE_SIZE_WORDS*FLASH_NUM_PAGES*sizeof(uint32_t)) /**< Size of storage1 in bytes */
 
 
-#define STORAGE1_LAST_STORED_ELEMENT_ADDRESSES_SIZE	4
-int32_t storage1_last_stored_element_addresses[STORAGE1_LAST_STORED_ELEMENT_ADDRESSES_SIZE];
+#ifdef UNIT_TEST
+	#define STORAGE1_LAST_STORED_ELEMENT_ADDRESSES_SIZE	4	 /**< Number of addresses in storage1_last_stored_element_addresses-array, during unit testing. */
+#else
+	#define STORAGE1_LAST_STORED_ELEMENT_ADDRESSES_SIZE	4	 /**< Number of addresses in storage1_last_stored_element_addresses-array, during normal operation. */
+#endif
+
+int32_t storage1_last_stored_element_addresses[STORAGE1_LAST_STORED_ELEMENT_ADDRESSES_SIZE]; /**< Array to save the last/end addresses of stored elements */
+
 
 uint8_t backup_data[FLASH_PAGE_SIZE_WORDS*sizeof(uint32_t)];					/**< Array to backup a whole flash page, needed for restoring bytes after a page erase */
 

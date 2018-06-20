@@ -308,6 +308,7 @@ TEST_F(Storage1Test, StoreAndReadUint8Uint32Test) {
 	uint8_t store_data[98];
 	uint32_t len = sizeof(store_data);
 	uint8_t read_data[len];
+	memset(read_data, 0xFF, len);
 	ret_code_t ret;
 	for(uint32_t i = 0; i < len; i++) {
 		store_data[i] = i;
@@ -325,11 +326,13 @@ TEST_F(Storage1Test, StoreAndReadUint8Uint32Test) {
 	ret = storage1_store_uint8_as_uint32(len, store_data, len);
 	EXPECT_EQ(ret, NRF_SUCCESS);
 	
+	memset(read_data, 0xFF, len);
 	ret = storage1_read_uint32_as_uint8(len, read_data, len);
 	EXPECT_EQ(ret, NRF_SUCCESS);	
 	EXPECT_TRUE(memcmp(store_data, read_data, len) == 0);
 	
 	// Check if the former written bytes are still correct
+	memset(read_data, 0xFF, len);
 	ret = storage1_read_uint32_as_uint8(0, read_data, len);
 	EXPECT_EQ(ret, NRF_SUCCESS);	
 	EXPECT_TRUE(memcmp(store_data, read_data, len) == 0);
@@ -339,6 +342,7 @@ TEST_F(Storage1Test, StoreAndReadUint8Uint32Test) {
 	EXPECT_EQ(ret, NRF_SUCCESS);
 	
 	uint8_t read_data1[len + 2];
+	memset(read_data1, 0xFF, len + 2);
 	
 	ret = storage1_read_uint32_as_uint8(FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t), read_data1, len+2);
 	EXPECT_EQ(ret, NRF_SUCCESS);	
@@ -352,14 +356,14 @@ TEST_F(Storage1Test, StoreAndReadUint8Uint32Test) {
 	// Write small data
 	ret = storage1_store_uint8_as_uint32(FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*2+1, store_data, 1);
 	EXPECT_EQ(ret, NRF_SUCCESS);
-	
+	memset(read_data, 0xFF, len);
 	ret = storage1_read_uint32_as_uint8(FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*2+1, read_data, 1);
 	EXPECT_EQ(ret, NRF_SUCCESS);	
 	EXPECT_TRUE(memcmp(store_data, read_data, 1) == 0);
 	
 	ret = storage1_store_uint8_as_uint32(FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*2+6, store_data, 3);
 	EXPECT_EQ(ret, NRF_SUCCESS);
-	
+	memset(read_data, 0xFF, len);
 	ret = storage1_read_uint32_as_uint8(FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*2+6, read_data, 3);
 	EXPECT_EQ(ret, NRF_SUCCESS);	
 	EXPECT_TRUE(memcmp(store_data, read_data, 3) == 0);
@@ -367,14 +371,14 @@ TEST_F(Storage1Test, StoreAndReadUint8Uint32Test) {
 	// Write 0 data
 	ret = storage1_store_uint8_as_uint32(FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*2+22, store_data, 0);
 	EXPECT_EQ(ret, NRF_SUCCESS);
-	
+	memset(read_data, 0xFF, len);
 	ret = storage1_read_uint32_as_uint8(FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*2+22, read_data, 0);
 	EXPECT_EQ(ret, NRF_SUCCESS);	
 	
 	// Write to large address
 	ret = storage1_store_uint8_as_uint32(storage1_get_size()-10, store_data, 11);
 	EXPECT_EQ(ret, NRF_ERROR_INVALID_PARAM);
-	
+	memset(read_data, 0xFF, len);
 	ret = storage1_read_uint32_as_uint8(storage1_get_size()-10, read_data, 11);
 	EXPECT_EQ(ret, NRF_ERROR_INVALID_PARAM);	
 	
