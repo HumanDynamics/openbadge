@@ -66,20 +66,17 @@ ret_code_t flash_init(void) {
 	system_event_init();
 	
 	
-	
-	ret_code_t ret = NRF_SUCCESS;
-	
 	fs_ret_t status_init = fs_init();
 	
 	if(status_init != FS_SUCCESS) {
-		ret = NRF_ERROR_INTERNAL;
+		return NRF_ERROR_INTERNAL; 
 	}
 	
-	// Register the system event handler for flash!
+	// Register the system event handler for flash, but only if we successfully initialized the fstorage module first.
 	system_event_register_handler(fs_sys_event_handler);
 	
 	
-	return ret;
+	return NRF_SUCCESS;
 }
 
 

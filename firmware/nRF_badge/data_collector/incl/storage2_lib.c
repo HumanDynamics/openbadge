@@ -10,7 +10,24 @@
 
 ret_code_t storage2_init(void) {
 	
-	return eeprom_init();
+	static uint8_t init_done = 0;
+	
+	// Directly return if the flash module was already initialized successfully (but only in normal operation, not in testing mode).
+	#ifndef UNIT_TEST
+	if(init_done) {
+		return NRF_SUCCESS;
+	}
+	#else	// To not generate compiler warnings
+	(void) init_done;
+	#endif
+	
+	ret_code_t ret = eeprom_init();
+	
+	if(ret == NRF_SUCCESS) {
+		init_done = 1;
+	}
+	
+	return ret;	
 }
 
 

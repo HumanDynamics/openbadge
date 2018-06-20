@@ -455,10 +455,31 @@ ret_code_t storage1_read_uint32_as_uint8(uint32_t address, uint8_t* data, uint32
 
 
 ret_code_t storage1_init(void) {
+	
+	
+	
 	for(uint32_t i = 0; i < STORAGE1_LAST_STORED_ELEMENT_ADDRESSES_SIZE; i++)
 		storage1_last_stored_element_addresses[i] = -1;
 	
-	return flash_init();
+	// Flag if the initialization has already be done and was successful
+	static uint8_t init_done = 0;
+	
+	// Directly return if the flash module was already initialized successfully (but only in normal operation, not in testing mode).
+	#ifndef UNIT_TEST
+	if(init_done) {
+		return NRF_SUCCESS;
+	}
+	#else	// To not generate compiler warnings
+	(void) init_done;
+	#endif
+	
+	ret_code_t ret = flash_init();
+	
+	if(ret == NRF_SUCCESS) {
+		init_done = 1;
+	}
+	
+	return ret;
 }
 
 
