@@ -102,7 +102,7 @@ ret_code_t flash_erase_bkgnd(uint32_t page_num, uint16_t num_pages);
  * @retval  NRF_ERROR_BUSY				If there is already an ongoing operation (erase or store).
  * @retval 	NRF_ERROR_INTERNAL	    	If the module is not initialized or has a false configuration.
  * @retval  NRF_ERROR_INVALID_PARAM		If the specified input parameters are bad.
- * @retval  NRF_ERROR_TIMEOUT			If the erase operation timed out.
+ * @retval  NRF_ERROR_TIMEOUT			If the store operation timed out or the operation takes too long.
  */
 ret_code_t flash_erase(uint32_t page_num, uint16_t num_pages);
 
@@ -149,7 +149,7 @@ ret_code_t flash_store_bkgnd(uint32_t word_num, const uint32_t* p_words, uint16_
  * @retval  NRF_ERROR_BUSY				If there is already an ongoing operation (erase or store).
  * @retval 	NRF_ERROR_INTERNAL	    	If the module is not initialized or has a false configuration.
  * @retval  NRF_ERROR_INVALID_PARAM		If the specified input parameters are bad.
- * @retval  NRF_ERROR_TIMEOUT			If the store operation timed out.
+ * @retval  NRF_ERROR_TIMEOUT			If the store operation timed out or the operation takes too long.
  */
 ret_code_t flash_store(uint32_t word_num, const uint32_t* p_words, uint16_t length_words);
 

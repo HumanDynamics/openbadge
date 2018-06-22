@@ -37,6 +37,7 @@
  * @retval  NRF_SUCCESS    		If the module was successfully initialized.
  * @retval  NRF_ERROR_INTERNAL  If there was an error while initializing the spi-module (e.g. bad configuration)
  * @retval 	NRF_ERROR_BUSY		If the unprotecting operation failed (because of an ongoing spi operation).
+ * @retval	NRF_ERROR_TIMEOUT	If the unprotecting operation takes too long.
  */
 ret_code_t eeprom_init(void);
 
@@ -62,6 +63,7 @@ ret_code_t eeprom_init(void);
  * @retval  NRF_SUCCESS             	If the operation was started successfully.
  * @retval  NRF_ERROR_BUSY				If the SPI interface or the EEPROM is busy.
  * @retval 	NRF_ERROR_INVALID_PARAM   	If the address is to big or the provided tx_data-buffer is not placed in the Data RAM region.
+ * @retval	NRF_ERROR_TIMEOUT			If the operation takes too long.
  */
 ret_code_t eeprom_store_bkgnd(uint32_t address, uint8_t* tx_data, uint32_t length_tx_data);
 
@@ -79,6 +81,7 @@ ret_code_t eeprom_store_bkgnd(uint32_t address, uint8_t* tx_data, uint32_t lengt
  * @retval  NRF_SUCCESS             	If the operation was started successfully.
  * @retval  NRF_ERROR_BUSY				If the SPI interface or the EEPROM is busy.
  * @retval 	NRF_ERROR_INVALID_PARAM   	If the address is to big or the provided tx_data-buffer is not placed in the Data RAM region.
+ * @retval	NRF_ERROR_TIMEOUT			If the operation takes too long.
  */
 ret_code_t eeprom_store(uint32_t address, uint8_t* tx_data, uint32_t length_tx_data);
 
@@ -102,6 +105,7 @@ ret_code_t eeprom_store(uint32_t address, uint8_t* tx_data, uint32_t length_tx_d
  * @retval  NRF_SUCCESS             	If the operation was started successfully.
  * @retval  NRF_ERROR_BUSY				If the SPI interface or the EEPROM is busy.
  * @retval 	NRF_ERROR_INVALID_PARAM   	If the address is to big or the provided rx_data-buffer is not placed in the Data RAM region.
+ * @retval	NRF_ERROR_TIMEOUT			If the operation takes too long.
  */
 ret_code_t eeprom_read_bkgnd(uint32_t address, uint8_t* rx_data, uint32_t length_rx_data);
 
@@ -119,6 +123,7 @@ ret_code_t eeprom_read_bkgnd(uint32_t address, uint8_t* rx_data, uint32_t length
  * @retval  NRF_SUCCESS             	If the operation was started successfully.
  * @retval  NRF_ERROR_BUSY				If the SPI interface or the EEPROM is busy.
  * @retval 	NRF_ERROR_INVALID_PARAM   	If the address is to big or the provided rx_data-buffer is not placed in the Data RAM region.
+ * @retval	NRF_ERROR_TIMEOUT			If the operation takes too long.
  */
 ret_code_t eeprom_read(uint32_t address, uint8_t* rx_data, uint32_t length_rx_data);
 

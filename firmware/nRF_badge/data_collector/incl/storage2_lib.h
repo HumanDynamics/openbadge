@@ -27,6 +27,7 @@ ret_code_t storage2_init(void);
  * @retval 		NRF_SUCCSS					If operation was successful.
  * @retval 		NRF_ERROR_INVALID_PARAM		If data is NULL or specified address and length_data exceed the storage size or data is not in RAM section.
  * @retval 		NRF_ERROR_BUSY				If the underlying storage-module (here EEPROM or SPI) is busy.
+ * @retval		NRF_ERROR_TIMEOUT			If the operation takes too long.
  */
 ret_code_t storage2_store(uint32_t address, uint8_t* data, uint32_t length_data);
 
@@ -41,6 +42,7 @@ ret_code_t storage2_store(uint32_t address, uint8_t* data, uint32_t length_data)
  * @retval 		NRF_SUCCSS					If operation was successful.
  * @retval 		NRF_ERROR_INVALID_PARAM		If data is NULL or specified address and length_data exceed the storage size or data is not in RAM section.
  * @retval 		NRF_ERROR_BUSY				If the underlying storage-module (here EEPROM or SPI) is busy.
+ * @retval		NRF_ERROR_TIMEOUT			If the operation takes too long.
  */
 ret_code_t storage2_read(uint32_t address, uint8_t* data, uint32_t length_data);
 

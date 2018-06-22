@@ -3,6 +3,8 @@
 
 #include "stdio.h"
 
+
+
 #define STORAGE1_SIZE	(FLASH_PAGE_SIZE_WORDS*FLASH_NUM_PAGES*sizeof(uint32_t)) /**< Size of storage1 in bytes */
 
 
@@ -205,7 +207,8 @@ void storage1_compute_word_aligned_addresses(uint32_t address, uint32_t length_d
  * @retval 		NRF_SUCCSS					If operation was successful.
  * @retval 		NRF_ERROR_INVALID_PARAM		If specified address and length_data exceed the storage size.
  * @retval 		NRF_ERROR_BUSY				If the underlying storage-module (here flash) is busy.
- * @retval 		NRF_ERROR_INTERNAL			If the underlying storage-module (here flash) was not correctly initialized or the operation timed out (sth. went wrong).
+ * @retval 		NRF_ERROR_INTERNAL			If the underlying storage-module (here flash) was not correctly initialized.
+ * @retval		NRF_ERROR_TIMEOUT			If the operation timed out (sth. went wrong) or the operation takes too long.
  */
 ret_code_t storage1_store_uint8_as_uint32(uint32_t address, uint8_t* data, uint32_t length_data) {
 	
@@ -261,9 +264,6 @@ ret_code_t storage1_store_uint8_as_uint32(uint32_t address, uint8_t* data, uint3
 		// Store the words to flash
 		ret = flash_store(word_address_aligned, words, length_words);
 		if(ret != NRF_SUCCESS) {	// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INTERNAL, NRF_ERROR_INVALID_PARAM, NRF_ERROR_TIMEOUT
-			if(ret == NRF_ERROR_INTERNAL || ret == NRF_ERROR_TIMEOUT)
-				ret = NRF_ERROR_INTERNAL;	
-			// ret could be NRF_ERROR_BUSY, NRF_ERROR_INVALID_PARAM, NRF_ERROR_INTERNAL
 			return ret;
 		}
 	}
@@ -291,9 +291,6 @@ ret_code_t storage1_store_uint8_as_uint32(uint32_t address, uint8_t* data, uint3
 		// Store the words to flash
 		ret = flash_store(word_address_aligned, words, length_words);
 		if(ret != NRF_SUCCESS) {	// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INTERNAL, NRF_ERROR_INVALID_PARAM, NRF_ERROR_TIMEOUT
-			if(ret == NRF_ERROR_INTERNAL || ret == NRF_ERROR_TIMEOUT)
-				ret = NRF_ERROR_INTERNAL;	
-			// ret could be NRF_ERROR_BUSY, NRF_ERROR_INVALID_PARAM, NRF_ERROR_INTERNAL
 			return ret;
 		}
 	}
@@ -323,9 +320,6 @@ ret_code_t storage1_store_uint8_as_uint32(uint32_t address, uint8_t* data, uint3
 		// Store the words to flash
 		ret = flash_store(word_address_aligned, words, length_words);
 		if(ret != NRF_SUCCESS) {	// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INTERNAL, NRF_ERROR_INVALID_PARAM, NRF_ERROR_TIMEOUT
-			if(ret == NRF_ERROR_INTERNAL || ret == NRF_ERROR_TIMEOUT)
-				ret = NRF_ERROR_INTERNAL;	
-			// ret could be NRF_ERROR_BUSY, NRF_ERROR_INVALID_PARAM, NRF_ERROR_INTERNAL
 			return ret;
 		}
 	}
@@ -521,9 +515,6 @@ ret_code_t storage1_store(uint32_t address, uint8_t* data, uint32_t length_data)
 	if(erase_num_pages > 0) {
 		ret = flash_erase(erase_start_page_address, erase_num_pages);
 		if(ret != NRF_SUCCESS) { // ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INTERNAL, NRF_ERROR_INVALID_PARAM, NRF_ERROR_TIMEOUT
-			if(ret == NRF_ERROR_INTERNAL || ret == NRF_ERROR_TIMEOUT)
-				ret = NRF_ERROR_INTERNAL;	
-			// ret could be NRF_ERROR_BUSY, NRF_ERROR_INVALID_PARAM, NRF_ERROR_INTERNAL
 			return ret;
 		}
 	}
@@ -531,14 +522,14 @@ ret_code_t storage1_store(uint32_t address, uint8_t* data, uint32_t length_data)
 	// Restore the backup data, but only if the first page was erased
 	if(backup_data_length > 0 && erase_start_page_address == start_page_address) {
 		ret = storage1_store_uint8_as_uint32(start_page_first_byte_address, backup_data, backup_data_length);
-		if(ret != NRF_SUCCESS) {  // ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INTERNAL, NRF_ERROR_INVALID_PARAM
+		if(ret != NRF_SUCCESS) {  // ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INTERNAL, NRF_ERROR_INVALID_PARAM, NRF_ERROR_TIMEOUT
 			return ret;
 		}
 	}
 	
 	// Finally store the data to flash
 	ret = storage1_store_uint8_as_uint32(address, data, length_data);
-	if(ret != NRF_SUCCESS) {  // ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INTERNAL, NRF_ERROR_INVALID_PARAM
+	if(ret != NRF_SUCCESS) {  // ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INTERNAL, NRF_ERROR_INVALID_PARAM, NRF_ERROR_TIMEOUT
 		return ret;
 	}
 	

@@ -21,6 +21,20 @@ static uint32_t const * address_of_word(uint32_t word_num);
 
 
 
+
+
+
+
+
+
+// TODO:	Implement the check for a timeout every time there is a while(operation == ..) call!!
+//			Add NRF_ERROR_TIMEOUT to _erase, _store
+
+
+
+
+
+
 /**
  *@brief Function for handling fstorage events.
  */
@@ -152,6 +166,7 @@ ret_code_t flash_erase(uint32_t page_num, uint16_t num_pages) {
 	}
 	
 	// Wait for the erase operation to terminate.
+	// TODO: timeout check
 	while(flash_get_operation() & FLASH_ERASE_OPERATION);
 	
 	// Return an error if the erase operation was not successful.
@@ -214,6 +229,7 @@ ret_code_t flash_store(uint32_t word_num, const uint32_t* p_words, uint16_t leng
 	}
 	
 	// Wait for the store operation to terminate.
+	// TODO: timeout check
 	while(flash_get_operation() & FLASH_STORE_OPERATION);
 	
 	// Return an error if the store operation was not successful.

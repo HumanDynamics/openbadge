@@ -11,6 +11,15 @@ extern uart_instance_t uart_instance;
 
 
 
+
+
+// TODO:	Implement the check for a timeout every time there is a while(operation == ..) call!!
+//			Add NRF_ERROR_TIMEOUT to _write_enable, _global_unprotect, _store_bkgnd, _store, _read_bkgnd, _read
+
+
+
+
+
 #define CMD_WREN	0b00000110	/**< Write enable command code */
 #define CMD_RDSR	0b00000101	/**< Read status register command code */
 #define CMD_WRSR	0b00000001	/**< Write status register command code */
@@ -81,7 +90,7 @@ ret_code_t eeprom_init(void) {
 	// Directly unprotect the EEPROM in the initialization step
 	ret = eeprom_global_unprotect();
 	
-	// ret could be NRF_SUCCESS or NRF_ERROR_BUSY	
+	// ret could be NRF_SUCCESS, NRF_ERROR_BUSY	or NRF_ERROR_TIMEOUT
 	
 	return ret;
 }
@@ -99,7 +108,7 @@ ret_code_t eeprom_init(void) {
  */
 static ret_code_t eeprom_read_status(uint8_t* p_eeprom_status) {
 	uint8_t tx_buf[1] = {CMD_RDSR};
-    uint8_t rx_buf[2] = {0, 0};
+    uint8_t rx_buf[2] = {0, 0x01};
 					 
 	ret_code_t ret = spi_transmit_receive(&spi_instance, tx_buf, 1, rx_buf, 2);
 	
@@ -119,7 +128,7 @@ static ret_code_t eeprom_read_status(uint8_t* p_eeprom_status) {
  * @retval  1  			If the EEPROM or the spi interface is busy.
  */
 static bool eeprom_is_busy(void) {
-	uint8_t eeprom_status = 0;
+	uint8_t eeprom_status = 0x01;
 	ret_code_t ret = eeprom_read_status(&eeprom_status);
 	
 	// Check if the SPI is busy
@@ -139,6 +148,7 @@ static bool eeprom_is_busy(void) {
  *
  * @retval  NRF_SUCCESS    		If the spi transmit operation was succesful.
  * @retval  NRF_ERROR_BUSY  	If there is already an SPI operation ongoing on the same spi peripheral.
+ * @retval	NRF_ERROR_TIMEOUT	If the operation takes too long.
  */
 static ret_code_t eeprom_write_enable(void) {
 	// Generating one-byte buffer for writing the "write enable"-command
@@ -147,7 +157,9 @@ static ret_code_t eeprom_write_enable(void) {
 	// SPI transmit in blocking mode
 	ret_code_t ret = spi_transmit(&spi_instance, tx_buf, 1);
 	
+	// TODO: timeout check
 	while(eeprom_get_operation() != EEPROM_NO_OPERATION);
+	
 	
 	// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INVALID_ADDR (the last one can't happen here)
 	if(ret != NRF_SUCCESS) {
@@ -161,6 +173,7 @@ static ret_code_t eeprom_write_enable(void) {
  *
  * @retval  NRF_SUCCESS    		If the spi transmit operation was succesful.
  * @retval  NRF_ERROR_BUSY  	If there is already an SPI operation ongoing on the same spi peripheral.
+ * @retval	NRF_ERROR_TIMEOUT	If the operation takes too long.
  */
 static ret_code_t eeprom_global_unprotect(void) {
 	
@@ -177,6 +190,7 @@ static ret_code_t eeprom_global_unprotect(void) {
 	// SPI transmit in blocking mode
 	ret = spi_transmit(&spi_instance, tx_buf, 2);
 	
+	// TODO: timeout check
 	while(eeprom_get_operation() != EEPROM_NO_OPERATION);
 	
 	// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INVALID_ADDR (the last one can't happen here)
@@ -263,6 +277,7 @@ ret_code_t eeprom_store_bkgnd(uint32_t address, uint8_t* tx_data, uint32_t lengt
 	}
 	
 	// Wait until the first 4 data bytes are stored into the EEPROM (important to not just check if they have been transmitted via spi, because the EEPROM needs time to store it internally)
+	// TODO: timeout check
 	while(eeprom_get_operation() != EEPROM_NO_OPERATION);
 
 		
@@ -321,6 +336,7 @@ ret_code_t eeprom_store(uint32_t address, uint8_t* tx_data, uint32_t length_tx_d
 	}
 	
 	// Wait until the operation terminates
+	// TODO: timeout check
 	while(eeprom_get_operation() == EEPROM_STORE_OPERATION);
 	
 	return NRF_SUCCESS;
@@ -385,6 +401,7 @@ ret_code_t eeprom_read_bkgnd(uint32_t address, uint8_t* rx_data, uint32_t length
 		return ret;
 	}
 	
+	// TODO: timeout check
 	while(eeprom_get_operation() != EEPROM_NO_OPERATION);
 	
 	// copy the first data to the output buffer
@@ -442,6 +459,7 @@ ret_code_t eeprom_read(uint32_t address, uint8_t* rx_data, uint32_t length_rx_da
 	}
 	
 	// Wait until the operation terminates
+	// TODO: timeout check
 	while(eeprom_get_operation() == EEPROM_READ_OPERATION);
 	
 	return NRF_SUCCESS;

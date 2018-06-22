@@ -35,8 +35,8 @@ ret_code_t storage1_init(void);
  * @retval 		NRF_SUCCSS					If operation was successful.
  * @retval 		NRF_ERROR_INVALID_PARAM		If data is NULL or specified address and length_data exceed the storage size.
  * @retval 		NRF_ERROR_BUSY				If the underlying storage-module (here flash) is busy.
- * @retval 		NRF_ERROR_INTERNAL			If the underlying storage-module (here flash) was not correctly initialized or the operation timed out (sth. went wrong).
- *											Or if something went wrong during the calculation of the backup-data size.
+ * @retval 		NRF_ERROR_INTERNAL			If the underlying storage-module (here flash) was not correctly initialized or if something went wrong during the calculation of the backup-data size.
+ * @retval		NRF_ERROR_TIMEOUT			If the operation timed out (sth. went wrong while flash storing/erasing) or the operation takes too long.
  */
 ret_code_t storage1_store(uint32_t address, uint8_t* data, uint32_t length_data);
 
