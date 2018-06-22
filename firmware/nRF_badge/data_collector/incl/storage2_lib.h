@@ -8,7 +8,8 @@
  *
  * @retval 		NRF_SUCCSS					If operation was successful.
  * @retval 		NRF_ERROR_INTERNAL			If the underlying storage-module (here EEPROM) could not correctly initialized (here: bad spi configuration).
- * @retval 		NRF_ERROR_BUSY				If the underlying storage-module (here EEPROM) is busy (here: EEPROM unprotecting operation failed because of an ongoing spi operation).
+ * @retval 		NRF_ERROR_BUSY				If the EEPROM unprotecting operation failed (because of an ongoing spi operation).
+ * @retval		NRF_ERROR_TIMEOUT			If the EEPROM unprotecting operation takes too long.
  */
 ret_code_t storage2_init(void);
 
