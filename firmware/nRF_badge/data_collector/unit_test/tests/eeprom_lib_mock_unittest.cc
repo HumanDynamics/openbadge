@@ -7,6 +7,10 @@
 
 #define EEPROM_SIZE_TEST	(256*1024)
 
+
+extern void eeprom_write_to_file(const char* filename);
+
+
 namespace {
 
 
@@ -84,6 +88,8 @@ TEST(EEPROMNullPointerTest, ReturnValueTest) {
 	
 	ret = eeprom_read(0, NULL, 1);
 	EXPECT_EQ(ret, NRF_ERROR_INVALID_PARAM);
+	
+	eeprom_write_to_file("EEPROM.txt");
 	
 }
 

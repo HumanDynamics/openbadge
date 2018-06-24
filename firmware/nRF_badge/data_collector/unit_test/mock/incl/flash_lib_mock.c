@@ -5,6 +5,10 @@
 
 #include "string.h"		// For memset
 
+#include "storage_file_lib.h"
+
+
+
 
 
 
@@ -217,3 +221,8 @@ uint32_t flash_get_page_number(void) {
 	return FLASH_NUM_PAGES;
 }
 
+void flash_write_to_file(const char* filename) {
+	uint8_t* bytes = (uint8_t*) flash_words;
+	uint32_t len = FLASH_NUM_WORDS*sizeof(uint32_t);
+	storage_file_write_to_file(filename, bytes, len);
+}

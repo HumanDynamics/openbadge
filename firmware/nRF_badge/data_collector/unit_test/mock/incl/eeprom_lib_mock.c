@@ -6,6 +6,7 @@
 
 #include "string.h"		// For memset
 
+#include "storage_file_lib.h"
 
 
 static uint8_t eeprom_data[EEPROM_SIZE];	/**< Simulator of the external EEPROM data bytes */
@@ -165,5 +166,11 @@ uint32_t eeprom_get_size(void) {
 	return EEPROM_SIZE;
 }
 
+
+void eeprom_write_to_file(const char* filename) {
+	uint8_t* bytes = (uint8_t*) eeprom_data;
+	uint32_t len = EEPROM_SIZE;
+	storage_file_write_to_file(filename, bytes, len);
+}
 
 

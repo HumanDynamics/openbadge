@@ -8,6 +8,9 @@
 #define FLASH_NUM_PAGES_TEST			30
 #define FLASH_PAGE_SIZE_WORDS_TEST  	256
 
+
+extern void flash_write_to_file(const char* filename);
+
 namespace {
 
 
@@ -39,6 +42,10 @@ TEST(FlashStoreTest, StartOfFlashTest) {
 	ret = flash_read(0, (uint32_t*) read_data, word_num);
 	EXPECT_EQ(ret, NRF_SUCCESS);
 	EXPECT_STREQ(read_data, store_data);	
+	
+	
+	
+	
 }
 
 
@@ -218,6 +225,8 @@ TEST(FlashNullPointerTest, ReturnValueTest) {
 	
 	ret = flash_read(0, NULL, 1);
 	EXPECT_EQ(ret, NRF_ERROR_INVALID_PARAM);
+	
+	flash_write_to_file("Flash.txt");
 	
 }
 
