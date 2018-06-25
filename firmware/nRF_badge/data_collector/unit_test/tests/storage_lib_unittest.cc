@@ -18,6 +18,8 @@
 
 extern void storage_split_to_storage_modules(uint32_t address, uint8_t* data, uint32_t length_data, uint32_t splitted_address[], uint8_t* splitted_data[], uint32_t splitted_length_data[], uint32_t storage_sizes[], uint8_t number_of_storage_modules);
 
+extern void eeprom_write_to_file(const char* filename);
+extern void flash_write_to_file(const char* filename);
 
 
 
@@ -285,6 +287,9 @@ TEST_F(StorageTest, StoreAndReadTest) {
 	EXPECT_EQ(ret, NRF_SUCCESS);
 	ret = storage_read(address, read_data, 0);
 	EXPECT_EQ(ret, NRF_SUCCESS);	
+	
+	eeprom_write_to_file("Storage_EEPROM.txt");
+	flash_write_to_file("Storage_Flash.txt");
 }
 
 };  
