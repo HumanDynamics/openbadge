@@ -134,8 +134,13 @@ ret_code_t storage1_compute_pages_to_erase(uint32_t address, uint32_t length_dat
 		}		
 	}	
 	
-	// Search for the index, where to store the current address
+	
 	int32_t last_stored_element_address = (int32_t) (address + length_data - 1);
+	if(last_stored_element_address == STORAGE1_SIZE - 1) { // if then end-address is the last address in storage, we don't need to insert it (because this will only be deleted/overwritten, if a write to the last page is performed again)
+		return NRF_SUCCESS;
+	}
+	
+	// Search for the index, where to store the current address
 	uint32_t index = 0;
 	int32_t min_diff = storage1_get_size();
 	for(uint32_t i = 0; i < STORAGE1_LAST_STORED_ELEMENT_ADDRESSES_SIZE; i++) {

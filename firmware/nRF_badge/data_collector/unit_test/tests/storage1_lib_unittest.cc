@@ -204,6 +204,20 @@ TEST_F(Storage1Test, ComputePagesToEraseTest) {
 	EXPECT_EQ(storage1_last_stored_element_addresses[2], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*3 + 9);
 	EXPECT_EQ(storage1_last_stored_element_addresses[3], -1);
 	
+	
+	
+	
+	
+	// Now write to the end of the flash some data --> it should not insert anything into storage1_last_stored_element_addresses[], because we write to STORAGE1_SIZE - 1!
+	ret	= storage1_compute_pages_to_erase(STORAGE1_SIZE_TEST-11, 11, &erase_start_page_address, &erase_num_pages);
+	EXPECT_EQ(ret, NRF_SUCCESS);
+	EXPECT_EQ(erase_start_page_address, FLASH_NUM_PAGES_TEST - 1);
+	EXPECT_EQ(erase_num_pages, 1);
+	EXPECT_EQ(storage1_last_stored_element_addresses[0], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*1 + 19);
+	EXPECT_EQ(storage1_last_stored_element_addresses[1], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*4 + 29);
+	EXPECT_EQ(storage1_last_stored_element_addresses[2], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*3 + 9);
+	EXPECT_EQ(storage1_last_stored_element_addresses[3], -1);	// This one should stay -1
+	
 }
 
 
