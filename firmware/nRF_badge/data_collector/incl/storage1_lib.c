@@ -123,9 +123,9 @@ ret_code_t storage1_compute_pages_to_erase(uint32_t address, uint32_t length_dat
 			storage1_last_stored_element_addresses[i] = -1;		
 		} else {
 			// Check if storage1_last_stored_element_addresses[i] is on the page before, and equals "address-1" --> could be deleted
-			if(storage1_last_stored_element_addresses[i] == (int32_t)address - 1) {
-				storage1_last_stored_element_addresses[i] = -1;
-			}
+			//if(storage1_last_stored_element_addresses[i] == (int32_t)address - 1) {
+			//	storage1_last_stored_element_addresses[i] = -1;
+			//}
 			
 			// Check if storage1_last_stored_element_addresses[i] is in a page that will be written to
 			if(last_stored_element_page_address > start_page_address && last_stored_element_page_address < start_page_address + num_pages) {
@@ -136,9 +136,12 @@ ret_code_t storage1_compute_pages_to_erase(uint32_t address, uint32_t length_dat
 	
 	
 	int32_t last_stored_element_address = (int32_t) (address + length_data - 1);
-	if(last_stored_element_address == STORAGE1_SIZE - 1) { // if then end-address is the last address in storage, we don't need to insert it (because this will only be deleted/overwritten, if a write to the last page is performed again)
+
+	// if then end-address is the last address in a unit, we don't need to insert it (because this will only be deleted/overwritten, if a write to the same unit is performed again)
+	if(last_stored_element_address % storage1_get_unit_size() == storage1_get_unit_size() - 1) {
 		return NRF_SUCCESS;
 	}
+
 	
 	// Search for the index, where to store the current address
 	uint32_t index = 0;

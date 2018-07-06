@@ -134,42 +134,43 @@ TEST_F(Storage1Test, ComputePagesToEraseTest) {
 	ret = storage1_compute_pages_to_erase(FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*1, 10, &erase_start_page_address, &erase_num_pages);
 	EXPECT_EQ(ret, NRF_SUCCESS);
 	EXPECT_EQ(erase_start_page_address, 1);
-	EXPECT_EQ(erase_num_pages, 1);
-	EXPECT_EQ(storage1_last_stored_element_addresses[0], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*5 + FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*3 - 1);
-	EXPECT_EQ(storage1_last_stored_element_addresses[1], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*4 + 29);
-	EXPECT_EQ(storage1_last_stored_element_addresses[2], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*2 + 19);
-	EXPECT_EQ(storage1_last_stored_element_addresses[3], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*1 + 9);
+	EXPECT_EQ(erase_num_pages, 1);	
+	EXPECT_EQ(storage1_last_stored_element_addresses[0], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*4 + 29);
+	EXPECT_EQ(storage1_last_stored_element_addresses[1], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*2 + 19);
+	EXPECT_EQ(storage1_last_stored_element_addresses[2], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*1 + 9);
+	EXPECT_EQ(storage1_last_stored_element_addresses[3], -1);
 	
 	
-	
-	// Now write to page 0 --> it should replace storage1_last_stored_element_addresses at index 0 (because could not find minimum, and no entry is -1)
+	// Now write to page 0 --> it should replace storage1_last_stored_element_addresses at index 3
 	ret	= storage1_compute_pages_to_erase(0, 10, &erase_start_page_address, &erase_num_pages);
 	EXPECT_EQ(ret, NRF_SUCCESS);
 	EXPECT_EQ(erase_start_page_address, 0);
 	EXPECT_EQ(erase_num_pages, 1);
-	EXPECT_EQ(storage1_last_stored_element_addresses[0], 9);
-	EXPECT_EQ(storage1_last_stored_element_addresses[1], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*4 + 29);
-	EXPECT_EQ(storage1_last_stored_element_addresses[2], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*2 + 19);
-	EXPECT_EQ(storage1_last_stored_element_addresses[3], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*1 + 9);
 	
-	// Now write again to page 0 with higher address (and full page write) --> it should replace storage1_last_stored_element_addresses at index 0, and should erase no pages
+	EXPECT_EQ(storage1_last_stored_element_addresses[0], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*4 + 29);
+	EXPECT_EQ(storage1_last_stored_element_addresses[1], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*2 + 19);
+	EXPECT_EQ(storage1_last_stored_element_addresses[2], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*1 + 9);
+	EXPECT_EQ(storage1_last_stored_element_addresses[3], 9);
+	
+	// Now write again to page 0 with higher address (and full page write) --> it should set storage1_last_stored_element_addresses[3] to -1, and should erase no pages
 	ret	= storage1_compute_pages_to_erase(20, FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*1 -20, &erase_start_page_address, &erase_num_pages);
 	EXPECT_EQ(ret, NRF_SUCCESS);
 	EXPECT_EQ(erase_start_page_address, 1);
 	EXPECT_EQ(erase_num_pages, 0);
-	EXPECT_EQ(storage1_last_stored_element_addresses[0], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*1 - 1);
-	EXPECT_EQ(storage1_last_stored_element_addresses[1], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*4 + 29);
-	EXPECT_EQ(storage1_last_stored_element_addresses[2], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*2 + 19);
-	EXPECT_EQ(storage1_last_stored_element_addresses[3], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*1 + 9);
+	EXPECT_EQ(storage1_last_stored_element_addresses[0], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*4 + 29);
+	EXPECT_EQ(storage1_last_stored_element_addresses[1], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*2 + 19);
+	EXPECT_EQ(storage1_last_stored_element_addresses[2], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*1 + 9);
+	EXPECT_EQ(storage1_last_stored_element_addresses[3], -1);
+	
 	
 	// Now write to page 1 --> it should replace storage1_last_stored_element_addresses at index 0 (because == address-1) and should set storage1_last_stored_element_addresses[3] to -1
 	ret	= storage1_compute_pages_to_erase(FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*1, 10, &erase_start_page_address, &erase_num_pages);
 	EXPECT_EQ(ret, NRF_SUCCESS);
 	EXPECT_EQ(erase_start_page_address, 1);
 	EXPECT_EQ(erase_num_pages, 1);
-	EXPECT_EQ(storage1_last_stored_element_addresses[0], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*1 + 9);
-	EXPECT_EQ(storage1_last_stored_element_addresses[1], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*4 + 29);
-	EXPECT_EQ(storage1_last_stored_element_addresses[2], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*2 + 19);
+	EXPECT_EQ(storage1_last_stored_element_addresses[0], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*4 + 29);
+	EXPECT_EQ(storage1_last_stored_element_addresses[1], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*2 + 19);
+	EXPECT_EQ(storage1_last_stored_element_addresses[2], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*1 + 9);
 	EXPECT_EQ(storage1_last_stored_element_addresses[3], -1);
 	
 	
@@ -178,30 +179,30 @@ TEST_F(Storage1Test, ComputePagesToEraseTest) {
 	EXPECT_EQ(ret, NRF_SUCCESS);
 	EXPECT_EQ(erase_start_page_address, 0);
 	EXPECT_EQ(erase_num_pages, 1);
-	EXPECT_EQ(storage1_last_stored_element_addresses[0], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*1 + 9);
-	EXPECT_EQ(storage1_last_stored_element_addresses[1], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*4 + 29);
-	EXPECT_EQ(storage1_last_stored_element_addresses[2], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*2 + 19);
+	EXPECT_EQ(storage1_last_stored_element_addresses[0], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*4 + 29);
+	EXPECT_EQ(storage1_last_stored_element_addresses[1], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*2 + 19);
+	EXPECT_EQ(storage1_last_stored_element_addresses[2], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*1 + 9);
 	EXPECT_EQ(storage1_last_stored_element_addresses[3], 19);
 	
 	
-	// Now write to page 3 --> it should replace storage1_last_stored_element_addresses at index 2 (because of min difference)
+	// Now write to page 3 --> it should replace storage1_last_stored_element_addresses at index 1 (because of min difference)
 	ret	= storage1_compute_pages_to_erase(FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*3, 10, &erase_start_page_address, &erase_num_pages);
 	EXPECT_EQ(ret, NRF_SUCCESS);
 	EXPECT_EQ(erase_start_page_address, 3);
 	EXPECT_EQ(erase_num_pages, 1);
-	EXPECT_EQ(storage1_last_stored_element_addresses[0], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*1 + 9);
-	EXPECT_EQ(storage1_last_stored_element_addresses[1], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*4 + 29);
-	EXPECT_EQ(storage1_last_stored_element_addresses[2], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*3 + 9);
+	EXPECT_EQ(storage1_last_stored_element_addresses[0], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*4 + 29);
+	EXPECT_EQ(storage1_last_stored_element_addresses[1], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*3 + 9);
+	EXPECT_EQ(storage1_last_stored_element_addresses[2], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*1 + 9);
 	EXPECT_EQ(storage1_last_stored_element_addresses[3], 19);
 	
-	// Now write again to page 0 with large data --> it should set [0] and [3] to -1, erase page 1 (not 0 because larger than former address in page 0) and should insert to [0]
+	// Now write again to page 0 with large data --> it should set [2] and [3] to -1, erase page 1 (not 0 because larger than former address in page 0) and should insert to [2]
 	ret	= storage1_compute_pages_to_erase(20, FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*1, &erase_start_page_address, &erase_num_pages);
 	EXPECT_EQ(ret, NRF_SUCCESS);
 	EXPECT_EQ(erase_start_page_address, 1);
 	EXPECT_EQ(erase_num_pages, 1);
-	EXPECT_EQ(storage1_last_stored_element_addresses[0], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*1 + 19);
-	EXPECT_EQ(storage1_last_stored_element_addresses[1], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*4 + 29);
-	EXPECT_EQ(storage1_last_stored_element_addresses[2], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*3 + 9);
+	EXPECT_EQ(storage1_last_stored_element_addresses[0], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*4 + 29);
+	EXPECT_EQ(storage1_last_stored_element_addresses[1], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*3 + 9);
+	EXPECT_EQ(storage1_last_stored_element_addresses[2], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*1 + 19);
 	EXPECT_EQ(storage1_last_stored_element_addresses[3], -1);
 	
 	
@@ -213,9 +214,9 @@ TEST_F(Storage1Test, ComputePagesToEraseTest) {
 	EXPECT_EQ(ret, NRF_SUCCESS);
 	EXPECT_EQ(erase_start_page_address, FLASH_NUM_PAGES_TEST - 1);
 	EXPECT_EQ(erase_num_pages, 1);
-	EXPECT_EQ(storage1_last_stored_element_addresses[0], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*1 + 19);
-	EXPECT_EQ(storage1_last_stored_element_addresses[1], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*4 + 29);
-	EXPECT_EQ(storage1_last_stored_element_addresses[2], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*3 + 9);
+	EXPECT_EQ(storage1_last_stored_element_addresses[0], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*4 + 29);
+	EXPECT_EQ(storage1_last_stored_element_addresses[1], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*3 + 9);
+	EXPECT_EQ(storage1_last_stored_element_addresses[2], FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t)*1 + 19);
 	EXPECT_EQ(storage1_last_stored_element_addresses[3], -1);	// This one should stay -1
 	
 }
