@@ -43,11 +43,3 @@ RUN ln -s /lib/x86_64-linux-gnu/libudev.so.0 /lib/x86_64-linux-gnu/libudev.so.1
 # SEGGER
 copy compose/JLink_Linux_V616i_x86_64.deb /opt/downloads/JLink_Linux_V616i_x86_64.deb
 RUN dpkg -i downloads/JLink_Linux_V616i_x86_64.deb
-
-# Free RTOS
-ENV RTOS_PATH=/opt/RTOS
-RUN wget http://interactive.freertos.org/attachments/token/r6d5gt3998niuc4/?name=Posix_GCC_Simulator_6.0.4.zip -O downloads/Posix_GCC_Simulator_6.0.4.zip
-RUN unzip downloads/Posix_GCC_Simulator_6.0.4.zip -d $RTOS_PATH
-ENV RTOS_PATH=/opt/RTOS/Posix_GCC_Simulator/FreeRTOS_Posix
-#Fix an error in makefile
-RUN sed -i "/	gcc -pthread -lrt -o\"FreeRTOS_Posix\" \$(OBJS) \$(USER_OBJS) \$(LIBS)/c\	gcc -pthread -o\"FreeRTOS_Posix\" \$(OBJS) \$(USER_OBJS) \$(LIBS) -lrt" $RTOS_PATH/Release/makefile
