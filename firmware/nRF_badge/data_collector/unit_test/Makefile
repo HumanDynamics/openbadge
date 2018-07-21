@@ -47,6 +47,7 @@ TESTS = flash_lib_mock_unittest \
 		storage2_lib_unittest \
 		storage_lib_unittest \
 		filesystem_lib_unittest \
+		timer_lib_unittest \
 				
 FIRMWARE_SRCS = $(FIRMWARE_DIR)/incl/storage1_lib.c \
 				$(FIRMWARE_DIR)/incl/storage2_lib.c \
@@ -420,7 +421,7 @@ $(TESTS_OBJECTS): $(MOCK_OBJECTS) $(FIRMWARE_OBJECTS)
 	$(NO_ECHO)$(CXX) $(CPPFLAGS) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) $(CXXFLAGS) -c $(TESTS_SRCS)
 
 $(TESTS): $(TESTS_OBJECTS) gtest_main.a
-	$(NO_ECHO)$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) -lpthread $@.o $(FIRMWARE_OBJECTS) $(MOCK_OBJECTS) gtest_main.a -o $(BUILD_DIR)/run_$@
+	$(NO_ECHO)$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) -lpthread $@.o $(FIRMWARE_OBJECTS) $(MOCK_OBJECTS) gtest_main.a -o $(BUILD_DIR)/run_$@ -lrt
 ifeq ($(LCOV), TRUE)
 # move .gcno files (only if exist) and don't raise an error
 	$(NO_ECHO)-mv *.gcno $(LCOV_DIR) 2>/dev/null || :
