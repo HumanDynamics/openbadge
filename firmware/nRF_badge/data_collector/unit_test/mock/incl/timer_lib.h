@@ -1,7 +1,7 @@
 /** @file
  *
  *
- * @brief Timer implementation to call timeout-handlers at specified intervals.
+ * @brief Timer implementation to call timeout-handlers at specified intervals through a timer-thread.
  *
  * @details This module provides the functionality to create and start timer that expires at specific intervals.
  *			If a timer expires a timeout-handler is called.
