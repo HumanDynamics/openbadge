@@ -46,10 +46,13 @@ TESTS = flash_lib_mock_unittest \
 		storage1_lib_unittest \
 		storage2_lib_unittest \
 		storage_lib_unittest \
+		filesystem_lib_unittest \
 				
 FIRMWARE_SRCS = $(FIRMWARE_DIR)/incl/storage1_lib.c \
 				$(FIRMWARE_DIR)/incl/storage2_lib.c \
 				$(FIRMWARE_DIR)/incl/storage_lib.c \
+				$(FIRMWARE_DIR)/incl/filesystem_lib.c \
+
 
 
 
@@ -69,8 +72,6 @@ FIRMWARE_INC_PATH += -I$(SDK_PATH)/components/drivers_nrf/nrf_soc_nosd
 #FIRMWARE_INC_PATH += -I$(FIRMWARE_DIR)/config
 #FIRMWARE_INC_PATH += -I$(SDK_PATH)/components/libraries/util					--> For sdk_errors.h		
 #FIRMWARE_INC_PATH += -I$(SDK_PATH)/components/drivers_nrf/nrf_soc_nosd			--> For nrf_error.h	
-
-
 
 MOCK_INC_PATH += -I$(MOCK_DIR)/incl
 
