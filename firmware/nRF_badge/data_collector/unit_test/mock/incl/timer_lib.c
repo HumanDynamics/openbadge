@@ -28,13 +28,13 @@ uint32_t number_of_timers = 0;								/**< Number of created timers */
 
 /**@brief Function for entering a critical section by locking the mutex.
  */
-void enter_critical_section(void) {
+static void enter_critical_section(void) {
 	pthread_mutex_lock(&critical_section_mutex);
 }
 
 /**@brief Function for exiting a critical section by locking the mutex.
  */
-void exit_critical_section(void) {
+static void exit_critical_section(void) {
 	pthread_mutex_unlock(&critical_section_mutex);
 }
 
@@ -242,6 +242,7 @@ void timer_init(void) {
 void timer_stop(void) {
 	enter_critical_section();
 	timer_running = 0;
+	pthread_mutex_destroy (&critical_section_mutex);
 	exit_critical_section();
 }
 
