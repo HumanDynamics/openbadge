@@ -48,12 +48,12 @@ TESTS = flash_lib_mock_unittest \
 		storage_lib_unittest \
 		filesystem_lib_unittest \
 		timer_lib_unittest \
+		app_timer_mock_unittest \
 				
 FIRMWARE_SRCS = $(FIRMWARE_DIR)/incl/storage1_lib.c \
 				$(FIRMWARE_DIR)/incl/storage2_lib.c \
 				$(FIRMWARE_DIR)/incl/storage_lib.c \
 				$(FIRMWARE_DIR)/incl/filesystem_lib.c \
-
 
 
 
@@ -66,19 +66,20 @@ FIRMWARE_INC_PATH += -I$(FIRMWARE_DIR)/incl
 FIRMWARE_INC_PATH += -I$(FIRMWARE_DIR)/config
 FIRMWARE_INC_PATH += -I$(SDK_PATH)/components/libraries/util				
 FIRMWARE_INC_PATH += -I$(SDK_PATH)/components/drivers_nrf/nrf_soc_nosd
-
+FIRMWARE_INC_PATH += -I$(SDK_PATH)/components/device			
+FIRMWARE_INC_PATH += -I$(SDK_PATH)/components/libraries/timer
 
 
 #FIRMWARE_INC_PATH += -I$(FIRMWARE_DIR)/incl
 #FIRMWARE_INC_PATH += -I$(FIRMWARE_DIR)/config
 #FIRMWARE_INC_PATH += -I$(SDK_PATH)/components/libraries/util					--> For sdk_errors.h		
 #FIRMWARE_INC_PATH += -I$(SDK_PATH)/components/drivers_nrf/nrf_soc_nosd			--> For nrf_error.h	
+#FIRMWARE_INC_PATH += -I$(SDK_PATH)/components/device							--> For compiler_abstractions.h
+#FIRMWARE_INC_PATH += -I$(SDK_PATH)/components/libraries/timer					--> For app_timer.h
+
+
 
 MOCK_INC_PATH += -I$(MOCK_DIR)/incl
-
-
-
-
 
 
 
@@ -410,6 +411,7 @@ badge_03v6_tester: compile
 # Builds a sample test.  A test should link with either gtest.a or
 # gtest_main.a, depending on whether it defines its own main()
 # function.
+# It is important that MOCK_INC_PATH is before FIRMWARE_INC_PATH, because some SDK-header files are probably overwritten in the MOCK_INC_PATH
 
 $(MOCK_OBJECTS):
 	$(NO_ECHO)$(CXX) $(CPPFLAGS) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) $(CXXFLAGS) -c $(MOCK_SRCS)
@@ -423,6 +425,7 @@ $(TESTS_OBJECTS): $(MOCK_OBJECTS) $(FIRMWARE_OBJECTS)
 $(TESTS): $(TESTS_OBJECTS) gtest_main.a
 	$(NO_ECHO)$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) -lpthread $@.o $(FIRMWARE_OBJECTS) $(MOCK_OBJECTS) gtest_main.a -o $(BUILD_DIR)/run_$@ -lrt
 ifeq ($(LCOV), TRUE)
-# move .gcno files (only if exist) and don't raise an error
+#move .gcno files (only if exist) and don't raise an error
 	$(NO_ECHO)-mv *.gcno $(LCOV_DIR) 2>/dev/null || :
 endif
+
