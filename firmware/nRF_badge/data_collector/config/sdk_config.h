@@ -121,6 +121,15 @@
 
 
 //==========================================================
+// <e> APP_SCHEDULER_ENABLED - app_scheduler - Application scheduler functionality
+//==========================================================
+#ifndef APP_SCHEDULER_ENABLED
+#define APP_SCHEDULER_ENABLED 1
+#endif //APP_SCHEDULER_ENABLED
+// </e>
+
+
+//==========================================================
 // <e> CLOCK_ENABLED - nrf_drv_clock - CLOCK peripheral driver
 //==========================================================
 #ifndef CLOCK_ENABLED
