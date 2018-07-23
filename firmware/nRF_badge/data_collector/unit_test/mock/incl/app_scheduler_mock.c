@@ -142,7 +142,8 @@ uint32_t app_sched_event_put(void                    * p_event_data,
         if (!app_sched_queue_full())
         {
             event_index       = m_queue_end_index;
-            m_queue_end_index = next_index(m_queue_end_index);
+			// Don't increment here, because app_sched_execute() could interrupt this, and will execute a non inserted event-handler!
+           // m_queue_end_index = next_index(m_queue_end_index);
 
         }
 
@@ -163,7 +164,9 @@ uint32_t app_sched_event_put(void                    * p_event_data,
             {
                 m_queue_event_headers[event_index].event_data_size = 0;
             }
-
+			
+			// Increment it iff the header was actually added to the queue!
+			m_queue_end_index = next_index(m_queue_end_index);
             err_code = NRF_SUCCESS;
         }
         else
