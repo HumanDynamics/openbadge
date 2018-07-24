@@ -218,25 +218,25 @@ static void* timer_check_queue(void* ptr) {
 void timer_init(void) {
 	
 	if(timer_running)
-		timer_stop();
-	
+		return;
 	pthread_mutex_init (&critical_section_mutex, NULL);
+	
+	enter_critical_section();
+	timer_running = 1;
+	queue_head = NULL;
+	number_of_timers = 0;
+	
+	
 	
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-	
-	queue_head = NULL;
-	number_of_timers = 0;
-	
-	timer_running = 1;
-	
+		
 	pthread_create(&thread_handle, &attr, timer_check_queue, NULL);
-	
-	
 	
 	pthread_attr_destroy(&attr);
 	
+	exit_critical_section();
 }
 
 void timer_stop(void) {
