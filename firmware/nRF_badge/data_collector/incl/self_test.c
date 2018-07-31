@@ -112,11 +112,11 @@ void runSelfTests(){
     nrf_delay_ms(LED_BLINK_MS);
 
     // ====== Accel ======
-    #ifdef EXIST_ACCL
-    accel_test(); //Test whoiam and set basic registers
-    accel_set_int_motion(); //Set internal movement detection with Interruput output
-    acc_self_test(); //Internal self_test LIS2DH
-    #endif //EXIST_ACCL
+    if (EXIST_ACCL) {
+        accel_test(); //Test whoiam and set basic registers
+        accel_set_int_motion(); //Set internal movement detection with Interruput output
+        acc_self_test(); //Internal self_test LIS2DH
+    }
 
     // ====== test mic =====
     testMicInit(MIC_ZERO);
@@ -124,10 +124,10 @@ void runSelfTests(){
     while(1) // stay in infinite loop for test mic and accel
     {
         // ====== Feature Motion detect ======
-        #ifdef EXIST_ACCL
-        //tap_accel(); //For tap detection reading register
-        motion_interrupt(); //For internal movement detection reading interrupt pin
-        #endif //EXIST_ACCL
+        if (EXIST_ACCL) {
+            //tap_accel(); //For tap detection reading register
+            motion_interrupt(); //For internal movement detection reading interrupt pin
+        }
         // ====== Feature Mic ======
         testMicAddSample();// update reading
         if (testMicAboveThreshold()) {

@@ -31,11 +31,11 @@
 #define SPIM0_SS_PIN                0    // SPI CSN signal.
 #define SPIM0_MOSI_PIN              4    // SPI MOSI signal.
 #define SPIM0_SCK_PIN               3    // SPI SCK signal.
-#define INT_PIN_INPUT               25    // SPI SCK signal.
+#define INT_PIN_INPUT               25   // accelerator interrupt pin
 
 #define MIC_PIN ADC_CONFIG_PSEL_AnalogInput6  //GPIO P05
 #define MIC_AREF NRF_ADC_CONFIG_REF_EXT_REF1  //GPIO P06
 
-#define EXIST_ACCL                        true    // board has accelerator?
+#define EXIST_ACCL					true    // board has accelerator?
 
 #endif // BADGE_03V6

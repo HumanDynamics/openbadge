@@ -23,7 +23,6 @@
 #define INT1_DURATION               0x00
 #define INT1_CFG                    0x30
 
-#ifdef EXIST_ACCL
 void accel_set_int_motion();
 void acc_self_test();
 void setDataRate();
@@ -33,6 +32,5 @@ void motion_interrupt();
 void accel_spi_init();
 void accel_init();
 void accel_set_int_tap();
-#endif //EXIST_ACCL
 
 #endif //ACCEL_H
