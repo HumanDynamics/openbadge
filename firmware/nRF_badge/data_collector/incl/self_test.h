@@ -13,6 +13,8 @@
     #define LED_OFF 0
 #endif
 
+#include "accel.h"
+
 #include "nrf_delay.h"          //includes blocking delay functions
 
 //#include "internal_flash.h"
@@ -38,7 +40,6 @@ struct
 bool testInternalFlash(void);
 */
 
-
 // adds a mic sample to the thresholding array. It will make
 // THRESH_SAMPLES samples and average them to create a single reading
 void testMicAddSample();
@@ -53,9 +54,7 @@ uint8_t testMicAvg();
 // return true if last sample is above threshold
 bool testMicAboveThreshold();
 
-
-
-
-
-
 void runSelfTests();
+
+uint8_t readRegister8(uint8_t reg);
+void writeRegister8(uint8_t reg, uint8_t value);

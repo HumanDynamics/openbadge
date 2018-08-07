@@ -61,12 +61,12 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 
 #define SCHED_MAX_EVENT_DATA_SIZE sizeof(uint32_t)
 #define SCHED_QUEUE_SIZE 100
- 
+
 /**
  * ============================================== MAIN ====================================================
  */
 int main(void)
-{    
+{
     #if defined(BOARD_PCA10028)  //NRF51DK
         //If button 4 is pressed on startup, do nothing (mostly so that UART lines are freed on the DK board)
         nrf_gpio_cfg_input(BUTTON_4,NRF_GPIO_PIN_PULLUP);  //button 4
@@ -78,7 +78,7 @@ int main(void)
         }
         nrf_gpio_cfg_default(BUTTON_4);
     #endif
-    
+
     debug_log_init();
     debug_log("\r\n\r\n\r\n\r\nUART trace initialized.\r\n\r\n");
 
@@ -99,23 +99,20 @@ int main(void)
     nrf_gpio_pin_dir_set(LED_2,NRF_GPIO_PIN_DIR_OUTPUT);  //set LED pin to output
     nrf_gpio_pin_write(LED_2,LED_OFF);  //turn off LED
 
-    // Button
-    nrf_gpio_cfg_input(BUTTON_1,NRF_GPIO_PIN_PULLUP);  //button
-    
     // Initialize
     BLE_init();
     sd_power_mode_set(NRF_POWER_MODE_LOWPWR);  //set low power sleep mode
     adc_config();
     rtc_config();
     spi_init();
-    
-    
+
+
     #if defined(TESTER_ENABLE) // tester mode is enabled
         runSelfTests();
         while(1);
     #endif    // end of self tests
-    
-    
+
+
     /*
     debug_log("=DEVELOPMENT BADGE.  ONLY ERASES EEPROM=\r\n");
     debug_log("=ERASING EEPROM...=\r\n");
@@ -143,10 +140,10 @@ int main(void)
     sender_init();
     scanner_init();
     BatteryMonitor_init();
-    
+
     BLEsetBadgeAssignment(getStoredBadgeAssignment());
     advertising_init();
-    
+
     // Blink once on start
     nrf_gpio_pin_write(LED_1,LED_OFF);
     nrf_delay_ms(100);
@@ -169,11 +166,11 @@ int main(void)
     nrf_gpio_pin_write(LED_1,LED_OFF);
     nrf_gpio_pin_write(LED_2,LED_OFF);
 
-    
+
     nrf_delay_ms(1000);
 
     debug_log("Done with setup.  Entering main loop.\r\n\r\n");
-    
+
     BLEstartAdvertising();
 
     nrf_delay_ms(2);
@@ -193,7 +190,7 @@ void BLEonConnect()
     #ifdef DEBUG_LOG_ENABLE
         nrf_gpio_pin_write(LED_1,LED_ON);
     #endif
-    
+
     ble_timeout_set(CONNECTION_TIMEOUT_MS);
 }
 
@@ -206,7 +203,7 @@ void BLEonDisconnect()
     #ifdef DEBUG_LOG_ENABLE
         nrf_gpio_pin_write(LED_1,LED_OFF);
     #endif
-    
+
     ble_timeout_cancel();
 }
 
@@ -219,7 +216,7 @@ static void processPendingCommand(void * p_event_data, uint16_t event_size) {
 
 /** Function for handling incoming data from the BLE UART service
  */
-void BLEonReceive(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)  
+void BLEonReceive(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)
 {
     if(length > 0)
     {
@@ -229,5 +226,3 @@ void BLEonReceive(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)
 
     ble_timeout_set(CONNECTION_TIMEOUT_MS);
 }
-
-

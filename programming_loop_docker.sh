@@ -27,12 +27,12 @@ fi
 mode="$1"
 case $mode in
     test)
-    COMPILE_CMD="badge_03v4_tester"
+    COMPILE_CMD="badge_03v6_tester"
     LOAD_CMD="flashNew"
     shift # past argument
     ;;
     prod)
-    COMPILE_CMD="badge_03v4_noDebug"
+    COMPILE_CMD="badge_03v6_noDebug"
     LOAD_CMD="flashCode"
     shift # past argument
     ;;
@@ -71,7 +71,7 @@ do
     then
 	    echo "============================================================"
 	    echo "########## Programming new badge (${COUNTER}) #######"
-        
+
         sleep 5
         load
     	get_mac

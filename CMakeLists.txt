@@ -8,10 +8,13 @@ set(SOURCE_FILES
     firmware/nRF_badge/data_collector/config/pstorage_platform.h
     firmware/nRF_badge/data_collector/incl/analog.c
     firmware/nRF_badge/data_collector/incl/analog.h
+    firmware/nRF_badge/data_collector/incl/accel.c
+    firmware/nRF_badge/data_collector/incl/accel.h
     firmware/nRF_badge/data_collector/incl/badge_03.h
     firmware/nRF_badge/data_collector/incl/badge_03v2_dynastream.h
     firmware/nRF_badge/data_collector/incl/badge_03v2_rigado.h
     firmware/nRF_badge/data_collector/incl/badge_03v4.h
+    firmware/nRF_badge/data_collector/incl/badge_03v6.h
     firmware/nRF_badge/data_collector/incl/battery.c
     firmware/nRF_badge/data_collector/incl/battery.h
     firmware/nRF_badge/data_collector/incl/ble_setup.c
