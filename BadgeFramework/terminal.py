@@ -2,19 +2,29 @@ import logging
 import sys
 import threading
 
-from ble_badge_connection import *
+
 from badge import *
+from ble_badge_connection import *
+from bluepy import *
+from bluepy import btle
+from bluepy.btle import UUID, Peripheral, DefaultDelegate, AssignedNumbers ,Scanner
+from bluepy.btle import BTLEException
 
 # Enable debug output.
-#logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
-
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 # Main Loop of Badge Terminal
+
 def main():
-	print "Searching for and connecting to badge..."
-	connection = BLEBadgeConnection.get_connection_to_badge()
+	print ("Searching for and connecting to badge...")
+	device_addr = "e8:08:f6:27:8a:28"
+	connection = BLEBadgeConnection.get_connection_to_badge(device_addr)
+	#print(connection)
 	if not connection:
 		print "Could not find nearby OpenBadge. :( Please try again!"
 		return
+
+
+	#conn = btle.Peripheral(device_addr, btle.ADDR_TYPE_RANDOM)
 
 	connection.connect()
 	badge = OpenBadge(connection)
@@ -159,4 +169,8 @@ def main():
 			print "Command Not Found!"
 			print_help({})
 
-Adafruit_BluefruitLE.get_provider().run_mainloop_with(main)
+
+
+
+if __name__ == "__main__":
+	main()

@@ -1,14 +1,13 @@
 import unittest
 import sys
-import Adafruit_BluefruitLE
 import logging
 import time
 import serial
 import serial.tools.list_ports
 import threading
 
-from BadgeFramework.ble_badge_connection import BLEBadgeConnection
-from BadgeFramework.badge import OpenBadge
+from ble_badge_connection import BLEBadgeConnection
+from badge import OpenBadge
 
 logging.basicConfig(filename="integration_test.log", level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -34,17 +33,22 @@ class IntegrationTest(unittest.TestCase):
 		self.runTest_startUART()
 		# AdaFruit has this really handy helper function, but we should probably write our own, so that
 		# we don't have to propogate the AdaFruit dependency everywhere.
-		Adafruit_BluefruitLE.get_provider().run_mainloop_with(self.runTest_MainLoop)
+		#Adafruit_BluefruitLE.get_provider().run_mainloop_with(self.runTest_MainLoop)
+		self.runTest_MainLoop()
+
 
 	def runTest_startUART(self):
-		uartPort = list(serial.tools.list_ports.grep("cu.usbmodem"))[0]
+		uartPort = list(serial.tools.list_ports.comports())[0]
 		self.uartSerial = serial.Serial(uartPort.device, 115200, timeout=1)
+
 
 		def uartRXTarget():
 			while True:
 				# Some slight implicit control flow going on here:
 				#   uartSerial.readline() will sometimes timeout, and then we'll just loop around.
+
 				rx_data = self.uartSerial.readline()
+
 				if rx_data:
 					# We truncate the ending newline. 
 					self.onUartLineRx(rx_data[:-1])
@@ -58,8 +62,9 @@ class IntegrationTest(unittest.TestCase):
 
 	def runTest_MainLoop(self):
 		restart_badge(self.uartSerial)
+		device_addr = "e8:08:f6:27:8a:28"
 
-		connection = BLEBadgeConnection.get_connection_to_badge()
+		connection = BLEBadgeConnection.get_connection_to_badge(device_addr)
 		connection.connect()
 		badge = OpenBadge(connection)
 

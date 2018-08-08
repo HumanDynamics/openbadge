@@ -1,4 +1,4 @@
-FROM resin/rpi-raspbian:jessie
+FROM resin/rpi-raspbian:stretch
 
 
 MAINTAINER Oren Lederman <orenled@mit.edu>
