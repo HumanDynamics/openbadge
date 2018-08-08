@@ -41,3 +41,21 @@ COPY compose/Makefile.posix $NRF_SDK_PATH/components/toolchain/gcc/Makefile.posi
 # SEGGER
 copy compose/JLink_Linux_V616i_x86_64.deb /opt/downloads/JLink_Linux_V616i_x86_64.deb
 RUN dpkg -i downloads/JLink_Linux_V616i_x86_64.deb
+
+################################
+## Bluetooth Python environment
+################################
+RUN apt-get update && apt-get install -y \
+    python \
+    python-dev \
+    python-pip \
+    python-setuptools \
+    gcc \
+    build-essential \
+    libglib2.0-dev \
+    bluez \
+    --no-install-recommends && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY ./BadgeFramework/requirements.txt /tmp/requirements.txt
+RUN pip install -r /tmp/requirements.txt
