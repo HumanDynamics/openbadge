@@ -1,8 +1,11 @@
-FROM ubuntu:12.04
+FROM ubuntu:18.04
 
 MAINTAINER Oren Lederman <orenled@mit.edu>
 # Based on https://github.com/FruityLoopers/fruityfactory
 
+###########################
+## Compilation environment
+###########################
 RUN apt-get update && apt-get install -y \
 	build-essential \
   libbluetooth-dev \
@@ -16,7 +19,8 @@ RUN apt-get update && apt-get install -y \
   git \
   cmake \
   minicom screen \
-  vim
+  vim \
+  wget
 
 RUN mkdir -p /opt/downloads
 
@@ -33,9 +37,6 @@ RUN wget https://developer.nordicsemi.com/nRF51_SDK/nRF51_SDK_v8.x.x/nRF51_SDK_8
 RUN unzip -q downloads/nRF51_SDK_8.1.0_b6ed55f.zip -d $NRF_SDK_PATH
 
 COPY compose/Makefile.posix $NRF_SDK_PATH/components/toolchain/gcc/Makefile.posix
-
-# Fix missing library error
-RUN ln -s /lib/x86_64-linux-gnu/libudev.so.0 /lib/x86_64-linux-gnu/libudev.so.1
 
 # SEGGER
 copy compose/JLink_Linux_V616i_x86_64.deb /opt/downloads/JLink_Linux_V616i_x86_64.deb
