@@ -1,6 +1,5 @@
 FROM resin/rpi-raspbian:stretch
 
-
 MAINTAINER Oren Lederman <orenled@mit.edu>
 # Based on https://github.com/FruityLoopers/fruityfactory
 
@@ -37,12 +36,10 @@ RUN unzip -q downloads/nRF51_SDK_8.1.0_b6ed55f.zip -d $NRF_SDK_PATH
 
 COPY compose/Makefile.posix_jessie $NRF_SDK_PATH/components/toolchain/gcc/Makefile.posix
 
-# Fix missing library error
-RUN ln -s /lib/arm-linux-gnueabihf/libudev.so.1 /lib/arm-linux-gnueabihf/libudev.so.0
-
 # SEGGER
 COPY compose/JLink_Linux_V616i_arm.tgz /opt/downloads/JLink_Linux_V616i_arm.tgz
 RUN tar -C /opt/ -xzf downloads/JLink_Linux_V616i_arm.tgz
 RUN ln -s /opt/JLink_Linux_V616i_arm/JLinkExe /usr/local/bin/JLinkExe
 
-COPY .  /app
+# Uncomment if running on a remote raspberry pi machine
+#COPY .  /app
