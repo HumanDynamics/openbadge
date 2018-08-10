@@ -23,6 +23,8 @@ ret_code_t storage1_init(void);
  *			If the application needs more than STORAGE1_LAST_STORED_ELEMENT_ADDRESSES_SIZE different sequential 
  *			addresses, this value has to be increased.
  *			The function converts the bytes to words and store them in the flash.
+ *			If the store operation fails (because of e.g. softdevice) the internal last_stored_element_addresses-array
+ *			is set nevertheless, so if the application stores to the same address again, it will be erased.
  *
  * @warning When storing data, all data that have been stored before on the same page but behind the new data, will be deleted.
  *			Furthermore, the erasing of pages before storing data to them could lead to inconsistent data, if the power supply is interrupted.
