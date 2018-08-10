@@ -1,6 +1,9 @@
 import time
+import sys
 from integration_test import *
-from BadgeFramework.badge import timestamps_to_time
+
+sys.path.append('../BadgeFramework')
+from badge import timestamps_to_time
 
 TEST_LENGTH_SECONDS = 3 * 60;
 SAMPLE_PERIOD_TICKS = 1638.0
@@ -51,5 +54,10 @@ class RecordNoGapsTestCase(IntegrationTest):
 		self.assertAlmostEqual(num_samples_taken, expected_num_samples, delta=1)
 
 if __name__ == "__main__":
-	testCase = RecordNoGapsTestCase()
+	if len(sys.argv) != 2:
+		print("Please enter badge MAC address")
+		exit(1)
+	device_addr = sys.argv[1]
+
+	testCase = RecordNoGapsTestCase(device_addr)
 	testCase.runTest()

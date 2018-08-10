@@ -21,5 +21,10 @@ class ScanRecordTimeoutTestCase(IntegrationTest):
 		self.assertFalse(status.scanner_status)
 
 if __name__ == "__main__":
-	testCase = ScanRecordTimeoutTestCase()
+	if len(sys.argv) != 2:
+		print("Please enter badge MAC address")
+		exit(1)
+	device_addr = sys.argv[1]
+
+	testCase = ScanRecordTimeoutTestCase(device_addr)
 	testCase.runTest()

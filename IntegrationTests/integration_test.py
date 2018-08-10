@@ -6,6 +6,7 @@ import serial
 import serial.tools.list_ports
 import threading
 
+sys.path.append('../BadgeFramework')
 from ble_badge_connection import BLEBadgeConnection
 from badge import OpenBadge
 
@@ -26,7 +27,8 @@ def restart_badge(serial):
 	time.sleep(5)
 
 class IntegrationTest(unittest.TestCase):
-	def __init__(self):
+	def __init__(self, device_addr):
+		self.device_addr = device_addr
 		unittest.TestCase.__init__(self)
 
 	def runTest(self):
@@ -62,9 +64,8 @@ class IntegrationTest(unittest.TestCase):
 
 	def runTest_MainLoop(self):
 		restart_badge(self.uartSerial)
-		device_addr = "e8:08:f6:27:8a:28"
 
-		connection = BLEBadgeConnection.get_connection_to_badge(device_addr)
+		connection = BLEBadgeConnection.get_connection_to_badge(self.device_addr)
 		connection.connect()
 		badge = OpenBadge(connection)
 
