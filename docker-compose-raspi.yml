@@ -9,6 +9,7 @@ services:
     # Also, uncomment the COPY app command at the end of the raspberry Dockerfile
     volumes:
       - .:/app
+      - /dev/bus/usb:/dev/bus/usb #required for serial port access
     privileged: true
     entrypoint: ["/app/compose/entry_point.sh"]
     command: ["badge_03v6_noDebug","flashAPP"]

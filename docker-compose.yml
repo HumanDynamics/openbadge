@@ -7,6 +7,7 @@ services:
       dockerfile: ./compose/Dockerfile
     volumes:
       - .:/app
+      - /dev/bus/usb:/dev/bus/usb #required for serial port access
     privileged: true
     network_mode: "host" #required for bluetooth access
     entrypoint: ["/app/compose/entry_point.sh"]

@@ -15,16 +15,18 @@ logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 # Main Loop of Badge Terminal
 
 def main():
-	print ("Searching for and connecting to badge...")
-	device_addr = "e8:08:f6:27:8a:28"
-	connection = BLEBadgeConnection.get_connection_to_badge(device_addr)
-	#print(connection)
-	if not connection:
-		print "Could not find nearby OpenBadge. :( Please try again!"
+	num_args = len(sys.argv) # Get the arguments list
+	if num_args != 2:
+		print("Please enter badge MAC address")
 		return
 
+	device_addr = sys.argv[1]
+	print ("Connecting to badge", device_addr)	
+	connection = BLEBadgeConnection.get_connection_to_badge(device_addr)
 
-	#conn = btle.Peripheral(device_addr, btle.ADDR_TYPE_RANDOM)
+	if not connection:
+		print("Could not find nearby OpenBadge. :( Please try again!")
+		return
 
 	connection.connect()
 	badge = OpenBadge(connection)
