@@ -9,7 +9,6 @@ import logging
 import time
 import uuid
 import sys
-import threading
 
 from bluepy import *
 from bluepy import btle
@@ -28,16 +27,6 @@ TX_CHAR_UUID      = uuid.UUID('6E400002-B5A3-F393-E0A9-E50E24DCCA9E')
 RX_CHAR_UUID      = uuid.UUID('6E400003-B5A3-F393-E0A9-E50E24DCCA9E')
 
 
-class ScanDelegate(DefaultDelegate):
-
-	def __init__(self):
-		DefaultDelegate.__init__(self)
-
-
-	def handleDiscovery(self, dev, isNewDev, isNewData):
-		pass
-
-
 class SimpleDelegate(DefaultDelegate):
 
     def __init__(self, bleconn):
@@ -45,7 +34,6 @@ class SimpleDelegate(DefaultDelegate):
         self.bleconn = bleconn
 
     def handleNotification(self, cHandle, data):
-        print(repr(data))
         self.bleconn.received(data)
 
 
@@ -71,10 +59,6 @@ class BLEBadgeConnection(BadgeConnection):
 
 		# Contains the bytes recieved from the device. Held here until an entire message is recieved.
 		self.rx_buffer = ""
-		# Condition used to synchronize waiting for the reciept of a message between threads.
-		# This condition is held when someone is waiting on a message to come in and is notified 
-		# after an entire message is recieved.
-		self.rx_condition = threading.Condition()
 		# Set to be the recieved message when an entire message is recieved.
 		self.rx_message = None
 		# The number of bytes in the completed message we are currently waiting on.
@@ -101,38 +85,24 @@ class BLEBadgeConnection(BadgeConnection):
 
 		if len(self.rx_buffer) >= self.rx_bytes_expected:
 			self.rx_message = self.rx_buffer[0:self.rx_bytes_expected]
-			#print(self.rx_message,"messsssssssssssssssssssssssssssssaaaaa")
 			self.rx_buffer = self.rx_buffer[self.rx_bytes_expected:]
 			self.rx_bytes_expected = 0
 
 
-			#self.on_message_rx(self.rx_buffer[0:self.rx_bytes_expected])
-			#self.rx_buffer = self.rx_buffer[self.rx_bytes_expected:]
-			#self.rx_bytes_expected = 0
-
 	# Implements BadgeConnection's connect() spec.	
 	def connect(self):
-		#self.ble_device.connect()
-		#print(self.ble_device)
+		logger.debug("Connecting...")
 		self.conn = btle.Peripheral(self.ble_device, btle.ADDR_TYPE_RANDOM)
 		
-		logger.debug("Attempting to discover characteristics...")
-
-		#self.ble_device.discover([UART_SERVICE_UUID], [TX_CHAR_UUID, RX_CHAR_UUID])
-		#conn = btle.Peripheral(self.ble_device, btle.ADDR_TYPE_RANDOM)
+		logger.debug("Connected.")
 
 		# Find the UART service and its characteristics.
 		self.uart = self.conn.getServiceByUUID(UART_SERVICE_UUID)
 		self.rx = self.uart.getCharacteristics(RX_CHAR_UUID)[0]
 		self.tx = self.uart.getCharacteristics(TX_CHAR_UUID)[0]
 
-
-
-		# Turn on notification of RX characteristics using the callback above.
+		# Turn on notification of RX characteristics
 		logger.debug('Subscribing to RX characteristic changes...')
-		
-		#self.rx.write(struct.pack('<bb',0x01,0x00)) # doesn't work. not sure why
-		#conn.writeCharacteristic(handle=self.rx.getHandle(),val=struct.pack('<bb', 0x00, 0x00))
 		CONFIG_HANDLE = 0x000c;
 		self.conn.writeCharacteristic(handle=CONFIG_HANDLE,val=struct.pack('<bb', 0x01, 0x00))
 		self.conn.setDelegate(SimpleDelegate(bleconn=self))
@@ -146,13 +116,13 @@ class BLEBadgeConnection(BadgeConnection):
 		self.rx = None
 
 		self.rx_buffer = ""
-		self.rx_condition = threading.Condition()
 		self.rx_message = None
 		self.rx_bytes_expected = 0
 
 		#self.ble_device.disconnect()
 		self.conn.disconnect()
 		self.ble_device = None
+
 
 	# Implements BadgeConnection's is_connected() spec.
 	def is_connected(self):
@@ -161,6 +131,7 @@ class BLEBadgeConnection(BadgeConnection):
 			return False
 		else:
 			return True
+
 
 	# Implements BadgeConnection's await_data() spec.
 	def await_data(self, data_len):
