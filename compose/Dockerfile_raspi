@@ -34,7 +34,7 @@ run mkdir -p $NRF_SDK_PATH
 RUN wget https://developer.nordicsemi.com/nRF51_SDK/nRF51_SDK_v8.x.x/nRF51_SDK_8.1.0_b6ed55f.zip -O downloads/nRF51_SDK_8.1.0_b6ed55f.zip
 RUN unzip -q downloads/nRF51_SDK_8.1.0_b6ed55f.zip -d $NRF_SDK_PATH
 
-COPY compose/Makefile.posix_jessie $NRF_SDK_PATH/components/toolchain/gcc/Makefile.posix
+COPY compose/Makefile.posix_raspi $NRF_SDK_PATH/components/toolchain/gcc/Makefile.posix
 
 # SEGGER
 COPY compose/JLink_Linux_V616i_arm.tgz /opt/downloads/JLink_Linux_V616i_arm.tgz
