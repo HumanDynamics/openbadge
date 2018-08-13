@@ -37,3 +37,6 @@ Commands:
 The framework includes two tools for testing firmware code
 * Badge terminal. The utility opens a connections to a badge and allows you to run simple commands. To run, use the following docker command: `docker-compose run nrf terminal <MAC ADDRESS>`
 * Integration tests. These are tests designed for testing basic badge functionality. To run the tests, use the following docker command: `docker-compose run nrf run_all_tests <MAC ADDRESS>`
+
+Note that in order to run the integration tests, you'll need to have a badge connected with a serial interface. A regular J-Link debugger/programmer does not include these. We recommend using a nRF51 dev-kit as a programmer for this purpose (see our wiki/documentations on how to make one).
+
