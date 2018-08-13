@@ -88,7 +88,7 @@ def main():
 			print badge.get_mic_data()
 		elif len(args) == 2:
 			start_time_to_request = int(time.time()) - int(args[1])
-			print badge.get_mic_data(start_time_to_request, 0)
+			print badge.get_mic_data(start_time_to_request)
 		else:
 			print "Invalid Syntax: get_mic_data [seconds of mic data to request]"
 
@@ -98,7 +98,7 @@ def main():
 			mic_data = badge.get_mic_data()
 		elif len(args) == 2:
 			start_time_to_request = int(time.time()) - int(args[1])
-			mic_data = badge.get_mic_data(start_time_to_request, 0)
+			mic_data = badge.get_mic_data(start_time_to_request)
 		else:
 			print "Invalid Syntax: get_audio_stream [seconds of audio to request]"
 			return
