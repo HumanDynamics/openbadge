@@ -32,3 +32,13 @@ Commands:
  then enters a loop. Each time a new badge is placed, it will be automatically programmed and its MAC address will be
  written to the macs.log file. For most purposes, use the "prod" command variables. The "test" option turns on serial
  output and other testing features and is not recommended for production.
+
+If you are using a raspberry pi to run this code, please use the raspberry pi compose file (-f docker-compose-raspi.yml). For example `docker-compose -f docker-compose-raspi.yml build`.
+
+## Firmware testing tools ##
+The framework includes two tools for testing firmware code
+* Badge terminal. The utility opens a connections to a badge and allows you to run simple commands. To run, use the following docker command: `docker-compose run nrf terminal <MAC ADDRESS>`
+* Integration tests. These are tests designed for testing basic badge functionality. To run the tests, use the following docker command: `docker-compose run nrf run_all_tests <MAC ADDRESS>`
+
+Note that in order to run the integration tests, you'll need to have a badge connected with a serial interface. A regular J-Link debugger/programmer does not include these. We recommend using a nRF51 dev-kit as a programmer for this purpose (see our wiki/documentations on how to make one).
+
