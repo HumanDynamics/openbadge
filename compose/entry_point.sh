@@ -9,6 +9,12 @@ elif [ "$1" = 'make_rssi_scanner' ]; then
 elif [ "$1" = 'getMAC' ]; then
     cd /app/firmware/nRF_badge/util
     ./getMAC.sh
+elif [ "$1" = 'terminal' ]; then
+    cd /app/BadgeFramework
+    python ./terminal.py ${@:2}
+elif [ "$1" = 'run_all_tests' ]; then
+    cd /app/IntegrationTests
+    python ./run_all_tests.py ${@:2}
 else
     exec "$@"
 fi
