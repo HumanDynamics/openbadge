@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+from __future__ import division, absolute_import, print_function
 
 from fnmatch import fnmatch
 from importlib import import_module
@@ -20,11 +20,11 @@ device_addr = sys.argv[1]
 for file in os.listdir("."):
 	if fnmatch(file, "test_*.py"):
 		test_case_name = file.replace(".py", "")
-		print "Running", test_case_name + "..."
+		print("Running " + test_case_name + "...")
 		test_status = os.system("python {}.py {} > testResults/{}.log".format(test_case_name, device_addr, test_case_name))
 		if not test_status == 0:
 			raise AssertionError("Test {} Failed!".format(test_case_name))
 		else:
-			print "  Test", test_case_name, "PASSED! :)"
+			print("  Test "+ test_case_name + " PASSED! :)")
 
-print "All integration tests passed! :) ✅"
+print("All integration tests passed! :)")

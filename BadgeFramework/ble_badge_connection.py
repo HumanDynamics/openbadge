@@ -1,8 +1,4 @@
-# Much of this code is adapted from Adafruit's BlueFruit Low Level Example code
-#   Original code can be found here: 
-#   https://github.com/adafruit/Adafruit_Python_BluefruitLE/blob/master/examples/low_level.py
-# The Adafruit Library is licensed under the MIT license.
-
+from __future__ import division, absolute_import, print_function
 from badge_connection import *
 
 import logging

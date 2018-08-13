@@ -1,3 +1,4 @@
+from __future__ import division, absolute_import, print_function
 import unittest
 import sys
 import logging
@@ -71,7 +72,7 @@ class IntegrationTest(unittest.TestCase):
 
 		try:
 			self.testCase(badge, logger)
-			print "Test Passed! :)"
+			print("Test Passed! :)")
 		except Exception as e:
 			self.onTestFailure(badge, logger)
 			raise AssertionError("Test Failure")

@@ -1,3 +1,4 @@
+from __future__ import division, absolute_import, print_function
 import time
 import sys
 from integration_test import *
@@ -44,7 +45,7 @@ class RecordNoGapsTestCase(IntegrationTest):
 			# Check that timestamps are continous
 			sample_time = timestamps_to_time(header.timestamp_seconds, header.timestamp_miliseconds)
 			self.assertAlmostEqual(expected_next_chunk_time, sample_time, delta=0.001)
-			print "Chunk {}: OK".format(header)
+			print("Chunk {}: OK".format(header))
 			expected_next_chunk_time = sample_time + (float(header.num_samples_in_chunk) / SAMPLES_PER_SECOND)
 
 		# Check that there were the correct number of total samples for the amount of time spent recording

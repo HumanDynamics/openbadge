@@ -1,3 +1,4 @@
+from __future__ import division, absolute_import, print_function
 from struct import *
 
 # This file defines much of the structure needed to carry out our communication protocol in Python.
