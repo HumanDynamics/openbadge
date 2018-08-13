@@ -121,6 +121,7 @@ incl/storage1_lib.c \
 incl/storage2_lib.c \
 incl/storage_lib.c \
 incl/filesystem_lib.c \
+incl/accel_lib.c \
 $(SDK_PATH)/components/toolchain/system_nrf51.c \
 $(SDK_PATH)/components/drivers_nrf/uart/nrf_drv_uart.c \
 $(SDK_PATH)/components/drivers_nrf/common/nrf_drv_common.c \
@@ -132,6 +133,7 @@ $(SDK_PATH)/components/libraries/util/app_error.c \
 $(SDK_PATH)/components/libraries/util/app_error_weak.c \
 $(SDK_PATH)/components/drivers_nrf/clock/nrf_drv_clock.c \
 $(SDK_PATH)/components/libraries/util/app_util_platform.c \
+$(SDK_PATH)/components/drivers_nrf/gpiote/nrf_drv_gpiote.c \
 
 #incl/accel.c \
 #incl/analog.c \
@@ -202,7 +204,7 @@ ASM_SOURCE_FILES  = $(SDK_PATH)/components/toolchain/gcc/gcc_startup_nrf51.S
 #INC_PATHS += -I$(SDK_PATH)/components/libraries/experimental_section_vars 		# needed for fstorage.c
 #INC_PATHS += -I$(SDK_PATH)/components/softdevice/common/softdevice_handler		# needed for system_event_lib.h/.c
 #INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/clock				# needed for softdevice_handler.c
-
+#INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/gpiote				# needed for nrf_drv_gpiote.c/.h
 
 #includes
 INC_PATHS  = -Iconfig
@@ -225,6 +227,7 @@ INC_PATHS += -I$(SDK_PATH)/components/libraries/fstorage
 INC_PATHS += -I$(SDK_PATH)/components/libraries/experimental_section_vars
 INC_PATHS += -I$(SDK_PATH)/components/softdevice/common/softdevice_handler
 INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/clock
+INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/gpiote
 
 
 #INC_PATHS += -I$(SDK_PATH)/components/libraries/uart

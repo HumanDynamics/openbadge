@@ -38,6 +38,7 @@
 
 #include "storage1_lib.h"
 
+#include "accel_lib.h"
 
 
 /**
@@ -175,7 +176,7 @@ int main(void)
     nrf_gpio_pin_write(LED_1,LED_ON);  //turn on LED
 	
 	nrf_gpio_pin_dir_set(LED_2,NRF_GPIO_PIN_DIR_OUTPUT);  //set LED pin to output
-    nrf_gpio_pin_write(LED_2,LED_OFF);  //turn on LED
+    nrf_gpio_pin_write(LED_2,LED_OFF);  //turn off LED
 
 	ret_code_t ret;
 	(void) ret;
@@ -185,8 +186,8 @@ int main(void)
 	debug_log("Start...\n\r");
 
 	
-	nrf_gpio_pin_dir_set(LED_2,NRF_GPIO_PIN_DIR_OUTPUT);  //set LED pin to output
-    nrf_gpio_pin_write(LED_2,LED_ON);  //turn on LED
+	//nrf_gpio_pin_dir_set(LED_2,NRF_GPIO_PIN_DIR_OUTPUT);  //set LED pin to output
+    nrf_gpio_pin_write(LED_2, LED_ON);  //turn on LED
 	
 	// Always initialize everything!!
 	nrf_clock_lf_cfg_t clock_lf_cfg =  {.source        = NRF_CLOCK_LF_SRC_XTAL,            
@@ -209,7 +210,24 @@ int main(void)
 	
 	eeprom_selftest();
 	
+	ret = accel_init();
+	nrf_delay_ms(2000);
+	if(ret == NRF_SUCCESS) {
+		nrf_gpio_pin_write(LED_2,LED_OFF);  //turn on LED
+		nrf_delay_ms(500);
+		nrf_gpio_pin_write(LED_2,LED_ON);  //turn on LED
+		nrf_delay_ms(500);
+		nrf_gpio_pin_write(LED_2,LED_OFF);  //turn on LED
+	} else {		
+		nrf_gpio_pin_write(LED_1,LED_OFF);  //turn on LED
+		nrf_delay_ms(500);
+		nrf_gpio_pin_write(LED_1,LED_ON);  //turn on LED
+	}
 	
+	accel_selftest();
+	
+	
+	//accel_selftest();
 	while(1);
 	
 	
