@@ -33,6 +33,8 @@ Commands:
  written to the macs.log file. For most purposes, use the "prod" command variables. The "test" option turns on serial
  output and other testing features and is not recommended for production.
 
+If you are using a raspberry pi to run this code, please use the raspberry pi compose file (-f docker-compose-raspi.yml). For example `docker-compose -f docker-compose-raspi.yml build`.
+
 ## Firmware testing tools ##
 The framework includes two tools for testing firmware code
 * Badge terminal. The utility opens a connections to a badge and allows you to run simple commands. To run, use the following docker command: `docker-compose run nrf terminal <MAC ADDRESS>`

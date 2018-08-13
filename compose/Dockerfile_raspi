@@ -43,3 +43,21 @@ RUN ln -s /opt/JLink_Linux_V616i_arm/JLinkExe /usr/local/bin/JLinkExe
 
 # Uncomment if running on a remote raspberry pi machine
 #COPY .  /app
+
+################################
+## Bluetooth Python environment
+################################
+RUN apt-get update && apt-get install -y \
+    python \
+    python-dev \
+    python-pip \
+    python-setuptools \
+    gcc \
+    build-essential \
+    libglib2.0-dev \
+    bluez \
+    --no-install-recommends && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY ./requirements.txt /tmp/requirements.txt
+RUN pip install -r /tmp/requirements.txt
