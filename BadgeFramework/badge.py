@@ -152,7 +152,7 @@ class OpenBadge(object):
 			logger.debug("Awaiting {} bytes.".format(bytes_awaited))
 			data = self.connection.await_data(bytes_awaited)
 
-			# TODO: better to use a deserializer here to ensure we are using the correct data type
+			# Note - not using a deserializer here for performance reasons
 			chunks_and_headers.append((header, map(ord, data)))
 
 			serialized_header = self.connection.await_data(MicrophoneDataHeader.length())
