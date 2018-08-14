@@ -41,8 +41,8 @@ COPY compose/JLink_Linux_V616i_arm.tgz /opt/downloads/JLink_Linux_V616i_arm.tgz
 RUN tar -C /opt/ -xzf downloads/JLink_Linux_V616i_arm.tgz
 RUN ln -s /opt/JLink_Linux_V616i_arm/JLinkExe /usr/local/bin/JLinkExe
 
-# Uncomment if running on a remote raspberry pi machine
-#COPY .  /app
+# Fix missing library error
+RUN ln -s /lib/arm-linux-gnueabihf/libudev.so.1 /lib/arm-linux-gnueabihf/libudev.so.0
 
 ################################
 ## Bluetooth Python environment
@@ -61,3 +61,9 @@ RUN apt-get update && apt-get install -y \
 
 COPY ./requirements.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt
+
+################################
+## Misc
+################################
+# Uncomment if running on a remote raspberry pi machine
+#COPY .  /app

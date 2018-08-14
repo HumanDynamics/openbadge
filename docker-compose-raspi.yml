@@ -11,5 +11,6 @@ services:
       - .:/app
       - /dev/bus/usb:/dev/bus/usb #required for serial port access
     privileged: true
+    network_mode: "host" #required for bluetooth access
     entrypoint: ["/app/compose/entry_point.sh"]
     command: ["badge_03v6_noDebug","flashAPP"]
