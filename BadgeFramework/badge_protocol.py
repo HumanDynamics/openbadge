@@ -248,7 +248,7 @@ class ScanDataHeader(BadgeMessage):
 		BadgeMessage.__init__(self)
 
 class ScanDataDevice(BadgeMessage):
-	message_fields = [ushort_field("device_id"), int8_field("average_rssi"), uint8_field("num_times_seen")]
+	message_fields = [ushort_field("device_id"), int8_field("average_rssi"), int8_field("num_times_seen")]
 
 	def __init__(self, device_id, average_rssi, num_times_seen):
 		self.device_id = device_id
