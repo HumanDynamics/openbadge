@@ -90,8 +90,8 @@ static accel_operating_mode_t 	operating_mode = ACCEL_OPERATING_MODE_DEFAULT;			
 static accel_HP_filter_t 		HP_filter = ACCEL_HP_FILTER_DEFAULT;					/**< The current HP filter mode */
 
 
-static accel_interrupt_event_t		interrupt_event = ACCEL_INTERRUPT_EVENT_DEFAULT;	/**< The current interrupt event that is generated, when the interrupt-pin switches from low to high */
-static accel_interrupt_handler_t 	interrupt_handler = NULL;							/**< The current interrupt handler callback function */
+static volatile accel_interrupt_event_t		interrupt_event = ACCEL_INTERRUPT_EVENT_DEFAULT;	/**< The current interrupt event that is generated, when the interrupt-pin switches from low to high */
+static volatile accel_interrupt_handler_t 	interrupt_handler = NULL;							/**< The current interrupt handler callback function */
 
 static uint16_t motion_interrupt_parameter_threshold_milli_gauss = ACCEL_MOTION_INTERRUPT_PARAMETER_THRESHOLD_MILLIGAUSS_DEFAULT;	/**< The current threshold for the motion interrupt */
 static uint16_t motion_interrupt_parameter_minimal_duration_ms = ACCEL_MOTION_INTERRUPT_PARAMETER_MINIMAL_DURATION_MS_DEFAULT;		/**< The current minimal duration for the motion interrupt */
