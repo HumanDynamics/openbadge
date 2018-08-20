@@ -50,6 +50,9 @@ TESTS = flash_lib_mock_unittest \
 		timer_lib_unittest \
 		app_timer_mock_unittest \
 		app_scheduler_mock_unittest \
+		callback_generator_lib_unittest \
+		data_generator_lib_unittest \
+		accel_lib_mock_unittest \
 				
 FIRMWARE_SRCS = $(FIRMWARE_DIR)/incl/storage1_lib.c \
 				$(FIRMWARE_DIR)/incl/storage2_lib.c \
@@ -70,6 +73,7 @@ FIRMWARE_INC_PATH += -I$(SDK_PATH)/components/drivers_nrf/nrf_soc_nosd
 FIRMWARE_INC_PATH += -I$(SDK_PATH)/components/device			
 FIRMWARE_INC_PATH += -I$(SDK_PATH)/components/libraries/timer
 FIRMWARE_INC_PATH += -I$(SDK_PATH)/components/libraries/scheduler
+
 
 
 #FIRMWARE_INC_PATH += -I$(FIRMWARE_DIR)/incl
