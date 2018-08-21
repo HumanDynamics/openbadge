@@ -345,89 +345,92 @@ ret_code_t 	accel_init(void) {
 	// TODO: retrieve Pin-numbers from the custom_board-file!
 	// TODO: Interrupt pin configuration!
 	
+	static uint8_t init_done = 0;
 	
-	// SPI-module intitalization
-	
-	spi_instance.spi_peripheral = 0;
-	spi_instance.nrf_drv_spi_config.frequency 		= NRF_DRV_SPI_FREQ_8M;
-	spi_instance.nrf_drv_spi_config.bit_order 		= NRF_DRV_SPI_BIT_ORDER_MSB_FIRST;
-	spi_instance.nrf_drv_spi_config.mode			= NRF_DRV_SPI_MODE_3;
-	spi_instance.nrf_drv_spi_config.orc				= 0;
-	spi_instance.nrf_drv_spi_config.irq_priority	= 1; //APP_IRQ_PRIORITY_MID;	
-	spi_instance.nrf_drv_spi_config.ss_pin 			= 2;
-	spi_instance.nrf_drv_spi_config.miso_pin		= 1;
-	spi_instance.nrf_drv_spi_config.mosi_pin		= 4;
-	spi_instance.nrf_drv_spi_config.sck_pin			= 3;
-	
-	ret_code_t ret = spi_init(&spi_instance);
-	
-	// ret could be NRF_SUCCESS or NRF_ERROR_INVALID_PARAM
-	if(ret != NRF_SUCCESS)
-		return NRF_ERROR_INTERNAL;
-	
-	// Check the WHO_AM_I-register value
-	uint8_t value = 0;
-	ret = accel_read_reg_8(LIS2DH12_WHO_AM_I_ADDR, &value);
-	// ret could be NRF_SUCCESS, NRF_ERROR_BUSY or NRF_ERROR_INTERNAL
-	if(ret != NRF_SUCCESS)
-		return ret;
-	
-	if(value != LIS2DH12_WHO_AM_I_VALUE) {
-		return NRF_ERROR_INTERNAL;
-	}	
-	
-	
-	// Interrupt pin configuration and initialization:
-	if(!nrf_drv_gpiote_is_init())
-		nrf_drv_gpiote_init();
-	
-	
-	// GPIOTE_CONFIG_IN_SENSE_LOTOHI(true) or GPIOTE_CONFIG_IN_SENSE_HITOLO(true)
-	nrf_drv_gpiote_in_config_t in_config = GPIOTE_CONFIG_IN_SENSE_LOTOHI(true);
-    in_config.pull = NRF_GPIO_PIN_PULLUP;
-    ret = nrf_drv_gpiote_in_init(ACCEL_INT1_PIN, &in_config, accel_int1_event_handler);
-	if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;
-    nrf_drv_gpiote_in_event_enable(ACCEL_INT1_PIN, true);
-	
+	if(init_done == 0) {
+		// SPI-module intitalization
+		spi_instance.spi_peripheral = 0;
+		spi_instance.nrf_drv_spi_config.frequency 		= NRF_DRV_SPI_FREQ_8M;
+		spi_instance.nrf_drv_spi_config.bit_order 		= NRF_DRV_SPI_BIT_ORDER_MSB_FIRST;
+		spi_instance.nrf_drv_spi_config.mode			= NRF_DRV_SPI_MODE_3;
+		spi_instance.nrf_drv_spi_config.orc				= 0;
+		spi_instance.nrf_drv_spi_config.irq_priority	= 1; //APP_IRQ_PRIORITY_MID;	
+		spi_instance.nrf_drv_spi_config.ss_pin 			= 2;
+		spi_instance.nrf_drv_spi_config.miso_pin		= 1;
+		spi_instance.nrf_drv_spi_config.mosi_pin		= 4;
+		spi_instance.nrf_drv_spi_config.sck_pin			= 3;
+		
+		ret_code_t ret = spi_init(&spi_instance);
+		
+		// ret could be NRF_SUCCESS or NRF_ERROR_INVALID_PARAM
+		if(ret != NRF_SUCCESS)
+			return NRF_ERROR_INTERNAL;
+		
+		// Check the WHO_AM_I-register value
+		uint8_t value = 0;
+		ret = accel_read_reg_8(LIS2DH12_WHO_AM_I_ADDR, &value);
+		// ret could be NRF_SUCCESS, NRF_ERROR_BUSY or NRF_ERROR_INTERNAL
+		if(ret != NRF_SUCCESS)
+			return ret;
+		
+		if(value != LIS2DH12_WHO_AM_I_VALUE) {
+			return NRF_ERROR_INTERNAL;
+		}	
+		
+		
+		// Interrupt pin configuration and initialization:
+		if(!nrf_drv_gpiote_is_init())
+			nrf_drv_gpiote_init();
+		
+		
+		// GPIOTE_CONFIG_IN_SENSE_LOTOHI(true) or GPIOTE_CONFIG_IN_SENSE_HITOLO(true)
+		nrf_drv_gpiote_in_config_t in_config = GPIOTE_CONFIG_IN_SENSE_LOTOHI(true);
+		in_config.pull = NRF_GPIO_PIN_PULLUP;
+		ret = nrf_drv_gpiote_in_init(ACCEL_INT1_PIN, &in_config, accel_int1_event_handler);
+		if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;
+		nrf_drv_gpiote_in_event_enable(ACCEL_INT1_PIN, true);
+		
 
-	
-	// Enable the default axis
-	ret = accel_set_axis(ACCEL_AXIS_DEFAULT);
-	if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;
-	
-	// Set the default full scale
-	full_scale = ACCEL_FULL_SCALE_DEFAULT;
-	ret = accel_set_full_scale(ACCEL_FULL_SCALE_DEFAULT);
-	if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;
-	
-	// Set the default datarate
-	datarate = ACCEL_DATARATE_DEFAULT;
-	ret = accel_set_datarate(ACCEL_DATARATE_DEFAULT);
-	if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;
-	
-	// Set the default operating mode
-	ret = accel_set_operating_mode(ACCEL_OPERATING_MODE_DEFAULT);
-	if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;
-	
-	// Set the default FIFO-configuration
-	ret = accel_set_fifo(ACCEL_FIFO_DEFAULT);
-	if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;
-	
-	// Set the default HP-filter configuration
-	HP_filter = ACCEL_HP_FILTER_DEFAULT;
-	ret = accel_set_HP_filter(ACCEL_HP_FILTER_DEFAULT);
-	if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;
-	
-	// Set the default motion interrupt threshold and duration-parameters
-	motion_interrupt_parameter_threshold_milli_gauss = ACCEL_MOTION_INTERRUPT_PARAMETER_THRESHOLD_MILLIGAUSS_DEFAULT;
-	motion_interrupt_parameter_minimal_duration_ms = ACCEL_MOTION_INTERRUPT_PARAMETER_MINIMAL_DURATION_MS_DEFAULT;
-	accel_set_motion_interrupt_parameters(ACCEL_MOTION_INTERRUPT_PARAMETER_THRESHOLD_MILLIGAUSS_DEFAULT, ACCEL_MOTION_INTERRUPT_PARAMETER_MINIMAL_DURATION_MS_DEFAULT);
-	
-	// Set the default interrupt operation/event
-	interrupt_handler = NULL;
-	interrupt_event = ACCEL_INTERRUPT_EVENT_DEFAULT;
-	ret = accel_set_interrupt(ACCEL_INTERRUPT_EVENT_DEFAULT);
-	if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;
+		
+		// Enable the default axis
+		ret = accel_set_axis(ACCEL_AXIS_DEFAULT);
+		if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;
+		
+		// Set the default full scale
+		full_scale = ACCEL_FULL_SCALE_DEFAULT;
+		ret = accel_set_full_scale(ACCEL_FULL_SCALE_DEFAULT);
+		if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;
+		
+		// Set the default datarate
+		datarate = ACCEL_DATARATE_DEFAULT;
+		ret = accel_set_datarate(ACCEL_DATARATE_DEFAULT);
+		if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;
+		
+		// Set the default operating mode
+		ret = accel_set_operating_mode(ACCEL_OPERATING_MODE_DEFAULT);
+		if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;
+		
+		// Set the default FIFO-configuration
+		ret = accel_set_fifo(ACCEL_FIFO_DEFAULT);
+		if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;
+		
+		// Set the default HP-filter configuration
+		HP_filter = ACCEL_HP_FILTER_DEFAULT;
+		ret = accel_set_HP_filter(ACCEL_HP_FILTER_DEFAULT);
+		if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;
+		
+		// Set the default motion interrupt threshold and duration-parameters
+		motion_interrupt_parameter_threshold_milli_gauss = ACCEL_MOTION_INTERRUPT_PARAMETER_THRESHOLD_MILLIGAUSS_DEFAULT;
+		motion_interrupt_parameter_minimal_duration_ms = ACCEL_MOTION_INTERRUPT_PARAMETER_MINIMAL_DURATION_MS_DEFAULT;
+		accel_set_motion_interrupt_parameters(ACCEL_MOTION_INTERRUPT_PARAMETER_THRESHOLD_MILLIGAUSS_DEFAULT, ACCEL_MOTION_INTERRUPT_PARAMETER_MINIMAL_DURATION_MS_DEFAULT);
+		
+		// Set the default interrupt operation/event
+		interrupt_handler = NULL;
+		interrupt_event = ACCEL_INTERRUPT_EVENT_DEFAULT;
+		ret = accel_set_interrupt(ACCEL_INTERRUPT_EVENT_DEFAULT);
+		if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;
+	}
+	init_done = 1;
 		
 	return NRF_SUCCESS;
 }
