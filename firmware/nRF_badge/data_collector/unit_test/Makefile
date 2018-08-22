@@ -1,3 +1,5 @@
+#TODO: Clean it up
+#
 # A sample Makefile for building Google Test and using it in user
 # tests.  Please tweak it to suit your environment and project.  You
 # may want to move it to your project's root directory.
@@ -113,27 +115,35 @@ GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
 
 # House-keeping build targets.
 
-
 #target for printing all targets
 help:
 	@echo
 	@echo "The following targets are available:"
-	@echo "  - Compile options: NRF51DK   badge_03   badge_03_noDebug"
+	@echo "  - Info:            help  helpDetailed"
+	@echo
+	@echo "  - Compile options:  "
+	@echo "                     NRF51DK   badge_03   badge_03_noDebug"
 	@echo "                     badge_03v2_rigado   badge_03v2_dynastream"
 	@echo "                     badge_03v2_rigado_noDebug	badge_03v2_rigado_tester"
 	@echo "                     badge_03v4	 badge_03v4_noDebug   badge_03v4_tester"
 	@echo "                     badge_03v6	 badge_03v6_noDebug   badge_03v6_tester"
-	@echo "  - Info:            help  helpDetailed"
+	@echo
+	@echo "  - Compile tests: "
+	@$(foreach test,$(TESTS),echo "                     ${test}";)
+	@echo "                     all (compiles all the above tests)"
+
 	@echo
 	@echo "  - Run tests (after compilation):"
-	@echo "                     ${RUN_TESTS} run_all_tests"
+	@$(foreach run_test,$(RUN_TESTS),echo "                     ${run_test}";)
+	@echo "                     run_all (runs all the above tests)"
 	@echo 
 	@echo "  - LCOV:            Enable with LCOV=TRUE as make parameter (for compiling and running tests)"
 	@echo
 	@echo "  - LCOV remove zero called files:"
 	@echo "                     Enable with LCOV_RM_ZERO=TRUE as make parameter (for running tests) LCOV=TRUE is prerequisite"
 	@echo
-
+	
+	
 helpDetailed:
 	@echo
 	@echo "The following targets are available:"
@@ -220,29 +230,25 @@ CXXFLAGS += -DUNIT_TEST
 
 #$(info LCOV=${LCOV}. To enable LCOV, call make with parameter LCOV=TRUE.)
 
-TESTS_OBJECTS = $(addsuffix .o, $(TESTS))
-TESTS_SRCS = $(addsuffix .cc, $(addprefix $(TEST_DIR)/, $(TESTS)))
+TESTS_OBJECTS = $(addprefix $(BUILD_DIR)/, $(addsuffix .o, $(TESTS)))
+#TESTS_SRCS = $(addsuffix .cc, $(addprefix $(TEST_DIR)/, $(TESTS)))
 
 
 MOCK_SRCS += $(shell find $(MOCK_DIR) -name '*.c*')
 MOCK_FILES_C = $(notdir $(shell find $(MOCK_DIR) -name '*.c'))
 MOCK_FILES_CC = $(notdir $(shell find $(MOCK_DIR) -name '*.cc'))
-MOCK_OBJECTS += $(MOCK_FILES_C:.c=.o)
-MOCK_OBJECTS += $(MOCK_FILES_CC:.cc=.o)
+MOCK_OBJECTS += $(addprefix $(BUILD_DIR)/,$(MOCK_FILES_C:.c=.o))
+MOCK_OBJECTS += $(addprefix $(BUILD_DIR)/,$(MOCK_FILES_CC:.cc=.o))
 #$(info MOCK_OBJECTS=${MOCK_OBJECTS})
 
 FIRMWARE_FILES = $(notdir $(FIRMWARE_SRCS))
-FIRMWARE_OBJECTS += $(FIRMWARE_FILES:.c=.o)
-
+FIRMWARE_OBJECTS += $(addprefix $(BUILD_DIR)/,$(FIRMWARE_FILES:.c=.o))
+#$(info FIRMWARE_OBJECTS=${FIRMWARE_OBJECTS})
 
 RUN_TESTS = $(addprefix run_, $(TESTS))
 
 
-
-test : clean
-
-
-all : print_lcov_help $(TESTS)
+all : $(TESTS)
 	
 
 clean :
@@ -251,18 +257,10 @@ clean :
 	$(NO_ECHO)mkdir $(BUILD_DIR)
 	$(NO_ECHO)rm -f -r $(LCOV_DIR)
 	$(NO_ECHO)mkdir $(LCOV_DIR)
-
 	
-# a command to clear after build and enter build-directory
-clean_after_build :
-	$(NO_ECHO)rm -f gtest.a gtest_main.a *.o 
-	@echo "Build done. Now you can run tests with \"make [${RUN_TESTS}]\" or \"make run_all_tests\""
-	
-
-
 
 # Target for running all unit tests
-run_all_tests : print_lcov_help $(RUN_TESTS)
+run_all : $(RUN_TESTS)
 
 # Make the run_..-targets Phony.
 .PHONY: $(RUN_TESTS)
@@ -367,18 +365,18 @@ GTEST_SRCS_ = $(GTEST_DIR)/src/*.cc $(GTEST_DIR)/src/*.h $(GTEST_HEADERS)
 # implementation details, the dependencies specified below are
 # conservative and not optimized.  This is fine as Google Test
 # compiles fast and for ordinary users its source rarely changes.
-gtest-all.o : $(GTEST_SRCS_)
-	$(NO_ECHO)$(CXX) $(CPPFLAGS) -I$(GTEST_DIR) $(CXXFLAGS) -c \
+$(BUILD_DIR)/gtest-all.o : $(GTEST_SRCS_)
+	$(NO_ECHO)$(CXX) $(CPPFLAGS) -I$(GTEST_DIR) $(CXXFLAGS) -o $(BUILD_DIR)/gtest-all.o -c \
             $(GTEST_DIR)/src/gtest-all.cc
 
-gtest_main.o : $(GTEST_SRCS_)
-	$(NO_ECHO)$(CXX) $(CPPFLAGS) -I$(GTEST_DIR) $(CXXFLAGS) -c \
+$(BUILD_DIR)/gtest_main.o : $(GTEST_SRCS_)
+	$(NO_ECHO)$(CXX) $(CPPFLAGS) -I$(GTEST_DIR) $(CXXFLAGS) -o $(BUILD_DIR)/gtest_main.o  -c \
             $(GTEST_DIR)/src/gtest_main.cc
 
-gtest.a : gtest-all.o
+$(BUILD_DIR)/gtest.a : $(BUILD_DIR)/gtest-all.o
 	$(NO_ECHO)$(AR) $(ARFLAGS) $@ $^
 
-gtest_main.a : gtest-all.o gtest_main.o
+$(BUILD_DIR)/gtest_main.a : $(BUILD_DIR)/gtest-all.o $(BUILD_DIR)/gtest_main.o
 	$(NO_ECHO)$(AR) $(ARFLAGS) $@ $^
 	
 	
@@ -390,8 +388,11 @@ gtest_main.a : gtest-all.o gtest_main.o
 	
 	
 #==============================  Board option rules  ===================================
+print_info: print_lcov_help
+#	@echo "You can run tests with \"make [${RUN_TESTS}]\" or \"make run_all\""
+	
 
-compile: clean lcov_flags all clean_after_build
+compile: clean lcov_flags print_info
 
 NRF51DK: compile
 
@@ -420,18 +421,27 @@ badge_03v6_tester: compile
 # It is important that MOCK_INC_PATH is before FIRMWARE_INC_PATH, because some SDK-header files are probably overwritten in the MOCK_INC_PATH
 
 $(MOCK_OBJECTS):
-	$(NO_ECHO)$(CXX) $(CPPFLAGS) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) $(CXXFLAGS) -c $(MOCK_SRCS)
+	$(NO_ECHO) $(CXX) $(CPPFLAGS) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) $(CXXFLAGS) -o $@ -c $(MOCK_DIR)/incl/$(basename $(notdir $@)).c*
 
 $(FIRMWARE_OBJECTS):
-	$(NO_ECHO)$(CXX) $(CPPFLAGS) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) $(CXXFLAGS) -c $(FIRMWARE_SRCS)
+#	@echo Firmware objects: $@ --> $(FIRMWARE_DIR)/incl/$(basename $(notdir $@)).*
+	$(NO_ECHO) $(CXX) $(CPPFLAGS) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) $(CXXFLAGS) -o $@ -c $(FIRMWARE_DIR)/incl/$(basename $(notdir $@)).c*
+
+#chunk_fifo_lib_unittest.o: $(MOCK_OBJECTS) $(FIRMWARE_OBJECTS)
+#	$(NO_ECHO)$(CXX) $(CPPFLAGS) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) $(CXXFLAGS) -c $(TEST_DIR)/chunk_fifo_lib_unittest.cc
 
 $(TESTS_OBJECTS): $(MOCK_OBJECTS) $(FIRMWARE_OBJECTS)
-	$(NO_ECHO)$(CXX) $(CPPFLAGS) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) $(CXXFLAGS) -c $(TESTS_SRCS)
+#	@echo Test object $(basename $@)
+	$(NO_ECHO)$(CXX) $(CPPFLAGS) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) $(CXXFLAGS) -o $@ -c $(TEST_DIR)/$(basename $(notdir $@)).cc
 
-$(TESTS): $(TESTS_OBJECTS) gtest_main.a
-	$(NO_ECHO)$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) -lpthread $@.o $(FIRMWARE_OBJECTS) $(MOCK_OBJECTS) gtest_main.a -o $(BUILD_DIR)/run_$@ -lrt
+#https://stackoverflow.com/questions/16262344/pass-a-target-name-to-dependency-list-in-makefile
+$(TESTS): % : $(BUILD_DIR)/gtest_main.a $(BUILD_DIR)/%.o 
+#	$(NO_ECHO)-mv $(BUILD_DIR)/*.o $(BUILD_DIR)/*.a . 2>/dev/null || :
+	$(NO_ECHO)$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) -lpthread $(BUILD_DIR)/$@.o $(FIRMWARE_OBJECTS) $(MOCK_OBJECTS) $(BUILD_DIR)/gtest_main.a -o $(BUILD_DIR)/run_$@ -lrt
+#	$(NO_ECHO)-mv *.o *.a $(BUILD_DIR) 2>/dev/null || :
 ifeq ($(LCOV), TRUE)
 #move .gcno files (only if exist) and don't raise an error
 	$(NO_ECHO)-mv *.gcno $(LCOV_DIR) 2>/dev/null || :
 endif
+
 
