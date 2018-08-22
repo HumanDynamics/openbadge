@@ -122,6 +122,7 @@ incl/storage2_lib.c \
 incl/storage_lib.c \
 incl/filesystem_lib.c \
 incl/accel_lib.c \
+incl/chunk_fifo_lib.c \
 $(SDK_PATH)/components/toolchain/system_nrf51.c \
 $(SDK_PATH)/components/drivers_nrf/uart/nrf_drv_uart.c \
 $(SDK_PATH)/components/drivers_nrf/common/nrf_drv_common.c \

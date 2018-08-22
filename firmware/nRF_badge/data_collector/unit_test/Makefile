@@ -55,12 +55,13 @@ TESTS = flash_lib_mock_unittest \
 		callback_generator_lib_unittest \
 		data_generator_lib_unittest \
 		accel_lib_mock_unittest \
+		chunk_fifo_lib_unittest \
 				
 FIRMWARE_SRCS = $(FIRMWARE_DIR)/incl/storage1_lib.c \
 				$(FIRMWARE_DIR)/incl/storage2_lib.c \
 				$(FIRMWARE_DIR)/incl/storage_lib.c \
 				$(FIRMWARE_DIR)/incl/filesystem_lib.c \
-
+				$(FIRMWARE_DIR)/incl/chunk_fifo_lib.c \
 
 
 
