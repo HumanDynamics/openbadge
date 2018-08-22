@@ -2329,4 +2329,14 @@ inline int RUN_ALL_TESTS() {
   return ::testing::UnitTest::GetInstance()->Run();
 }
 
+#define EXPECT_ARRAY_EQ(array1, array2, num) { \
+	for(uint32_t i = 0; i < num; i++) { \
+		EXPECT_EQ(array1[i], array2[i]); \
+		if(array1[i] != array2[i]) { \
+			printf("  at index i=%u\n", i); \
+		} \
+	} \
+}
+
+
 #endif  // GTEST_INCLUDE_GTEST_GTEST_H_
