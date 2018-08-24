@@ -47,6 +47,9 @@ TEST(ChunkFifoTest, OneElementTest) {
 	uint8_t num = chunk_fifo_get_number_of_chunks(&chunk_fifo);
 	EXPECT_EQ(num, 0);
 	
+	// Close the chunk-fifo without opening it --> nothing should happen
+	chunk_fifo_write_close(&chunk_fifo);
+	
 	// Open the chunk-fifo for writing one element
 	data_t*				data = NULL;
 	additional_info_t* 	additional_info = NULL;
@@ -65,7 +68,7 @@ TEST(ChunkFifoTest, OneElementTest) {
 	additional_info_t* additional_info_read;
 	ret = chunk_fifo_read_open(&chunk_fifo, (void**) &data_read, (void**) &additional_info_read);
 	EXPECT_EQ(ret, NRF_ERROR_NOT_FOUND);
-	
+	chunk_fifo_read_close(&chunk_fifo);
 	
 	// Close the chunk-fifo
 	chunk_fifo_write_close(&chunk_fifo);
@@ -120,13 +123,30 @@ TEST(ChunkFifoTest, MultipleElementsTest) {
 	num = chunk_fifo_get_number_of_chunks(&chunk_fifo);
 	EXPECT_EQ(num, 10);
 	
-	// And there should be no chunk to read:
+
+	
 	ret = chunk_fifo_read_open(&chunk_fifo, (void**) &data_read, (void**) &additional_info_read);
 	EXPECT_EQ(ret, NRF_SUCCESS);
-	chunk_fifo_read_close(&chunk_fifo);
+	chunk_fifo_read_close(&chunk_fifo);	
 	
 	num = chunk_fifo_get_number_of_chunks(&chunk_fifo);
 	EXPECT_EQ(num, 9);
 	
+	
+	chunk_fifo_write_open(&chunk_fifo, (void**)&data, (void**)&additional_info);
+	chunk_fifo_write_close(&chunk_fifo);
+	
+	num = chunk_fifo_get_number_of_chunks(&chunk_fifo);
+	EXPECT_EQ(num, 10);
+	
+	ret = chunk_fifo_read_open(&chunk_fifo, (void**) &data_read, (void**) &additional_info_read);
+	EXPECT_EQ(ret, NRF_SUCCESS);
+	chunk_fifo_read_close(&chunk_fifo);	
+	
+	num = chunk_fifo_get_number_of_chunks(&chunk_fifo);
+	EXPECT_EQ(num, 9);
+	
+	
 }
+
 };  

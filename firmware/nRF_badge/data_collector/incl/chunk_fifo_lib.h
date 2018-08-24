@@ -28,6 +28,8 @@ typedef struct
 	uint8_t *           p_chunk_fifo_buf;     		/**< Pointer to FIFO buffer memory. */
     volatile uint8_t    chunk_read_pos;        		/**< Next read position in the chunk-fifo buffer. */
     volatile uint8_t    chunk_write_pos;       		/**< Next write position in the chunk-fifo buffer. */
+	volatile uint8_t    chunk_open_read;        	/**< Flag if currently there is a chunk read operation in progress. */
+    volatile uint8_t    chunk_open_write;       	/**< Flag if currently there is a chunk write operation in progress. */
 } chunk_fifo_t;
 
 
@@ -79,6 +81,7 @@ ret_code_t 	chunk_fifo_read_open(chunk_fifo_t* chunk_fifo, void** p_chunk, void*
  *
  * @details	This functions closes/finishes the read operation of the currently opened read chunk.
  *			This is equal to the consummation of the chunk (like a normal get()-function) by incrementing the chunk_read_pos.
+ *			The closing of the chunk and incrementing of chunk_read_pos only takes place if there was a read-opening operation (by chunk_fifo_read_open()) before.
  *
  * @param[in] 	chunk_fifo 			Pointer to chunk-fifo identifier variable.
  */
@@ -102,7 +105,8 @@ void 		chunk_fifo_write_open(chunk_fifo_t* chunk_fifo, void** p_chunk, void** p_
 /**@brief Function to close/finish a write operation of the currently opened write chunk.
  *
  * @details	This functions closes/finishes the write operation of the currently opened write chunk.
- *			This is equal to the put()-function of a normal FIFO by incrementing the chunk_write_pos (except it would reach the chunk_read_pos).
+ *			This is equal to the put()-function of a normal FIFO by incrementing the chunk_write_pos, 
+ *			except it would reach the chunk_read_pos or there was no write-opening operation (by chunk_fifo_write_open()) before.
  *
  * @param[in] 	chunk_fifo 			Pointer to chunk-fifo identifier variable.
  */
