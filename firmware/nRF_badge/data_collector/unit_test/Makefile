@@ -249,6 +249,8 @@ FIRMWARE_OBJECTS += $(addprefix $(BUILD_DIR)/,$(FIRMWARE_FILES:.c=.o))
 RUN_TESTS = $(addprefix run_, $(TESTS))
 
 
+
+
 all : $(TESTS)
 	
 
@@ -258,6 +260,8 @@ clean :
 	$(NO_ECHO)mkdir $(BUILD_DIR)
 	$(NO_ECHO)rm -f -r $(LCOV_DIR)
 	$(NO_ECHO)mkdir $(LCOV_DIR)
+	
+test: clean
 	
 
 # Target for running all unit tests
@@ -287,12 +291,15 @@ else
 endif
 # https://stackoverflow.com/questions/5377297/how-to-manually-call-another-target-from-a-make-target/5378242?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
 # Call the lcov_genhtml-target with parameter LCOV_DIR_CUR
+	$(NO_ECHO)-mv $(BUILD_DIR)/*.gcda . 2>/dev/null || :
 	$(NO_ECHO)$(MAKE) -f $(THIS_FILE) lcov_genhtml LCOV_DIR_CUR=$(LCOV_DIR)/$@ > /dev/null
 else
-	$(NO_ECHO)rm -f *.gcda
+#	$(NO_ECHO)rm -f $(BUILD_DIR)/*.gcda ./*.gcda
 ifeq ($(LCOV_RM_ZERO), TRUE) 	
 	@echo Enable LCOV data generation with LCOV=TRUE, to remove zero called files with LCOV_RM_ZERO=TRUE!
 endif
+# Remove all the gcda-files
+	$(NO_ECHO)rm -f $(BUILD_DIR)/*.gcda ./*.gcda
 endif
 
 
@@ -322,13 +329,13 @@ ifeq ($(LCOV), TRUE)
 	rm -f -r $(LCOV_DIR_CUR)
 	mkdir $(LCOV_DIR_CUR)
 	lcov -c -d . -o $(LCOV_DIR_CUR)/coverage.info 2> /dev/null
-	lcov --remove $(LCOV_DIR_CUR)/coverage.info "/usr*" "googletest*" "_build*" -o $(LCOV_DIR_CUR)/coverage.info > /dev/null
+	lcov --remove $(LCOV_DIR_CUR)/coverage.info "/usr*" "googletest*" "_build*" "callback_generator_lib.*" "data_generator_lib.*" -o $(LCOV_DIR_CUR)/coverage.info 2> /dev/null
 # Call the lcov_remove_zero_called-target with parameter LCOV_DIR_CUR
 	$(NO_ECHO)$(MAKE) -f $(THIS_FILE) lcov_remove_zero_called LCOV_DIR_CUR=$(LCOV_DIR_CUR) > /dev/null
 	genhtml $(LCOV_DIR_CUR)/coverage.info -o $(LCOV_DIR_CUR) > /dev/null
 # Delete the gcda and gcno data again
 	rm -f *.gcda *.gcno
-endif	
+endif
 
 
 
@@ -442,7 +449,7 @@ $(TESTS): % : $(BUILD_DIR)/gtest_main.a $(BUILD_DIR)/%.o
 #	$(NO_ECHO)-mv *.o *.a $(BUILD_DIR) 2>/dev/null || :
 ifeq ($(LCOV), TRUE)
 #move .gcno files (only if exist) and don't raise an error
-	$(NO_ECHO)-mv *.gcno $(LCOV_DIR) 2>/dev/null || :
+	$(NO_ECHO)-mv $(BUILD_DIR)/*.gcno $(LCOV_DIR) 2>/dev/null || :
 endif
 
 
