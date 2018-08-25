@@ -228,16 +228,17 @@ ret_code_t accel_set_fifo(accel_fifo_t accel_fifo);
  * @warning The output-buffers (accel_x, accel_y, accel_z) have to be a size of at least 32 elements.
  *
  *
- * @param[out]	accel_x		Pointer to array with at least 32 entries for acceleration data in x-direction.
- * @param[out]	accel_y		Pointer to array with at least 32 entries for acceleration data in y-direction.
- * @param[out]	accel_z		Pointer to array with at least 32 entries for acceleration data in z-direction.
- * @param[out]	num_samples	Pointer to memory where to store the number of samples read from the accelerometer.
+ * @param[out]	accel_x			Pointer to array with at least 32 entries for acceleration data in x-direction.
+ * @param[out]	accel_y			Pointer to array with at least 32 entries for acceleration data in y-direction.
+ * @param[out]	accel_z			Pointer to array with at least 32 entries for acceleration data in z-direction.
+ * @param[out]	num_samples		Pointer to memory where to store the number of samples read from the accelerometer.
+ * @param[in]	max_num_samples	Maximal number of samples to read from the accelerometer.
  *
  * @retval  NRF_SUCCESS    			If the operation was successful.
  * @retval 	NRF_ERROR_BUSY			If the spi-module is busy.
  * @retval	NRF_ERROR_INTERNAL		If there were some internal problems, because the buffers weren't in RAM-section (should not happen!).
  */
-ret_code_t accel_read_acceleration(int16_t* accel_x, int16_t* accel_y, int16_t* accel_z, uint8_t* num_samples);
+ret_code_t 	accel_read_acceleration(int16_t* accel_x, int16_t* accel_y, int16_t* accel_z, uint8_t* num_samples, uint32_t max_num_samples);
 
 
 

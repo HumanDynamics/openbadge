@@ -128,9 +128,9 @@ ret_code_t 	accel_set_fifo(accel_fifo_t accel_fifo) {
 }
 
 
-ret_code_t 	accel_read_acceleration(int16_t* accel_x, int16_t* accel_y, int16_t* accel_z, uint8_t* num_samples) {
+ret_code_t 	accel_read_acceleration(int16_t* accel_x, int16_t* accel_y, int16_t* accel_z, uint8_t* num_samples, uint32_t max_num_samples) {
 	
-	return data_generator_accel_read_acceleration(accel_x, accel_y, accel_z, num_samples);
+	return data_generator_accel_read_acceleration(accel_x, accel_y, accel_z, num_samples, max_num_samples);
 	
 }
 

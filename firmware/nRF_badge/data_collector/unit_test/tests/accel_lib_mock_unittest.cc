@@ -34,7 +34,7 @@ void false_accel_interrupt_generator_handler(nrf_drv_gpiote_pin_t* pin, nrf_gpio
 
 
 // Data-generator function for the accel_read_acceleration()-function of the accelerometer module.
-ret_code_t accel_read_acceleration_generator_handler(int16_t* x, int16_t* y, int16_t* z, uint8_t* num_samples) {
+ret_code_t accel_read_acceleration_generator_handler(int16_t* x, int16_t* y, int16_t* z, uint8_t* num_samples, uint32_t max_num_samples) {
 	
 	for(int16_t i = 0; i < 10; i++) {
 		x[i] = i;
@@ -118,7 +118,7 @@ TEST_F(AccelLibMockTest, ReadFunctionNoGeneratorTest) {
 	// Read the acceleration from the accelerometer. In this case no data-generator function is set --> the default implementation in data_generator_lib.cc is taken.
 	int16_t x[32], y[32], z[32];
 	uint8_t num_samples;
-	ret_code_t ret = accel_read_acceleration(x, y, z, &num_samples);
+	ret_code_t ret = accel_read_acceleration(x, y, z, &num_samples, 32);
 
 	EXPECT_EQ(ret, NRF_SUCCESS);
 	EXPECT_EQ(num_samples, 1);
@@ -133,7 +133,7 @@ TEST_F(AccelLibMockTest, ReadFunctionGeneratorTest) {
 	data_generator_accel_read_acceleration_set_generator(accel_read_acceleration_generator_handler);
 	int16_t x[32], y[32], z[32];
 	uint8_t num_samples;
-	ret_code_t ret = accel_read_acceleration(x, y, z, &num_samples);
+	ret_code_t ret = accel_read_acceleration(x, y, z, &num_samples, 32);
 
 	EXPECT_EQ(ret, NRF_SUCCESS);
 	EXPECT_EQ(num_samples, 10);

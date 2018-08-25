@@ -805,7 +805,7 @@ ret_code_t 	accel_set_fifo(accel_fifo_t accel_fifo) {
 }
 
 
-ret_code_t 	accel_read_acceleration(int16_t* accel_x, int16_t* accel_y, int16_t* accel_z, uint8_t* num_samples) {
+ret_code_t 	accel_read_acceleration(int16_t* accel_x, int16_t* accel_y, int16_t* accel_z, uint8_t* num_samples, uint32_t max_num_samples) {
 	ret_code_t ret;
 	*num_samples = 0;
 	
@@ -821,6 +821,10 @@ ret_code_t 	accel_read_acceleration(int16_t* accel_x, int16_t* accel_y, int16_t*
 	*num_samples += 1;
 	if(*num_samples > FIFO_SIZE) {	// Only for safety reasons
 		*num_samples = FIFO_SIZE;
+	}
+	
+	if((uint32_t) *num_samples > max_num_samples) {	// Only read maximal max_num_samples from the accelerometer
+		*num_samples = (uint8_t) max_num_samples;
 	}
 	
 	// Now read available number of samples from the fifo
@@ -936,7 +940,7 @@ bool 		accel_selftest(void) {
 	int16_t y[32] = {0};
 	int16_t z[32] = {0};
 	uint8_t num_samples = 0;	
-	ret = accel_read_acceleration(x, y, z, &num_samples);
+	ret = accel_read_acceleration(x, y, z, &num_samples, 32);
 	if(ret != NRF_SUCCESS) {
 		debug_log("Accel_read_acceleration failed!\n\r");
 		selftest_failed = 1;
