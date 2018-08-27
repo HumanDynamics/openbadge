@@ -28,7 +28,10 @@
 #define APP_TIMER_TICKS_TO_MS(TICKS, PRESCALER) \
             ((uint32_t)((TICKS) * ((PRESCALER) + 1) * 1000)/ (uint64_t)APP_TIMER_CLOCK_FREQ)
 
+#define APP_TIMER_US_TO_TICKS(US, PRESCALER) \
+			((uint64_t)ROUNDED_DIV(((uint64_t) US) * ((uint64_t)APP_TIMER_CLOCK_FREQ), ((PRESCALER) + 1) * ((uint64_t)1000000)))
 
+			
 uint32_t timer_ids[MAX_NUMBER_OF_APP_TIMERS];	/**< The mapping between app_timer-index and timer-index/timer-id. */
 
 uint32_t number_of_app_timers = 0;				/**< The number of created app timers. */
@@ -166,13 +169,13 @@ uint32_t app_timer_stop_all(void) {
  * @return    Current value of the simulated RTC1 counter.
  */
 uint32_t app_timer_cnt_get(void) {
-	uint32_t ms = timer_get_milliseconds_since_start();
-	uint32_t ticks = APP_TIMER_TICKS(ms, 0);
-	
+	uint64_t us = timer_get_microseconds_since_start();
+	uint64_t ticks = APP_TIMER_US_TO_TICKS(us, 0);
+
 	// Map to 0 - MAX_RTC_COUNTER_VAL
 	ticks = ticks % (MAX_RTC_COUNTER_VAL + 1);
 	
-	return ticks;
+	return (uint32_t) ticks;
 }
 
 
