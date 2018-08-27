@@ -28,13 +28,13 @@ uint32_t number_of_timers = 0;								/**< Number of created timers */
 
 /**@brief Function for entering a critical section by locking the mutex.
  */
-static void enter_critical_section(void) {
+void timer_enter_critical_section(void) {
 	pthread_mutex_lock(&critical_section_mutex);
 }
 
 /**@brief Function for exiting a critical section by locking the mutex.
  */
-static void exit_critical_section(void) {
+void timer_exit_critical_section(void) {
 	pthread_mutex_unlock(&critical_section_mutex);
 }
 
@@ -170,7 +170,7 @@ static void timer_remove_node(uint32_t timer_id) {
  */
 static void* timer_check_queue(void* ptr) {
 	while(timer_running) {
-		enter_critical_section();
+		timer_enter_critical_section();
 		uint64_t cur_time = timer_get_microseconds_since_start();
 		
 		
@@ -202,7 +202,7 @@ static void* timer_check_queue(void* ptr) {
 				}
 			}
 		}		
-		exit_critical_section();
+		timer_exit_critical_section();
 		
 		// Call the handler outside the critical section (because probably the application timeout-handler could call timer_start_timer())
 		if(timeout_handler != NULL) {
@@ -221,7 +221,7 @@ void timer_init(void) {
 		return;
 	pthread_mutex_init (&critical_section_mutex, NULL);
 	
-	enter_critical_section();
+	timer_enter_critical_section();
 	timer_running = 1;
 	queue_head = NULL;
 	number_of_timers = 0;
@@ -236,14 +236,14 @@ void timer_init(void) {
 	
 	pthread_attr_destroy(&attr);
 	
-	exit_critical_section();
+	timer_exit_critical_section();
 }
 
 void timer_stop(void) {
-	enter_critical_section();
+	timer_enter_critical_section();
 	timer_running = 0;
 	pthread_mutex_destroy (&critical_section_mutex);
-	exit_critical_section();
+	timer_exit_critical_section();
 }
 
 
@@ -285,9 +285,9 @@ uint8_t timer_start_timer(uint32_t timer_id, uint64_t timeout_microseconds, void
 	timer_nodes[timer_id].p_context = p_context;
 	timer_nodes[timer_id].microseconds_interval = timeout_microseconds;
 	
-	enter_critical_section();
+	timer_enter_critical_section();
 	timer_insert_node(timer_id, timer_nodes[timer_id].microseconds_interval);
-	exit_critical_section();
+	timer_exit_critical_section();
 	
 	return 1;
 	
@@ -296,9 +296,9 @@ uint8_t timer_start_timer(uint32_t timer_id, uint64_t timeout_microseconds, void
 
 
 void timer_stop_timer(uint32_t timer_id) {
-	enter_critical_section();
+	timer_enter_critical_section();
 	timer_remove_node(timer_id);
-	exit_critical_section();
+	timer_exit_critical_section();
 }
 
 

@@ -59,6 +59,15 @@ typedef struct {
  */
 void 		timer_init(void);
 
+/**@brief Function for entering a critical section by locking the mutex.
+ */
+void timer_enter_critical_section(void);
+
+/**@brief Function for exiting a critical section by locking the mutex.
+ */
+void timer_exit_critical_section(void);
+
+
 /**@brief Function for stopping the timer-module.
  *
  * @details	The function stops the internal timer-thread.
