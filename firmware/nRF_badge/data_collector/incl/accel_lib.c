@@ -7,9 +7,9 @@
 
 
 // TODO: remove
-#include "nrf_gpio.h"
+//#include "nrf_gpio.h"
 
-#include "nrf_delay.h" // Needed for accel_selftest()
+#include "systick_lib.h" // Needed for accel_selftest()
 
 
 // TODO: retrieve Pin-numbers from the custom_board-file!
@@ -29,8 +29,8 @@
 
 /**< Parameters for the selftest-function of the accelerometer */
 #define ACCEL_SELFTEST_TIME_FOR_INTERRUPT_GENERATION_MS						10000
-#define ACCEL_SELFTEST_INTERRUPT_THRESHOLD_MILLIGAUSS						500
-#define ACCEL_SELFTEST_INTERRUPT_MINIMAL_DURATION_MS						30
+#define ACCEL_SELFTEST_INTERRUPT_THRESHOLD_MILLIGAUSS						250
+#define ACCEL_SELFTEST_INTERRUPT_MINIMAL_DURATION_MS						20
 
 
 
@@ -165,7 +165,7 @@ static void accel_int1_event_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polari
 	if(pin == ACCEL_INT1_PIN && action == NRF_GPIOTE_POLARITY_LOTOHI) {
 		if(interrupt_event != ACCEL_NO_INTERRUPT) {
 			// TODO: remove
-			nrf_gpio_pin_toggle(9);
+			//nrf_gpio_pin_toggle(9);
 			
 			
 			if(interrupt_handler != NULL) {
@@ -924,16 +924,14 @@ bool 		accel_selftest(void) {
 		selftest_failed = 1;
 	}
 	
-	
+	debug_log("Waiting for an wake-up interrupt for %u ms.\n\r", ACCEL_SELFTEST_TIME_FOR_INTERRUPT_GENERATION_MS);
 	
 	// This is the actual test:
 	// Waiting for an interrupt:
+	uint32_t end_ms = systick_get_millis() + ACCEL_SELFTEST_TIME_FOR_INTERRUPT_GENERATION_MS;
 	selftest_event_counter = 0;	
-	for(uint32_t i = 0; i < ACCEL_SELFTEST_TIME_FOR_INTERRUPT_GENERATION_MS/200; i++) {
-		if(selftest_event_counter != 0)
-			break;
-		nrf_delay_ms(200);
-	}	
+	while(selftest_event_counter == 0 && systick_get_millis() < end_ms);
+
 	
 	// Reading accelerometer data:
 	int16_t x[32] = {0};

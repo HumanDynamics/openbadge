@@ -9,27 +9,18 @@
 
 
 #include "system_event_lib.h"	// Needed to register an system event handler!
-
+#include "systick_lib.h"		// Needed for the timeout-checks
 
 #include "debug_lib.h"
+
+
+#define FLASH_OPERATION_TIMEOUT_MS		100	/**< The time in milliseconds to wait for an operation to finish. */
 
 
 static volatile flash_operation_t flash_operation = FLASH_NO_OPERATION;
 
 static uint32_t const * address_of_page(uint16_t page_num);
 static uint32_t const * address_of_word(uint32_t word_num);
-
-
-
-
-
-
-
-
-
-// TODO:	Implement the check for a timeout every time there is a while(operation == ..) call!!
-//			Add NRF_ERROR_TIMEOUT to _erase, _store
-
 
 
 
@@ -165,9 +156,14 @@ ret_code_t flash_erase(uint32_t page_num, uint16_t num_pages) {
 		return ret;
 	}
 	
-	// Wait for the erase operation to terminate.
-	// TODO: timeout check
-	while(flash_get_operation() & FLASH_ERASE_OPERATION);
+	// Wait for the erase operation to terminate with timeout check.
+	uint64_t end_ms = systick_get_millis() + FLASH_OPERATION_TIMEOUT_MS;
+	while(flash_get_operation() & FLASH_ERASE_OPERATION && systick_get_millis() < end_ms);
+	if(flash_get_operation() & FLASH_ERASE_OPERATION) {
+		// Reset the erase operation
+		flash_operation &= ~FLASH_ERASE_OPERATION;
+		return NRF_ERROR_TIMEOUT;
+	}
 	
 	// Return an error if the erase operation was not successful.
 	if(flash_get_operation() & FLASH_ERASE_ERROR) {
@@ -228,9 +224,14 @@ ret_code_t flash_store(uint32_t word_num, const uint32_t* p_words, uint16_t leng
 		return ret;
 	}
 	
-	// Wait for the store operation to terminate.
-	// TODO: timeout check
-	while(flash_get_operation() & FLASH_STORE_OPERATION);
+	// Wait for the store operation to terminate with timeout check.
+	uint64_t end_ms = systick_get_millis() + FLASH_OPERATION_TIMEOUT_MS;
+	while(flash_get_operation() & FLASH_STORE_OPERATION && systick_get_millis() < end_ms);
+	if(flash_get_operation() & FLASH_STORE_OPERATION) {
+		// Reset the store operation
+		flash_operation &= ~FLASH_STORE_OPERATION;
+		return NRF_ERROR_TIMEOUT;
+	}
 	
 	// Return an error if the store operation was not successful.
 	if(flash_get_operation() & FLASH_STORE_ERROR) {
@@ -292,7 +293,15 @@ bool flash_selftest(void) {
 	uint32_t tmp = 0xABCD1234;		
 	flash_store_bkgnd(0, &tmp, 1);
 
-	while(flash_get_operation() & FLASH_STORE_OPERATION);
+	// Wait for the store operation to terminate with timeout check.
+	uint64_t end_ms = systick_get_millis() + FLASH_OPERATION_TIMEOUT_MS;
+	while(flash_get_operation() & FLASH_STORE_OPERATION && systick_get_millis() < end_ms);
+	if(flash_get_operation() & FLASH_STORE_OPERATION) {
+		// Reset the store operation
+		flash_operation &= ~FLASH_STORE_OPERATION;
+		debug_log("Flash store operation timed out!\n\r");
+		return 0;
+	}
 	
 	
 //******************** Test erasing 2 pages *************************	
@@ -304,10 +313,19 @@ bool flash_selftest(void) {
 	}
 	
 	flash_operation_t erase_operation = flash_get_operation();
-	//TODO: Check with timeout!
-	while(erase_operation & FLASH_ERASE_OPERATION) {
+	
+	// Wait for the erase operation to terminate with timeout check.
+	end_ms = systick_get_millis() + FLASH_OPERATION_TIMEOUT_MS;
+	while(erase_operation & FLASH_ERASE_OPERATION && systick_get_millis() < end_ms) {
 		erase_operation = flash_get_operation();
 	}
+	if(erase_operation & FLASH_ERASE_OPERATION) {
+		// Reset the erase operation
+		flash_operation &= ~FLASH_ERASE_OPERATION;
+		debug_log("Flash erase operation timed out!\n\r");
+		return 0;
+	}
+	
 	if(erase_operation & FLASH_ERASE_ERROR) {
 		debug_log("Erasing error!\n\r");
 		return 0;
@@ -328,10 +346,19 @@ bool flash_selftest(void) {
 	}
 	
 	flash_operation_t store_operation = flash_get_operation();
-	//TODO: Check with timeout!
-	while(store_operation & FLASH_STORE_OPERATION) {
+	
+	// Wait for the store operation to terminate with timeout check.
+	end_ms = systick_get_millis() + FLASH_OPERATION_TIMEOUT_MS;
+	while(store_operation & FLASH_STORE_OPERATION && systick_get_millis() < end_ms) {
 		store_operation = flash_get_operation();
 	}
+	if(store_operation & FLASH_STORE_OPERATION) {
+		// Reset the erase operation
+		flash_operation &= ~FLASH_STORE_OPERATION;
+		debug_log("Flash store operation timed out!\n\r");
+		return 0;
+	}
+	
 	if(store_operation & FLASH_STORE_ERROR) {
 		debug_log("Storing error!\n\r");
 		return 0;
@@ -403,10 +430,20 @@ bool flash_selftest(void) {
 	}
 	
 	store_operation = flash_get_operation();
-	//TODO: Check with timeout!
-	while(store_operation & FLASH_STORE_OPERATION) {
+	
+	// Wait for the store operation to terminate with timeout check.
+	end_ms = systick_get_millis() + FLASH_OPERATION_TIMEOUT_MS;
+	while(store_operation & FLASH_STORE_OPERATION && systick_get_millis() < end_ms) {
 		store_operation = flash_get_operation();
 	}
+	if(store_operation & FLASH_STORE_OPERATION) {
+		// Reset the erase operation
+		flash_operation &= ~FLASH_STORE_OPERATION;
+		debug_log("Flash store operation timed out!\n\r");
+		return 0;
+	}
+	
+	
 	if(store_operation & FLASH_STORE_ERROR) {
 		debug_log("Storing words error!\n\r");
 		return 0;

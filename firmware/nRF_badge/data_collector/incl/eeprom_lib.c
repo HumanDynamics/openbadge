@@ -3,20 +3,9 @@
 #include "spi_lib.h"
 #include "nrf_drv_common.h"
 
-
 #include "debug_lib.h"
 
-#include "uart_lib.h"
-extern uart_instance_t uart_instance;
-
-
-
-
-
-// TODO:	Implement the check for a timeout every time there is a while(operation == ..) call!!
-//			Add NRF_ERROR_TIMEOUT to _write_enable, _global_unprotect, _store_bkgnd, _store, _read_bkgnd, _read
-
-
+#include "systick_lib.h"		// Needed for the timeout-checks
 
 
 
@@ -26,7 +15,7 @@ extern uart_instance_t uart_instance;
 #define CMD_WRITE	0b00000010	/**< Write to memory array command code */
 #define CMD_READ	0b00000011	/**< Read from memory array command code */
 
-
+#define EEPROM_OPERATION_TIMEOUT_MS		100	/**< The time in milliseconds to wait for an operation to finish. */
 
 
 static ret_code_t eeprom_read_status(uint8_t* eeprom_status);
@@ -156,17 +145,21 @@ static ret_code_t eeprom_write_enable(void) {
 	
 	// SPI transmit in blocking mode
 	ret_code_t ret = spi_transmit(&spi_instance, tx_buf, 1);
-	
-	// TODO: timeout check
-	while(eeprom_get_operation() != EEPROM_NO_OPERATION);
-	
-	
 	// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INVALID_ADDR (the last one can't happen here)
 	if(ret != NRF_SUCCESS) {
-		ret = NRF_ERROR_BUSY;
+		return NRF_ERROR_BUSY;
 	}
 	
-	return ret;
+
+	uint64_t end_ms = systick_get_millis() + EEPROM_OPERATION_TIMEOUT_MS;
+	while(eeprom_get_operation() != EEPROM_NO_OPERATION && systick_get_millis() < end_ms);
+	if(eeprom_get_operation() != EEPROM_NO_OPERATION) {
+		// Reset the eeprom operation
+		eeprom_operation = EEPROM_NO_OPERATION;
+		return NRF_ERROR_TIMEOUT;
+	}
+
+	return NRF_SUCCESS;
 }
 
 /**@brief   Function for unprotecting all EEPROM blocks for writing to them.		
@@ -190,12 +183,17 @@ static ret_code_t eeprom_global_unprotect(void) {
 	// SPI transmit in blocking mode
 	ret = spi_transmit(&spi_instance, tx_buf, 2);
 	
-	// TODO: timeout check
-	while(eeprom_get_operation() != EEPROM_NO_OPERATION);
-	
 	// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INVALID_ADDR (the last one can't happen here)
     if(ret != NRF_SUCCESS)
 		ret = NRF_ERROR_BUSY;
+	
+	uint64_t end_ms = systick_get_millis() + EEPROM_OPERATION_TIMEOUT_MS;
+	while(eeprom_get_operation() != EEPROM_NO_OPERATION && systick_get_millis() < end_ms);
+	if(eeprom_get_operation() != EEPROM_NO_OPERATION) {
+		// Reset the eeprom operation
+		eeprom_operation = EEPROM_NO_OPERATION;
+		return NRF_ERROR_TIMEOUT;
+	}
 	
 	
 	return ret;	
@@ -277,8 +275,14 @@ ret_code_t eeprom_store_bkgnd(uint32_t address, uint8_t* tx_data, uint32_t lengt
 	}
 	
 	// Wait until the first 4 data bytes are stored into the EEPROM (important to not just check if they have been transmitted via spi, because the EEPROM needs time to store it internally)
-	// TODO: timeout check
-	while(eeprom_get_operation() != EEPROM_NO_OPERATION);
+	uint64_t end_ms = systick_get_millis() + EEPROM_OPERATION_TIMEOUT_MS;
+	while(eeprom_get_operation() != EEPROM_NO_OPERATION && systick_get_millis() < end_ms);
+	if(eeprom_get_operation() != EEPROM_NO_OPERATION) {
+		// Reset the eeprom operation
+		eeprom_operation = EEPROM_NO_OPERATION;
+		return NRF_ERROR_TIMEOUT;
+	}
+	
 
 		
 	// Now reschedule the store operation of the remaining bytes (if length_tx_data is > 4) in real background mode!
@@ -336,8 +340,13 @@ ret_code_t eeprom_store(uint32_t address, uint8_t* tx_data, uint32_t length_tx_d
 	}
 	
 	// Wait until the operation terminates
-	// TODO: timeout check
-	while(eeprom_get_operation() == EEPROM_STORE_OPERATION);
+	uint64_t end_ms = systick_get_millis() + EEPROM_OPERATION_TIMEOUT_MS;
+	while(eeprom_get_operation() == EEPROM_STORE_OPERATION && systick_get_millis() < end_ms);
+	if(eeprom_get_operation() == EEPROM_STORE_OPERATION) {
+		// Reset the eeprom operation
+		eeprom_operation = EEPROM_NO_OPERATION;
+		return NRF_ERROR_TIMEOUT;
+	}
 	
 	return NRF_SUCCESS;
 }
@@ -401,12 +410,19 @@ ret_code_t eeprom_read_bkgnd(uint32_t address, uint8_t* rx_data, uint32_t length
 		return ret;
 	}
 	
-	// TODO: timeout check
-	while(eeprom_get_operation() != EEPROM_NO_OPERATION);
+	// Wait until the operation terminates
+	uint64_t end_ms = systick_get_millis() + EEPROM_OPERATION_TIMEOUT_MS;
+	while(eeprom_get_operation() != EEPROM_NO_OPERATION && systick_get_millis() < end_ms);
+	if(eeprom_get_operation() != EEPROM_NO_OPERATION) {
+		// Reset the eeprom operation
+		eeprom_operation = EEPROM_NO_OPERATION;
+		return NRF_ERROR_TIMEOUT;
+	}
+	
+	
 	
 	// copy the first data to the output buffer
 	memcpy(rx_data, &first_receive[4], first_length_rx_data);
-	
 	
 	
 	
@@ -459,8 +475,13 @@ ret_code_t eeprom_read(uint32_t address, uint8_t* rx_data, uint32_t length_rx_da
 	}
 	
 	// Wait until the operation terminates
-	// TODO: timeout check
-	while(eeprom_get_operation() == EEPROM_READ_OPERATION);
+	uint64_t end_ms = systick_get_millis() + EEPROM_OPERATION_TIMEOUT_MS;
+	while(eeprom_get_operation() == EEPROM_READ_OPERATION && systick_get_millis() < end_ms);
+	if(eeprom_get_operation() == EEPROM_READ_OPERATION) {
+		// Reset the eeprom operation
+		eeprom_operation = EEPROM_NO_OPERATION;
+		return NRF_ERROR_TIMEOUT;
+	}
 	
 	return NRF_SUCCESS;
 	

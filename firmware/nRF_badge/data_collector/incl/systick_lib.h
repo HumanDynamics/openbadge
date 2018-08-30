@@ -16,9 +16,6 @@
 #include "stdint.h"
 #include "sdk_errors.h"	// Needed for the definition of ret_code_t and the error-codes
 
-// TODO: Put somewhere else?
-#define APP_PRESCALER          0
-
 
 /**@brief Function for initializing the systick-module.
  * 

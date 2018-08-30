@@ -203,17 +203,15 @@ int main(void)
 
 
 	
-	APP_TIMER_INIT(0, 20, NULL);
+	APP_TIMER_INIT(0, 50, NULL);
+	
 	ret = systick_init(0);
 	
-	debug_log("Ret systick: %u\n\r", ret);
 	
-	
-	
-	
+	debug_log("Ret systick: %u\n\r", ret);	
 	debug_log("Millis: %u\n\r",  (uint32_t) systick_get_millis());
 	
-	systick_delay_millis(10*1000);
+	systick_delay_millis(3*1000);
 	uint64_t ms = systick_get_millis();
 	uint32_t sec; uint16_t mil;
 	systick_get_timestamp(&sec, &mil);
@@ -222,7 +220,6 @@ int main(void)
 	
 	debug_log("Timestamp: %u, %u\n\r", sec, mil);
 	
-	while(1);
 	
 	flash_init();
 	

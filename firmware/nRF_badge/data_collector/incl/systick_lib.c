@@ -20,26 +20,30 @@ volatile float millis_per_ticks = (1000.0f / ((0 + 1) * APP_TIMER_CLOCK_FREQ));	
 static void systick_callback(void* p_context);
 
 ret_code_t systick_init(uint8_t prescaler) {
-	ret_code_t ret;
+	static uint8_t init_done = 0;
 	
-	ticks_since_start = 0;
-	former_ticks = app_timer_cnt_get();
-	
-	millis_synced = 0;
-	millis_offset = 0;
-	ticks_at_offset = systick_get_ticks_since_start();
-	millis_per_ticks = (1000.0f / ((prescaler + 1) * APP_TIMER_CLOCK_FREQ));	
-	
-	
-	
-	// Create the systick_timer
-	ret = app_timer_create(&systick_timer, APP_TIMER_MODE_REPEATED, systick_callback);
-	if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;
+	if(!init_done) {
+		ret_code_t ret;
+		ticks_since_start = 0;
+		former_ticks = app_timer_cnt_get();
+		
+		millis_synced = 0;
+		millis_offset = 0;
+		ticks_at_offset = systick_get_ticks_since_start();
+		millis_per_ticks = (1000.0f / ((prescaler + 1) * APP_TIMER_CLOCK_FREQ));	
+		
+		
+		
+		// Create the systick_timer
+		ret = app_timer_create(&systick_timer, APP_TIMER_MODE_REPEATED, systick_callback);
+		if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;
 
-	// Start the systick timer
-	ret = app_timer_start(systick_timer, APP_TIMER_TICKS(SYSTICK_TIMER_CALLBACK_PERIOD_MS, 0), NULL);
-	if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;	
-	
+		// Start the systick timer
+		ret = app_timer_start(systick_timer, APP_TIMER_TICKS(SYSTICK_TIMER_CALLBACK_PERIOD_MS, 0), NULL);
+		if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;	
+		
+		init_done = 1;
+	}
 	
 	return NRF_SUCCESS;
 }
