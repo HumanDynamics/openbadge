@@ -62,6 +62,8 @@ FIRMWARE_SRCS = $(FIRMWARE_DIR)/incl/storage1_lib.c \
 				$(FIRMWARE_DIR)/incl/storage_lib.c \
 				$(FIRMWARE_DIR)/incl/filesystem_lib.c \
 				$(FIRMWARE_DIR)/incl/chunk_fifo_lib.c \
+				$(FIRMWARE_DIR)/incl/systick_lib.c \
+				
 
 
 
