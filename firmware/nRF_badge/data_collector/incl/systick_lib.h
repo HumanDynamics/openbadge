@@ -52,6 +52,17 @@ uint64_t 	systick_get_ticks_since_start(void);
  */
 uint64_t	systick_get_millis(void);
 
+/**@brief Function for retrieving contoninuous milliseconds.
+ * 
+ * @details	This timebasis is not and could not be synchronized with an external time-source.
+ *			Therefore, the milliseconds are continious incremented without any jumps.
+ *			This is useful if the application wants to do timeout based stuff with time-deltas.
+ *
+ * @retval	The current continous milliseconds of the system (unsynced with an external time-source). Starts at 0.
+ */
+uint64_t systick_get_continuous_millis(void);
+
+
 /**@brief Function for retrieving the current timestamp (seconds, milliseconds): E.g. 50 seconds and 400 milliseconds.
  * 
  * @details	Internally the function just calls the get_millis()-function to calculate the seconds and milliseconds.

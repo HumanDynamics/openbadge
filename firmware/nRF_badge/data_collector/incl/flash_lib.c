@@ -157,8 +157,8 @@ ret_code_t flash_erase(uint32_t page_num, uint16_t num_pages) {
 	}
 	
 	// Wait for the erase operation to terminate with timeout check.
-	uint64_t end_ms = systick_get_millis() + FLASH_OPERATION_TIMEOUT_MS;
-	while(flash_get_operation() & FLASH_ERASE_OPERATION && systick_get_millis() < end_ms);
+	uint64_t end_ms = systick_get_continuous_millis() + FLASH_OPERATION_TIMEOUT_MS;
+	while(flash_get_operation() & FLASH_ERASE_OPERATION && systick_get_continuous_millis() < end_ms);
 	if(flash_get_operation() & FLASH_ERASE_OPERATION) {
 		// Reset the erase operation
 		flash_operation &= ~FLASH_ERASE_OPERATION;
@@ -225,8 +225,8 @@ ret_code_t flash_store(uint32_t word_num, const uint32_t* p_words, uint16_t leng
 	}
 	
 	// Wait for the store operation to terminate with timeout check.
-	uint64_t end_ms = systick_get_millis() + FLASH_OPERATION_TIMEOUT_MS;
-	while(flash_get_operation() & FLASH_STORE_OPERATION && systick_get_millis() < end_ms);
+	uint64_t end_ms = systick_get_continuous_millis() + FLASH_OPERATION_TIMEOUT_MS;
+	while(flash_get_operation() & FLASH_STORE_OPERATION && systick_get_continuous_millis() < end_ms);
 	if(flash_get_operation() & FLASH_STORE_OPERATION) {
 		// Reset the store operation
 		flash_operation &= ~FLASH_STORE_OPERATION;
@@ -294,8 +294,8 @@ bool flash_selftest(void) {
 	flash_store_bkgnd(0, &tmp, 1);
 
 	// Wait for the store operation to terminate with timeout check.
-	uint64_t end_ms = systick_get_millis() + FLASH_OPERATION_TIMEOUT_MS;
-	while(flash_get_operation() & FLASH_STORE_OPERATION && systick_get_millis() < end_ms);
+	uint64_t end_ms = systick_get_continuous_millis() + FLASH_OPERATION_TIMEOUT_MS;
+	while(flash_get_operation() & FLASH_STORE_OPERATION && systick_get_continuous_millis() < end_ms);
 	if(flash_get_operation() & FLASH_STORE_OPERATION) {
 		// Reset the store operation
 		flash_operation &= ~FLASH_STORE_OPERATION;
@@ -315,8 +315,8 @@ bool flash_selftest(void) {
 	flash_operation_t erase_operation = flash_get_operation();
 	
 	// Wait for the erase operation to terminate with timeout check.
-	end_ms = systick_get_millis() + FLASH_OPERATION_TIMEOUT_MS;
-	while(erase_operation & FLASH_ERASE_OPERATION && systick_get_millis() < end_ms) {
+	end_ms = systick_get_continuous_millis() + FLASH_OPERATION_TIMEOUT_MS;
+	while(erase_operation & FLASH_ERASE_OPERATION && systick_get_continuous_millis() < end_ms) {
 		erase_operation = flash_get_operation();
 	}
 	if(erase_operation & FLASH_ERASE_OPERATION) {
@@ -348,8 +348,8 @@ bool flash_selftest(void) {
 	flash_operation_t store_operation = flash_get_operation();
 	
 	// Wait for the store operation to terminate with timeout check.
-	end_ms = systick_get_millis() + FLASH_OPERATION_TIMEOUT_MS;
-	while(store_operation & FLASH_STORE_OPERATION && systick_get_millis() < end_ms) {
+	end_ms = systick_get_continuous_millis() + FLASH_OPERATION_TIMEOUT_MS;
+	while(store_operation & FLASH_STORE_OPERATION && systick_get_continuous_millis() < end_ms) {
 		store_operation = flash_get_operation();
 	}
 	if(store_operation & FLASH_STORE_OPERATION) {
@@ -432,8 +432,8 @@ bool flash_selftest(void) {
 	store_operation = flash_get_operation();
 	
 	// Wait for the store operation to terminate with timeout check.
-	end_ms = systick_get_millis() + FLASH_OPERATION_TIMEOUT_MS;
-	while(store_operation & FLASH_STORE_OPERATION && systick_get_millis() < end_ms) {
+	end_ms = systick_get_continuous_millis() + FLASH_OPERATION_TIMEOUT_MS;
+	while(store_operation & FLASH_STORE_OPERATION && systick_get_continuous_millis() < end_ms) {
 		store_operation = flash_get_operation();
 	}
 	if(store_operation & FLASH_STORE_OPERATION) {

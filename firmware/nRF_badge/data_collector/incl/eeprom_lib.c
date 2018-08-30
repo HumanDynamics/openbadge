@@ -151,8 +151,8 @@ static ret_code_t eeprom_write_enable(void) {
 	}
 	
 
-	uint64_t end_ms = systick_get_millis() + EEPROM_OPERATION_TIMEOUT_MS;
-	while(eeprom_get_operation() != EEPROM_NO_OPERATION && systick_get_millis() < end_ms);
+	uint64_t end_ms = systick_get_continuous_millis() + EEPROM_OPERATION_TIMEOUT_MS;
+	while(eeprom_get_operation() != EEPROM_NO_OPERATION && systick_get_continuous_millis() < end_ms);
 	if(eeprom_get_operation() != EEPROM_NO_OPERATION) {
 		// Reset the eeprom operation
 		eeprom_operation = EEPROM_NO_OPERATION;
@@ -187,8 +187,8 @@ static ret_code_t eeprom_global_unprotect(void) {
     if(ret != NRF_SUCCESS)
 		ret = NRF_ERROR_BUSY;
 	
-	uint64_t end_ms = systick_get_millis() + EEPROM_OPERATION_TIMEOUT_MS;
-	while(eeprom_get_operation() != EEPROM_NO_OPERATION && systick_get_millis() < end_ms);
+	uint64_t end_ms = systick_get_continuous_millis() + EEPROM_OPERATION_TIMEOUT_MS;
+	while(eeprom_get_operation() != EEPROM_NO_OPERATION && systick_get_continuous_millis() < end_ms);
 	if(eeprom_get_operation() != EEPROM_NO_OPERATION) {
 		// Reset the eeprom operation
 		eeprom_operation = EEPROM_NO_OPERATION;
@@ -275,8 +275,8 @@ ret_code_t eeprom_store_bkgnd(uint32_t address, uint8_t* tx_data, uint32_t lengt
 	}
 	
 	// Wait until the first 4 data bytes are stored into the EEPROM (important to not just check if they have been transmitted via spi, because the EEPROM needs time to store it internally)
-	uint64_t end_ms = systick_get_millis() + EEPROM_OPERATION_TIMEOUT_MS;
-	while(eeprom_get_operation() != EEPROM_NO_OPERATION && systick_get_millis() < end_ms);
+	uint64_t end_ms = systick_get_continuous_millis() + EEPROM_OPERATION_TIMEOUT_MS;
+	while(eeprom_get_operation() != EEPROM_NO_OPERATION && systick_get_continuous_millis() < end_ms);
 	if(eeprom_get_operation() != EEPROM_NO_OPERATION) {
 		// Reset the eeprom operation
 		eeprom_operation = EEPROM_NO_OPERATION;
@@ -340,8 +340,8 @@ ret_code_t eeprom_store(uint32_t address, uint8_t* tx_data, uint32_t length_tx_d
 	}
 	
 	// Wait until the operation terminates
-	uint64_t end_ms = systick_get_millis() + EEPROM_OPERATION_TIMEOUT_MS;
-	while(eeprom_get_operation() == EEPROM_STORE_OPERATION && systick_get_millis() < end_ms);
+	uint64_t end_ms = systick_get_continuous_millis() + EEPROM_OPERATION_TIMEOUT_MS;
+	while(eeprom_get_operation() == EEPROM_STORE_OPERATION && systick_get_continuous_millis() < end_ms);
 	if(eeprom_get_operation() == EEPROM_STORE_OPERATION) {
 		// Reset the eeprom operation
 		eeprom_operation = EEPROM_NO_OPERATION;
@@ -411,8 +411,8 @@ ret_code_t eeprom_read_bkgnd(uint32_t address, uint8_t* rx_data, uint32_t length
 	}
 	
 	// Wait until the operation terminates
-	uint64_t end_ms = systick_get_millis() + EEPROM_OPERATION_TIMEOUT_MS;
-	while(eeprom_get_operation() != EEPROM_NO_OPERATION && systick_get_millis() < end_ms);
+	uint64_t end_ms = systick_get_continuous_millis() + EEPROM_OPERATION_TIMEOUT_MS;
+	while(eeprom_get_operation() != EEPROM_NO_OPERATION && systick_get_continuous_millis() < end_ms);
 	if(eeprom_get_operation() != EEPROM_NO_OPERATION) {
 		// Reset the eeprom operation
 		eeprom_operation = EEPROM_NO_OPERATION;
@@ -475,8 +475,8 @@ ret_code_t eeprom_read(uint32_t address, uint8_t* rx_data, uint32_t length_rx_da
 	}
 	
 	// Wait until the operation terminates
-	uint64_t end_ms = systick_get_millis() + EEPROM_OPERATION_TIMEOUT_MS;
-	while(eeprom_get_operation() == EEPROM_READ_OPERATION && systick_get_millis() < end_ms);
+	uint64_t end_ms = systick_get_continuous_millis() + EEPROM_OPERATION_TIMEOUT_MS;
+	while(eeprom_get_operation() == EEPROM_READ_OPERATION && systick_get_continuous_millis() < end_ms);
 	if(eeprom_get_operation() == EEPROM_READ_OPERATION) {
 		// Reset the eeprom operation
 		eeprom_operation = EEPROM_NO_OPERATION;

@@ -928,9 +928,9 @@ bool 		accel_selftest(void) {
 	
 	// This is the actual test:
 	// Waiting for an interrupt:
-	uint32_t end_ms = systick_get_millis() + ACCEL_SELFTEST_TIME_FOR_INTERRUPT_GENERATION_MS;
+	uint32_t end_ms = systick_get_continuous_millis() + ACCEL_SELFTEST_TIME_FOR_INTERRUPT_GENERATION_MS;
 	selftest_event_counter = 0;	
-	while(selftest_event_counter == 0 && systick_get_millis() < end_ms);
+	while(selftest_event_counter == 0 && systick_get_continuous_millis() < end_ms);
 
 	
 	// Reading accelerometer data:

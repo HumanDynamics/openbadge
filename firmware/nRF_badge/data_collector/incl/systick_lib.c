@@ -6,16 +6,16 @@
 
 #define SYSTICK_TIMER_CALLBACK_PERIOD_MS (100*1000)
 
-
 APP_TIMER_DEF(systick_timer);
 
-volatile uint64_t ticks_since_start = 0;			/**< */
-volatile uint32_t former_ticks = 0;
+static volatile uint64_t ticks_since_start = 0;			/**< Ticks of the 32768Hz oscillator since start/init()-call. */
+static volatile uint32_t former_ticks = 0;				/**< The number of real RTC-ticks of the former systick-callback. */
 
-volatile uint8_t  millis_synced = 0;				/**< Flag if the systick is synced with an external time-source. */
-volatile uint64_t millis_offset = 0;				/**< The millis offset at ticks_at_offset setted externally. It is the y-axis offset of the straightline equation. */
-volatile uint64_t ticks_at_offset = 0;				/**< The ticks at the millis_offset. It is the x-value for the y-axis offset of the straightline equation. */
-volatile float millis_per_ticks = (1000.0f / ((0 + 1) * APP_TIMER_CLOCK_FREQ));		/**< Variable that represents the millis per ticks. It is the slope of the straigtline equation.*/
+static volatile uint8_t  millis_synced = 0;				/**< Flag if the systick is synced with an external time-source. */
+static volatile uint64_t millis_offset = 0;				/**< The millis offset at ticks_at_offset setted externally. It is the y-axis offset of the straightline equation. */
+static volatile uint64_t ticks_at_offset = 0;				/**< The ticks at the millis_offset. It is the x-value for the y-axis offset of the straightline equation. */
+static volatile float millis_per_ticks = (1000.0f / ((0 + 1) * APP_TIMER_CLOCK_FREQ));		/**< Variable that represents the millis per ticks. It is the slope of the straigtline equation.*/
+static float millis_per_ticks_default = (1000.0f / ((0 + 1) * APP_TIMER_CLOCK_FREQ));		/**< Variable that represents the default millis per ticks. It is the slope of the straigtline equation (needed for systick_get_continous_millis()).*/
 
 static void systick_callback(void* p_context);
 
@@ -31,6 +31,8 @@ ret_code_t systick_init(uint8_t prescaler) {
 		millis_offset = 0;
 		ticks_at_offset = systick_get_ticks_since_start();
 		millis_per_ticks = (1000.0f / ((prescaler + 1) * APP_TIMER_CLOCK_FREQ));	
+		
+		millis_per_ticks_default = (1000.0f / ((prescaler + 1) * APP_TIMER_CLOCK_FREQ));	
 		
 		
 		
@@ -147,6 +149,18 @@ uint64_t systick_get_millis(void) {
 	CRITICAL_REGION_EXIT();
 	
 	return millis;
+}
+
+uint64_t systick_get_continuous_millis(void) {
+	uint64_t cur_ticks_since_start = systick_get_ticks_since_start();
+	uint64_t millis = 0;
+	
+	CRITICAL_REGION_ENTER();
+	millis = ((uint64_t)(millis_per_ticks_default*(cur_ticks_since_start - 0))) + 0;
+	CRITICAL_REGION_EXIT();
+	
+	return millis;
+	
 }
 
 void systick_delay_millis(uint64_t millis) {
