@@ -31,6 +31,31 @@ void debug_init(void)
 	UART_BUFFER_INIT(&uart_instance, 0, UART_PRINTF_TX_BUFFER_SIZE, &ret);	
 }
 
+void debug_log_bkgnd( const char* format, ...) {
+	// Check if the tx buffer that we want to use is not NULL
+	if(uart_instance.uart_buffer.tx_buf == NULL) {
+		return;
+	}
+	
+	
+	uint32_t n = uart_instance.uart_buffer.tx_buf_size;
+		
+	va_list args;
+	va_start(args, format);
+	
+	int ret_vsnprintf = vsnprintf((char*) uart_instance.uart_buffer.tx_buf, n, format, args);
+	va_end(args);	
+	
+	
+	// Check if the output of vsnprintf is correct
+	if(ret_vsnprintf < 0 || ret_vsnprintf >= n) {
+		return;
+	}
+	
+	
+	uart_transmit_bkgnd(&uart_instance, NULL, uart_instance.uart_buffer.tx_buf, ret_vsnprintf);	
+	
+}
 
 void debug_log( const char* format, ...) {
 	

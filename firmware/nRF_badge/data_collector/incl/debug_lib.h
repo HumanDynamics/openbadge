@@ -31,11 +31,24 @@
 void debug_init(void);
 
 /**
+ * @brief Function for logging debug messages in background-mode (for high priority print-outs).
+ *
+ * @details This function logs messages over UART. The module must be initialized before using this function.
+ *			The function internally uses the tx-buffer of the uart_instance and generates the formatted message via vsnprintf.
+ *
+ * @param[in] 	format		The format string that should be printed.
+ * @param[in]	...			Variable arguments that should be inserted into the format string.
+ */
+void debug_log_bkgnd( const char* format, ...); 
+
+/**
  * @brief Function for logging debug messages.
  *
  * @details This function logs messages over UART. The module must be initialized before using this function.
  *			The function internally uses the tx-buffer of the uart_instance and generates the formatted message via vsnprintf.
  *
+ * @param[in] 	format		The format string that should be printed.
+ * @param[in]	...			Variable arguments that should be inserted into the format string.
  */
 void debug_log( const char* format, ...); 
 
@@ -52,6 +65,7 @@ void debug_log_dump(uint8_t * p_buffer, uint32_t len);
 #else // DEBUG_ENABLE
 
 #define debug_init(...)
+#define debug_log_bkgnd(...)
 #define debug_log(...)
 #define debug_log_dump(...)
 

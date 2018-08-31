@@ -12,6 +12,13 @@ void debug_init(void)
 {	
 }
 
+void debug_log_bkgnd( const char* format, ...) {
+	va_list args;
+	va_start(args, format);	
+	vprintf(format, args);
+	va_end(args);	
+}
+
 void debug_log(const char* format, ...) {
 	va_list args;
 	va_start(args, format);	
