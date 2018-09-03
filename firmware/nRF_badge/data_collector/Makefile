@@ -106,7 +106,12 @@ helpDetailed:
 #$(SDK_PATH)/components/libraries/util/app_error_weak.c \		# needed for app_error.c
 #$(SDK_PATH)/components/drivers_nrf/clock/nrf_drv_clock.c \		# needed for softdevice_handler.c
 #$(SDK_PATH)/components/libraries\util\app_util_platform.c \	# needed for the initialization of the softdevice via SOFTDEVICE_HANDLER_INIT()
- 
+#$(SDK_PATH)/components/drivers_nrf/gpiote/nrf_drv_gpiote.c \	# needed to set a the interrupt pins for the accelerometer
+#$(SDK_PATH)/components/libraries/timer/app_timer.c \			# needed for the timer-abstraction
+#$(SDK_PATH)/components/ble/ble_advertising/ble_advertising.c \ # needed for ble_lib to abstract the ble_advertising-functionality
+#$(SDK_PATH)/components/ble/ble_services/ble_nus/ble_nus.c \	# needed for ble_lib to abstract the BLE Nordic Uart Service functionality
+
+
 #source files
 C_SOURCE_FILES += \
 main.c \
@@ -124,6 +129,7 @@ incl/filesystem_lib.c \
 incl/accel_lib.c \
 incl/chunk_fifo_lib.c \
 incl/systick_lib.c \
+incl/ble_lib.c \
 $(SDK_PATH)/components/toolchain/system_nrf51.c \
 $(SDK_PATH)/components/drivers_nrf/uart/nrf_drv_uart.c \
 $(SDK_PATH)/components/drivers_nrf/common/nrf_drv_common.c \
@@ -137,6 +143,10 @@ $(SDK_PATH)/components/drivers_nrf/clock/nrf_drv_clock.c \
 $(SDK_PATH)/components/libraries/util/app_util_platform.c \
 $(SDK_PATH)/components/drivers_nrf/gpiote/nrf_drv_gpiote.c \
 $(SDK_PATH)/components/libraries/timer/app_timer.c \
+$(SDK_PATH)/components/ble/ble_advertising/ble_advertising.c \
+$(SDK_PATH)/components/ble/common/ble_advdata.c \
+$(SDK_PATH)/components/ble/ble_services/ble_nus/ble_nus.c \
+$(SDK_PATH)/components/ble/common/ble_srv_common.c \
 
 #incl/accel.c \
 #incl/analog.c \
@@ -233,6 +243,9 @@ INC_PATHS += -I$(SDK_PATH)/components/softdevice/common/softdevice_handler
 INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/clock
 INC_PATHS += -I$(SDK_PATH)/components/drivers_nrf/gpiote
 INC_PATHS += -I$(SDK_PATH)/components/libraries/timer
+INC_PATHS += -I$(SDK_PATH)/components/ble/ble_advertising
+INC_PATHS += -I$(SDK_PATH)/components/ble/common
+INC_PATHS += -I$(SDK_PATH)/components/ble/ble_services/ble_nus
 
 
 #INC_PATHS += -I$(SDK_PATH)/components/libraries/uart
@@ -361,6 +374,7 @@ ASMFLAGS += -x assembler-with-cpp
 # ! vvv this has been here since badge 03, hasn't been updated, but hasn't seemed to cause any issues?
 ASMFLAGS  += -DBOARD_PCA10028  #default to NRF51DK board
 badge_03: ASMFLAGS += -UBOARD_PCA10028  #undefine NRF51DK, to define custom board flag
+badge_03v6: ASMFLAGS += -UBOARD_PCA10028  #undefine NRF51DK, to define custom board flag
 badge_03: ASMFLAGS += -DBOARD_CUSTOM
 badge_03: ASMFLAGS += -DBOARD_BADGE_03
 ASMFLAGS += -DSOFTDEVICE_PRESENT
@@ -390,7 +404,8 @@ OBJECTS = $(C_OBJECTS) $(ASM_OBJECTS)
 nrf51422_xxac_s130: OUTPUT_FILENAME := nrf51422_xxac_s130
 #NRF51 DK uses 51422 xxac variant - 256KB flash, 32KB RAM, ANT/BLE SoC
 #nrf51422_xxac_s130: LINKER_SCRIPT=nrf51_xxac_S130_linker.ld
-nrf51422_xxac_s130: LINKER_SCRIPT=$(SDK_PATH)/components/softdevice/s130/toolchain/armgcc/armgcc_s130_nrf51422_xxac.ld
+#nrf51422_xxac_s130: LINKER_SCRIPT=$(SDK_PATH)/components/softdevice/s130/toolchain/armgcc/armgcc_s130_nrf51422_xxac.ld
+nrf51422_xxac_s130: LINKER_SCRIPT=armgcc_s130_nrf51422_xxac.ld
 nrf51422_xxac_s130: $(BUILD_DIRECTORIES) $(OBJECTS)
 	@echo Linking target: $(OUTPUT_FILENAME).out
 	$(NO_ECHO)$(CC) $(LDFLAGS) $(OBJECTS) $(LIBS) -o $(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_FILENAME).out

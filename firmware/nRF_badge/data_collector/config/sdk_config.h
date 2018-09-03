@@ -13,6 +13,33 @@
 //#include <nrf_peripherals.h> is included in every peripheral module, so don't need to include it here!
 //#include <nrf51822_peripherals.h>
 
+// <h> nRF_BLE 
+
+//==========================================================
+// <q> BLE_ADVERTISING_ENABLED  - ble_advertising - Advertising module
+ 
+
+#ifndef BLE_ADVERTISING_ENABLED
+#define BLE_ADVERTISING_ENABLED 1
+#endif
+
+// </h> 
+//==========================================================
+
+
+
+// <h> nRF_BLE_Services 
+
+//==========================================================
+// <q> BLE_NUS_ENABLED  - ble_nus - Nordic UART Service
+ 
+
+#ifndef BLE_NUS_ENABLED
+#define BLE_NUS_ENABLED 1
+#endif
+
+// </h> 
+//==========================================================
 
 
 //==========================================================

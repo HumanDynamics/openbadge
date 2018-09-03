@@ -43,6 +43,10 @@
 #include "app_timer.h"
 #include "systick_lib.h"
 
+#include "ble_lib.h"
+
+#include "app_error_weak.h"
+#include "app_error.h"
 
 /**
 TODO:
@@ -165,7 +169,6 @@ uint8_t readRegister8(uint8_t reg){
 }
 
 
-
 /**
  * ============================================== MAIN ====================================================
  */
@@ -186,6 +189,8 @@ int main(void)
 	
 	debug_init();
 	
+
+	
 	debug_log("Start...\n\r");
 
 	
@@ -202,6 +207,36 @@ int main(void)
 	SOFTDEVICE_HANDLER_INIT(&clock_lf_cfg, NULL);
 
 
+	
+	
+	
+	
+	ret = ble_init();
+	debug_log("Ret ble_init: %d\n\r", ret);
+	
+	uint8_t mac[6];
+	ble_get_MAC_address(mac);
+	debug_log("MAC address: %.2X:%.2X:%.2X:%.2X:%.2X:%.2X\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+
+	
+	uint8_t advdata[31];
+	
+	ret = ble_set_advertising_custom_advdata(0xFF00, advdata, 13);
+	debug_log("Ret ble_set_advertising_custom_advdata: %d\n\r", ret);
+	
+	ret = ble_start_advertising();
+	debug_log("Ret ble_start_advertising: %d\n\r", ret);
+	
+	
+	
+	
+	ret = ble_start_scanning(300, 100, 15);
+	debug_log("Ret ble_start_scanning: %d\n\r", ret);
+	nrf_delay_ms(5000);
+	
+	
+	
+	while(1);
 	
 	APP_TIMER_INIT(0, 50, NULL);
 	
@@ -246,8 +281,6 @@ int main(void)
 	
 	accel_selftest();
 	
-	
-	//accel_selftest();
 	while(1);
 	
 	
