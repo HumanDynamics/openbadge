@@ -34,9 +34,15 @@ BUILD_DIR = _build
 
 LCOV_DIR = $(BUILD_DIR)/LCOV
 
+# The pathes to protobuf-file-dir, to nanopb-dir and to output-dir
+PROTOBUF_PATH := ../protobuf
+NANOPB_PATH := $(PROTOBUF_PATH)/nanopb
+PROTOBUF_OUTPUT_PATH := ../incl
+
 # Points to the root of Google Test, relative to where this file is.
 # Remember to tweak this if you move this file.
 GTEST_DIR = googletest
+
 
 # If you want no cmd-line print outs of the cmds
 NO_ECHO := @
@@ -63,6 +69,8 @@ FIRMWARE_SRCS = $(FIRMWARE_DIR)/incl/storage1_lib.c \
 				$(FIRMWARE_DIR)/incl/filesystem_lib.c \
 				$(FIRMWARE_DIR)/incl/chunk_fifo_lib.c \
 				$(FIRMWARE_DIR)/incl/systick_lib.c \
+				$(FIRMWARE_DIR)/incl/test.pb.c \
+
 				
 
 
@@ -92,6 +100,7 @@ FIRMWARE_INC_PATH += -I$(SDK_PATH)/components/libraries/scheduler
 
 MOCK_INC_PATH += -I$(MOCK_DIR)/incl
 
+NANOPB_INC_PATH += -I$(NANOPB_PATH)
 
 
 
@@ -124,6 +133,8 @@ help:
 	@echo "The following targets are available:"
 	@echo "  - Info:            help  helpDetailed"
 	@echo
+	@echo "  - Protobuf:        protobuf"
+	@echo
 	@echo "  - Compile options:  "
 	@echo "                     NRF51DK   badge_03   badge_03_noDebug"
 	@echo "                     badge_03v2_rigado   badge_03v2_dynastream"
@@ -150,6 +161,8 @@ help:
 helpDetailed:
 	@echo
 	@echo "The following targets are available:"
+	@echo "   - protobuf:			create source and header file from all .proto-files"
+	@echo " -----"
 	@echo "   - NRF51DK:            compile for NRF51 devkit board."
 	@echo "   - badge_03:           compile for Badge 03 board (square blue badge)"
 	@echo "   - badge_03_noDebug:   compile for Badge 03, UART disabled"
@@ -248,10 +261,21 @@ FIRMWARE_FILES = $(notdir $(FIRMWARE_SRCS))
 FIRMWARE_OBJECTS += $(addprefix $(BUILD_DIR)/,$(FIRMWARE_FILES:.c=.o))
 #$(info FIRMWARE_OBJECTS=${FIRMWARE_OBJECTS})
 
+NANOPB_FILES = $(notdir $(wildcard $(NANOPB_PATH)/*.c))
+NANOPB_OBJECTS += $(addprefix $(BUILD_DIR)/,$(NANOPB_FILES:.c=.o))
+#$(info NANOPB_OBJECTS=${NANOPB_OBJECTS})
+
+
 RUN_TESTS = $(addprefix run_, $(TESTS))
 
 
+PROTOBUF_FILES := $(wildcard $(PROTOBUF_PATH)/*.proto)
+.PHONY: protobuf	
 
+protobuf: 
+	@echo Processing .proto files:
+	@$(foreach protobuf_file,$(PROTOBUF_FILES), echo -$(protobuf_file) $(shell $(NANOPB_PATH)/generator-bin/protoc --proto_path=$(NANOPB_PATH)/generator/proto --proto_path=$(PROTOBUF_PATH) --nanopb_out=$(PROTOBUF_OUTPUT_PATH) $(protobuf_file)))
+	
 
 all : $(TESTS)
 	
@@ -431,23 +455,28 @@ badge_03v6_tester: compile
 # It is important that MOCK_INC_PATH is before FIRMWARE_INC_PATH, because some SDK-header files are probably overwritten in the MOCK_INC_PATH
 
 $(MOCK_OBJECTS):
-	$(NO_ECHO) $(CXX) $(CPPFLAGS) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) $(CXXFLAGS) -o $@ -c $(MOCK_DIR)/incl/$(basename $(notdir $@)).c*
+	@echo Compiling $(notdir $@)
+	$(NO_ECHO) $(CXX) $(CPPFLAGS) $(NANOPB_INC_PATH) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) $(CXXFLAGS) -o $@ -c $(MOCK_DIR)/incl/$(basename $(notdir $@)).c*
 
 $(FIRMWARE_OBJECTS):
+	@echo Compiling $(notdir $@)
 #	@echo Firmware objects: $@ --> $(FIRMWARE_DIR)/incl/$(basename $(notdir $@)).*
-	$(NO_ECHO) $(CXX) $(CPPFLAGS) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) $(CXXFLAGS) -o $@ -c $(FIRMWARE_DIR)/incl/$(basename $(notdir $@)).c*
+	$(NO_ECHO) $(CXX) $(CPPFLAGS) $(NANOPB_INC_PATH) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) $(CXXFLAGS) -o $@ -c $(FIRMWARE_DIR)/incl/$(basename $(notdir $@)).c*
 
-#chunk_fifo_lib_unittest.o: $(MOCK_OBJECTS) $(FIRMWARE_OBJECTS)
-#	$(NO_ECHO)$(CXX) $(CPPFLAGS) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) $(CXXFLAGS) -c $(TEST_DIR)/chunk_fifo_lib_unittest.cc
+$(NANOPB_OBJECTS):
+	@echo Compiling $(notdir $@)
+	$(NO_ECHO) $(CXX) $(CPPFLAGS) $(NANOPB_INC_PATH) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) $(CXXFLAGS) -o $@ -c $(NANOPB_PATH)/$(basename $(notdir $@)).c*
 
-$(TESTS_OBJECTS): $(MOCK_OBJECTS) $(FIRMWARE_OBJECTS)
+$(TESTS_OBJECTS): $(MOCK_OBJECTS) $(FIRMWARE_OBJECTS) $(NANOPB_OBJECTS)
+	@echo Compiling $(notdir $@)
 #	@echo Test object $(basename $@)
-	$(NO_ECHO)$(CXX) $(CPPFLAGS) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) $(CXXFLAGS) -o $@ -c $(TEST_DIR)/$(basename $(notdir $@)).cc
+	$(NO_ECHO)$(CXX) $(CPPFLAGS) $(NANOPB_INC_PATH) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) $(CXXFLAGS) -o $@ -c $(TEST_DIR)/$(basename $(notdir $@)).cc
 
 #https://stackoverflow.com/questions/16262344/pass-a-target-name-to-dependency-list-in-makefile
 $(TESTS): % : $(BUILD_DIR)/gtest_main.a $(BUILD_DIR)/%.o 
+	@echo Linking $(notdir $@)
 #	$(NO_ECHO)-mv $(BUILD_DIR)/*.o $(BUILD_DIR)/*.a . 2>/dev/null || :
-	$(NO_ECHO)$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) -lpthread $(BUILD_DIR)/$@.o $(FIRMWARE_OBJECTS) $(MOCK_OBJECTS) $(BUILD_DIR)/gtest_main.a -o $(BUILD_DIR)/run_$@ -lrt
+	$(NO_ECHO)$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(NANOPB_INC_PATH) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) -lpthread $(BUILD_DIR)/$@.o $(FIRMWARE_OBJECTS) $(MOCK_OBJECTS) $(NANOPB_OBJECTS) $(BUILD_DIR)/gtest_main.a -o $(BUILD_DIR)/run_$@ -lrt
 #	$(NO_ECHO)-mv *.o *.a $(BUILD_DIR) 2>/dev/null || :
 ifeq ($(LCOV), TRUE)
 #move .gcno files (only if exist) and don't raise an error

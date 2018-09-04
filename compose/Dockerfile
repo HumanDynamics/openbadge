@@ -17,7 +17,8 @@ RUN apt-get update && apt-get install -y \
   cmake \
   minicom screen \
   vim \
-  lcov
+  lcov \
+  lib32stdc++6
 
 RUN mkdir -p /opt/downloads
 
