@@ -8,10 +8,10 @@ NRF_SDK_PATH ?= /usr/local/nRF51_SDK_8.1.0_b6ed55f
 # Michael: ADDED /nRF5_SDK_12.3.0_d7731ad
 SDK_PATH := $(NRF_SDK_PATH)/nRF5_SDK_12.3.0_d7731ad
 
-# The pathes to protobuf-file-dir, to nanopb-dir and to output-dir
-PROTOBUF_PATH := protobuf
-NANOPB_PATH := $(PROTOBUF_PATH)/nanopb
-PROTOBUF_OUTPUT_PATH := incl
+# The tinybuf directories
+TINYBUF_PATH := tinybuf
+TINYBUF_SRC_PATH := $(TINYBUF_PATH)/incl
+
 
 export OUTPUT_FILENAME
 #MAKEFILE_NAME := $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
@@ -58,7 +58,6 @@ remduplicates = $(strip $(if $1,$(firstword $1) $(call remduplicates,$(filter-ou
 help:
 	@echo
 	@echo "The following targets are available:"
-	@echo "  - Protobuf:        protobuf"
 	@echo "  - Boards/options:  NRF51DK   badge_03   badge_03_noDebug"
 	@echo "                     badge_03v2_rigado   badge_03v2_dynastream"
 	@echo "                     badge_03v2_rigado_noDebug	badge_03v2_rigado_tester"
@@ -71,8 +70,6 @@ help:
 helpDetailed:
 	@echo
 	@echo "The following targets are available:"
-	@echo "   - protobuf:			create source and header file from all .proto-files"
-	@echo " -----"
 	@echo "   - NRF51DK:            compile for NRF51 devkit board."
 	@echo "   - badge_03:           compile for Badge 03 board (square blue badge)"
 	@echo "   - badge_03_noDebug:   compile for Badge 03, UART disabled"
@@ -138,7 +135,6 @@ incl/accel_lib.c \
 incl/chunk_fifo_lib.c \
 incl/systick_lib.c \
 incl/ble_lib.c \
-incl/test.pb.c \
 $(SDK_PATH)/components/toolchain/system_nrf51.c \
 $(SDK_PATH)/components/drivers_nrf/uart/nrf_drv_uart.c \
 $(SDK_PATH)/components/drivers_nrf/common/nrf_drv_common.c \
@@ -156,9 +152,7 @@ $(SDK_PATH)/components/ble/ble_advertising/ble_advertising.c \
 $(SDK_PATH)/components/ble/common/ble_advdata.c \
 $(SDK_PATH)/components/ble/ble_services/ble_nus/ble_nus.c \
 $(SDK_PATH)/components/ble/common/ble_srv_common.c \
-$(NANOPB_PATH)/pb_common.c \
-$(NANOPB_PATH)/pb_decode.c \
-$(NANOPB_PATH)/pb_encode.c \
+$(TINYBUF_SRC_PATH)/tinybuf.c \
 
 #incl/accel.c \
 #incl/analog.c \
@@ -258,7 +252,7 @@ INC_PATHS += -I$(SDK_PATH)/components/libraries/timer
 INC_PATHS += -I$(SDK_PATH)/components/ble/ble_advertising
 INC_PATHS += -I$(SDK_PATH)/components/ble/common
 INC_PATHS += -I$(SDK_PATH)/components/ble/ble_services/ble_nus
-INC_PATHS += -I$(NANOPB_PATH)
+INC_PATHS += -I$(TINYBUF_SRC_PATH)
 
 
 #INC_PATHS += -I$(SDK_PATH)/components/libraries/uart
@@ -415,13 +409,6 @@ vpath %.S $(ASM_PATHS)
 OBJECTS = $(C_OBJECTS) $(ASM_OBJECTS)
 
 
-PROTOBUF_FILES := $(wildcard $(PROTOBUF_PATH)/*.proto)
-.PHONY: protobuf	
-
-protobuf: 
-	@echo Processing .proto files:
-	@$(foreach protobuf_file,$(PROTOBUF_FILES), echo -$(protobuf_file) $(shell $(NANOPB_PATH)/generator-bin/protoc --proto_path=$(NANOPB_PATH)/generator/proto --proto_path=$(PROTOBUF_PATH) --nanopb_out=$(PROTOBUF_OUTPUT_PATH) $(protobuf_file)))
-	
 
 nrf51422_xxac_s130: OUTPUT_FILENAME := nrf51422_xxac_s130
 #NRF51 DK uses 51422 xxac variant - 256KB flash, 32KB RAM, ANT/BLE SoC

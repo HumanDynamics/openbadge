@@ -1,9 +1,0 @@
-syntax = "proto2";
-import "nanopb.proto";
-
-
-
-message Message {
-    optional uint32 test = 1;
-}
-
