@@ -796,7 +796,7 @@ ret_code_t filesystem_register_partition(uint16_t* partition_id, uint32_t* requi
 	
 	
 	// Check if we have enough space for at least the first element header and data (in dynamic case, this check will only check if we can store the first-element header).
-	if(available_size < (PARTITION_METADATA_SIZE + element_header_len + element_len) )
+	if(available_size < (uint32_t)(PARTITION_METADATA_SIZE + element_header_len + element_len) )
 		return NRF_ERROR_NO_MEM;
 	
 	
