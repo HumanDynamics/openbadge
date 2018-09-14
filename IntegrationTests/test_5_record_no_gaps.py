@@ -1,8 +1,12 @@
+from __future__ import division, absolute_import, print_function
 import time
+import sys
 from integration_test import *
-from BadgeFramework.badge import timestamps_to_time
 
-TEST_LENGTH_SECONDS = 3 * 60;
+sys.path.append('../BadgeFramework')
+from badge import timestamps_to_time
+
+TEST_LENGTH_SECONDS = 3 * 60
 SAMPLE_PERIOD_TICKS = 1638.0
 NRF_CLOCK_FREQ = 32768.0
 SAMPLE_PERIOD_MS = SAMPLE_PERIOD_TICKS * (1000.0 / NRF_CLOCK_FREQ)
@@ -22,7 +26,7 @@ class RecordNoGapsTestCase(IntegrationTest):
 		time.sleep(TEST_LENGTH_SECONDS)
 		badge.stop_recording()
 
-		mic_data = badge.get_mic_data(timestamp_seconds=test_start_time)
+		mic_data = badge.get_mic_data(t=test_start_time)
 
 		num_samples_taken = 0
 
@@ -40,8 +44,8 @@ class RecordNoGapsTestCase(IntegrationTest):
 
 			# Check that timestamps are continous
 			sample_time = timestamps_to_time(header.timestamp_seconds, header.timestamp_miliseconds)
-			self.assertAlmostEqual(expected_next_chunk_time, sample_time, delta=0.001)
-			print "Chunk {}: OK".format(header)
+			self.assertAlmostEqual(expected_next_chunk_time, sample_time, delta=0.005)
+			print("Chunk {}: OK".format(header))
 			expected_next_chunk_time = sample_time + (float(header.num_samples_in_chunk) / SAMPLES_PER_SECOND)
 
 		# Check that there were the correct number of total samples for the amount of time spent recording
@@ -51,5 +55,10 @@ class RecordNoGapsTestCase(IntegrationTest):
 		self.assertAlmostEqual(num_samples_taken, expected_num_samples, delta=1)
 
 if __name__ == "__main__":
-	testCase = RecordNoGapsTestCase()
+	if len(sys.argv) != 2:
+		print("Please enter badge MAC address")
+		exit(1)
+	device_addr = sys.argv[1]
+
+	testCase = RecordNoGapsTestCase(device_addr)
 	testCase.runTest()

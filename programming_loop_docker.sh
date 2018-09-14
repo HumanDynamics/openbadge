@@ -75,8 +75,8 @@ do
         sleep 5
         load
     	get_mac
+	    echo "########## Finished (${COUNTER}) #######"
 	    let COUNTER=COUNTER+1
 	    echo "### Done. Place next badge!!!"
-
     fi
 done

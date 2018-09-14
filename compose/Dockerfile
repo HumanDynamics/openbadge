@@ -1,8 +1,11 @@
-FROM ubuntu:12.04
+FROM ubuntu:18.04
 
 MAINTAINER Oren Lederman <orenled@mit.edu>
 # Based on https://github.com/FruityLoopers/fruityfactory
 
+###########################
+## Compilation environment
+###########################
 RUN apt-get update && apt-get install -y \
 	build-essential \
   libbluetooth-dev \
@@ -17,7 +20,8 @@ RUN apt-get update && apt-get install -y \
   cmake \
   minicom screen \
   vim \
-  lcov 
+  lcov \
+  wget
 
 RUN mkdir -p /opt/downloads
 
@@ -37,9 +41,25 @@ RUN unzip -q downloads/nRF5_SDK_12.3.0_d7731ad.zip -d $NRF_SDK_PATH
 
 COPY compose/Makefile.posix $NRF_SDK_PATH/components/toolchain/gcc/Makefile.posix
 
-# Fix missing library error
-RUN ln -s /lib/x86_64-linux-gnu/libudev.so.0 /lib/x86_64-linux-gnu/libudev.so.1
-
 # SEGGER
 copy compose/JLink_Linux_V616i_x86_64.deb /opt/downloads/JLink_Linux_V616i_x86_64.deb
+
 RUN dpkg -i downloads/JLink_Linux_V616i_x86_64.deb
+
+################################
+## Bluetooth Python environment
+################################
+RUN apt-get update && apt-get install -y \
+    python \
+    python-dev \
+    python-pip \
+    python-setuptools \
+    gcc \
+    build-essential \
+    libglib2.0-dev \
+    bluez \
+    --no-install-recommends && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY ./requirements.txt /tmp/requirements.txt
+RUN pip install -r /tmp/requirements.txt

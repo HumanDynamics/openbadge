@@ -1,3 +1,4 @@
+from __future__ import division, absolute_import, print_function
 import time
 import logging
 import sys
@@ -17,16 +18,17 @@ logger = logging.getLogger(__name__)
 # We generally define timestamp_seconds to be in number of seconds since UTC epoch
 # and timestamp_miliseconds to be the miliseconds portion of that UTC timestamp.
 
-# Returns the current number of seconds since UTC epoch.
-def get_timestamp_seconds():
-	return int(time.time())
+# Returns the current timestamp as two parts - seconds and milliseconds
+def get_timestamps():
+	return get_timestamps_from_time(time.time())
 
-# Returns miliseconds portion of current time since UTC epoch.
-def get_timestamp_miliseconds():
-	current_time_seconds = int(time.time())
-	timestamp_fraction_of_second = time.time() - current_time_seconds
+# Returns the given time as two parts - seconds and milliseconds
+def get_timestamps_from_time(t):
+	timestamp_seconds = int(t)
+	timestamp_fraction_of_second = t - timestamp_seconds
 	timestamp_miliseconds = int(1000 * timestamp_fraction_of_second)
-	return timestamp_miliseconds
+	return (timestamp_seconds, timestamp_miliseconds)
+	
 
 # Convert badge timestamp representation to python representation
 def timestamps_to_time(timestamp_seconds, timestamp_miliseconds):
@@ -66,9 +68,11 @@ class OpenBadge(object):
 	#   Optional fields new_id and new_group number will set the badge's id
 	#     and group number. They must be sent together. 
 	# Returns a StatusResponse() representing badge's response.
-	def get_status(self, timestamp_seconds=None, timestamp_miliseconds=None, new_id=None, new_group_number=None):
-		if timestamp_seconds == None: timestamp_seconds = get_timestamp_seconds()
-		if timestamp_miliseconds == None: timestamp_miliseconds = get_timestamp_miliseconds()
+	def get_status(self, t=None, new_id=None, new_group_number=None):
+		if t is None:
+			(timestamp_seconds, timestamp_miliseconds) = get_timestamps()
+		else:
+			(timestamp_seconds, timestamp_miliseconds) = get_timestamps_from_time(t)
 
 		status_request = StatusRequest(timestamp_seconds, timestamp_miliseconds, badge_id=new_id, group_number=new_group_number)
 
@@ -78,9 +82,11 @@ class OpenBadge(object):
 	#  timeout_minutes is the number of minutes the badge is to record, 
 	#    or 0 if the badge is to scan indefinetely.
 	# Returns a StartRecordResponse() representing the badges response.
-	def start_recording(self, timestamp_seconds=None, timestamp_miliseconds=None, timeout_minutes=0):
-		if timestamp_seconds == None: timestamp_seconds = get_timestamp_seconds()
-		if timestamp_miliseconds == None: timestamp_miliseconds = get_timestamp_miliseconds()
+	def start_recording(self, t=None, timeout_minutes=0):
+		if t is None:
+			(timestamp_seconds, timestamp_miliseconds) = get_timestamps()
+		else:
+			(timestamp_seconds, timestamp_miliseconds) = get_timestamps_from_time(t)
 
 		start_record_request = StartRecordRequest(timestamp_seconds, timestamp_miliseconds, timeout_minutes)
 
@@ -100,11 +106,13 @@ class OpenBadge(object):
 	#   window_miliseconds and interval_miliseconds controls radio duty cycle during scanning (0 for firmware default)
 	#     radio is active for [window_miliseconds] every [interval_miliseconds]
 	# Returns a StartScanningResponse() representing the badge's response.
-	def start_scanning(self, timestamp_seconds=None, timestamp_miliseconds=None,
+	def start_scanning(self, t=None,
 	   timeout_minutes=0, window_miliseconds=DEFAULT_SCAN_WINDOW, interval_miliseconds=DEFAULT_SCAN_INTERVAL,
 	    duration_seconds=DEFAULT_SCAN_DURATION, period_seconds=DEFAULT_SCAN_PERIOD):
-		if timestamp_seconds == None: timestamp_seconds = get_timestamp_seconds()
-		if timestamp_miliseconds == None: timestamp_miliseconds = get_timestamp_miliseconds()
+		if t is None:
+			(timestamp_seconds, timestamp_miliseconds) = get_timestamps()
+		else:
+			(timestamp_seconds, timestamp_miliseconds) = get_timestamps_from_time(t)
 		
 		start_scanning_request = StartScanningRequest(timestamp_seconds, timestamp_miliseconds, timeout_minutes, 
 			window_miliseconds, interval_miliseconds, duration_seconds, period_seconds)
@@ -127,9 +135,12 @@ class OpenBadge(object):
 	# Send a request to the badge for recorded microphone data starting at the given timestamp.
 	# Returns a list of tuples of (MicrophoneDataHeader(), microphone_sample_chunk_data), where each tuple
 	#   contains one chunk of microphone data. 
-	def get_mic_data(self, timestamp_seconds=None, timestamp_miliseconds=None):
-		if timestamp_seconds == None: timestamp_seconds = get_timestamp_seconds()
-		if timestamp_miliseconds == None: timestamp_miliseconds = get_timestamp_miliseconds()
+	def get_mic_data(self, t=None):
+		if t is None:
+			(timestamp_seconds, timestamp_miliseconds) = get_timestamps()
+		else:
+			(timestamp_seconds, timestamp_miliseconds) = get_timestamps_from_time(t)
+
 
 		mic_data_request = MicrophoneDataRequest(timestamp_seconds, timestamp_miliseconds)
 		header = self.send_command(mic_data_request, MicrophoneDataHeader)
@@ -141,6 +152,7 @@ class OpenBadge(object):
 			logger.debug("Awaiting {} bytes.".format(bytes_awaited))
 			data = self.connection.await_data(bytes_awaited)
 
+			# Note - not using a deserializer here for performance reasons
 			chunks_and_headers.append((header, map(ord, data)))
 
 			serialized_header = self.connection.await_data(MicrophoneDataHeader.length())
@@ -151,8 +163,12 @@ class OpenBadge(object):
 	# Sends a request to the badge for recorded scan data starting at the the given timestamp.
 	# Returns a list of tuples of (ScanDataHeader(), [ScanDataDevice(), ScanDataDevice(), ...])
 	#   where each tuple contains a header and a list of devices seen from one scan. 
-	def get_scan_data(self, timestamp_seconds=None):
-		if timestamp_seconds == None: timestamp_seconds = get_timestamp_seconds()
+	def get_scan_data(self, t=None):
+		if t is None:
+			(timestamp_seconds, timestamp_miliseconds) = get_timestamps()
+		else:
+			(timestamp_seconds, timestamp_miliseconds) = get_timestamps_from_time(t)
+
 
 		scan_data_request = ScanDataRequest(timestamp_seconds)
 		header = self.send_command(scan_data_request, ScanDataHeader)

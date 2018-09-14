@@ -1,3 +1,4 @@
+from __future__ import division, absolute_import, print_function
 from struct import *
 
 # This file defines much of the structure needed to carry out our communication protocol in Python.
@@ -15,23 +16,30 @@ IDENITFY_HEADER = "i"
 
 # These fields are used by BadgeMessage objects to serialize and deserialize binary messages to Python objects.
 # Fields are composed of (attribute, length [in bytes], optional, serializer, parser)
+
+# chr field is used for convinience, but can be confusing. We use the chr field to represnet an object that is an actual
+# character, or a string of length 1 (as opposed to a numeric object). For signed numeric char (int8), use the int8_field
 def char_field(attribute, optional=False):
 	return (attribute, 1, optional, lambda x: chr(x) if type(x) is int else x, lambda x: chr(x) if type (x) is int else x)
 
-def long_field(attribute, optional=False):
-	return (attribute, 4, optional, lambda x: pack("<l", x), lambda x: unpack("<l", x)[0])
+def ulong_field(attribute, optional=False):
+	return (attribute, 4, optional, lambda x: pack("<L", x), lambda x: unpack("<L", x)[0])
 
-def short_field(attribute, optional=False):
-	return (attribute, 2, optional, lambda x: pack("<h", x), lambda x: unpack("<h", x)[0])
+def ushort_field(attribute, optional=False):
+	return (attribute, 2, optional, lambda x: pack("<H", x), lambda x: unpack("<H", x)[0])
 
 def float_field(attribute, optional=False):
 	return (attribute, 4, optional, lambda x: pack("<f", x), lambda x: unpack("<f", x)[0])
 
-def bool_field(attribute, optional=False):
-	return (attribute, 1, optional, lambda x: chr(x), lambda x: not x == chr(False))
+def bool_field(attribute, optional=False): # bool fields are actually uchars
+	return (attribute, 1, optional, lambda x: pack("<B", x), lambda x: unpack("<B", x)[0] == 1)
 
 def uint8_field(attribute, optional=False):
-	return (attribute, 1, optional, lambda x: chr(x), lambda x: ord(x))
+	return (attribute, 1, optional, lambda x: pack("<B", x), lambda x: unpack("<B", x)[0])
+
+def int8_field(attribute, optional=False):
+	return (attribute, 1, optional, lambda x: pack("<b", x), lambda x: unpack("<b", x)[0])
+
 
 # BadgeMessage represents a message sent to/recieved from the badge.
 #  The badge communicates by sending messages in a special binary format. 
@@ -96,8 +104,8 @@ class BadgeMessage(object):
 #   https://github.com/HumanDynamics/OpenBadge/wiki/Communication-protocol
 
 class StatusRequest(BadgeMessage):
-	message_fields = [char_field("header"), long_field("timestamp_seconds"), short_field("timestamp_miliseconds"),
-	 short_field("badge_id", optional=True), char_field("group_number", optional=True)]
+	message_fields = [char_field("header"), ulong_field("timestamp_seconds"), ushort_field("timestamp_miliseconds"),
+	 ushort_field("badge_id", optional=True), uint8_field("group_number", optional=True)]
 
 	def __init__(self, timestamp_seconds, timestamp_miliseconds, header=STATUS_REQUEST_HEADER, badge_id=None, group_number=None):
 		self.header = header
@@ -109,8 +117,8 @@ class StatusRequest(BadgeMessage):
 		BadgeMessage.__init__(self)
 
 class StatusResponse(BadgeMessage):
-	message_fields = [char_field("clock_status"), bool_field("scanner_status"), bool_field("collector_status"), 
-	long_field("timestamp_seconds"), short_field("timestamp_miliseconds"), float_field("battery_voltage")]
+	message_fields = [bool_field("clock_status"), bool_field("scanner_status"), bool_field("collector_status"), 
+	ulong_field("timestamp_seconds"), ushort_field("timestamp_miliseconds"), float_field("battery_voltage")]
 
 	def __init__(self, clock_status, scanner_status, collector_status, timestamp_seconds, 
 		timestamp_miliseconds, battery_voltage):
@@ -124,7 +132,7 @@ class StatusResponse(BadgeMessage):
 		BadgeMessage.__init__(self)
 
 class StartRecordRequest(BadgeMessage):
-	message_fields = [char_field("header"), long_field("timestamp_seconds"), short_field("timestamp_miliseconds"), short_field("timeout_minutes")]
+	message_fields = [char_field("header"), ulong_field("timestamp_seconds"), ushort_field("timestamp_miliseconds"), ushort_field("timeout_minutes")]
 
 	def __init__(self, timestamp_seconds, timestamp_miliseconds, timeout_minutes, header=START_RECORDING_HEADER):
 		self.header = header
@@ -135,7 +143,7 @@ class StartRecordRequest(BadgeMessage):
 		BadgeMessage.__init__(self)
 
 class StartRecordResponse(BadgeMessage):
-	message_fields = [long_field("timestamp_seconds"), short_field("timestamp_miliseconds")]
+	message_fields = [ulong_field("timestamp_seconds"), ushort_field("timestamp_miliseconds")]
 
 	def __init__(self, timestamp_seconds, timestamp_miliseconds):
 		self.timestamp_seconds = timestamp_seconds
@@ -152,9 +160,9 @@ class StopRecordRequest(BadgeMessage):
 		BadgeMessage.__init__(self)
 
 class StartScanningRequest(BadgeMessage):
-	message_fields = [char_field("header"), long_field("timestamp_seconds"), short_field("timestamp_miliseconds"),
-	 short_field("timeout_minutes"), short_field("window_miliseconds"), short_field("interval_miliseconds"),
-	  short_field("duration_seconds"), short_field("period_seconds")]
+	message_fields = [char_field("header"), ulong_field("timestamp_seconds"), ushort_field("timestamp_miliseconds"),
+	 ushort_field("timeout_minutes"), ushort_field("window_miliseconds"), ushort_field("interval_miliseconds"),
+	  ushort_field("duration_seconds"), ushort_field("period_seconds")]
 
 	def __init__(self, timestamp_seconds, timestamp_miliseconds, timeout_minutes, window_miliseconds, interval_miliseconds, 
 		duration_seconds, period_seconds, header=START_SCANNING_HEADER):
@@ -170,7 +178,7 @@ class StartScanningRequest(BadgeMessage):
 		BadgeMessage.__init__(self)
 
 class StartScanningResponse(BadgeMessage):
-	message_fields = [long_field("timestamp_seconds"), short_field("timestamp_miliseconds")]
+	message_fields = [ulong_field("timestamp_seconds"), ushort_field("timestamp_miliseconds")]
 
 	def __init__(self, timestamp_seconds, timestamp_miliseconds):
 		self.timestamp_seconds = timestamp_seconds
@@ -187,7 +195,7 @@ class StopScanningRequest(BadgeMessage):
 		BadgeMessage.__init__(self)
 
 class IdentifyRequest(BadgeMessage):
-	message_fields = [char_field("header"), short_field("duration_seconds")]
+	message_fields = [char_field("header"), ushort_field("duration_seconds")]
 
 	def __init__(self, duration_seconds, header=IDENITFY_HEADER):
 		self.header = header
@@ -196,7 +204,7 @@ class IdentifyRequest(BadgeMessage):
 		BadgeMessage.__init__(self)
 
 class MicrophoneDataRequest(BadgeMessage):
-	message_fields = [char_field("header"), long_field("timestamp_seconds"), short_field("timestamp_miliseconds")]
+	message_fields = [char_field("header"), ulong_field("timestamp_seconds"), ushort_field("timestamp_miliseconds")]
 
 	def __init__(self, timestamp_seconds, timestamp_miliseconds, header=REQUEST_MIC_DATA_HEADER):
 		self.header = header
@@ -206,8 +214,8 @@ class MicrophoneDataRequest(BadgeMessage):
 		BadgeMessage.__init__(self)
 
 class MicrophoneDataHeader(BadgeMessage):
-	message_fields = [long_field("timestamp_seconds"), short_field("timestamp_miliseconds"), 
-	   float_field("battery_voltage"), short_field("sample_period_miliseconds"), 
+	message_fields = [ulong_field("timestamp_seconds"), ushort_field("timestamp_miliseconds"), 
+	   float_field("battery_voltage"), ushort_field("sample_period_miliseconds"), 
 	   uint8_field("num_samples_in_chunk")]
 
 	def __init__(self, timestamp_seconds, timestamp_miliseconds, battery_voltage, 
@@ -221,7 +229,7 @@ class MicrophoneDataHeader(BadgeMessage):
 		BadgeMessage.__init__(self)
 
 class ScanDataRequest(BadgeMessage):
-	message_fields = [char_field("header"), long_field("timestamp_seconds")]
+	message_fields = [char_field("header"), ulong_field("timestamp_seconds")]
 
 	def __init__(self, timestamp_seconds, header=REQUEST_SCAN_DATA_HEADER):
 		self.header = header
@@ -230,7 +238,7 @@ class ScanDataRequest(BadgeMessage):
 		BadgeMessage.__init__(self)
 
 class ScanDataHeader(BadgeMessage):
-	message_fields = [long_field("timestamp_seconds"), float_field("battery_voltage"), uint8_field("num_devices_seen")]
+	message_fields = [ulong_field("timestamp_seconds"), float_field("battery_voltage"), uint8_field("num_devices_seen")]
 
 	def __init__(self, timestamp_seconds, battery_voltage, num_devices_seen):
 		self.timestamp_seconds = timestamp_seconds
@@ -240,7 +248,7 @@ class ScanDataHeader(BadgeMessage):
 		BadgeMessage.__init__(self)
 
 class ScanDataDevice(BadgeMessage):
-	message_fields = [short_field("device_id"), char_field("average_rssi"), uint8_field("num_times_seen")]
+	message_fields = [ushort_field("device_id"), int8_field("average_rssi"), int8_field("num_times_seen")]
 
 	def __init__(self, device_id, average_rssi, num_times_seen):
 		self.device_id = device_id

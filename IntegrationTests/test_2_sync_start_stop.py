@@ -1,3 +1,4 @@
+from __future__ import division, absolute_import, print_function
 import time
 from integration_test import *
 
@@ -40,5 +41,10 @@ class SyncStartStopTestCase(IntegrationTest):
 		self.assertFalse(status.collector_status)
 
 if __name__ == "__main__":
-	testCase = SyncStartStopTestCase()
+	if len(sys.argv) != 2:
+		print("Please enter badge MAC address")
+		exit(1)
+	device_addr = sys.argv[1]
+
+	testCase = SyncStartStopTestCase(device_addr)
 	testCase.runTest()

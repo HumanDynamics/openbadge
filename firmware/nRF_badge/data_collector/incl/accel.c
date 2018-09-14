@@ -1,8 +1,8 @@
 #include "accel.h"
 #include "self_test.h"
 
-bool self_test_enable= false;
 
+bool self_test_enable = false;
 
 // ====== Accel LIS2DH and SPI functions ======
 volatile bool transmission_completed_spi = false;
@@ -10,15 +10,16 @@ volatile bool transmission_completed_spi = false;
 void accel_spi_evt_handler(spi_master_evt_t spi_master_evt)
 {
     switch(spi_master_evt.evt_type){
-		case SPI_MASTER_EVT_TRANSFER_COMPLETED:
-			//Transmission done.
-			transmission_completed_spi = true;
-			//rx_buffer must have received data now.
-	    	break;
-		default:
-			// no implementation is required for now.
-		    break;
-	}
+
+        case SPI_MASTER_EVT_TRANSFER_COMPLETED:
+            //Transmission done.
+            transmission_completed_spi = true;
+            //rx_buffer must have received data now.
+            break;
+        default:
+            // no implementation is required for now.
+            break;
+    }
 }
 
 // ==== Init SPI for LIS2DH comunication ====
@@ -181,7 +182,8 @@ void tap_accel(){
 }
 
 // ==== Internal motion detection with Interrupt output ====
-void motion_interruput(){
+
+void motion_interrupt(){
     //==== Set Interrupt as Input ====
     nrf_gpio_pin_set(INT_PIN_INPUT);
     nrf_gpio_cfg_input(INT_PIN_INPUT, NRF_GPIO_PIN_PULLUP);

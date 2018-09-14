@@ -1,3 +1,4 @@
+from __future__ import division, absolute_import, print_function
 # This BadgeConnection interface represents a connection to an OpenBadge.
 #   This connection is used by the Badge object to communicate with a physical badge.
 #      This acts to bridge our abstraction of a badge to our implementation of 

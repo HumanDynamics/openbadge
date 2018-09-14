@@ -116,7 +116,6 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 
 
 
-
 #define INIT_STRUCT(P_UART_BUFFER, RX_BUF_SIZE, TX_BUF_SIZE) \
     do                                                                                             \
     {                                                                                              \
@@ -174,7 +173,7 @@ uint8_t readRegister8(uint8_t reg){
  */
 int main(void)
 {
-	
+
 	
 // TODO: - Move UART, SPI, ADC opertation enum from .h into .c and also the includes that needn't to be public! 
 
@@ -474,7 +473,7 @@ int main(void)
     #endif    // end of self tests
 
 
-   
+
 
     APP_SCHED_INIT(SCHED_MAX_EVENT_DATA_SIZE, SCHED_QUEUE_SIZE);
 
@@ -488,15 +487,17 @@ int main(void)
     advertising_init();
 
     // Blink once on start
+
 	nrf_gpio_pin_write(LED_1,LED_OFF);
     nrf_delay_ms(200);
     nrf_gpio_pin_write(LED_1, LED_ON);
     nrf_delay_ms(200);
     nrf_gpio_pin_write(LED_1, LED_OFF);
     nrf_delay_ms(200);
+
     nrf_gpio_pin_write(LED_1,LED_ON);
     nrf_gpio_pin_write(LED_2,LED_ON);
-    nrf_delay_ms(200);
+    nrf_delay_ms(100);
     nrf_gpio_pin_write(LED_1,LED_OFF);
     nrf_gpio_pin_write(LED_2,LED_OFF);
 
@@ -561,4 +562,6 @@ void BLEonReceive(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)
 
     ble_timeout_set(CONNECTION_TIMEOUT_MS);
 }
+
 */
+

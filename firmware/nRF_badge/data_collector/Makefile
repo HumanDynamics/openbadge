@@ -95,6 +95,7 @@ helpDetailed:
 	@echo
 
 
+
 ###################################################### SOURCE #####################################
 	
 #source files
@@ -115,6 +116,7 @@ helpDetailed:
 #$(SDK_PATH)/components/libraries/timer/app_timer.c \			# needed for the timer-abstraction
 #$(SDK_PATH)/components/ble/ble_advertising/ble_advertising.c \ # needed for ble_lib to abstract the ble_advertising-functionality
 #$(SDK_PATH)/components/ble/ble_services/ble_nus/ble_nus.c \	# needed for ble_lib to abstract the BLE Nordic Uart Service functionality
+
 
 
 #source files
@@ -528,6 +530,7 @@ flashS130: flashS130.jlink
 flashS130.jlink:
 	printf "loadbin $(SDK_PATH)/components/softdevice/s130/hex/s130_nrf51_2.0.1_softdevice.hex 0\nr\ng\nexit\n" > $(OBJECT_DIRECTORY)/flashS130.jlink
 	#printf "loadbin $(SDK_PATH)/components/softdevice/s130/hex/s130_softdevice.hex 0\nr\ng\nexit\n" > $(OBJECT_DIRECTORY)/flashS130.jlink
+
 
 
 #erase all flash
