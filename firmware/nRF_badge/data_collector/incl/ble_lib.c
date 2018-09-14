@@ -444,9 +444,8 @@ ble_state_t ble_get_state(void) {
 
 ret_code_t ble_transmit(uint8_t* data, uint16_t len) {
 	ret_code_t ret = ble_nus_string_send(&ble_nus, data, len);
-	if(ret != NRF_SUCCESS) return NRF_ERROR_BUSY;
-	
-	return NRF_SUCCESS;
+
+	return ret;
 }
 
 
