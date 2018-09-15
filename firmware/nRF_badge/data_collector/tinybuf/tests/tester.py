@@ -24,8 +24,8 @@ if __name__ == '__main__':
 
 	bytes_read = read_bytes(input_file)
 	
-	test_message = test_protocol.Test_message()
-	test_message.decode(bytes_read)
+	test_message = test_protocol.Test_message.decode(bytes_read)
+
 	
 	print "Decoded test_message"
 	print test_message.__dict__

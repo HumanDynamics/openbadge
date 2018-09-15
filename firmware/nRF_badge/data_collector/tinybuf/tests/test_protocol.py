@@ -43,9 +43,11 @@ class Embedded_message1:
 			ostream.write(struct.pack('>Q', self.e))
 
 
-	def decode(self, buf):
-		istream = _Istream(buf)
-		self.decode_internal(istream)
+	@classmethod
+	def decode(cls, buf):
+		obj = cls()
+		obj.decode_internal(_Istream(buf))
+		return obj
 
 	def decode_internal(self, istream):
 		self.reset()
@@ -82,9 +84,11 @@ class Embedded_message:
 		self.embedded_message1.encode_internal(ostream)
 
 
-	def decode(self, buf):
-		istream = _Istream(buf)
-		self.decode_internal(istream)
+	@classmethod
+	def decode(cls, buf):
+		obj = cls()
+		obj.decode_internal(_Istream(buf))
+		return obj
 
 	def decode_internal(self, istream):
 		self.reset()
@@ -172,9 +176,11 @@ class Test_message:
 		ostream.write(struct.pack('>f', self.d))
 
 
-	def decode(self, buf):
-		istream = _Istream(buf)
-		self.decode_internal(istream)
+	@classmethod
+	def decode(cls, buf):
+		obj = cls()
+		obj.decode_internal(_Istream(buf))
+		return obj
 
 	def decode_internal(self, istream):
 		self.reset()

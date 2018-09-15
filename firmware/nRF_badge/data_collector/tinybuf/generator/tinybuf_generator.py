@@ -712,11 +712,15 @@ class Protocol_creator:
 	
 	
 	def python_create_decode_functions(self, variables):
+	
+		
 		# Create the decode function
 		self.python_file.append_line()
-		self.python_file.append_line("\tdef decode(self, buf):")
-		self.python_file.append_line("\t\tistream = _Istream(buf)")
-		self.python_file.append_line("\t\tself.decode_internal(istream)")
+		self.python_file.append_line("\t@classmethod")
+		self.python_file.append_line("\tdef decode(cls, buf):")
+		self.python_file.append_line("\t\tobj = cls()")
+		self.python_file.append_line("\t\tobj.decode_internal(_Istream(buf))")
+		self.python_file.append_line("\t\treturn obj")
 		
 		
 		# Create the decode_internal-function
