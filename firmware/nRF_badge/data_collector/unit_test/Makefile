@@ -27,16 +27,21 @@ FIRMWARE_DIR = ..
 TEST_DIR = tests
 
 # Where to find mocking code.
-MOCK_DIR = mock
+MOCK_DIR = mock/incl
 
 # Where the builded files will be stored to.
 BUILD_DIR = _build
+BUILD_C_DIR = $(BUILD_DIR)/C
+BUILD_CC_DIR = $(BUILD_DIR)/CC
 
 LCOV_DIR = $(BUILD_DIR)/LCOV
 
 # The tinybuf directories
 TINYBUF_PATH := ../tinybuf
 TINYBUF_SRC_PATH := $(TINYBUF_PATH)/incl
+
+
+SDK_PATH := $(NRF_SDK_PATH)/nRF5_SDK_12.3.0_d7731ad
 
 # Points to the root of Google Test, relative to where this file is.
 # Remember to tweak this if you move this file.
@@ -45,6 +50,9 @@ GTEST_DIR = googletest
 
 # If you want no cmd-line print outs of the cmds
 NO_ECHO := @
+
+#function for removing duplicates in a list
+remduplicates = $(strip $(if $1,$(firstword $1) $(call remduplicates,$(filter-out $(firstword $1),$1))))
 
 # All tests produced by this Makefile.  Remember to add new tests you
 # created to the list.
@@ -68,6 +76,7 @@ FIRMWARE_SRCS = $(FIRMWARE_DIR)/incl/storage1_lib.c \
 				$(FIRMWARE_DIR)/incl/filesystem_lib.c \
 				$(FIRMWARE_DIR)/incl/chunk_fifo_lib.c \
 				$(FIRMWARE_DIR)/incl/systick_lib.c \
+				
 
 				
 
@@ -75,7 +84,7 @@ FIRMWARE_SRCS = $(FIRMWARE_DIR)/incl/storage1_lib.c \
 
 
 
-SDK_PATH := $(NRF_SDK_PATH)/nRF5_SDK_12.3.0_d7731ad
+
 
 FIRMWARE_INC_PATH += -I$(FIRMWARE_DIR)/incl
 FIRMWARE_INC_PATH += -I$(FIRMWARE_DIR)/config
@@ -96,7 +105,7 @@ FIRMWARE_INC_PATH += -I$(SDK_PATH)/components/libraries/scheduler
 #FIRMWARE_INC_PATH += -I$(SDK_PATH)/components/libraries/scheduler				--> For app_scheduler.h
 
 
-MOCK_INC_PATH += -I$(MOCK_DIR)/incl
+MOCK_INC_PATH += -I$(MOCK_DIR)
 
 TINYBUF_INC_PATH += -I$(TINYBUF_SRC_PATH)
 
@@ -147,9 +156,6 @@ help:
 	@echo "                     run_all (runs all the above tests)"
 	@echo 
 	@echo "  - LCOV:            Enable with LCOV=TRUE as make parameter (for compiling and running tests)"
-	@echo
-	@echo "  - LCOV remove zero called files:"
-	@echo "                     Enable with LCOV_RM_ZERO=TRUE as make parameter (for running tests) LCOV=TRUE is prerequisite"
 	@echo
 	
 	
@@ -239,26 +245,48 @@ CXXFLAGS += -DUNIT_TEST
 
 #$(info LCOV=${LCOV}. To enable LCOV, call make with parameter LCOV=TRUE.)
 
-TESTS_OBJECTS = $(addprefix $(BUILD_DIR)/, $(addsuffix .o, $(TESTS)))
-#TESTS_SRCS = $(addsuffix .cc, $(addprefix $(TEST_DIR)/, $(TESTS)))
-
+TESTS_OBJECTS_CC = $(addprefix $(BUILD_CC_DIR)/, $(addsuffix .o, $(TESTS)))
+TESTS_FILES_CC_PATH = $(addsuffix .cc, $(addprefix $(TEST_DIR)/, $(TESTS)))
+#$(info TESTS_FILES=${TESTS_FILES})
 
 MOCK_SRCS += $(shell find $(MOCK_DIR) -name '*.c*')
 MOCK_FILES_C = $(notdir $(shell find $(MOCK_DIR) -name '*.c'))
 MOCK_FILES_CC = $(notdir $(shell find $(MOCK_DIR) -name '*.cc'))
-MOCK_OBJECTS += $(addprefix $(BUILD_DIR)/,$(MOCK_FILES_C:.c=.o))
-MOCK_OBJECTS += $(addprefix $(BUILD_DIR)/,$(MOCK_FILES_CC:.cc=.o))
-#$(info MOCK_OBJECTS=${MOCK_OBJECTS})
+MOCK_OBJECTS_C += $(addprefix $(BUILD_C_DIR)/,$(MOCK_FILES_C:.c=.o))
+MOCK_OBJECTS_CC += $(addprefix $(BUILD_CC_DIR)/,$(MOCK_FILES_CC:.cc=.o))
+MOCK_FILES_C_PATH += $(addprefix $(MOCK_DIR)/, $(MOCK_FILES_C))
+MOCK_FILES_CC_PATH += $(addprefix $(MOCK_DIR)/, $(MOCK_FILES_CC))
+#$(info MOCK_FILES_PATH=${MOCK_FILES_PATH})
 
 FIRMWARE_FILES = $(notdir $(FIRMWARE_SRCS))
-FIRMWARE_OBJECTS += $(addprefix $(BUILD_DIR)/,$(FIRMWARE_FILES:.c=.o))
-#$(info FIRMWARE_OBJECTS=${FIRMWARE_OBJECTS})
+FIRMWARE_OBJECTS_C += $(addprefix $(BUILD_C_DIR)/,$(FIRMWARE_FILES:.c=.o))
+FIRMWARE_FILES_C_PATH += $(FIRMWARE_SRCS)
+#$(info FIRMWARE_FILES_PATH=${FIRMWARE_FILES_PATH})
 
 TINYBUF_FILES = $(notdir $(wildcard $(TINYBUF_SRC_PATH)/*.c))
-TINYBUF_OBJECTS += $(addprefix $(BUILD_DIR)/,$(TINYBUF_FILES:.c=.o))
-#$(info TINYBUF_SRC_PATH=${TINYBUF_SRC_PATH})
+TINYBUF_OBJECTS_C += $(addprefix $(BUILD_C_DIR)/,$(TINYBUF_FILES:.c=.o))
+TINYBUF_FILES_C_PATH +=  $(addprefix $(TINYBUF_SRC_PATH)/,$(TINYBUF_FILES))
+#$(info TINYBUF_FILES_PATH=${TINYBUF_FILES_PATH})
 #$(info TINYBUF_FILES=${TINYBUF_FILES})
 #$(info TINYBUF_OBJECTS=${TINYBUF_OBJECTS})
+
+
+
+C_OBJECTS = $(MOCK_OBJECTS_C) $(FIRMWARE_OBJECTS_C) $(TINYBUF_OBJECTS_C)
+CC_OBJECTS = $(MOCK_OBJECTS_CC)
+SRC_FILES_C_PATHS += $(call remduplicates, $(dir $(MOCK_FILES_C_PATH) ) )
+SRC_FILES_C_PATHS += $(call remduplicates, $(dir $(FIRMWARE_FILES_C_PATH) ) )
+SRC_FILES_C_PATHS += $(call remduplicates, $(dir $(TINYBUF_FILES_C_PATH) ) )
+SRC_FILES_CC_PATHS += $(call remduplicates, $(dir $(TESTS_FILES_CC_PATH) ) )
+SRC_FILES_CC_PATHS += $(call remduplicates, $(dir $(MOCK_FILES_CC_PATH) ) )
+
+#$(info C_OBJECTS=${C_OBJECTS})
+#$(info CC_OBJECTS=${CC_OBJECTS})
+#$(info SRC_FILES_C_PATHS=${SRC_FILES_C_PATHS})
+#$(info SRC_FILES_CC_PATHS=${SRC_FILES_CC_PATHS})
+
+vpath %.c $(SRC_FILES_C_PATHS)
+vpath %.cc $(SRC_FILES_CC_PATHS)
 
 
 RUN_TESTS = $(addprefix run_, $(TESTS))
@@ -272,10 +300,10 @@ clean :
 	$(NO_ECHO)rm -f $(addprefix $(BUILD_DIR)/, $(addprefix run_, $(TESTS))) gtest.a gtest_main.a *.o *.gcda *.gcno *.gcov *.info
 	$(NO_ECHO)rm -f -r $(BUILD_DIR)
 	$(NO_ECHO)mkdir $(BUILD_DIR)
+	$(NO_ECHO)mkdir $(BUILD_C_DIR)
+	$(NO_ECHO)mkdir $(BUILD_CC_DIR)
 	$(NO_ECHO)rm -f -r $(LCOV_DIR)
 	$(NO_ECHO)mkdir $(LCOV_DIR)
-	
-test: clean
 	
 
 # Target for running all unit tests
@@ -298,22 +326,17 @@ endif
 	$(NO_ECHO)(cd $(BUILD_DIR)/ ;	./$@)
 	@echo ====================================================================
 ifeq ($(LCOV), TRUE) 
-ifeq ($(LCOV_RM_ZERO), TRUE) 	
 	@echo Creating LCOV data and removing zero called files...
-else 
-	@echo Creating LCOV data with zero called files...
-endif
 # https://stackoverflow.com/questions/5377297/how-to-manually-call-another-target-from-a-make-target/5378242?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
 # Call the lcov_genhtml-target with parameter LCOV_DIR_CUR
 	$(NO_ECHO)-mv $(BUILD_DIR)/*.gcda . 2>/dev/null || :
+	$(NO_ECHO)-mv $(BUILD_C_DIR)/*.gcda . 2>/dev/null || :
+	$(NO_ECHO)-mv $(BUILD_CC_DIR)/*.gcda . 2>/dev/null || :
 	$(NO_ECHO)$(MAKE) -f $(THIS_FILE) lcov_genhtml LCOV_DIR_CUR=$(LCOV_DIR)/$@ > /dev/null
 else
-#	$(NO_ECHO)rm -f $(BUILD_DIR)/*.gcda ./*.gcda
-ifeq ($(LCOV_RM_ZERO), TRUE) 	
-	@echo Enable LCOV data generation with LCOV=TRUE, to remove zero called files with LCOV_RM_ZERO=TRUE!
-endif
+
 # Remove all the gcda-files
-	$(NO_ECHO)rm -f $(BUILD_DIR)/*.gcda ./*.gcda
+	$(NO_ECHO)rm -f $(BUILD_DIR)/*.gcda $(BUILD_C_DIR)/*.gcda $(BUILD_CC_DIR)/*.gcda ./*.gcda
 endif
 
 
@@ -323,10 +346,7 @@ ifeq ($(LCOV), TRUE)
 else
 	@echo To enable LCOV, call make with parameter LCOV=TRUE.
 endif
-ifeq ($(LCOV_RM_ZERO), TRUE) 	
-else
-	@echo To remove zero called files in LCOV, call make with parameter LCOV_RM_ZERO=TRUE.
-endif
+
 	
 #Adding coverage information flags to compiler	
 lcov_flags :
@@ -342,12 +362,14 @@ ifeq ($(LCOV), TRUE)
 	gcov $(TESTS) 2> /dev/null
 	rm -f -r $(LCOV_DIR_CUR)
 	mkdir $(LCOV_DIR_CUR)
+
 	lcov -c -d . -o $(LCOV_DIR_CUR)/coverage.info 2> /dev/null
-	lcov --remove $(LCOV_DIR_CUR)/coverage.info "/usr*" "googletest*" "_build*" "callback_generator_lib.*" "data_generator_lib.*" -o $(LCOV_DIR_CUR)/coverage.info 2> /dev/null
-# Call the lcov_remove_zero_called-target with parameter LCOV_DIR_CUR
+	lcov --remove $(LCOV_DIR_CUR)/coverage.info "/usr*" "*googletest*" "*_build*" "*callback_generator_lib.*" "*data_generator_lib.*" -o $(LCOV_DIR_CUR)/coverage.info 2> /dev/null
+	
+## Call the lcov_remove_zero_called-target with parameter LCOV_DIR_CUR
 	$(NO_ECHO)$(MAKE) -f $(THIS_FILE) lcov_remove_zero_called LCOV_DIR_CUR=$(LCOV_DIR_CUR) > /dev/null
-	genhtml $(LCOV_DIR_CUR)/coverage.info -o $(LCOV_DIR_CUR) > /dev/null
-# Delete the gcda and gcno data again
+	genhtml $(LCOV_DIR_CUR)/coverage.info -o $(LCOV_DIR_CUR) --prefix=/app/firmware/nRF_badge/data_collector > /dev/null 
+## Delete the gcda and gcno data again
 	rm -f *.gcda *.gcno
 endif
 
@@ -356,7 +378,6 @@ endif
 # https://github.com/s-oravec/quilt/wiki/LCOV-Trace-File
 lcov_remove_zero_called :
 ifeq ($(LCOV), TRUE)
-ifeq ($(LCOV_RM_ZERO), TRUE)
 	@echo Removing zero called files...
 	$(NO_ECHO)cp $(LCOV_DIR_CUR)/coverage.info $(LCOV_DIR_CUR)/coverage.info.tmp
 	@while read line; \
@@ -370,13 +391,9 @@ ifeq ($(LCOV_RM_ZERO), TRUE)
 		esac \
 	done <$(LCOV_DIR_CUR)/coverage.info.tmp
 	$(NO_ECHO)rm -f $(LCOV_DIR_CUR)/coverage.info.tmp
-endif
 endif	
 
-#	lcov --remove $(LCOV_DIR_CUR)/coverage.info "$$cur_src_file" -o $(LCOV_DIR_CUR)/coverage.info;; \
-# 	remove_src_files=expr "$$remove_src_files $$cur_src_file";\
-	
-	
+
 # Builds gtest.a and gtest_main.a.
 
 # Usually you shouldn't tweak such internal variables, indicated by a
@@ -435,40 +452,34 @@ badge_03v6_noDebug: compile
 badge_03v6_tester: compile
 
 
+$(BUILD_C_DIR)/%.o : %.c
+	@echo Compiling $(notdir $@)
+	$(NO_ECHO) $(CXX) $(CPPFLAGS) $(TINYBUF_INC_PATH) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) $(CXXFLAGS) -o $@ -c $<
 
-	
+$(BUILD_CC_DIR)/%.o : %.cc
+	@echo Compiling $(notdir $@)
+	$(NO_ECHO) $(CXX) $(CPPFLAGS) $(TINYBUF_INC_PATH) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) $(CXXFLAGS) -o $@ -c $<
+
+
 # Builds a sample test.  A test should link with either gtest.a or
 # gtest_main.a, depending on whether it defines its own main()
 # function.
-# It is important that MOCK_INC_PATH is before FIRMWARE_INC_PATH, because some SDK-header files are probably overwritten in the MOCK_INC_PATH
 
-$(MOCK_OBJECTS):
+$(TESTS_OBJECTS_CC): $(C_OBJECTS) $(CC_OBJECTS)
 	@echo Compiling $(notdir $@)
-	$(NO_ECHO) $(CXX) $(CPPFLAGS) $(TINYBUF_INC_PATH) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) $(CXXFLAGS) -o $@ -c $(MOCK_DIR)/incl/$(basename $(notdir $@)).c*
-
-$(FIRMWARE_OBJECTS):
-	@echo Compiling $(notdir $@)
-#	@echo Firmware objects: $@ --> $(FIRMWARE_DIR)/incl/$(basename $(notdir $@)).*
-	$(NO_ECHO) $(CXX) $(CPPFLAGS) $(TINYBUF_INC_PATH) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) $(CXXFLAGS) -o $@ -c $(FIRMWARE_DIR)/incl/$(basename $(notdir $@)).c*
-
-$(TINYBUF_OBJECTS):
-	@echo Compiling $(notdir $@)
-	$(NO_ECHO) $(CXX) $(CPPFLAGS) $(TINYBUF_INC_PATH) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) $(CXXFLAGS) -o $@ -c $(TINYBUF_SRC_PATH)/$(basename $(notdir $@)).c*
-
-$(TESTS_OBJECTS): $(MOCK_OBJECTS) $(FIRMWARE_OBJECTS) $(TINYBUF_OBJECTS)
-	@echo Compiling $(notdir $@)
-#	@echo Test object $(basename $@)
 	$(NO_ECHO)$(CXX) $(CPPFLAGS) $(TINYBUF_INC_PATH) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) $(CXXFLAGS) -o $@ -c $(TEST_DIR)/$(basename $(notdir $@)).cc
 
 #https://stackoverflow.com/questions/16262344/pass-a-target-name-to-dependency-list-in-makefile
-$(TESTS): % : $(BUILD_DIR)/gtest_main.a $(BUILD_DIR)/%.o 
+$(TESTS): % : $(BUILD_DIR)/gtest_main.a $(BUILD_CC_DIR)/%.o 
 	@echo Linking $(notdir $@)
 #	$(NO_ECHO)-mv $(BUILD_DIR)/*.o $(BUILD_DIR)/*.a . 2>/dev/null || :
-	$(NO_ECHO)$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(TINYBUF_INC_PATH) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) -lpthread $(BUILD_DIR)/$@.o $(FIRMWARE_OBJECTS) $(MOCK_OBJECTS) $(TINYBUF_OBJECTS) $(BUILD_DIR)/gtest_main.a -o $(BUILD_DIR)/run_$@ -lrt
+	$(NO_ECHO)$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(TINYBUF_INC_PATH) $(MOCK_INC_PATH) $(FIRMWARE_INC_PATH) -lpthread $(BUILD_CC_DIR)/$@.o $(C_OBJECTS) $(CC_OBJECTS) $(BUILD_DIR)/gtest_main.a -o $(BUILD_DIR)/run_$@ -lrt
 #	$(NO_ECHO)-mv *.o *.a $(BUILD_DIR) 2>/dev/null || :
 ifeq ($(LCOV), TRUE)
 #move .gcno files (only if exist) and don't raise an error
 	$(NO_ECHO)-mv $(BUILD_DIR)/*.gcno $(LCOV_DIR) 2>/dev/null || :
+	$(NO_ECHO)-mv $(BUILD_C_DIR)/*.gcno $(LCOV_DIR) 2>/dev/null || :
+	$(NO_ECHO)-mv $(BUILD_CC_DIR)/*.gcno $(LCOV_DIR) 2>/dev/null || :
 endif
 
 
