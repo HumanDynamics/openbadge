@@ -1,5 +1,6 @@
 #include "data_generator_internal_lib.h"
 #include "data_generator_lib.h"
+#include <string.h>
 
 
 DATA_GENERATOR_IMPLEMENTATION(accel_read_acceleration, ret_code_t, int16_t* accel_x, int16_t* accel_y, int16_t* accel_z, uint8_t* num_samples, uint32_t max_num_samples) {
@@ -15,3 +16,12 @@ DATA_GENERATOR_IMPLEMENTATION(accel_read_acceleration, ret_code_t, int16_t* acce
 	return NRF_SUCCESS;
 }
 
+
+DATA_GENERATOR_IMPLEMENTATION(ble_get_MAC_address, void, uint8_t* MAC_address, uint8_t len) {
+	
+	memset(MAC_address, 0, len);
+	if(data_generator_ble_get_MAC_address_get_generator() != NULL) {
+		data_generator_ble_get_MAC_address_get_generator()(MAC_address, len);
+	}
+
+}

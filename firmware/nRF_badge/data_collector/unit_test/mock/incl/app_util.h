@@ -31,5 +31,14 @@
  */
 #define ROUNDED_DIV(A, B) (((A) + ((B) / 2)) / (B))
 
+/**@brief Macro for checking if an integer is a power of two.
+ *
+ * @param[in]   A   Number to be tested.
+ *
+ * @return      true if value is power of two.
+ * @return      false if value not power of two.
+ */
+#define IS_POWER_OF_TWO(A) ( ((A) != 0) && ((((A) - 1) & (A)) == 0) )
+
 
 #endif

@@ -13,6 +13,14 @@
 //#include <nrf_peripherals.h> is included in every peripheral module, so don't need to include it here!
 //#include <nrf51822_peripherals.h>
 
+
+// APP FIFO ENABLED
+#ifndef APP_FIFO_ENABLED
+#define APP_FIFO_ENABLED 1
+#endif
+
+
+
 // <h> nRF_BLE 
 
 //==========================================================

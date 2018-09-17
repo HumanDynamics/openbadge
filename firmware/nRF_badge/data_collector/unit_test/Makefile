@@ -69,6 +69,7 @@ TESTS = flash_lib_mock_unittest \
 		data_generator_lib_unittest \
 		accel_lib_mock_unittest \
 		chunk_fifo_lib_unittest \
+		ble_lib_mock_unittest \
 				
 FIRMWARE_SRCS = $(FIRMWARE_DIR)/incl/storage1_lib.c \
 				$(FIRMWARE_DIR)/incl/storage2_lib.c \
@@ -76,6 +77,7 @@ FIRMWARE_SRCS = $(FIRMWARE_DIR)/incl/storage1_lib.c \
 				$(FIRMWARE_DIR)/incl/filesystem_lib.c \
 				$(FIRMWARE_DIR)/incl/chunk_fifo_lib.c \
 				$(FIRMWARE_DIR)/incl/systick_lib.c \
+				$(SDK_PATH)/components/libraries/fifo/app_fifo.c \
 				
 
 				
@@ -93,6 +95,8 @@ FIRMWARE_INC_PATH += -I$(SDK_PATH)/components/drivers_nrf/nrf_soc_nosd
 FIRMWARE_INC_PATH += -I$(SDK_PATH)/components/device			
 FIRMWARE_INC_PATH += -I$(SDK_PATH)/components/libraries/timer
 FIRMWARE_INC_PATH += -I$(SDK_PATH)/components/libraries/scheduler
+FIRMWARE_INC_PATH += -I$(SDK_PATH)/components/libraries/fifo
+FIRMWARE_INC_PATH += -I$(SDK_PATH)/components/softdevice/s130/headers
 
 
 
@@ -243,6 +247,7 @@ CXXFLAGS += $(CFLAGS)
 CXXFLAGS += -DUNIT_TEST
 
 
+
 #$(info LCOV=${LCOV}. To enable LCOV, call make with parameter LCOV=TRUE.)
 
 TESTS_OBJECTS_CC = $(addprefix $(BUILD_CC_DIR)/, $(addsuffix .o, $(TESTS)))
@@ -368,7 +373,8 @@ ifeq ($(LCOV), TRUE)
 	
 ## Call the lcov_remove_zero_called-target with parameter LCOV_DIR_CUR
 	$(NO_ECHO)$(MAKE) -f $(THIS_FILE) lcov_remove_zero_called LCOV_DIR_CUR=$(LCOV_DIR_CUR) > /dev/null
-	genhtml $(LCOV_DIR_CUR)/coverage.info -o $(LCOV_DIR_CUR) --prefix=/app/firmware/nRF_badge/data_collector > /dev/null 
+#	genhtml $(LCOV_DIR_CUR)/coverage.info -o $(LCOV_DIR_CUR) --prefix=/app/firmware/nRF_badge/data_collector > /dev/null 
+	genhtml $(LCOV_DIR_CUR)/coverage.info -o $(LCOV_DIR_CUR) --prefix=/opt/nrf/sdk/nrf_sdk_12_3/nrf5_12.3.0_d7731ad/nRF5_SDK_12.3.0_d7731ad > /dev/null 
 ## Delete the gcda and gcno data again
 	rm -f *.gcda *.gcno
 endif

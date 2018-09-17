@@ -35,7 +35,7 @@ static ble_gap_sec_params_t		ble_sec_params;                               		/**
 static ble_nus_t                ble_nus;   											/**< Struct for Nordic UART Service module. */
 static uint16_t                 ble_conn_handle = BLE_CONN_HANDLE_INVALID;    		/**< Handle of the current connection. */
 
-static ble_state_t	ble_state;														/**< The current BLE-state. */ 
+static uint8_t	ble_state;														/**< The current BLE-state. */ 
 
 
 
