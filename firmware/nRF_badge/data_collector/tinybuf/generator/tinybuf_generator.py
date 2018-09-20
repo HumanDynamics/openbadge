@@ -832,8 +832,9 @@ class Protocol_creator:
 		for variable in variables:
 			field_name = variable[0]
 			field_type = variable[1]
-			
 			self.python_create_field_declaration(field_type, field_name)
+		self.python_file.append_line("\t\tpass")	# Added this if there is an Empty message, with no fields at all
+		
 		
 		self.python_create_encode_functions(variables)
 		
