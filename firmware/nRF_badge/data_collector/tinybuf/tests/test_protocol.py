@@ -36,6 +36,7 @@ class Embedded_message1:
 
 	def encode_internal(self, ostream):
 		self.encode_e(ostream)
+		pass
 
 	def encode_e(self, ostream):
 		ostream.write(struct.pack('>B', self.has_e))
@@ -76,6 +77,7 @@ class Embedded_message:
 	def encode_internal(self, ostream):
 		self.encode_f(ostream)
 		self.encode_embedded_message1(ostream)
+		pass
 
 	def encode_f(self, ostream):
 		ostream.write(struct.pack('>B', self.f))
@@ -135,6 +137,7 @@ class Test_message:
 		self.encode_uint8_array(ostream)
 		self.encode_c(ostream)
 		self.encode_d(ostream)
+		pass
 
 	def encode_a(self, ostream):
 		ostream.write(struct.pack('>B', self.has_a))

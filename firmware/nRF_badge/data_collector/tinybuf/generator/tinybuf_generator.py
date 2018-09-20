@@ -346,8 +346,8 @@ class Protocol_parser:
 				
 			if(found_message_start):
 				if(line[0] == '}'):
-					if(len(message) == 1):
-						raise Exception("Message '" + message[0] + "' has no variables")
+					#if(len(message) == 1):
+					#	raise Exception("Message '" + message[0] + "' has no variables")
 				
 					# Append as new data-type
 					SUPPORTED_DATA_TYPES.append([message[0], DATA_TYPE_MESSAGE, 0])
@@ -658,6 +658,7 @@ class Protocol_creator:
 		for variable in variables:
 			field_name = variable[0]			
 			self.python_file.append_line("\t\tself.encode_" + field_name + "(ostream)")
+		self.python_file.append_line("\t\tpass")	# Added this if there is an Empty message, with no fields at all
 		
 		# Create all the encode-functions for the variables
 		self.python_file.append_line()
