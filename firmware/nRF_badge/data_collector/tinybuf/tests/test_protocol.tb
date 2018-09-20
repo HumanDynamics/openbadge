@@ -14,6 +14,9 @@ message Embedded_message {
 	required Embedded_message1 	embedded_message1;
 }
 
+message Empty_message {
+}
+
 
 message Test_message { 
 	optional uint16 			a;
@@ -21,9 +24,9 @@ message Test_message {
 	repeated uint16 			uint16_array[TEST1];
 	repeated Embedded_message 	embedded_messages[TEST2];
 	optional Embedded_message1 	embedded_message1;
+	required Empty_message 		empty_message;
 	repeated uint8 				uint8_array[TEST3];
 	optional double 			c;	
 	required float 				d;
 }
-
 

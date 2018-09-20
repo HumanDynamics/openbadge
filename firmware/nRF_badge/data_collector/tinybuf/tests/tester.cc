@@ -52,8 +52,9 @@ uint8_t create_test_message(uint8_t* buf, uint32_t max_size, uint32_t* len) {
 	test_message.d = 11.23f;
 	
 	uint8_t encode_status = tb_encode(&ostream, Test_message_fields, &test_message);
-	printf("Encode status: %u\n", encode_status);
 	*len = ostream.bytes_written;
+	printf("Encode status: %u, Len: %u\n", encode_status, *len);
+	
 	
 	return encode_status;
 	

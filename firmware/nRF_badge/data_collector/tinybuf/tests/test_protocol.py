@@ -28,6 +28,7 @@ class Embedded_message1:
 	def reset(self):
 		self.has_e = 0
 		self.e = 0
+		pass
 
 	def encode(self):
 		ostream = _Ostream()
@@ -68,6 +69,7 @@ class Embedded_message:
 	def reset(self):
 		self.f = 0
 		self.embedded_message1 = None
+		pass
 
 	def encode(self):
 		ostream = _Ostream()
@@ -105,6 +107,33 @@ class Embedded_message:
 		self.embedded_message1.decode_internal(istream)
 
 
+class Empty_message:
+
+	def __init__(self):
+		self.reset()
+
+	def reset(self):
+		pass
+
+	def encode(self):
+		ostream = _Ostream()
+		self.encode_internal(ostream)
+		return ostream.buf
+
+	def encode_internal(self, ostream):
+		pass
+
+
+	@classmethod
+	def decode(cls, buf):
+		obj = cls()
+		obj.decode_internal(_Istream(buf))
+		return obj
+
+	def decode_internal(self, istream):
+		self.reset()
+
+
 class Test_message:
 
 	def __init__(self):
@@ -118,10 +147,12 @@ class Test_message:
 		self.embedded_messages = []
 		self.has_embedded_message1 = 0
 		self.embedded_message1 = None
+		self.empty_message = None
 		self.uint8_array = []
 		self.has_c = 0
 		self.c = 0
 		self.d = 0
+		pass
 
 	def encode(self):
 		ostream = _Ostream()
@@ -134,6 +165,7 @@ class Test_message:
 		self.encode_uint16_array(ostream)
 		self.encode_embedded_messages(ostream)
 		self.encode_embedded_message1(ostream)
+		self.encode_empty_message(ostream)
 		self.encode_uint8_array(ostream)
 		self.encode_c(ostream)
 		self.encode_d(ostream)
@@ -164,6 +196,9 @@ class Test_message:
 		if self.has_embedded_message1:
 			self.embedded_message1.encode_internal(ostream)
 
+	def encode_empty_message(self, ostream):
+		self.empty_message.encode_internal(ostream)
+
 	def encode_uint8_array(self, ostream):
 		count = len(self.uint8_array)
 		ostream.write(struct.pack('>H', count))
@@ -192,6 +227,7 @@ class Test_message:
 		self.decode_uint16_array(istream)
 		self.decode_embedded_messages(istream)
 		self.decode_embedded_message1(istream)
+		self.decode_empty_message(istream)
 		self.decode_uint8_array(istream)
 		self.decode_c(istream)
 		self.decode_d(istream)
@@ -221,6 +257,10 @@ class Test_message:
 		if self.has_embedded_message1:
 			self.embedded_message1 = Embedded_message1()
 			self.embedded_message1.decode_internal(istream)
+
+	def decode_empty_message(self, istream):
+		self.empty_message = Empty_message()
+		self.empty_message.decode_internal(istream)
 
 	def decode_uint8_array(self, istream):
 		count = struct.unpack('>H', istream.read(2))[0]

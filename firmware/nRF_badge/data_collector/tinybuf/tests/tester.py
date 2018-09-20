@@ -35,7 +35,7 @@ if __name__ == '__main__':
 	bytes_write = test_message.encode()
 	
 	
-	print "Encoded test_message"
+	print "Encoded test_message: Len: " + str(len(bytes_write))
 	print repr(bytes_write)
 	
 	write_bytes(output_file, bytes_write)

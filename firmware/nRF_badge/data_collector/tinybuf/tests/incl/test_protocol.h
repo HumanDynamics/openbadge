@@ -19,6 +19,9 @@ typedef struct {
 } Embedded_message;
 
 typedef struct {
+} Empty_message;
+
+typedef struct {
 	uint8_t has_a;
 	uint16_t a;
 	int32_t b;
@@ -28,6 +31,7 @@ typedef struct {
 	Embedded_message embedded_messages[12];
 	uint8_t has_embedded_message1;
 	Embedded_message1 embedded_message1;
+	Empty_message empty_message;
 	uint16_t uint8_array_count;
 	uint8_t uint8_array[1000];
 	uint8_t has_c;
@@ -37,6 +41,7 @@ typedef struct {
 
 extern const tb_field_t Embedded_message1_fields[2];
 extern const tb_field_t Embedded_message_fields[3];
-extern const tb_field_t Test_message_fields[9];
+extern const tb_field_t Empty_message_fields[1];
+extern const tb_field_t Test_message_fields[10];
 
 #endif
