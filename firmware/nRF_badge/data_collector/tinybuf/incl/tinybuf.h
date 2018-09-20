@@ -13,29 +13,33 @@
 
 
 typedef enum {
-	FIELD_TYPE_REQUIRED = (1 << 0),
-	FIELD_TYPE_OPTIONAL = (1 << 1),
-	FIELD_TYPE_REPEATED = (1 << 2),
+	FIELD_TYPE_REQUIRED 		= (1 << 0),
+	FIELD_TYPE_OPTIONAL 		= (1 << 1),
+	FIELD_TYPE_REPEATED		 	= (1 << 2),
+	FIELD_TYPE_FIXED_REPEATED 	= (1 << 3),
+	FIELD_TYPE_ONEOF			= (1 << 4),
 } tb_field_type_t;
 
 typedef enum {
-	DATA_TYPE_INT = (1 << 3),
-	DATA_TYPE_UINT = (1 << 4),
-	DATA_TYPE_FLOAT = (1 << 5),
-	DATA_TYPE_DOUBLE = (1 << 6),
-	DATA_TYPE_MESSAGE = (1 << 7),
+	DATA_TYPE_INT 				= (1 << 5),
+	DATA_TYPE_UINT 				= (1 << 6),
+	DATA_TYPE_FLOAT 			= (1 << 7),
+	DATA_TYPE_DOUBLE 			= (1 << 8),
+	DATA_TYPE_MESSAGE 			= (1 << 9),
 } tb_data_type_t;
 
 
-#define TB_LAST_FIELD {0, 0, 0, 0, 0, 0, NULL}	/**< Marker for the last field in a field-array */
+#define TB_LAST_FIELD {0, 0, 0, 0, 0, 0, 0, 0, NULL}	/**< Marker for the last field in a field-array */
 
 typedef struct {
-	uint8_t 	type; 			/**< optional/repeated/required. uint, int, float, double, submessage*/
+	uint16_t 	type; 			/**< optional/repeated/required. uint, int, float, double, submessage */
 	uint32_t 	data_offset;	/**< Offset of data relative to begin of struct */
-	int32_t 	size_offset;	/**< Offset to bool flag when optional-field or to size when repeated, relative to field data */
-	uint32_t	size_size;		/**< Size of bool flag or the size of size/count of an array */
+	int32_t 	size_offset;	/**< Offset to bool flag when optional-field or to size when repeated or to which_ when oneof, relative to field data */
+	uint32_t	size_size;		/**< Size of bool flag or the size of size/count of an array or the which_-field of oneof-field */
 	uint32_t	data_size;		/**< Size of one data entry (1,2,4,8,submessage_size) */
 	uint32_t	array_size;		/**< Size of array. 0 if it is not an array */
+	uint8_t		oneof_tag;		/**< The tag-number/identifier of a oneof-field. 0 if not an oneof-field. */
+	uint8_t		oneof_first;	/**< Flag if the field is the first oneof-entry. */
 	const void*	ptr;	  		/**< Pointer to submessage description, otherwise NULL */
 } tb_field_t;
 

@@ -29,6 +29,7 @@ if __name__ == '__main__':
 	
 	print "Decoded test_message"
 	print test_message.__dict__
+	print test_message.payload.__dict__
 	
 	
 	

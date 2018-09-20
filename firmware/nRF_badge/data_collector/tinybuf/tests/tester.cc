@@ -19,6 +19,12 @@ uint8_t create_test_message(uint8_t* buf, uint32_t max_size, uint32_t* len) {
 	Test_message test_message;
 	memset(&test_message, 0, sizeof(test_message));
 	
+	test_message.fixed_array[0] = 100;
+	test_message.fixed_array[1] = 101;
+	test_message.fixed_array[2] = 102;
+	test_message.fixed_array[3] = 103;
+	
+	
 	test_message.has_a = 0;
 	test_message.a = 10000;
 	
@@ -32,10 +38,17 @@ uint8_t create_test_message(uint8_t* buf, uint32_t max_size, uint32_t* len) {
 	
 	test_message.embedded_messages_count = 2;
 	test_message.embedded_messages[0].f = 100;
-	test_message.embedded_messages[0].embedded_message1.has_e = 1;
-	test_message.embedded_messages[0].embedded_message1.e = 0xDEADBEEF;
+	test_message.embedded_messages[0].embedded_message1[0].has_e = 1;
+	test_message.embedded_messages[0].embedded_message1[0].e = 0xDEADBEEF;
+	test_message.embedded_messages[0].embedded_message1[1].has_e = 0;
+	test_message.embedded_messages[0].which_embedded_payload = Embedded_message_g_tag;
+	test_message.embedded_messages[0].embedded_payload.g = 100;
 	test_message.embedded_messages[1].f = 101;
-	test_message.embedded_messages[1].embedded_message1.has_e = 0;
+	test_message.embedded_messages[1].embedded_message1[0].has_e = 0;
+	test_message.embedded_messages[1].embedded_message1[1].has_e = 1;
+	test_message.embedded_messages[1].embedded_message1[1].e = 0xBEEFDEAD;
+	test_message.embedded_messages[1].which_embedded_payload = Embedded_message_g_tag;
+	test_message.embedded_messages[1].embedded_payload.g = 200;
 	
 	test_message.has_embedded_message1 = 1;
 	test_message.embedded_message1.has_e = 1;
@@ -50,6 +63,17 @@ uint8_t create_test_message(uint8_t* buf, uint32_t max_size, uint32_t* len) {
 	test_message.c = 1.123;
 	
 	test_message.d = 11.23f;
+	
+	test_message.which_payload = Test_message_embedded_message_oneof_tag;
+	test_message.payload.embedded_message_oneof.f = 11;
+	test_message.payload.embedded_message_oneof.embedded_message1[0].has_e = 1;
+	test_message.payload.embedded_message_oneof.embedded_message1[0].e = 0xFF;
+	test_message.payload.embedded_message_oneof.embedded_message1[1].has_e = 1;
+	test_message.payload.embedded_message_oneof.embedded_message1[1].e = 0xAA;
+	test_message.payload.embedded_message_oneof.which_embedded_payload = Embedded_message_g_tag;
+	test_message.payload.embedded_message_oneof.embedded_payload.g = 100;
+	
+	
 	
 	uint8_t encode_status = tb_encode(&ostream, Test_message_fields, &test_message);
 	*len = ostream.bytes_written;
@@ -70,6 +94,12 @@ uint8_t check_test_message(uint8_t* buf, uint32_t len) {
 	printf("Decode status: %u\n", decode_status);
 	EXPECT_EQ(decode_status, 1);
 	
+	
+	EXPECT_EQ(test_message.fixed_array[0], 100);
+	EXPECT_EQ(test_message.fixed_array[1], 101);
+	EXPECT_EQ(test_message.fixed_array[2], 102);
+	EXPECT_EQ(test_message.fixed_array[3], 103);
+	
 	EXPECT_EQ(test_message.has_a, 0);
 	EXPECT_EQ(test_message.a, 0);
 	
@@ -85,10 +115,17 @@ uint8_t check_test_message(uint8_t* buf, uint32_t len) {
 	
 	EXPECT_EQ(test_message.embedded_messages_count, 2);
 	EXPECT_EQ(test_message.embedded_messages[0].f, 100);
-	EXPECT_EQ(test_message.embedded_messages[0].embedded_message1.has_e, 1);
-	EXPECT_EQ(test_message.embedded_messages[0].embedded_message1.e, 0xDEADBEEF);
+	EXPECT_EQ(test_message.embedded_messages[0].embedded_message1[0].has_e, 1);
+	EXPECT_EQ(test_message.embedded_messages[0].embedded_message1[0].e, 0xDEADBEEF);
+	EXPECT_EQ(test_message.embedded_messages[0].embedded_message1[1].has_e, 0);
+	EXPECT_EQ(test_message.embedded_messages[0].which_embedded_payload, Embedded_message_g_tag);
+	EXPECT_EQ(test_message.embedded_messages[0].embedded_payload.g, 100);
 	EXPECT_EQ(test_message.embedded_messages[1].f, 101);
-	EXPECT_EQ(test_message.embedded_messages[1].embedded_message1.has_e , 0);
+	EXPECT_EQ(test_message.embedded_messages[1].embedded_message1[0].has_e, 0);
+	EXPECT_EQ(test_message.embedded_messages[1].embedded_message1[1].has_e, 1);
+	EXPECT_EQ(test_message.embedded_messages[1].embedded_message1[1].e, 0xBEEFDEAD);
+	EXPECT_EQ(test_message.embedded_messages[1].which_embedded_payload, Embedded_message_g_tag);
+	EXPECT_EQ(test_message.embedded_messages[1].embedded_payload.g, 200);
 	
 	EXPECT_EQ(test_message.has_embedded_message1, 1);
 	EXPECT_EQ(test_message.embedded_message1.has_e, 1);
@@ -105,6 +142,16 @@ uint8_t check_test_message(uint8_t* buf, uint32_t len) {
 	EXPECT_EQ(test_message.c, 1.123);
 	
 	EXPECT_EQ(test_message.d, 11.23f);
+	
+	
+	EXPECT_EQ(test_message.which_payload, Test_message_embedded_message_oneof_tag);
+	EXPECT_EQ(test_message.payload.embedded_message_oneof.f, 11);
+	EXPECT_EQ(test_message.payload.embedded_message_oneof.embedded_message1[0].has_e, 1);
+	EXPECT_EQ(test_message.payload.embedded_message_oneof.embedded_message1[0].e, 0xFF);
+	EXPECT_EQ(test_message.payload.embedded_message_oneof.embedded_message1[1].has_e, 1);
+	EXPECT_EQ(test_message.payload.embedded_message_oneof.embedded_message1[1].e, 0xAA);
+	EXPECT_EQ(test_message.payload.embedded_message_oneof.which_embedded_payload, Embedded_message_g_tag);
+	EXPECT_EQ(test_message.payload.embedded_message_oneof.embedded_payload.g, 100);
 	
 	/*
 	EXPECT_EQ(test_message.has_zero, 0);

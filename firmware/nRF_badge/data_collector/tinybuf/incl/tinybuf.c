@@ -1,6 +1,6 @@
 #include "tinybuf.h"
 #include <string.h>
-//#include "stdio.h"
+#include "stdio.h"
 typedef enum {
 	BIG_ENDIAN = 0,
 	LITTLE_ENDIAN = 1
@@ -180,7 +180,29 @@ static uint8_t tb_read_from_istream_little_endian(tb_istream_t* istream, uint8_t
 }
 
 
-
+/**@brief Function to check if an oneof-which tag is valid.
+ *
+ * @details This function should only be called at the first field of the oneof-field.
+ *
+ * @param[in]	fields			Pointer to the array of structure-fields.
+ * @param[in]	which_tag		The which_field to test.
+ * @param[in]	field_index		The first field index of the oneof-field.
+ 
+ *
+ * @retval 		1			On success.
+ * @retval		0			On failure, when the which_tag was not found in.
+ */
+static uint8_t check_oneof_which_tag_validity(const tb_field_t fields[], uint8_t which_tag, uint8_t field_index) {
+	uint8_t i = field_index;
+	do {
+		// Check if the first found field_index has the which_tag:
+		if(fields[i].oneof_tag == which_tag)
+			return 1;
+		i++;
+	} while((fields[i].type & FIELD_TYPE_ONEOF) && (fields[i].oneof_first == 0));	// Search until the end of the Oneof-field, or until a new Oneof-field starts
+		
+	return 0;
+}
 
 
 
@@ -250,7 +272,29 @@ uint8_t tb_encode(tb_ostream_t* ostream, const tb_field_t fields[], void* src_st
 				// Now write the actual data of the array				
 				if(!tb_write_to_ostream_big_endian(ostream, (uint8_t*) data_ptr, field.data_size, count))
 					return 0;
+			} else if(field.type & FIELD_TYPE_FIXED_REPEATED) {
+				// Write the actual data of the array				
+				if(!tb_write_to_ostream_big_endian(ostream, (uint8_t*) data_ptr, field.data_size, field.array_size))
+					return 0;
+			} else if (field.type & FIELD_TYPE_ONEOF) {
+				void* which_ptr = ((uint8_t*) data_ptr + field.size_offset);
+				uint8_t which = *((uint8_t*) which_ptr);
 				
+				// Only write if this is the first field of the oneof-field
+				if(field.oneof_first) {
+					// Check the validity of which-tag
+					if(!check_oneof_which_tag_validity(fields, which, i))
+						return 0;
+					
+					if(!tb_write_to_ostream(ostream, (uint8_t*) which_ptr, field.size_size))	// Could actually also write just 1 byte
+						return 0;		
+				}						
+				
+				if(which == field.oneof_tag) {
+					// Here we assume to have a required-field type!
+					if(!tb_write_to_ostream_big_endian(ostream, (uint8_t*) data_ptr, field.data_size, 1))
+						return 0;
+				}				
 			} else {
 				//printf("Error no field type specified\n");
 				return 0;
@@ -314,6 +358,33 @@ uint8_t tb_encode(tb_ostream_t* ostream, const tb_field_t fields[], void* src_st
 					// Recursive call of encode function
 					if(!tb_encode(ostream, (tb_field_t*) field.ptr, struct_ptr))
 						return 0;					
+				}				
+			} else if(field.type & FIELD_TYPE_FIXED_REPEATED) {
+				for(uint32_t k = 0; k < field.array_size; k++) {
+					struct_ptr = ((uint8_t*)src_struct + field.data_offset + k*field.data_size);
+					// Recursive call of encode function
+					if(!tb_encode(ostream, (tb_field_t*) field.ptr, struct_ptr))
+						return 0;					
+				}				
+			} else if (field.type & FIELD_TYPE_ONEOF) {
+				void* which_ptr = ((uint8_t*) struct_ptr + field.size_offset);
+				uint8_t which = *((uint8_t*) which_ptr);
+				
+				// Only write if this is the first field of the oneof-field
+				if(field.oneof_first) {
+					// Check the validity of which-tag
+					if(!check_oneof_which_tag_validity(fields, which, i))
+						return 0;
+					
+					if(!tb_write_to_ostream(ostream, (uint8_t*) which_ptr, field.size_size))	// Could actually also write just 1 byte
+						return 0;				
+				}
+				
+				if(which == field.oneof_tag) {
+					// Here we assume to have a required-field type!
+					// Recursive call of encode function
+					if(!tb_encode(ostream, (tb_field_t*) field.ptr, struct_ptr))
+						return 0;
 				}				
 			} else {
 				//printf("Error no field type specified\n");
@@ -399,6 +470,33 @@ uint8_t tb_decode(tb_istream_t* istream, const tb_field_t fields[], void* dst_st
 				if(!tb_read_from_istream_little_endian(istream, (uint8_t*) data_ptr, field.data_size, count))
 					return 0;
 				
+			} else if(field.type & FIELD_TYPE_FIXED_REPEATED) {
+				// Write the actual data of the array		
+				if(!tb_read_from_istream_little_endian(istream, (uint8_t*) data_ptr, field.data_size, field.array_size))
+					return 0;
+				
+			} else if (field.type & FIELD_TYPE_ONEOF) {
+				void* which_ptr = ((uint8_t*) data_ptr + field.size_offset);
+				
+				
+				// Only read if this is the first field of the oneof-field
+				if(field.oneof_first)
+					if(!tb_read_from_istream(istream, (uint8_t*) which_ptr, field.size_size))	// Could actually also read just 1 byte
+						return 0;
+				
+				// Here we can just read the which-entry from the structure (the field in the structure should have been written by the first-oneof field)
+				uint8_t which = *((uint8_t*) which_ptr);
+				
+				if(field.oneof_first)
+					// Check the validity of which-tag
+					if(!check_oneof_which_tag_validity(fields, which, i))
+						return 0;
+				
+				if(which == field.oneof_tag) {
+					// Here we assume to have a required-field type!
+					if(!tb_read_from_istream_little_endian(istream, (uint8_t*) data_ptr, field.data_size, 1))
+						return 0;
+				}				
 			} else {
 				//printf("Error no field type specified\n");
 				return 0;
@@ -459,6 +557,38 @@ uint8_t tb_decode(tb_istream_t* istream, const tb_field_t fields[], void* dst_st
 					// Recursive call of encode function
 					if(!tb_decode(istream, (tb_field_t*) field.ptr, struct_ptr))
 						return 0;					
+				}
+				
+			} else if(field.type & FIELD_TYPE_FIXED_REPEATED) {
+				
+				for(uint32_t k = 0; k < field.array_size; k++) {
+					struct_ptr = ((uint8_t*)dst_struct + field.data_offset + k*field.data_size);
+					// Recursive call of encode function
+					if(!tb_decode(istream, (tb_field_t*) field.ptr, struct_ptr))
+						return 0;					
+				}
+				
+			} else if (field.type & FIELD_TYPE_ONEOF) {
+				void* which_ptr = ((uint8_t*) struct_ptr + field.size_offset);
+				
+				// Only read if this is the first field of the oneof-field
+				if(field.oneof_first)
+					if(!tb_read_from_istream(istream, (uint8_t*) which_ptr, field.size_size))	// Could actually also read just 1 byte
+						return 0;
+				
+				// Here we can just read the which-entry from the structure (the field in the structure should have been written by the first-oneof field)
+				uint8_t which = *((uint8_t*) which_ptr);
+				
+				if(field.oneof_first)
+					// Check the validity of which-tag
+					if(!check_oneof_which_tag_validity(fields, which, i))
+						return 0;
+				
+				if(which == field.oneof_tag) {
+					// Here we assume to have a required-field type!
+					// Recursive call of encode function
+					if(!tb_decode(istream, (tb_field_t*) field.ptr, struct_ptr))
+						return 0;	
 				}				
 			} else {
 				//printf("Error no field type specified\n");
