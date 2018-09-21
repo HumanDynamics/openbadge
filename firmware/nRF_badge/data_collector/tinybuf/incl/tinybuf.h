@@ -10,7 +10,10 @@
 #define tb_delta(st, m1, m2) 	(((int32_t)tb_offsetof(st, m1)) - ((int32_t)tb_offsetof(st, m2)))
 
 
-
+typedef enum {
+	TB_BIG_ENDIAN = 0,
+	TB_LITTLE_ENDIAN = 1
+} tb_endian_t;
 
 typedef enum {
 	FIELD_TYPE_REQUIRED 		= (1 << 0),
@@ -84,11 +87,12 @@ tb_istream_t tb_istream_from_buffer(uint8_t* buf, uint32_t buf_size);
  * @param[in]	ostream		Pointer to output-stream structure.
  * @param[in]	fields		Pointer to the array of structure-fields.
  * @param[in]	src_struct	Pointer to structure that should be serialized.
+ * @param[in] 	output_endianness	The desired endianness of the output-data.
  *
  * @retval 		1			On success.
  * @retval		0			On failure, due to buffer limitations or invalid structure.
  */
-uint8_t tb_encode(tb_ostream_t* ostream, const tb_field_t fields[], void* src_struct);
+uint8_t tb_encode(tb_ostream_t* ostream, const tb_field_t fields[], void* src_struct, tb_endian_t output_endianness);
 
 
 /**@brief Function to deserialize an input-stream to a structure.
@@ -96,11 +100,12 @@ uint8_t tb_encode(tb_ostream_t* ostream, const tb_field_t fields[], void* src_st
  * @param[in]	istream		Pointer to input-stream structure.
  * @param[in]	fields		Pointer to the array of structure-fields.
  * @param[in]	src_struct	Pointer to structure where the deserialized data should be stored to.
+ * @param[in] 	input_endianness	The endianness of the input-data.
  *
  * @retval 		1			On success.
  * @retval		0			On failure, due to buffer limitations or invalid structure.
  */
-uint8_t tb_decode(tb_istream_t* istream, const tb_field_t fields[], void* dst_struct);
+uint8_t tb_decode(tb_istream_t* istream, const tb_field_t fields[], void* dst_struct, tb_endian_t input_endianness);
 
 
 #endif

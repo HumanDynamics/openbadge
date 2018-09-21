@@ -75,7 +75,7 @@ uint8_t create_test_message(uint8_t* buf, uint32_t max_size, uint32_t* len) {
 	
 	
 	
-	uint8_t encode_status = tb_encode(&ostream, Test_message_fields, &test_message);
+	uint8_t encode_status = tb_encode(&ostream, Test_message_fields, &test_message, TB_BIG_ENDIAN);
 	*len = ostream.bytes_written;
 	printf("Encode status: %u, Len: %u\n", encode_status, *len);
 	
@@ -90,7 +90,7 @@ uint8_t check_test_message(uint8_t* buf, uint32_t len) {
 	Test_message test_message;
 	memset(&test_message, 0, sizeof(test_message));
 	
-	uint8_t decode_status = tb_decode(&istream, Test_message_fields, &test_message);
+	uint8_t decode_status = tb_decode(&istream, Test_message_fields, &test_message, TB_BIG_ENDIAN);
 	printf("Decode status: %u\n", decode_status);
 	EXPECT_EQ(decode_status, 1);
 	
