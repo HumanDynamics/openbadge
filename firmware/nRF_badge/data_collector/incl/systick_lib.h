@@ -93,6 +93,12 @@ void 		systick_set_millis(uint64_t ticks_since_start_at_sync, uint64_t millis_sy
  */
 void 		systick_set_timestamp(uint64_t ticks_since_start_at_sync, uint32_t seconds_sync, uint16_t milliseconds_sync);
 
+/**@brief Function to check, whether the millis/timestamps of this module are synced with an external time-source or not.
+ *
+ * @retval	1	If synced with external time-source.
+ * @retval	0	If not synced with external time-source.
+ */
+uint8_t 	systick_is_synced(void);
 
 /**@brief Function for actively waiting for a specific amount of milliseconds.
  *			
