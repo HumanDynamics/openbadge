@@ -23,13 +23,13 @@
 #define ACCEL_FIFO_DEFAULT													ACCEL_FIFO_DISABLE
 #define ACCEL_HP_FILTER_DEFAULT												ACCEL_HP_FILTER_DISABLE
 #define ACCEL_INTERRUPT_EVENT_DEFAULT										ACCEL_NO_INTERRUPT
-#define ACCEL_MOTION_INTERRUPT_PARAMETER_THRESHOLD_MILLIGAUSS_DEFAULT		250
+#define ACCEL_MOTION_INTERRUPT_PARAMETER_THRESHOLD_MG_DEFAULT				250
 #define	ACCEL_MOTION_INTERRUPT_PARAMETER_MINIMAL_DURATION_MS_DEFAULT		0
 
 
 /**< Parameters for the selftest-function of the accelerometer */
 #define ACCEL_SELFTEST_TIME_FOR_INTERRUPT_GENERATION_MS						10000
-#define ACCEL_SELFTEST_INTERRUPT_THRESHOLD_MILLIGAUSS						250
+#define ACCEL_SELFTEST_INTERRUPT_THRESHOLD_MG								250
 #define ACCEL_SELFTEST_INTERRUPT_MINIMAL_DURATION_MS						20
 
 
@@ -93,7 +93,7 @@ static accel_HP_filter_t 		HP_filter = ACCEL_HP_FILTER_DEFAULT;					/**< The cur
 static volatile accel_interrupt_event_t		interrupt_event = ACCEL_INTERRUPT_EVENT_DEFAULT;	/**< The current interrupt event that is generated, when the interrupt-pin switches from low to high */
 static volatile accel_interrupt_handler_t 	interrupt_handler = NULL;							/**< The current interrupt handler callback function */
 
-static uint16_t motion_interrupt_parameter_threshold_milli_gauss = ACCEL_MOTION_INTERRUPT_PARAMETER_THRESHOLD_MILLIGAUSS_DEFAULT;	/**< The current threshold for the motion interrupt */
+static uint16_t motion_interrupt_parameter_threshold_mg = ACCEL_MOTION_INTERRUPT_PARAMETER_THRESHOLD_MG_DEFAULT;	/**< The current threshold for the motion interrupt */
 static uint16_t motion_interrupt_parameter_minimal_duration_ms = ACCEL_MOTION_INTERRUPT_PARAMETER_MINIMAL_DURATION_MS_DEFAULT;		/**< The current minimal duration for the motion interrupt */
 
 
@@ -256,34 +256,34 @@ static void get_shift_factor_and_sensitivity(int16_t* shift_factor, int16_t* sen
 }
 
 
-/**@brief Function for retrieving the milli-gauss per LSB for the threshold register for interrupt configuration.
+/**@brief Function for retrieving the mg per LSB for the threshold register for interrupt configuration.
  *
  * @param[in]	accel_full_scale	The current full-scale of the accelerometer.
  *
- * @retval 	Milli-gauss per LSB for the current configuration.
+ * @retval 	mg per LSB for the current configuration.
  */
-static uint16_t get_threshold_milli_gauss_per_lsb(accel_full_scale_t accel_full_scale) {
+static uint16_t get_threshold_mg_per_lsb(accel_full_scale_t accel_full_scale) {
 	
-	uint16_t milli_gauss_per_lsb = 16;
+	uint16_t mg_per_lsb = 16;
 	switch(accel_full_scale) {	// See Datasheet LIS2DH12: chapter 8.21, p.43/53 
 		case ACCEL_FULL_SCALE_2G:
-			milli_gauss_per_lsb = 16;
+			mg_per_lsb = 16;
 		break;
 		case ACCEL_FULL_SCALE_4G:
-			milli_gauss_per_lsb = 32;
+			mg_per_lsb = 32;
 		break;
 		case ACCEL_FULL_SCALE_8G:
-			milli_gauss_per_lsb = 62;
+			mg_per_lsb = 62;
 		break;
 		case ACCEL_FULL_SCALE_16G:
-			milli_gauss_per_lsb = 186;
+			mg_per_lsb = 186;
 		break;
 		default:
-			milli_gauss_per_lsb = 16;
+			mg_per_lsb = 16;
 		break;
 		
 	}
-	return milli_gauss_per_lsb;
+	return mg_per_lsb;
 	
 }
 
@@ -420,9 +420,9 @@ ret_code_t 	accel_init(void) {
 		if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;
 		
 		// Set the default motion interrupt threshold and duration-parameters
-		motion_interrupt_parameter_threshold_milli_gauss = ACCEL_MOTION_INTERRUPT_PARAMETER_THRESHOLD_MILLIGAUSS_DEFAULT;
+		motion_interrupt_parameter_threshold_mg = ACCEL_MOTION_INTERRUPT_PARAMETER_THRESHOLD_MG_DEFAULT;
 		motion_interrupt_parameter_minimal_duration_ms = ACCEL_MOTION_INTERRUPT_PARAMETER_MINIMAL_DURATION_MS_DEFAULT;
-		accel_set_motion_interrupt_parameters(ACCEL_MOTION_INTERRUPT_PARAMETER_THRESHOLD_MILLIGAUSS_DEFAULT, ACCEL_MOTION_INTERRUPT_PARAMETER_MINIMAL_DURATION_MS_DEFAULT);
+		accel_set_motion_interrupt_parameters(ACCEL_MOTION_INTERRUPT_PARAMETER_THRESHOLD_MG_DEFAULT, ACCEL_MOTION_INTERRUPT_PARAMETER_MINIMAL_DURATION_MS_DEFAULT);
 		
 		// Set the default interrupt operation/event
 		interrupt_handler = NULL;
@@ -614,14 +614,14 @@ void 		accel_set_interrupt_handler(accel_interrupt_handler_t accel_interrupt_han
 
 
 
-ret_code_t 	accel_set_motion_interrupt_parameters(uint16_t threshold_milli_gauss, uint16_t minimal_duration_ms) {
+ret_code_t 	accel_set_motion_interrupt_parameters(uint16_t threshold_mg, uint16_t minimal_duration_ms) {
 
 	
 	ret_code_t ret;
 	
 	// Calculate and write the interrupt-threshold:
-	uint16_t milli_gauss_per_lsb = get_threshold_milli_gauss_per_lsb(full_scale);
-	uint16_t threshold = threshold_milli_gauss/milli_gauss_per_lsb;
+	uint16_t mg_per_lsb = get_threshold_mg_per_lsb(full_scale);
+	uint16_t threshold = threshold_mg/mg_per_lsb;
 	if(threshold > 0x7F) threshold = 0x7F;
 	ret = accel_write_reg_8(LIS2DH12_INT1_THS_ADDR, (uint8_t) threshold);
 	if(ret != NRF_SUCCESS) return ret;
@@ -634,7 +634,7 @@ ret_code_t 	accel_set_motion_interrupt_parameters(uint16_t threshold_milli_gauss
 	if(ret != NRF_SUCCESS) return ret;
 	
 	
-	motion_interrupt_parameter_threshold_milli_gauss = threshold_milli_gauss;
+	motion_interrupt_parameter_threshold_mg = threshold_mg;
 	motion_interrupt_parameter_minimal_duration_ms = minimal_duration_ms;
 	
 	return NRF_SUCCESS;
@@ -712,8 +712,8 @@ ret_code_t 	accel_set_interrupt(accel_interrupt_event_t accel_interrupt_event) {
 			ret = accel_write_reg_8(LIS2DH12_CTRL_REG5_ADDR, tmp);
 			if(ret != NRF_SUCCESS) return ret;
 			
-			// Set the motion interrupt parameters (threshold_milli_gauss and minimal_duration_ms)
-			ret = accel_set_motion_interrupt_parameters(motion_interrupt_parameter_threshold_milli_gauss, motion_interrupt_parameter_minimal_duration_ms);
+			// Set the motion interrupt parameters (threshold_mg and minimal_duration_ms)
+			ret = accel_set_motion_interrupt_parameters(motion_interrupt_parameter_threshold_mg, motion_interrupt_parameter_minimal_duration_ms);
 			if(ret != NRF_SUCCESS) return ret;
 			
 			// Dummy read the reference register to reset the HP-filter:
@@ -839,7 +839,7 @@ ret_code_t 	accel_read_acceleration(int16_t* accel_x, int16_t* accel_y, int16_t*
 		ret = NRF_ERROR_INTERNAL;
 	if(ret != NRF_SUCCESS) return ret;
 	
-	// Get the shift_factor and the sensitivity for the current configuration, to convert the acceleration to milli gauss
+	// Get the shift_factor and the sensitivity for the current configuration, to convert the acceleration to mg
 	int16_t shift_factor, sensitivity;
 	get_shift_factor_and_sensitivity(&shift_factor, &sensitivity, operating_mode, full_scale);
 	
@@ -872,7 +872,7 @@ bool 		accel_selftest(void) {
 	accel_HP_filter_t 			former_HP_filter = HP_filter;
 	accel_interrupt_event_t		former_interrupt_event = interrupt_event;
 	accel_interrupt_handler_t 	former_interrupt_handler = interrupt_handler;
-	uint16_t 					former_motion_interrupt_parameter_threshold_milli_gauss = motion_interrupt_parameter_threshold_milli_gauss;
+	uint16_t 					former_motion_interrupt_parameter_threshold_mg = motion_interrupt_parameter_threshold_mg;
 	uint16_t 					former_motion_interrupt_parameter_minimal_duration_ms = motion_interrupt_parameter_minimal_duration_ms;
 	
 	
@@ -904,7 +904,7 @@ bool 		accel_selftest(void) {
 		selftest_failed = 1;
 	}
 	
-	ret = accel_set_motion_interrupt_parameters(ACCEL_SELFTEST_INTERRUPT_THRESHOLD_MILLIGAUSS, ACCEL_SELFTEST_INTERRUPT_MINIMAL_DURATION_MS);
+	ret = accel_set_motion_interrupt_parameters(ACCEL_SELFTEST_INTERRUPT_THRESHOLD_MG, ACCEL_SELFTEST_INTERRUPT_MINIMAL_DURATION_MS);
 	if(ret != NRF_SUCCESS) {
 		debug_log("Accel_set_motion_interrupt_parameters failed!\n\r");
 		selftest_failed = 1;
@@ -978,7 +978,7 @@ bool 		accel_selftest(void) {
 		selftest_failed = 1;
 	}
 	
-	ret = accel_set_motion_interrupt_parameters(former_motion_interrupt_parameter_threshold_milli_gauss, former_motion_interrupt_parameter_minimal_duration_ms);
+	ret = accel_set_motion_interrupt_parameters(former_motion_interrupt_parameter_threshold_mg, former_motion_interrupt_parameter_minimal_duration_ms);
 	if(ret != NRF_SUCCESS) {
 		debug_log("Accel_set_motion_interrupt_parameters failed!\n\r");
 		selftest_failed = 1;

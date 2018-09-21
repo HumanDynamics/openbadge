@@ -118,7 +118,7 @@ void systick_set_millis(uint64_t ticks_since_start_at_sync, uint64_t millis_sync
 	float new_millis_per_ticks = delta_millis/delta_ticks;
 	
 	// Now average the new_millis_per_ticks with the global millis_per_ticks via an moving average filter:
-	float alpha = 0.5;	// The exponential moving average filter coefficient. Has to be <= 1.
+	float alpha = 0.1;	// The exponential moving average filter coefficient. Has to be <= 1.
 	millis_per_ticks = new_millis_per_ticks*alpha + millis_per_ticks*(1-alpha);
 	
 	// Calculate the new millis_offset via the new millis_per_ticks 

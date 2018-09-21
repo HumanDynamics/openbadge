@@ -37,6 +37,10 @@ void debug_log_bkgnd( const char* format, ...) {
 		return;
 	}
 	
+	// Check if uart is already transmitting sth
+	if(uart_get_operation(&uart_instance) & UART_TRANSMIT_OPERATION) {
+		return;
+	}
 	
 	uint32_t n = uart_instance.uart_buffer.tx_buf_size;
 		
@@ -62,6 +66,11 @@ void debug_log( const char* format, ...) {
 	
 	// Check if the tx buffer that we want to use is not NULL
 	if(uart_instance.uart_buffer.tx_buf == NULL) {
+		return;
+	}
+	
+	// Check if uart is already transmitting sth
+	if(uart_get_operation(&uart_instance) & UART_TRANSMIT_OPERATION) {
 		return;
 	}
 	

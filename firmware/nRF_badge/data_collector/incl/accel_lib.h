@@ -161,14 +161,14 @@ void accel_set_interrupt_handler(accel_interrupt_handler_t accel_interrupt_handl
 
 /**@brief Function for setting an interrupt operation/event.
  *
- * @param[in]   threshold_milli_gauss	The threshold in milli gauss to generate an interrupt.
+ * @param[in]   threshold_mg			The threshold in mg to generate an interrupt.
  * @param[in]   minimal_duration_ms		The minimal duration in ms the acceleration has to be above the threshold to generate an interrupt.
  *
  * @retval  NRF_SUCCESS    				If the operation was successful.
  * @retval 	NRF_ERROR_BUSY				If the spi-module is busy.
  * @retval	NRF_ERROR_INTERNAL			If there were some internal problems, because the buffers weren't in RAM-section (should not happen!).
  */
-ret_code_t accel_set_motion_interrupt_parameters(uint16_t threshold_milli_gauss, uint16_t minimal_duration_ms);
+ret_code_t accel_set_motion_interrupt_parameters(uint16_t threshold_mg, uint16_t minimal_duration_ms);
 
 
 /**@brief Function for setting an interrupt operation/event.
@@ -219,9 +219,9 @@ ret_code_t accel_set_fifo(accel_fifo_t accel_fifo);
 
 
 
-/**@brief Function for reading the current acceleration in milli gauss.
+/**@brief Function for reading the current acceleration in mg.
  *
- * @details This function reads the acceleration data from the accelerometer and converts it to milli gauss.
+ * @details This function reads the acceleration data from the accelerometer and converts it to mg.
  *			If the FIFO is enabled this function reads everything from the FIFO and returns the number of samples
  *			in the output variable num_samples. If the FIFO is not enabled num_samples is always 1.
  *			
@@ -249,7 +249,7 @@ ret_code_t 	accel_read_acceleration(int16_t* accel_x, int16_t* accel_y, int16_t*
  *			has to generate a wake-up interrupt by moving the device.
  *			The selftest can be configured by the following parameters: 
  *			- ACCEL_SELFTEST_TIME_FOR_INTERRUPT_GENERATION_MS: 	The time the wake-up event has to appear after function-call
- *			- ACCEL_SELFTEST_INTERRUPT_THRESHOLD_MILLIGAUSS:	The threshold in milligauss to generate the wake-up interrupt
+ *			- ACCEL_SELFTEST_INTERRUPT_THRESHOLD_MG:		The threshold in mg to generate the wake-up interrupt
  *			- ACCEL_SELFTEST_INTERRUPT_MINIMAL_DURATION_MS:		Minimal duration must be above the threshold, before generating an interrupt
  *			
  *
