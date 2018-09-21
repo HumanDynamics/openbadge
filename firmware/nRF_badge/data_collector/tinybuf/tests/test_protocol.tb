@@ -1,3 +1,6 @@
+import test_parent_protocol
+extern Empty_message;
+
 define {
 	TEST1 = 10;
 	TEST2 = 12;
@@ -17,8 +20,6 @@ message Embedded_message {
 	}
 }
 
-message Empty_message {
-}
 
 
 message Test_message { 

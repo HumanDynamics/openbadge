@@ -13,10 +13,6 @@ const tb_field_t Embedded_message_fields[4] = {
 	TB_LAST_FIELD,
 };
 
-const tb_field_t Empty_message_fields[1] = {
-	TB_LAST_FIELD,
-};
-
 const tb_field_t Test_message_fields[13] = {
 	{72, tb_offsetof(Test_message, fixed_array), 0, 0, tb_membersize(Test_message, fixed_array[0]), tb_membersize(Test_message, fixed_array)/tb_membersize(Test_message, fixed_array[0]), 0, 0, NULL},
 	{66, tb_offsetof(Test_message, a), tb_delta(Test_message, has_a, a), 1, tb_membersize(Test_message, a), 0, 0, 0, NULL},

@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "tinybuf.h"
+#include "test_parent_protocol.h"
 
 #define TEST1 10
 #define TEST2 12
@@ -25,9 +26,6 @@ typedef struct {
 		uint8_t g;
 	} embedded_payload;
 } Embedded_message;
-
-typedef struct {
-} Empty_message;
 
 typedef struct {
 	uint32_t fixed_array[4];
@@ -55,7 +53,6 @@ typedef struct {
 
 extern const tb_field_t Embedded_message1_fields[2];
 extern const tb_field_t Embedded_message_fields[4];
-extern const tb_field_t Empty_message_fields[1];
 extern const tb_field_t Test_message_fields[13];
 
 #endif

@@ -3,7 +3,6 @@
 #include "stdio.h"
 
 
-
 /**@brief Function to retrieve the endianness of the system.
  *
  * @retval	TB_BIG_ENDIAN		If the system has big-endian format.
@@ -220,7 +219,6 @@ uint8_t tb_encode(tb_ostream_t* ostream, const tb_field_t fields[], void* src_st
 	uint8_t i = 0;
 	
 	while(fields[i].type != 0) {
-		printf("i = %u\n", i);
 		tb_field_t field = fields[i];
 		// All these types are little endian
 		if(field.type & DATA_TYPE_INT || field.type & DATA_TYPE_UINT || field.type & DATA_TYPE_FLOAT || field.type & DATA_TYPE_DOUBLE)  {
@@ -417,8 +415,7 @@ uint8_t tb_encode(tb_ostream_t* ostream, const tb_field_t fields[], void* src_st
 uint8_t tb_decode(tb_istream_t* istream, const tb_field_t fields[], void* dst_struct, tb_endian_t input_endianness) {
 	uint8_t i = 0;
 	
-	while(fields[i].type != 0) {
-		
+	while(fields[i].type != 0) {		
 		tb_field_t field = fields[i];
 		// All these types are little endian
 		if(field.type & DATA_TYPE_INT || field.type & DATA_TYPE_UINT || field.type & DATA_TYPE_FLOAT || field.type & DATA_TYPE_DOUBLE)  {
@@ -607,4 +604,80 @@ uint8_t tb_decode(tb_istream_t* istream, const tb_field_t fields[], void* dst_st
 	}
 	return 1;
 }
+
+
+
+
+uint32_t tb_get_max_encoded_len(const tb_field_t fields[]) {
+	uint8_t i = 0;
+	uint32_t len = 0;
+	
+	while(fields[i].type != 0) {	
+		tb_field_t field = fields[i];
+		if(field.type & DATA_TYPE_INT || field.type & DATA_TYPE_UINT || field.type & DATA_TYPE_FLOAT || field.type & DATA_TYPE_DOUBLE)  {
+			if(field.type & FIELD_TYPE_REQUIRED) {
+				len += field.data_size;
+			} else if(field.type & FIELD_TYPE_OPTIONAL) {
+				len += field.size_size;
+				len += field.data_size;
+			} else if(field.type & FIELD_TYPE_REPEATED) {
+				len += field.size_size;
+				len += ((uint32_t) field.array_size) * field.data_size;
+			} else if(field.type & FIELD_TYPE_FIXED_REPEATED) {
+				len += ((uint32_t) field.array_size) * field.data_size;
+			} else if (field.type & FIELD_TYPE_ONEOF) {
+				// Here we need to search for the max
+				len += field.size_size;	// The which field
+				uint32_t tmp_len_max = 0;
+				do {
+					uint32_t tmp_len = 0;
+					if(fields[i].type & DATA_TYPE_MESSAGE) {
+						tmp_len = tb_get_max_encoded_len((tb_field_t*) fields[i].ptr);
+					} else {
+						tmp_len = fields[i].data_size;
+					}
+					if(tmp_len > tmp_len_max) {
+						tmp_len_max = tmp_len;
+					}
+					i++;
+				} while((fields[i].type & FIELD_TYPE_ONEOF) && (fields[i].oneof_first == 0));	// Search until the end of the Oneof-field, or until a new Oneof-field starts
+				i--;	// Decrement one again, because we stepped one too far
+				len += tmp_len_max;
+			}
+		} else if (field.type & DATA_TYPE_MESSAGE) {
+			if(field.type & FIELD_TYPE_REQUIRED) {
+				len += tb_get_max_encoded_len((tb_field_t*) field.ptr);
+			} else if(field.type & FIELD_TYPE_OPTIONAL) {
+				len += field.size_size;
+				len += tb_get_max_encoded_len((tb_field_t*) field.ptr);				
+			} else if(field.type & FIELD_TYPE_REPEATED) {
+				len += field.size_size;
+				len += ((uint32_t) field.array_size) * tb_get_max_encoded_len((tb_field_t*) field.ptr);				
+			} else if(field.type & FIELD_TYPE_FIXED_REPEATED) {
+				len += ((uint32_t) field.array_size) * tb_get_max_encoded_len((tb_field_t*) field.ptr);				
+			} else if (field.type & FIELD_TYPE_ONEOF) {
+				// Here we need to search for the max
+				len += field.size_size;	// The which field
+				uint32_t tmp_len_max = 0;
+				do {
+					uint32_t tmp_len = 0;
+					if(field.type & DATA_TYPE_MESSAGE) {
+						tmp_len = tb_get_max_encoded_len((tb_field_t*) field.ptr);
+					} else {
+						tmp_len = fields[i].data_size;
+					}
+					if(tmp_len > tmp_len_max) {
+						tmp_len_max = tmp_len;
+					}
+					i++;
+				} while((fields[i].type & FIELD_TYPE_ONEOF) && (fields[i].oneof_first == 0));	// Search until the end of the Oneof-field, or until a new Oneof-field starts
+				i--;	// Decrement one again, because we stepped one too far
+				len += tmp_len_max;
+			}		
+		} 	
+		i++;
+	}
+	return len;
+}
+
 

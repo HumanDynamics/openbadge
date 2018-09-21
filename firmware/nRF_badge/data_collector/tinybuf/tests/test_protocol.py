@@ -1,4 +1,5 @@
 import struct
+from test_parent_protocol import *
 
 TEST1 = 10
 TEST2 = 12
@@ -153,34 +154,6 @@ class Embedded_message:
 
 		def decode_g(self, istream):
 			self.g= struct.unpack('>B', istream.read(1))[0]
-
-
-class Empty_message:
-
-	def __init__(self):
-		self.reset()
-
-	def reset(self):
-		pass
-
-	def encode(self):
-		ostream = _Ostream()
-		self.encode_internal(ostream)
-		return ostream.buf
-
-	def encode_internal(self, ostream):
-		pass
-
-
-	@classmethod
-	def decode(cls, buf):
-		obj = cls()
-		obj.decode_internal(_Istream(buf))
-		return obj
-
-	def decode_internal(self, istream):
-		self.reset()
-		pass
 
 
 class Test_message:

@@ -108,5 +108,14 @@ uint8_t tb_encode(tb_ostream_t* ostream, const tb_field_t fields[], void* src_st
 uint8_t tb_decode(tb_istream_t* istream, const tb_field_t fields[], void* dst_struct, tb_endian_t input_endianness);
 
 
+/**@brief Function to retrieve the max encoded length of a message.
+ *
+ * @param[in]	fields		Pointer to the array of structure-fields.
+ *
+ * @retval 		Maximum encoded length.
+ */
+uint32_t tb_get_max_encoded_len(const tb_field_t fields[]);
+
+
 #endif
 

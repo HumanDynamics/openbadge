@@ -152,31 +152,7 @@ uint8_t check_test_message(uint8_t* buf, uint32_t len) {
 	EXPECT_EQ(test_message.payload.embedded_message_oneof.embedded_message1[1].e, 0xAA);
 	EXPECT_EQ(test_message.payload.embedded_message_oneof.which_embedded_payload, Embedded_message_g_tag);
 	EXPECT_EQ(test_message.payload.embedded_message_oneof.embedded_payload.g, 100);
-	
-	/*
-	EXPECT_EQ(test_message.has_zero, 0);
-	EXPECT_EQ(test_message.zero, 0);
-	
-	EXPECT_EQ(test_message.first, -10000);
-	
-	EXPECT_EQ(test_message.array_count, 3);
-	EXPECT_EQ(test_message.array[0], 200);
-	EXPECT_EQ(test_message.array[1], 201);
-	EXPECT_EQ(test_message.array[2], 202);
-	
-	EXPECT_EQ(test_message.message_count, 2);
-	EXPECT_EQ(test_message.message[0].second, 10);
-	EXPECT_EQ(test_message.message[1].second, 11);
-	
-	EXPECT_EQ(test_message.a_count, 2);
-	EXPECT_EQ(test_message.a[0], 50);
-	EXPECT_EQ(test_message.a[1], 51);
-	
-	
-	EXPECT_EQ(test_message.has_x, 1);
-	EXPECT_EQ(test_message.x, 1.123);
-	*/
-	
+
 	
 	return decode_status;
 }
@@ -223,6 +199,18 @@ int main(void) {
 	
 	printf("Path: %s\n", output_file_path);
 	printf("Path: %s\n", input_file_path);
+	
+	uint32_t Empty_message_expected_size = 0;
+	uint32_t Embedded_message1_expected_size = 1 + 8;
+	uint32_t Embedded_message_expected_size = 1 + 2*Embedded_message1_expected_size + (1+1);
+	uint32_t Test_message_expected_size  = 4*4 + (1+2) + 4 + (1+2*10) + (1+12*Embedded_message_expected_size)
+								+ (1+Embedded_message1_expected_size) + Empty_message_expected_size
+								+ (2+1000) + (1+8) + 4 + (1+Embedded_message_expected_size);
+	EXPECT_EQ(tb_get_max_encoded_len(Empty_message_fields), Empty_message_expected_size);
+	EXPECT_EQ(tb_get_max_encoded_len(Embedded_message1_fields), Embedded_message1_expected_size);
+	EXPECT_EQ(tb_get_max_encoded_len(Embedded_message_fields), Embedded_message_expected_size);
+	EXPECT_EQ(tb_get_max_encoded_len(Test_message_fields), Test_message_expected_size);
+									
 	
 	uint8_t buf[1000];
 	uint32_t len = 0;

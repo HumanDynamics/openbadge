@@ -158,6 +158,20 @@ class Protocol_parser:
 				if(not format[i] == line[i]):
 					return 0
 		return 1
+		
+	def get_import(self, line):
+		format = ["import", "'import_name'"]
+		format_required = [1, 0]
+		if(not self.check_format(line, format, format_required)):		
+			raise Exception("Line: " + str(line) + " has not the format " + str(format))
+		return line[1]
+		
+	def get_extern_message(self, line):
+		format = ["extern", "'extern_message'", ";"]
+		format_required = [1, 0, 1]
+		if(not self.check_format(line, format, format_required)):		
+			raise Exception("Line: " + str(line) + " has not the format " + str(format))
+		return line[1]
 			
 	def check_define_header(self, line):
 		format = ["define", "{"]
@@ -319,6 +333,27 @@ class Protocol_parser:
 		
 		return [field_name, field_type, field_data_type_len, field_array_size, field_data_type_str]
 		
+	
+	def parse_imports(self, lines):
+		new_lines = []
+		imports = []
+		extern_messages = []
+		for l in lines:
+			line_num = l[0]
+			line = l[1]
+			if(line[0] == 'import'):
+				imports.append(self.get_import(line))
+				continue
+			
+			if(line[0] == 'extern'):
+				extern_messages.append(self.get_extern_message(line))
+				continue
+			
+			# Else just append the line to the new lines			
+			new_lines.append(l)
+			
+		return [new_lines, imports, extern_messages]
+				
 	
 	def parse_defines(self, lines):
 		new_lines = []
@@ -517,6 +552,11 @@ class Protocol_parser:
 		lines = self.read_file()
 		
 		
+		[lines, imports, extern_messages] = self.parse_imports(lines)
+		# Add all the extern-messages as known data-types
+		for extern_message in extern_messages:
+			SUPPORTED_DATA_TYPES.append([extern_message, DATA_TYPE_MESSAGE, 0])
+			
 		[lines, defines] = self.parse_defines(lines)
 		[lines, messages] = self.parse_messages(lines, defines)
 		
@@ -525,7 +565,7 @@ class Protocol_parser:
 		if(len(lines) > 0):
 			raise Exception("Could not parse line " + str(lines[0][0]))
 		
-		return [defines, messages]
+		return [imports, defines, messages]
 
 class OutputFile:
 	def __init__(self, output_file):
@@ -541,10 +581,11 @@ class OutputFile:
 			f.write(self.file_output)
 		
 class Protocol_creator:
-	def __init__(self, output_format, output_path, output_name, defines, messages):
+	def __init__(self, output_format, output_path, output_name, imports, defines, messages):
 		self.output_format = output_format
 		self.output_path = output_path
 		self.output_name = output_name
+		self.imports = imports
 		self.defines = defines
 		self.messages = messages
 		
@@ -802,14 +843,17 @@ class Protocol_creator:
 		
 		# Then write the imports
 		self.h_file.append_line("#include <stdint.h>")
-		self.h_file.append_line('#include "tinybuf.h"')
-		self.h_file.append_line()
-		
+		self.h_file.append_line('#include "tinybuf.h"')		
 		self.c_file.append_line('#include "tinybuf.h"')
 		self.c_file.append_line('#include "' + self.output_name + ".h" + '"')
 		self.c_file.append_line()
 		
-		# First create the defines
+		# First create the imports
+		for imp in self.imports:
+			self.h_file.append_line('#include "' + imp + '.h"')
+		self.h_file.append_line()
+		
+		# Then create the defines
 		for define in self.defines:
 			self.h_file.append_line("#define " + define[0] + " " + define[1])
 		self.h_file.append_line()
@@ -1273,10 +1317,15 @@ class Protocol_creator:
 		
 		print "Creating python-file..."
 		
-		self.python_file.append_line("import struct")
-		self.python_file.append_line()
+		self.python_file.append_line("import struct")	
 		
-		# First create the defines
+		# First create the imports
+		for imp in self.imports:
+			self.python_file.append_line("from " + imp + " import *")
+			
+		self.python_file.append_line()
+			
+		# Then create the defines
 		for define in self.defines:
 			self.python_file.append_line(define[0] + " = " + define[1])
 		self.python_file.append_line()
@@ -1335,7 +1384,7 @@ if __name__ == '__main__':
 		raise Exception("Protocol-file '" + file + "' does not exist.")
 		
 	protocol_parser = Protocol_parser(file)
-	[defines, messages] = protocol_parser.parse()
-	protocol_creator = Protocol_creator(output_format, output_path, output_name, defines, messages)
+	[imports, defines, messages] = protocol_parser.parse()
+	protocol_creator = Protocol_creator(output_format, output_path, output_name, imports, defines, messages)
 	protocol_creator.create()
 	
