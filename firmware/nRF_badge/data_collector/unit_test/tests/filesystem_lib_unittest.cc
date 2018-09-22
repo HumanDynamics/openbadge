@@ -927,5 +927,21 @@ TEST_F(FilesystemTest, ClearTest) {
 	
 }
 
+TEST_F(FilesystemTest, AvailableSizeTest) {
+	uint32_t available_size = 0;
+	available_size = filesystem_get_available_size();	
+	EXPECT_EQ(available_size, STORAGE1_SIZE_TEST + STORAGE2_SIZE_TEST - STORAGE1_UNIT_SIZE_TEST);
+	
+	uint16_t partition_id = 0xFFFF;
+	uint32_t required_size = 1222;	
+	// Register partition
+	ret_code_t ret = filesystem_register_partition(&partition_id, &required_size, 1, 1, 0);
+	EXPECT_EQ(ret, NRF_SUCCESS);
+	
+	available_size = filesystem_get_available_size();	
+	EXPECT_EQ(available_size, STORAGE1_SIZE_TEST + STORAGE2_SIZE_TEST - STORAGE1_UNIT_SIZE_TEST - required_size);
+
+}
+
 };
 

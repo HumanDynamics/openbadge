@@ -28,7 +28,12 @@
 
 
 // TODO: define this by the linker script with enough space for new program code!
+#ifdef UNIT_TEST
 #define FLASH_NUM_PAGES 30	
+#else
+#define FLASH_NUM_PAGES 30
+#endif
+	
 #if   	defined (NRF51)
 #define FLASH_PAGE_SIZE_WORDS	256						/**< Number of words in one page (nrf51: 256) */
 #elif (defined (NRF52) || defined(NRF52840_XXAA))

@@ -125,6 +125,11 @@ ret_code_t 	filesystem_reset(void);
  */
 ret_code_t filesystem_clear(void);
 
+/** @brief Function for retrieving the available number of bytes in the filesystem.
+ *
+ * @retval Available bytes in the filesystem.
+ */
+uint32_t filesystem_get_available_size(void);
 
 /** @brief Function for registering a partition.
  *

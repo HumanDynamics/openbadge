@@ -758,7 +758,13 @@ ret_code_t filesystem_clear(void) {
 	return ret;
 }
 
-
+uint32_t filesystem_get_available_size(void) {
+	uint32_t storage_size = storage_get_size();
+	if(storage_size >= next_free_address) {
+		return storage_size - next_free_address;
+	}
+	return 0;
+}
 
 
 ret_code_t filesystem_register_partition(uint16_t* partition_id, uint32_t* required_size, uint8_t is_dynamic, uint8_t enable_crc, uint16_t element_len) {
