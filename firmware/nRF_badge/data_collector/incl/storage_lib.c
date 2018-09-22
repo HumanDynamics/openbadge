@@ -5,24 +5,81 @@
 #include "storage1_lib.h"
 #include "storage2_lib.h"
 
-
 typedef ret_code_t 	(*storage_init_function_t)(void);
 typedef ret_code_t 	(*storage_read_function_t)(uint32_t address, uint8_t* data, uint32_t length_data);
 typedef ret_code_t 	(*storage_store_function_t)(uint32_t address, uint8_t* data, uint32_t length_data);
 typedef uint32_t 	(*storage_get_size_function_t)(void);
 typedef uint32_t 	(*storage_get_unit_size_function_t)(void);
+typedef ret_code_t 	(*storage_clear_function_t)(uint32_t address, uint32_t length);
 
 
-
+#ifdef UNIT_TEST	// Because currently the unit-tests are written for this configuration. But for an efficient filesystem (because of SWAP_PAGE) we need the EEPROM as first storage-module
 storage_init_function_t 			storage_init_functions[] 			= {storage1_init, 			storage2_init};
 storage_read_function_t 			storage_read_functions[] 			= {storage1_read, 			storage2_read};
 storage_store_function_t 			storage_store_functions[]			= {storage1_store, 			storage2_store};
 storage_get_size_function_t 		storage_get_size_functions[] 		= {storage1_get_size, 		storage2_get_size};
 storage_get_unit_size_function_t 	storage_get_unit_size_functions[] 	= {storage1_get_unit_size, 	storage2_get_unit_size};
+storage_clear_function_t 			storage_clear_functions[] 			= {storage1_clear, 			storage2_clear};
+#else
+storage_init_function_t 			storage_init_functions[] 			= {storage2_init, 			storage1_init};
+storage_read_function_t 			storage_read_functions[] 			= {storage2_read, 			storage1_read};
+storage_store_function_t 			storage_store_functions[]			= {storage2_store, 			storage1_store};
+storage_get_size_function_t 		storage_get_size_functions[] 		= {storage2_get_size, 		storage1_get_size};
+storage_get_unit_size_function_t 	storage_get_unit_size_functions[] 	= {storage2_get_unit_size, 	storage1_get_unit_size};
+storage_clear_function_t 			storage_clear_functions[] 			= {storage2_clear, 			storage1_clear};
+#endif
 
 
 #define NUMBER_OF_STORAGE_MODULES (uint8_t) (sizeof(storage_init_functions)/sizeof(storage_init_function_t))	/**< The number of different storage modules */
 static uint32_t storage_sizes[NUMBER_OF_STORAGE_MODULES];														/**< Contains the sizes of the storage modules (set during init-function) */
+
+
+
+/** @brief Function for retrieving the splitted address, data and length of the different storage-modules for a given address and data length.
+ * 
+ * @param[in]	address						The address that should be splitted.
+ * @param[in]	data						Pointer to data to be splitted (Could also be NULL, if no data has to be splitted)
+ * @param[in]	length_data					The length of the data that should be splitted.
+ * @param[out]	splitted_address			Pointer to memory where the splitted-address should be stored to.
+ * @param[out]	splitted_data				Pointer to memory where the splitted-data-pointer should be stored to.
+ * @param[out]	splitted_length_data		Pointer to memory where the splitted length should be stored to.
+ * @param[in]	storage_sizes				Array of the sizes of the different storage modules.
+ * @param[in]	number_of_storage_modules	Number of different storage modules.
+ */
+void storage_split_to_storage_modules(uint32_t address, uint8_t* data, uint32_t length_data, uint32_t splitted_address[], uint8_t* splitted_data[], uint32_t splitted_length_data[], uint32_t storage_sizes[], uint8_t number_of_storage_modules) {
+	uint32_t tmp_address = address;
+	uint32_t tmp_length_data = length_data;
+	uint32_t cumulated_size = 0;
+	for(uint8_t i = 0; i < number_of_storage_modules; i++) {
+		uint32_t size = storage_sizes[i];
+
+		// Check if the address is within the i-th storage-module, and we have some data left
+		if(tmp_address >= cumulated_size &&  tmp_address < cumulated_size + size && tmp_length_data > 0) {
+			
+			splitted_address[i] = tmp_address - cumulated_size;
+			if(data != NULL)
+				splitted_data[i] 	= &data[tmp_address - address];
+			else
+				splitted_data[i] 	= NULL;
+			
+			if(tmp_address + tmp_length_data <= cumulated_size + size) {
+				splitted_length_data[i] = tmp_length_data;
+			} else {
+				splitted_length_data[i] = (cumulated_size + size) - tmp_address;
+			}
+			tmp_address += splitted_length_data[i];	
+			tmp_length_data -= splitted_length_data[i];
+		} else { // if we have nothing in the i-th storage module, set everything to NULL
+			splitted_address[i] = 0;
+			splitted_data[i] = NULL;
+			splitted_length_data[i] = 0;
+		}	
+		
+		cumulated_size += size;		
+		
+	}	
+}
+
 
 ret_code_t storage_init(void) {
 
@@ -41,36 +98,6 @@ ret_code_t storage_init(void) {
 		
 	}	
 	return NRF_SUCCESS;
-}
-
-void storage_split_to_storage_modules(uint32_t address, uint8_t* data, uint32_t length_data, uint32_t splitted_address[], uint8_t* splitted_data[], uint32_t splitted_length_data[], uint32_t storage_sizes[], uint8_t number_of_storage_modules) {
-	uint32_t tmp_address = address;
-	uint32_t tmp_length_data = length_data;
-	uint32_t cumulated_size = 0;
-	for(uint8_t i = 0; i < number_of_storage_modules; i++) {
-		uint32_t size = storage_sizes[i];
-
-		// Check if the address is within the i-th storage-module, and we have some data left
-		if(tmp_address >= cumulated_size &&  tmp_address < cumulated_size + size && tmp_length_data > 0) {
-			
-			splitted_address[i] = tmp_address - cumulated_size;
-			splitted_data[i] 	= &data[tmp_address - address];
-			if(tmp_address + tmp_length_data <= cumulated_size + size) {
-				splitted_length_data[i] = tmp_length_data;
-			} else {
-				splitted_length_data[i] = (cumulated_size + size) - tmp_address;
-			}
-			tmp_address += splitted_length_data[i];	
-			tmp_length_data -= splitted_length_data[i];
-		} else { // if we have nothing in the i-th storage module, set everything to NULL
-			splitted_address[i] = 0;
-			splitted_data[i] = NULL;
-			splitted_length_data[i] = 0;
-		}	
-		
-		cumulated_size += size;		
-		
-	}	
 }
 
 
@@ -180,3 +207,26 @@ uint32_t storage_get_size(void) {
 	return size;
 }
 
+ret_code_t storage_clear(uint32_t address, uint32_t length) {
+	if(address + length > storage_get_size()) {
+		return NRF_ERROR_INVALID_PARAM;
+	}
+	if(length == 0)
+		return NRF_SUCCESS;
+	
+	uint32_t splitted_address[NUMBER_OF_STORAGE_MODULES];
+	uint8_t* splitted_data[NUMBER_OF_STORAGE_MODULES];
+	uint32_t splitted_length[NUMBER_OF_STORAGE_MODULES];
+
+	storage_split_to_storage_modules(address, NULL, length, splitted_address, splitted_data, splitted_length, storage_sizes, NUMBER_OF_STORAGE_MODULES);
+	
+	
+	for(uint8_t i = 0; i < NUMBER_OF_STORAGE_MODULES; i++)  {
+		if(splitted_length[i] == 0) continue;
+		ret_code_t ret = storage_clear_functions[i](splitted_address[i], splitted_length[i]);
+		if(ret != NRF_SUCCESS) 
+			return ret;
+	}
+	
+	return NRF_SUCCESS;
+}

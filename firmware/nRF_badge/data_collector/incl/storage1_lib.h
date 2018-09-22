@@ -75,4 +75,17 @@ uint32_t storage1_get_unit_size(void);
  */
 uint32_t storage1_get_size(void);
 
+
+/** @brief Function to clear/erase a defined address range.
+ * 
+ * @param[in]	address			The address of the first byte to clear.
+ * @param[in]	length			The number of bytes to clear.
+ *
+ * @retval 		NRF_SUCCSS					If operation was successful.
+ * @retval 		NRF_ERROR_INVALID_PARAM		If specified address and length exceed the storage size.
+ * @retval 		NRF_ERROR_BUSY				If the underlying storage-module is busy.
+ * @retval		NRF_ERROR_TIMEOUT			If the operation takes too long.
+ */
+ret_code_t storage1_clear(uint32_t address, uint32_t length);
+
 #endif 

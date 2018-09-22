@@ -748,6 +748,17 @@ ret_code_t filesystem_reset(void) {
 } 
 
 
+ret_code_t filesystem_clear(void) {
+	
+	uint32_t length = storage_get_size();
+	ret_code_t ret = storage_clear(0, length);
+	if(ret != NRF_SUCCESS) return ret;
+	
+	ret = filesystem_reset();
+	return ret;
+}
+
+
 
 
 ret_code_t filesystem_register_partition(uint16_t* partition_id, uint32_t* required_size, uint8_t is_dynamic, uint8_t enable_crc, uint16_t element_len) {

@@ -115,6 +115,16 @@ ret_code_t 	filesystem_init(void);
  */
 ret_code_t 	filesystem_reset(void);
 
+/** @brief Function for clearing the storage of the filesystem.
+ *
+ * @details	The function cleares the complete storage and resets the filesystem afterwords via filesystem_reset().
+ * 
+ * @retval 		NRF_SUCCESS					If operation was successful.
+ * @retval 		NRF_ERROR_BUSY				If the underlying storage-module is busy.
+ * @retval		NRF_ERROR_TIMEOUT			If the operation takes too long.
+ */
+ret_code_t filesystem_clear(void);
+
 
 /** @brief Function for registering a partition.
  *

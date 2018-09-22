@@ -292,4 +292,46 @@ TEST_F(StorageTest, StoreAndReadTest) {
 	flash_write_to_file("Storage_Flash.txt");
 }
 
+TEST_F(StorageTest, ClearTest) {
+	ret_code_t ret;
+	uint8_t store_data[1000];
+	uint32_t len = sizeof(store_data);
+	uint8_t read_data[len];
+	for(uint32_t i = 0; i < len; i++)
+		store_data[i] = i % 256;
+	memset(read_data, 0xFF, len);
+	uint32_t address;
+	
+	// Store in storage 1 and 2
+	address = STORAGE1_SIZE_TEST - len/2;
+	ret = storage_store(address, store_data, len);
+	EXPECT_EQ(ret, NRF_SUCCESS);
+	memset(read_data, 0xFF, len);
+	ret = storage_read(address, read_data, len);
+	EXPECT_EQ(ret, NRF_SUCCESS);
+	EXPECT_ARRAY_EQ(store_data, read_data, len);
+	
+
+	
+	// Now clear a little bit of storage 1 and 2
+	ret = storage_clear(address + len/4, len/2);
+	EXPECT_EQ(ret, NRF_SUCCESS);
+	
+	memset(read_data, 0xFF, len);
+	ret = storage_read(address, read_data, len);
+	EXPECT_EQ(ret, NRF_SUCCESS);
+	
+	for(uint32_t i = 0; i < len; i++) {
+		if(i < len/4)
+			store_data[i] = i % 256;
+		else if(i < len/2 + len/4)
+			store_data[i] = 0xFF;
+		else 
+			store_data[i] = i % 256;
+	}
+	EXPECT_ARRAY_EQ(store_data, read_data, len);
+	
+	
+}
+
 };  

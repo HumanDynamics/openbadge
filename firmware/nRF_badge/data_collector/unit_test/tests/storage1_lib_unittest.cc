@@ -495,12 +495,42 @@ TEST_F(Storage1Test, StoreAndReadTest) {
 	ret = storage1_read(0, read_data1, 0);
 	EXPECT_EQ(ret, NRF_SUCCESS);
 	ret = storage1_read(1, read_data1, storage1_get_size());
-	EXPECT_EQ(ret, NRF_ERROR_INVALID_PARAM);
+	EXPECT_EQ(ret, NRF_ERROR_INVALID_PARAM);	
 	
+}
+
+TEST_F(Storage1Test, ClearTest) {
 	
+	ret_code_t ret;
 	
+	uint8_t store_data[2000];
+	uint32_t len = sizeof(store_data);
+	uint8_t read_data[len];
 	
+	for(uint32_t i = 0; i < len; i++) {
+		store_data[i] = i % 256;
+	}
+	ret = storage1_store(0, store_data, len);
+	EXPECT_EQ(ret, NRF_SUCCESS);
 	
+	ret = storage1_read(0, read_data, len);
+	EXPECT_EQ(ret, NRF_SUCCESS);	
+	EXPECT_ARRAY_EQ(store_data, read_data, len);
+	
+	ret = storage1_clear(len/4, len/2);
+	EXPECT_EQ(ret, NRF_SUCCESS);
+	
+	ret = storage1_read(0, read_data, len);
+	EXPECT_EQ(ret, NRF_SUCCESS);	
+	for(uint32_t i = 0; i < len; i++) {
+		if(i < len/4)
+			store_data[i] = i % 256; 
+		else if(i < len/2 + len/4)
+			store_data[i] = 0xFF;
+		else	// Because it is flash, and will erase the following page completely
+			store_data[i] = 0xFF; 
+	}
+	EXPECT_ARRAY_EQ(store_data, read_data, len);	
 }
 
 };  

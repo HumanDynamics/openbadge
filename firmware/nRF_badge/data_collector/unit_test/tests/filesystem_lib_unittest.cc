@@ -29,7 +29,7 @@ extern ret_code_t filesystem_compute_available_size(uint32_t partition_start_add
 
 extern uint32_t filesystem_get_swap_page_address_of_partition(uint16_t partition_id);
 
-extern ret_code_t filesystem_reset(void);
+
 
 extern uint32_t filesystem_compute_next_element_address(uint16_t partition_id, uint32_t cur_element_address, uint16_t cur_element_len, uint16_t next_element_len);
 
@@ -872,6 +872,60 @@ TEST_F(FilesystemTest, CorruptedDataTest) {
 	
 }
 
+
+TEST_F(FilesystemTest, ClearTest) {
 	
+	uint16_t partition_id = 0xFFFF;
+	uint32_t required_size = STORAGE1_SIZE_TEST;
+	
+	// Register partition
+	ret_code_t ret = filesystem_register_partition(&partition_id, &required_size, 1, 1, 0);
+	ASSERT_EQ(ret, NRF_SUCCESS);
+	
+	ret = filesystem_iterator_init(partition_id);
+	EXPECT_EQ(ret, NRF_ERROR_INVALID_STATE);
+	
+		
+	// Create 3 elements in partition
+	uint8_t data[3000];	
+	for(uint32_t j = 0; j < 3; j++) {
+		
+		for(uint16_t i =0; i < 1000; i++)
+			data[i] = i % 256;
+	
+		ret_code_t ret = filesystem_store_element(partition_id, data, (j+1)*1000);
+		EXPECT_EQ(ret, NRF_SUCCESS);		
+	}
+	
+	
+	
+	ret = filesystem_iterator_init(partition_id);
+	EXPECT_EQ(ret, NRF_SUCCESS);
+	
+	EXPECT_EQ(partition_iterators[0].iterator_valid, 0xA5);
+	
+	// If we only reset the filesystem, the partition should be still there and we can create an iterator for it
+	ret = filesystem_reset();
+	EXPECT_EQ(ret, NRF_SUCCESS);
+	// Register partition
+	ret = filesystem_register_partition(&partition_id, &required_size, 1, 1, 0);
+	EXPECT_EQ(ret, NRF_SUCCESS);
+	ret = filesystem_iterator_init(partition_id);
+	EXPECT_EQ(ret, NRF_SUCCESS);	
+	EXPECT_EQ(partition_iterators[0].iterator_valid, 0xA5);
+	
+	
+	
+	// If we clear the filesystem completely, we should not find a valid iterator
+	ret = filesystem_clear();
+	EXPECT_EQ(ret, NRF_SUCCESS);
+	// Register partition
+	ret = filesystem_register_partition(&partition_id, &required_size, 1, 1, 0);
+	EXPECT_EQ(ret, NRF_SUCCESS);
+	ret = filesystem_iterator_init(partition_id);
+	EXPECT_EQ(ret, NRF_ERROR_INVALID_STATE);
+	
+}
+
 };
 
