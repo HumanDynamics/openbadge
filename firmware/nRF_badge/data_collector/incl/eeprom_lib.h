@@ -43,35 +43,9 @@ ret_code_t eeprom_init(void);
 
 
 
-
-/**@brief   Function for storing data in asynchronous/non-blocking/background mode in EEPROM via SPI.
- *
- * @details This is a non-blocking function. If there is already an ongoing SPI or EEPROM operation it returns NRF_ERROR_BUSY.
- *			It achieves the data storing to EEPROM without internal buffers for transmitting the data via SPI.
- *			Therefore the tx_data-buffer is modified during the function, so the "write-header" for the EEPROM could be placed
- *			in this buffer. 
- *			This operation is splitted in three parts. At the beginning the first 4 data bytes (or less) are transmitted in blocking mode via an internal allocated buffer.
- *			After that the remaining bytes are transmitted in non-blocking mode (with the Write-header in the first 4 tx_data-buffer bytes).
- *			In the end if the spi transmit operation terminated and the internal spi-handler is called, the first 4 data bytes are restored to the tx_data-buffer.
- *	
- * @warning The store data must be kept in memory until the operation has terminated.
- *
- * @param[in]   address			Address in EEPROM where to store the data. 	   	
- * @param[in]   tx_data			Pointer to the data to store. This is not const because it is internally modified. It must be in Data RAM region.
- * @param[in]   length_tx_data	Length of the data to store.
- *
- * @retval  NRF_SUCCESS             	If the operation was started successfully.
- * @retval  NRF_ERROR_BUSY				If the SPI interface or the EEPROM is busy.
- * @retval 	NRF_ERROR_INVALID_PARAM   	If the address is to big or the provided tx_data-buffer is not placed in the Data RAM region.
- * @retval	NRF_ERROR_TIMEOUT			If the operation takes too long.
- */
-ret_code_t eeprom_store_bkgnd(uint32_t address, uint8_t* tx_data, uint32_t length_tx_data);
-
-
 /**@brief   Function for storing data in blocking mode in EEPROM via SPI.
  *
- * @details This function uses internally eeprom_store_bkgnd() to store the data and eeprom_get_operation()
- *			to wait until the operation (spi transfer and EEPROM internal write) has terminated. 
+ * @details This function waits until the operation (spi transfer and EEPROM internal write) has terminated. 
  *	
  *
  * @param[in]   address			Address in EEPROM where to store the data. 	   	
@@ -83,37 +57,13 @@ ret_code_t eeprom_store_bkgnd(uint32_t address, uint8_t* tx_data, uint32_t lengt
  * @retval 	NRF_ERROR_INVALID_PARAM   	If the address is to big or the provided tx_data-buffer is not placed in the Data RAM region.
  * @retval	NRF_ERROR_TIMEOUT			If the operation takes too long.
  */
-ret_code_t eeprom_store(uint32_t address, uint8_t* tx_data, uint32_t length_tx_data);
+ret_code_t eeprom_store(uint32_t address, const uint8_t* tx_data, uint32_t length_tx_data);
 
-
-/**@brief   Function for reading data in asynchronous/non-blocking/background mode from EEPROM via SPI.
- *
- * @details This is a non-blocking function. If there is already an ongoing SPI or EEPROM operation it returns NRF_ERROR_BUSY.
- *			It achieves the data reading from EEPROM without internal buffers for receiving the data via SPI.
- *			Therefore the rx_data-buffer is modified during the function, so the first 4 dummy bytes during the SPI transfer could be placed
- *			in this buffer and be overwritten by the actual 4 data bytes after transmission.
- *			This operation is splitted in three parts. At the beginning the first 4 data bytes (or less) are read in blocking mode via an internal allocated buffer.
- *			After that the remaining bytes are read in non-blocking mode (with the 4 dummy bytes in the first 4 rx_data-buffer bytes).
- *			In the end if the spi transmit operation terminated and the internal spi-handler is called, the first 4 data bytes are restored to the rx_data-buffer.
- *	
- * @warning The rx_data-buffer must be kept in memory until the operation has terminated.
- *
- * @param[in]   address			Address of the data to be read from EEPROM. 	   	
- * @param[in]   tx_data			Pointer to the buffer where to store the read data. It must be in Data RAM region.
- * @param[in]   length_tx_data	Length of the data to read.
- *
- * @retval  NRF_SUCCESS             	If the operation was started successfully.
- * @retval  NRF_ERROR_BUSY				If the SPI interface or the EEPROM is busy.
- * @retval 	NRF_ERROR_INVALID_PARAM   	If the address is to big or the provided rx_data-buffer is not placed in the Data RAM region.
- * @retval	NRF_ERROR_TIMEOUT			If the operation takes too long.
- */
-ret_code_t eeprom_read_bkgnd(uint32_t address, uint8_t* rx_data, uint32_t length_rx_data);
 
 
 /**@brief   Function for reading data in blocking mode from EEPROM via SPI.
  *
- * @details This function uses internally eeprom_read_bkgnd() to read the data and eeprom_get_operation()
- *			to wait until the operation (spi transfer) has terminated. 
+ * @details This function waits until the operation (spi transfer) has terminated. 
  *	
  *
  * @param[in]   address			Address of the data to be read from EEPROM.  	   	

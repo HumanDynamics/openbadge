@@ -15,7 +15,9 @@
 #define CMD_WRITE	0b00000010	/**< Write to memory array command code */
 #define CMD_READ	0b00000011	/**< Read from memory array command code */
 
-#define EEPROM_OPERATION_TIMEOUT_MS		100	/**< The time in milliseconds to wait for an operation to finish. */
+#define EEPROM_OPERATION_TIMEOUT_MS		500	/**< The time in milliseconds to wait for an operation to finish. */
+#define EEPROM_PAGE_SIZE 				128	/**< We need to align the bytes to write and read to the EEPROM boundaries (because of unknown reasons it couldn't be 256..) */
+
 
 
 static ret_code_t eeprom_read_status(uint8_t* eeprom_status);
@@ -24,7 +26,7 @@ static ret_code_t eeprom_write_enable(void);
 static ret_code_t eeprom_global_unprotect(void);
 
 
-
+static uint8_t eeprom_buf[EEPROM_PAGE_SIZE + 4];	/**< Buffer for EEPROM read/store operations (+ 4 for header) */
 
 
 typedef struct {
@@ -119,7 +121,6 @@ static ret_code_t eeprom_read_status(uint8_t* p_eeprom_status) {
 static bool eeprom_is_busy(void) {
 	uint8_t eeprom_status = 0x01;
 	ret_code_t ret = eeprom_read_status(&eeprom_status);
-	
 	// Check if the SPI is busy
 	if(ret != NRF_SUCCESS)
 		return 1;
@@ -201,11 +202,7 @@ static ret_code_t eeprom_global_unprotect(void) {
 
 
 
-
-
-
-
-ret_code_t eeprom_store_bkgnd(uint32_t address, uint8_t* tx_data, uint32_t length_tx_data) {
+ret_code_t eeprom_store(uint32_t address, const uint8_t* tx_data, uint32_t length_tx_data) {
 	
 	// Check if the specified address is valid. The EEPROM has 256kByte of memory.
 	// Furthermore check if the data pointer is in RAM, not in read only-Memory
@@ -221,78 +218,13 @@ ret_code_t eeprom_store_bkgnd(uint32_t address, uint8_t* tx_data, uint32_t lengt
 		return NRF_ERROR_BUSY;
 	}
 	
-	// Set the eeprom operation to store
-	eeprom_operation = EEPROM_STORE_OPERATION;
-	
-	
-	// Enable writing
-	ret_code_t ret = eeprom_write_enable();
-	
-	// ret could be NRF_SUCCESS or NRF_ERROR_BUSY	
-	if(ret != NRF_SUCCESS) {
-		// Reset the eeprom operation
-		eeprom_operation = EEPROM_NO_OPERATION;
-		return ret;
-	}
-	
-	
-	
-	
-	// The header for writing {CMD_WRITE, address24_16, address15_8, address7_0}
-	uint8_t tx_header[4] = {CMD_WRITE, ((address>>16)&0xFF), ((address>>8)&0xFF), ((address>>0)&0xFF)};
-	
-	
-	// At the beginning the first 4 bytes (or less) are stored
-	uint32_t first_length_tx_data = 0;
-	uint32_t remaining_length_tx_data = 0;
-	
-	if(length_tx_data < 4) {
-		first_length_tx_data = length_tx_data;
-		remaining_length_tx_data = 0;
-	} else {
-		first_length_tx_data = 4;
-		remaining_length_tx_data = length_tx_data - 4;
-	}
-	
-	// Temporary array for transmitting the first 4 data bytes.
-	uint32_t len = 4 + first_length_tx_data;
-	uint8_t first_transmit[len];
-	// Copy the header into the first_transmit-array
-	memcpy(&first_transmit[0], tx_header, 4);
-	memcpy(&first_transmit[4], tx_data, first_length_tx_data);
-	
-	
-	// Start a blocking spi transmission
-	ret = spi_transmit(&spi_instance, first_transmit, len);
-	
-	// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INVALID_ADDR
-	if(ret == NRF_ERROR_INVALID_ADDR)
-		ret = NRF_ERROR_INVALID_PARAM;
-	if(ret != NRF_SUCCESS) {		
-		// Reset the eeprom operation
-		eeprom_operation = EEPROM_NO_OPERATION;
-		return ret;
-	}
-	
-	// Wait until the first 4 data bytes are stored into the EEPROM (important to not just check if they have been transmitted via spi, because the EEPROM needs time to store it internally)
-	uint64_t end_ms = systick_get_continuous_millis() + EEPROM_OPERATION_TIMEOUT_MS;
-	while(eeprom_get_operation() != EEPROM_NO_OPERATION && systick_get_continuous_millis() < end_ms);
-	if(eeprom_get_operation() != EEPROM_NO_OPERATION) {
-		// Reset the eeprom operation
-		eeprom_operation = EEPROM_NO_OPERATION;
-		return NRF_ERROR_TIMEOUT;
-	}
-	
-
-		
-	// Now reschedule the store operation of the remaining bytes (if length_tx_data is > 4) in real background mode!
-	if(remaining_length_tx_data > 0) {
-		
-		// Set the eeprom operation to store again
+	uint32_t address_offset = 0;
+	while(length_tx_data > 0) {
+		// Set the eeprom operation to store
 		eeprom_operation = EEPROM_STORE_OPERATION;
 		
-		ret = eeprom_write_enable();
-	
+		// Enable writing
+		ret_code_t ret = eeprom_write_enable();
 		// ret could be NRF_SUCCESS or NRF_ERROR_BUSY	
 		if(ret != NRF_SUCCESS) {
 			// Reset the eeprom operation
@@ -300,52 +232,41 @@ ret_code_t eeprom_store_bkgnd(uint32_t address, uint8_t* tx_data, uint32_t lengt
 			return ret;
 		}
 		
+		uint32_t tmp_address = address + address_offset;
+		// The header for writing {CMD_WRITE, address24_16, address15_8, address7_0}
+		uint8_t tx_header[4] = {CMD_WRITE, ((tmp_address>>16)&0xFF), ((tmp_address>>8)&0xFF), ((tmp_address>>0)&0xFF)};
+	
+		// Round up to next Page-address
+		uint32_t next_page_address = ((tmp_address/EEPROM_PAGE_SIZE) + 1) * EEPROM_PAGE_SIZE;
+		uint32_t step_len = next_page_address - tmp_address;
+		step_len = (length_tx_data > step_len) ? step_len : length_tx_data;
 		
-		// Save the first 4 data bytes into the eeprom_finish_operation-type for resetting the first 4 bytes of tx_data in the spi-interrupt handler when the transmission is done.
-		eeprom_finish_operation.p_data = tx_data;
-		memcpy((uint8_t*) eeprom_finish_operation.first_data, tx_data, 4);
-		
-		// replace the first 4 Bytes of the tx_data with the new header
-		address = address + 4;
-		tx_header[1] = ((address>>16)&0xFF);
-		tx_header[2] = ((address>>8)&0xFF);
-		tx_header[3] = ((address>>0)&0xFF);
-		
-		memcpy(tx_data, tx_header, 4);
-		len = length_tx_data;
-		
-		ret = spi_transmit_bkgnd(&spi_instance, spi_event_handler, tx_data, len);
+		memcpy(eeprom_buf, tx_header, 4);
+		memcpy(&eeprom_buf[4], &tx_data[address_offset], step_len);
+			
+		// Start a blocking spi transmission
+		ret = spi_transmit(&spi_instance, eeprom_buf, 4 + step_len);
 		
 		// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INVALID_ADDR
-		if(ret == NRF_ERROR_INVALID_ADDR)
-			ret = NRF_ERROR_INVALID_PARAM;
-		if(ret != NRF_SUCCESS) {
+		if(ret == NRF_ERROR_INVALID_ADDR) ret = NRF_ERROR_INVALID_PARAM;
+		if(ret != NRF_SUCCESS) {		
 			// Reset the eeprom operation
 			eeprom_operation = EEPROM_NO_OPERATION;
 			return ret;
 		}
 		
-	}
-	
-	return NRF_SUCCESS;
-	
-}
-
-
-ret_code_t eeprom_store(uint32_t address, uint8_t* tx_data, uint32_t length_tx_data) {
-	// Start a background store operation
-	ret_code_t ret = eeprom_store_bkgnd(address, tx_data, length_tx_data);
-	if(ret != NRF_SUCCESS) {
-		return ret;
-	}
-	
-	// Wait until the operation terminates
-	uint64_t end_ms = systick_get_continuous_millis() + EEPROM_OPERATION_TIMEOUT_MS;
-	while(eeprom_get_operation() == EEPROM_STORE_OPERATION && systick_get_continuous_millis() < end_ms);
-	if(eeprom_get_operation() == EEPROM_STORE_OPERATION) {
-		// Reset the eeprom operation
-		eeprom_operation = EEPROM_NO_OPERATION;
-		return NRF_ERROR_TIMEOUT;
+		// Wait until the first 4 data bytes are stored into the EEPROM (important to not just check if they have been transmitted via spi, because the EEPROM needs time to store it internally)
+		uint64_t end_ms = systick_get_continuous_millis() + EEPROM_OPERATION_TIMEOUT_MS;
+		while(eeprom_get_operation() != EEPROM_NO_OPERATION && systick_get_continuous_millis() < end_ms);
+		if(eeprom_get_operation() != EEPROM_NO_OPERATION) {
+			// Reset the eeprom operation
+			eeprom_operation = EEPROM_NO_OPERATION;
+			return NRF_ERROR_TIMEOUT;
+		}
+		
+		
+		length_tx_data -= step_len;
+		address_offset += step_len;		
 	}
 	
 	return NRF_SUCCESS;
@@ -355,10 +276,7 @@ ret_code_t eeprom_store(uint32_t address, uint8_t* tx_data, uint32_t length_tx_d
 
 
 
-
-
-ret_code_t eeprom_read_bkgnd(uint32_t address, uint8_t* rx_data, uint32_t length_rx_data) {
-	
+ret_code_t eeprom_read(uint32_t address, uint8_t* rx_data, uint32_t length_rx_data) {
 	// Check if the specified address is valid. The EEPROM has 256kByte of memory.
 	// Furthermore check if the data pointer is in RAM, not in read only-Memory
 	if((address + length_rx_data > (EEPROM_SIZE) ) ||  !nrf_drv_is_in_RAM(rx_data))
@@ -373,118 +291,46 @@ ret_code_t eeprom_read_bkgnd(uint32_t address, uint8_t* rx_data, uint32_t length
 	}
 	
 	
-	
-	// Set the eeprom operation to read
-	eeprom_operation = EEPROM_READ_OPERATION;
-	
-	
-	// The header for reading data via spi from the EEPROM
-	uint8_t tx_header[4] = {CMD_READ,  ((address>>16)&0xFF), ((address>>8)&0xFF), (address&0xFF)};
-	
-	
-	// At the beginning the first 4 bytes (or less) are read
-	uint32_t first_length_rx_data = 0;
-	uint32_t remaining_length_rx_data = 0;
-	if(length_rx_data < 4) {
-		first_length_rx_data = length_rx_data;
-		remaining_length_rx_data = 0;
-	} else {
-		first_length_rx_data = 4;
-		remaining_length_rx_data = length_rx_data - 4;
-	}
-	
-	
-	uint32_t len = 4 + first_length_rx_data;
-	uint8_t first_receive[len];
-	
-	
-	// Do a blocking transmit receive operation
-	ret_code_t ret = spi_transmit_receive(&spi_instance, tx_header, 4, first_receive, len);
-	
-	// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INVALID_ADDR
-	if(ret == NRF_ERROR_INVALID_ADDR)
-		ret = NRF_ERROR_INVALID_PARAM;
-	if(ret != NRF_SUCCESS) {		
-		// Reset the eeprom operation
-		eeprom_operation = EEPROM_NO_OPERATION;
-		return ret;
-	}
-	
-	// Wait until the operation terminates
-	uint64_t end_ms = systick_get_continuous_millis() + EEPROM_OPERATION_TIMEOUT_MS;
-	while(eeprom_get_operation() != EEPROM_NO_OPERATION && systick_get_continuous_millis() < end_ms);
-	if(eeprom_get_operation() != EEPROM_NO_OPERATION) {
-		// Reset the eeprom operation
-		eeprom_operation = EEPROM_NO_OPERATION;
-		return NRF_ERROR_TIMEOUT;
-	}
-	
-	
-	
-	// copy the first data to the output buffer
-	memcpy(rx_data, &first_receive[4], first_length_rx_data);
-	
-	
-	
-	// Now reschedule the read operation of the remaining bytes (if length_rx_data is > 4) in real background mode!
-	if(remaining_length_rx_data > 0) {
-		
-		// Set the eeprom operation to read again
+	uint32_t address_offset = 0;
+	while(length_rx_data > 0) {
+		// Set the eeprom operation to read
 		eeprom_operation = EEPROM_READ_OPERATION;
+		
+		uint32_t tmp_address = address + address_offset;
+		uint8_t tx_header[4] = {CMD_READ, ((tmp_address>>16)&0xFF), ((tmp_address>>8)&0xFF), ((tmp_address>>0)&0xFF)};
+		
+		// Round up to next Page-address
+		uint32_t next_page_address = ((tmp_address/EEPROM_PAGE_SIZE) + 1) * EEPROM_PAGE_SIZE;
+		uint32_t step_len = next_page_address - tmp_address;
+		step_len = (length_rx_data > step_len) ? step_len : length_rx_data;
+		memset(eeprom_buf, 0, sizeof(eeprom_buf));
 	
-		
-		// Save the first 4 data bytes into the eeprom_finish_operation-type for resetting the first 4 bytes of rx_data in the spi-interrupt handler when the transmission is done.
-		eeprom_finish_operation.p_data = rx_data;
-		memcpy((uint8_t*) eeprom_finish_operation.first_data, &first_receive[4], 4);
-		
-		
-		// recompute the header
-		address = address + 4;
-		tx_header[1] = ((address>>16)&0xFF);
-		tx_header[2] = ((address>>8)&0xFF);
-		tx_header[3] = ((address>>0)&0xFF);
-		
-	
-		len = 4 + remaining_length_rx_data;
-		
-	
-		// Start the background spi transmit receive operation
-		ret = spi_transmit_receive_bkgnd(&spi_instance, spi_event_handler, tx_header, 4, rx_data, len);
-
-
+		// Do a blocking transmit receive operation
+		ret_code_t ret = spi_transmit_receive(&spi_instance, tx_header, 4, eeprom_buf, 4 + step_len);
 		// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INVALID_ADDR
-		if(ret == NRF_ERROR_INVALID_ADDR)
-			ret = NRF_ERROR_INVALID_PARAM;
-		if(ret != NRF_SUCCESS) {
+		if(ret == NRF_ERROR_INVALID_ADDR) ret = NRF_ERROR_INVALID_PARAM;
+		if(ret != NRF_SUCCESS) {		
 			// Reset the eeprom operation
 			eeprom_operation = EEPROM_NO_OPERATION;
 			return ret;
 		}
+		
+		// Wait until the first 4 data bytes are stored into the EEPROM (important to not just check if they have been transmitted via spi, because the EEPROM needs time to store it internally)
+		uint64_t end_ms = systick_get_continuous_millis() + EEPROM_OPERATION_TIMEOUT_MS;
+		while(eeprom_get_operation() != EEPROM_NO_OPERATION && systick_get_continuous_millis() < end_ms);
+		if(eeprom_get_operation() != EEPROM_NO_OPERATION) {
+			// Reset the eeprom operation
+			eeprom_operation = EEPROM_NO_OPERATION;
+			return NRF_ERROR_TIMEOUT;
+		}
+		memcpy(&rx_data[address_offset], &eeprom_buf[4], step_len);
+		
+		length_rx_data -= step_len;
+		address_offset += step_len;		
 	}
 	
 	
 	return NRF_SUCCESS;
-	
-}
-
-ret_code_t eeprom_read(uint32_t address, uint8_t* rx_data, uint32_t length_rx_data) {
-	// Start a background read operation
-	ret_code_t ret = eeprom_read_bkgnd(address, rx_data, length_rx_data);
-	if(ret != NRF_SUCCESS) {
-		return ret;
-	}
-	
-	// Wait until the operation terminates
-	uint64_t end_ms = systick_get_continuous_millis() + EEPROM_OPERATION_TIMEOUT_MS;
-	while(eeprom_get_operation() == EEPROM_READ_OPERATION && systick_get_continuous_millis() < end_ms);
-	if(eeprom_get_operation() == EEPROM_READ_OPERATION) {
-		// Reset the eeprom operation
-		eeprom_operation = EEPROM_NO_OPERATION;
-		return NRF_ERROR_TIMEOUT;
-	}
-	
-	return NRF_SUCCESS;
-	
 }
 
 
@@ -515,14 +361,15 @@ uint32_t eeprom_get_size(void) {
 
 bool eeprom_selftest(void) {
 	
-	#define EEPROM_TEST_DATA_LEN	40
-	#define EEPROM_TEST_ADDRESS		100
+	#define EEPROM_TEST_DATA_LEN	1000
+	#define EEPROM_TEST_ADDRESS		1234
 	
-	uint8_t data[EEPROM_TEST_DATA_LEN];
-	uint8_t rx_data[EEPROM_TEST_DATA_LEN+1];
+	uint8_t data[EEPROM_TEST_DATA_LEN + 1];
+	uint8_t rx_data[EEPROM_TEST_DATA_LEN + 1];
 	
 	for(uint32_t i = 0; i < EEPROM_TEST_DATA_LEN; i++) {
-		data[i] = (i%26)+65;
+		data[i] = (i%52)+65;
+		rx_data[i] = 0;
 	}
 	
 	
@@ -543,8 +390,9 @@ bool eeprom_selftest(void) {
 	
 	ret = eeprom_read(EEPROM_TEST_ADDRESS, rx_data, EEPROM_TEST_DATA_LEN);
 	rx_data[EEPROM_TEST_DATA_LEN] = 0;
+	data[EEPROM_TEST_DATA_LEN] = 0;
 	
-	debug_log("Test read, Ret: %d, Read: %s\n\r", ret, rx_data);
+	debug_log("Test read, Ret: %d\n", ret);
 	if(ret != NRF_SUCCESS) {
 		debug_log("Read failed!\n\r");
 		return 0;
