@@ -572,7 +572,7 @@ uint32_t storage1_get_size(void) {
 }
 
 ret_code_t storage1_clear(uint32_t address, uint32_t length) {
-	uint32_t bytes_per_store_operation = 100;
+	uint32_t bytes_per_store_operation = 128;
 	uint8_t tmp[bytes_per_store_operation];
 	ret_code_t ret = NRF_SUCCESS;
 	uint32_t address_offset = 0;
