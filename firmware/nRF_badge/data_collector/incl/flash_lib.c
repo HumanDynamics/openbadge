@@ -14,7 +14,7 @@
 #include "debug_lib.h"
 
 
-#define FLASH_OPERATION_TIMEOUT_MS		100	/**< The time in milliseconds to wait for an operation to finish. */
+#define FLASH_OPERATION_TIMEOUT_MS		1000	/**< The time in milliseconds to wait for an operation to finish. */
 
 
 static volatile flash_operation_t flash_operation = FLASH_NO_OPERATION;
@@ -492,9 +492,42 @@ bool flash_selftest(void) {
 		return 0;
 	}
 	
+//****************** Large data write ****************************	
+	#define LARGE_WORD_NUMBER	700
+	uint32_t large_words_address = 1234;
+	uint32_t large_write_words[LARGE_WORD_NUMBER];
+	uint32_t large_read_words[LARGE_WORD_NUMBER];
+	for(uint32_t i = 0; i < LARGE_WORD_NUMBER; i++) {
+		large_write_words[i] = i;
+		large_read_words[i] = 0;	
+	}
 	
 	
+	ret = flash_erase(0, 15);
+	debug_log("Started erasing: Ret %d\n\r", ret);
+	if(ret != NRF_SUCCESS) {
+		debug_log("Start erasing failed! @ %u\n\r", __LINE__);
+		return 0;
+	}
 	
+	ret = flash_store(large_words_address, large_write_words, LARGE_WORD_NUMBER);
+	debug_log("Test large words store, Ret: %d\n\r", ret);
+	if(ret != NRF_SUCCESS) {
+		debug_log("Test large words store failed! @ %u\n\r", __LINE__);
+		return 0;
+	}
+	
+	ret = flash_read(large_words_address, large_read_words, LARGE_WORD_NUMBER);
+	debug_log("Test large words read, Ret: %d\n\r", ret);
+	if(ret != NRF_SUCCESS) {
+		debug_log("Test large words read failed! @ %u\n\r", __LINE__);
+		return 0;
+	}
+	
+	if(memcmp((uint8_t*)&large_write_words[0], (uint8_t*)&large_read_words[0], sizeof(uint32_t)*LARGE_WORD_NUMBER) != 0) {
+		debug_log("Stored words are not the right words! @ %u\n\r", __LINE__);
+		return 0;
+	}
 	
 	debug_log("Flash test successful!!\n\r");	
 	
