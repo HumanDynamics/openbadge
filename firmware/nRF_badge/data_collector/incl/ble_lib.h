@@ -7,9 +7,7 @@
 
 
 
-#define ADVERTISING_DEVICE_NAME			"HDBDG"     /**< Name of device. Will be included in the advertising data. */ 
-#define ADVERTISING_INTERVAL_MS		  	200   		/**< The advertising interval. */
-#define ADVERTISING_TIMEOUT_SECONDS    	6           /**< The advertising timeout interval. */
+
 
 
 

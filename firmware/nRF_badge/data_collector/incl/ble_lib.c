@@ -1,5 +1,5 @@
 #include "ble_lib.h"
-
+#include "advertiser_lib.h"		// For the advertising configuration	
 
 #include "debug_lib.h"
 
@@ -10,13 +10,6 @@
 #include "ble_nus.h"
 #include "softdevice_handler.h"	// Needed for softdevice_ble_evt_handler_set()
 #include "ble_hci.h"			// Needed for BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION in disconnect()
-
-
-
-// TODO: remove
-#define SCAN_WINDOW_MS_DEFAULT			100
-#define SCAN_INTERVAL_MS_DEFAULT		300
-#define SCAN_DURATION_SECONDS_DEFAULT	5   
 
 
 
