@@ -255,6 +255,8 @@ ret_code_t 	accel_read_acceleration(int16_t* accel_x, int16_t* accel_y, int16_t*
  *
  * @retval  0	If selftest failed.
  * @retval  1	If selftest passed.
+ *
+ * @note	systick_init() has to be called before.
  */
 bool accel_selftest(void);
 
