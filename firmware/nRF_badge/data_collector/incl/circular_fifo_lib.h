@@ -15,10 +15,11 @@
  */
 typedef struct
 {
-    uint8_t *          p_buf;           /**< Pointer to FIFO buffer memory.                      */
-    uint16_t           buf_size;   /**< Read/write index mask. Also used for size checking. */
-    volatile uint32_t  read_pos;        /**< Next read position in the FIFO buffer.              */
-    volatile uint32_t  write_pos;       /**< Next write position in the FIFO buffer.             */
+    uint8_t *          p_buf;           /**< Pointer to FIFO buffer memory.                       	*/
+    uint16_t           buf_size;   		/**< Size of the FIFO. 									  	*/
+    volatile uint32_t  read_pos;        /**< Next read position in the FIFO buffer.               	*/
+    volatile uint32_t  write_pos;       /**< Next write position in the FIFO buffer.              	*/
+	volatile uint8_t   read_flag;		/**< Flag if currently reading, to synchronize with write.	*/
 } circular_fifo_t;
 
 
