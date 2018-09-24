@@ -43,7 +43,7 @@ ret_code_t eeprom_init(void) {
  * @retval  NRF_ERROR_BUSY  			If there is already an ongoing EEPROM operation.
  * @retval  NRF_ERROR_INVALID_PARAM  	If the specified parameters are bad.
  */
-ret_code_t eeprom_store_bkgnd(uint32_t address, uint8_t* tx_data, uint32_t length_tx_data) {
+ret_code_t eeprom_store_bkgnd(uint32_t address, const uint8_t* tx_data, uint32_t length_tx_data) {
 	
 	
 	
@@ -79,7 +79,7 @@ ret_code_t eeprom_store_bkgnd(uint32_t address, uint8_t* tx_data, uint32_t lengt
  * @retval  NRF_ERROR_BUSY  			If there is already an ongoing EEPROM operation.
  * @retval  NRF_ERROR_INVALID_PARAM  	If the specified parameters are bad.
  */
-ret_code_t eeprom_store(uint32_t address, uint8_t* tx_data, uint32_t length_tx_data) {
+ret_code_t eeprom_store(uint32_t address, const uint8_t* tx_data, uint32_t length_tx_data) {
 	// Start a background store operation
 	ret_code_t ret = eeprom_store_bkgnd(address, tx_data, length_tx_data);
 	if(ret != NRF_SUCCESS) {
