@@ -70,6 +70,7 @@ TESTS = flash_lib_mock_unittest \
 		accel_lib_mock_unittest \
 		chunk_fifo_lib_unittest \
 		ble_lib_mock_unittest \
+		circular_fifo_lib_unittest \
 				
 FIRMWARE_SRCS = $(FIRMWARE_DIR)/incl/storage1_lib.c \
 				$(FIRMWARE_DIR)/incl/storage2_lib.c \
@@ -77,6 +78,7 @@ FIRMWARE_SRCS = $(FIRMWARE_DIR)/incl/storage1_lib.c \
 				$(FIRMWARE_DIR)/incl/filesystem_lib.c \
 				$(FIRMWARE_DIR)/incl/chunk_fifo_lib.c \
 				$(FIRMWARE_DIR)/incl/systick_lib.c \
+				$(FIRMWARE_DIR)/incl/circular_fifo_lib.c \
 				$(SDK_PATH)/components/libraries/fifo/app_fifo.c \
 				
 
