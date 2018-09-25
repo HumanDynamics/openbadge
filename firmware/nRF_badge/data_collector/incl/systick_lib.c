@@ -30,11 +30,9 @@ ret_code_t systick_init(uint8_t prescaler) {
 		millis_synced = 0;
 		millis_offset = 0;
 		ticks_at_offset = systick_get_ticks_since_start();
-		millis_per_ticks = (1000.0f / ((prescaler + 1) * APP_TIMER_CLOCK_FREQ));	
+		millis_per_ticks = (1000.0f / ((prescaler + 1) * APP_TIMER_CLOCK_FREQ));
 		
-		millis_per_ticks_default = (1000.0f / ((prescaler + 1) * APP_TIMER_CLOCK_FREQ));	
-		
-		
+		millis_per_ticks_default = (1000.0f / ((prescaler + 1) * APP_TIMER_CLOCK_FREQ));
 		
 		// Create the systick_timer
 		ret = app_timer_create(&systick_timer, APP_TIMER_MODE_REPEATED, systick_callback);

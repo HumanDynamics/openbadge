@@ -19,7 +19,7 @@ typedef enum {
 	ACCEL_DATARATE_200_HZ			= 0b0110,
 	ACCEL_DATARATE_400_HZ			= 0b0111,
 	ACCEL_DATARATE_1600_HZ			= 0b1000,	/**< Only available in low-power mode */
-	ACCEL_DATARATE_1344_HZ_5376_HZ	= 0b1001,	/**< In normal-mode/hogh-resolution-mode -> 1344Hz and in low-power mode -> 5376Hz */
+	ACCEL_DATARATE_1344_HZ_5376_HZ	= 0b1001,	/**< In normal-mode/high-resolution-mode -> 1344Hz and in low-power mode -> 5376Hz */
 } accel_datarate_t;
 
 

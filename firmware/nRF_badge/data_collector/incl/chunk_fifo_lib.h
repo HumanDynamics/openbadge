@@ -69,7 +69,7 @@ ret_code_t chunk_fifo_init(chunk_fifo_t* chunk_fifo, uint8_t chunk_num, uint32_t
  *			This pointer-variable could be a pointer to a struct.
  *
  * @param[in] 	chunk_fifo 			Pointer to chunk-fifo identifier variable.
- * @param[out] 	p_chunk	 			Pointer to a pointer variable, where the chunk-data could be retrieved from.
+ * @param[out] 	p_chunk	 			Pointer to a pointer variable, where the chunk-data could be retrieved from. Could also be NULL.
  * @param[out] 	p_additional_info	Pointer to a pointer variable, where the chunk-additional-info could be retrieved from.
  *
  * @retval 	NRF_SUCCESS					If there is a chunk in the FIFO.
@@ -98,7 +98,7 @@ void 		chunk_fifo_read_close(chunk_fifo_t* chunk_fifo);
  *
  * @param[in] 	chunk_fifo 			Pointer to chunk-fifo identifier variable.
  * @param[out] 	p_chunk	 			Pointer to a pointer variable, where the chunk-data could be written to.
- * @param[out] 	p_additional_info	Pointer to a pointer variable, where the chunk-additional-info could be written to.
+ * @param[out] 	p_additional_info	Pointer to a pointer variable, where the chunk-additional-info could be written to. Could also be NULL.
  */
 void 		chunk_fifo_write_open(chunk_fifo_t* chunk_fifo, void** p_chunk, void** p_additional_info);
 

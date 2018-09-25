@@ -26,7 +26,8 @@ ret_code_t chunk_fifo_read_open(chunk_fifo_t* chunk_fifo, void** p_chunk, void**
 	if(chunk_fifo->chunk_read_pos != chunk_fifo->chunk_write_pos) {
 		// New chunks are available
 		*p_chunk = &(chunk_fifo->p_chunk_fifo_buf[(chunk_fifo->chunk_read_pos)*(chunk_fifo->chunk_size + chunk_fifo->additional_info_size)]);
-		*p_additional_info = &(chunk_fifo->p_chunk_fifo_buf[chunk_fifo->chunk_size + (chunk_fifo->chunk_read_pos)*(chunk_fifo->chunk_size + chunk_fifo->additional_info_size)]);
+		if(p_additional_info != NULL)
+			*p_additional_info = &(chunk_fifo->p_chunk_fifo_buf[chunk_fifo->chunk_size + (chunk_fifo->chunk_read_pos)*(chunk_fifo->chunk_size + chunk_fifo->additional_info_size)]);
 		
 		chunk_fifo->chunk_open_read = 1;
 		ret = NRF_SUCCESS;
@@ -58,7 +59,8 @@ void chunk_fifo_write_open(chunk_fifo_t* chunk_fifo, void** p_chunk, void** p_ad
 	chunk_fifo->chunk_open_write = 1;
 	
 	*p_chunk = &(chunk_fifo->p_chunk_fifo_buf[(chunk_fifo->chunk_write_pos)*(chunk_fifo->chunk_size + chunk_fifo->additional_info_size)]);
-	*p_additional_info = &(chunk_fifo->p_chunk_fifo_buf[chunk_fifo->chunk_size + (chunk_fifo->chunk_write_pos)*(chunk_fifo->chunk_size + chunk_fifo->additional_info_size)]);
+	if(p_additional_info != NULL)
+		*p_additional_info = &(chunk_fifo->p_chunk_fifo_buf[chunk_fifo->chunk_size + (chunk_fifo->chunk_write_pos)*(chunk_fifo->chunk_size + chunk_fifo->additional_info_size)]);
 	
 }
 
