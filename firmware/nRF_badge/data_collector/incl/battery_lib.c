@@ -4,9 +4,11 @@
 #include "systick_lib.h" // Needed for battery_selftest()
 
 #define BATTERY_REFERENCE_VOLTAGE					1.2f 	/**< The internal reference voltage (NRF_ADC_CONFIG_REF_VBG) */
+#define BATTERY_SAMPLES_PER_AVERAGE					5
 #define BATTERY_SELFTEST_NUM_VOLTAGE_MEASUREMENTS	10		/**< Number of measurements for the selftest */
 
 static adc_instance_t adc_instance;
+static float average_voltage = 0;
 
 void battery_init(void) {
 	adc_instance.adc_peripheral = 0;
@@ -19,7 +21,20 @@ void battery_init(void) {
 }
 
 ret_code_t battery_read_voltage(float* voltage) {
-	return adc_read_voltage(&adc_instance, voltage, BATTERY_REFERENCE_VOLTAGE);
+	ret_code_t ret = adc_read_voltage(&adc_instance, voltage, BATTERY_REFERENCE_VOLTAGE);
+	if(ret != NRF_SUCCESS) return ret;
+	
+	static uint8_t first_read = 1;
+	if(first_read) {
+		first_read = 0;
+		average_voltage = *voltage;
+		return NRF_SUCCESS;
+	}
+	
+	average_voltage -= average_voltage * (1.f / (float) BATTERY_SAMPLES_PER_AVERAGE);
+	average_voltage += (*voltage) * (1.f / (float) BATTERY_SAMPLES_PER_AVERAGE);
+	*voltage = average_voltage;
+	return NRF_SUCCESS;
 }
 
 

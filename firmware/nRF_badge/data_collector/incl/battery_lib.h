@@ -8,7 +8,7 @@
  */
 void battery_init(void);
 
-/**@brief Function to read the current supply voltage in Volts.
+/**@brief Function to read the current supply voltage in Volts. Internally the voltage is averaged.
  *
  * @param[out]	voltage		Read supply voltage in Volts.
  *
