@@ -52,12 +52,19 @@ void advertiser_set_status_flags(uint8_t is_clock_synced, uint8_t microphone_ena
 
 
 
+/**@brief Function to retrieve the own badge-assignment.
+ *
+ * @param[out]	badge_assignement	Pointer where to store the badge_assignement.
+ */
+void advertiser_get_badge_assignement(BadgeAssignement* badge_assignement);
+
+
 /**@brief Function to retrieve the badge assignement from a custom_advdata-packet.
  *
  * @param[out]	badge_assignement	Pointer where to store the badge_assignement.
  * @param[in]	custom_advdata		Pointer to custom_advdata.
  */
-void advertiser_get_badge_assignement(BadgeAssignement* badge_assignement, void* custom_advdata);
+void advertiser_get_badge_assignement_from_advdata(BadgeAssignement* badge_assignement, void* custom_advdata);
 
 
 /**@brief Function to retrieve the length of the manufacture-data.

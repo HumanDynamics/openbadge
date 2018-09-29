@@ -86,11 +86,11 @@ static void internal_on_scan_report_callback(ble_gap_evt_adv_report_t* scan_repo
 			scanner_scan_report.scanner_scan_device_type = SCAN_DEVICE_TYPE_BADGE;
 			BadgeAssignement badge_assignement;
 			
-			advertiser_get_badge_assignement(&badge_assignement, &manuf_data_ptr[2]);
+			advertiser_get_badge_assignement_from_advdata(&badge_assignement, &manuf_data_ptr[2]);
 			scanner_scan_report.ID = badge_assignement.ID;
 			scanner_scan_report.group = badge_assignement.group;
 
-            debug_log_bkgnd("---Badge seen: group %d, ID %.4X, rssi %d.\r\n", scanner_scan_report.group, scanner_scan_report.ID, scanner_scan_report.rssi);
+           // debug_log_bkgnd("---Badge seen: group %d, ID %.4X, rssi %d.\r\n", scanner_scan_report.group, scanner_scan_report.ID, scanner_scan_report.rssi);
         }
     } else if (manuf_data_len == IBEACON_MANUF_DATA_LEN)  {
         iBeacon_data_t iBeacon_data;
@@ -105,12 +105,12 @@ static void internal_on_scan_report_callback(ble_gap_evt_adv_report_t* scan_repo
             
 			scanner_scan_report.ID = minor; // take only lower byte of major value
 			scanner_scan_report.group = iBeacon_data.major[1];
-			debug_log_bkgnd("---iBeacon seen: major %d, minor %d, rssi %d.\r\n", major, minor, rssi);
+			//debug_log_bkgnd("---iBeacon seen: major %d, minor %d, rssi %d.\r\n", major, minor, rssi);
         }
     }
 	
 	if(scanner_scan_report.scanner_scan_device_type == SCAN_DEVICE_TYPE_UNKNOWN) {
-		debug_log_bkgnd("Unknown device seen: rssi %d.\r\n", rssi);
+		//debug_log_bkgnd("Unknown device seen: rssi %d.\r\n", rssi);
 		return;
 	}
 	

@@ -19,10 +19,16 @@ typedef struct
 static custom_advdata_t custom_advdata;	/**< The custom advertising data structure where the current configuration is stored. */
 
 
+extern uint16_t crc16_compute(uint8_t const * p_data, uint32_t size, uint16_t const * p_crc); /**< In filesystem_lib.c */
+
+
 void advertiser_init(void) {	
 	memset(&custom_advdata, 0, sizeof(custom_advdata));
-
+	
 	ble_get_MAC_address(custom_advdata.MAC);
+	custom_advdata.group = 0;
+	custom_advdata.ID = crc16_compute(custom_advdata.MAC, 6, NULL);
+	
 	
 	ble_set_advertising_custom_advdata(CUSTOM_COMPANY_IDENTIFIER, (uint8_t*) &custom_advdata, sizeof(custom_advdata));
 }
@@ -65,7 +71,12 @@ void advertiser_set_status_flags(uint8_t is_clock_synced, uint8_t microphone_ena
 }
 
 
-void advertiser_get_badge_assignement(BadgeAssignement* badge_assignement, void* custom_advdata) {
+void advertiser_get_badge_assignement(BadgeAssignement* badge_assignement) {
+	badge_assignement->ID = custom_advdata.ID;
+	badge_assignement->group = custom_advdata.group;
+}
+
+void advertiser_get_badge_assignement_from_advdata(BadgeAssignement* badge_assignement, void* custom_advdata) {
 	custom_advdata_t* tmp = (custom_advdata_t*) custom_advdata;
 	badge_assignement->ID = tmp->ID;
 	badge_assignement->group = tmp->group;
