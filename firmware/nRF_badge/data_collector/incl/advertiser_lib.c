@@ -97,6 +97,11 @@ void advertiser_set_status_flag_accelerometer_interrupt_enabled(uint8_t accelero
 	ble_set_advertising_custom_advdata(CUSTOM_COMPANY_IDENTIFIER, (uint8_t*) &custom_advdata, sizeof(custom_advdata));
 }
 
+void advertiser_set_status_flag_battery_enabled(uint8_t battery_enabled) {
+	custom_advdata.status_flags |= (battery_enabled) ? (1 << 5) : 0;
+	ble_set_advertising_custom_advdata(CUSTOM_COMPANY_IDENTIFIER, (uint8_t*) &custom_advdata, sizeof(custom_advdata));
+}
+
 
 
 
@@ -137,4 +142,8 @@ uint8_t advertiser_get_status_flag_accelerometer_enabled(void) {
 
 uint8_t advertiser_get_status_flag_accelerometer_interrupt_enabled(void) {
 	return (custom_advdata.status_flags & (1 << 4)) ? 1 : 0;
+}
+
+uint8_t advertiser_get_status_flag_battery_enabled(void) {
+	return (custom_advdata.status_flags & (1 << 5)) ? 1 : 0;
 }
