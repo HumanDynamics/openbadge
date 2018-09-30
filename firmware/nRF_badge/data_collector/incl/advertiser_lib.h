@@ -14,10 +14,11 @@
 /**@brief Function to initialize the advertiser.
  *
  * @note ble_init() has to be called before.
+ * @note storer_init() has to be called before.
  */
 void advertiser_init(void);
 
-/**@brief	Function to start the advertising process with the parameters: ADVERTISING_DEVICE_NAME, ADVERTISING_INTERVAL_MS, ADVERTISING_TIMEOUT_SECONDS from ble_lib.h.
+/**@brief	Function to start the advertising process with the parameters: ADVERTISING_DEVICE_NAME, ADVERTISING_INTERVAL_MS, ADVERTISING_TIMEOUT_SECONDS.
  *
  * @retval	NRF_SUCCESS On success, else an error code indicating reason for failure.
  */
@@ -40,16 +41,35 @@ void advertiser_set_battery_voltage(float voltage);
 void advertiser_set_badge_assignement(BadgeAssignement badge_assignement);
 
 
-/**@brief Function to set the status flags of the advertising-packet.
+/**@brief Function to set the is_clock_synced-status flag of the advertising-packet.
  *
  * @param[in]	is_clock_synced						Flag if clock is synchronized.
+ */
+void advertiser_set_status_flag_is_clock_synced(uint8_t is_clock_synced);
+
+/**@brief Function to set the microphone_enabled-status flag of the advertising-packet.
+ *
  * @param[in]	microphone_enabled					Flag if microphone is enabled.
+ */
+void advertiser_set_status_flag_microphone_enabled(uint8_t microphone_enabled);
+
+/**@brief Function to set the scan_enabled-status flag of the advertising-packet.
+ *
  * @param[in]	scan_enabled						Flag if scanner is enabled.
- * @param[in]	accelerometer_data_enabled			Flag if accelerometer data are enabled.
+ */
+void advertiser_set_status_flag_scan_enabled(uint8_t scan_enabled);
+
+/**@brief Function to set the accelerometer_enabled-status flag of the advertising-packet.
+ *
+ * @param[in]	accelerometer_enabled			Flag if accelerometer is enabled.
+ */
+void advertiser_set_status_flag_accelerometer_enabled(uint8_t accelerometer_enabled);
+
+/**@brief Function to set the accelerometer_interrupt_enabled-status flag of the advertising-packet.
+ *
  * @param[in]	accelerometer_interrupt_enabled		Flag if accelerometer interrupt is enabled.
  */
-void advertiser_set_status_flags(uint8_t is_clock_synced, uint8_t microphone_enabled, uint8_t scan_enabled, uint8_t accelerometer_data_enabled, uint8_t accelerometer_interrupt_enabled);
-
+void advertiser_set_status_flag_microphone_enabled(uint8_t accelerometer_interrupt_enabled);
 
 
 /**@brief Function to retrieve the own badge-assignment.
@@ -72,5 +92,41 @@ void advertiser_get_badge_assignement_from_advdata(BadgeAssignement* badge_assig
  * @retval Length of the manufacture data.
  */
 uint8_t advertiser_get_manuf_data_len(void);
+
+/**@brief Function to retrieve the is_clock_synced-status flag of the advertising-packet.
+ *
+ * @retval 	0			If clock is unsynced.
+ * @retval 	1			If clock is synced.
+ */
+uint8_t advertiser_get_status_flag_is_clock_synced(void);
+
+/**@brief Function to retrieve the microphone_enabled-status flag of the advertising-packet.
+ *
+ * @retval 	0			If microphone is not enabled.
+ * @retval 	1			If microphone is enabled.
+ */
+uint8_t advertiser_get_status_flag_microphone_enabled(void);
+
+/**@brief Function to retrieve the scan_enabled-status flag of the advertising-packet.
+ *
+ * @retval 	0			If scanner is not enabled.
+ * @retval 	1			If scanner is enabled.
+ */
+uint8_t advertiser_get_status_flag_scan_enabled(void);
+
+/**@brief Function to retrieve the accelerometer-status flag of the advertising-packet.
+ *
+ * @retval 	0			If accelerometer is not enabled.
+ * @retval 	1			If accelerometer_ is enabled.
+ */
+uint8_t advertiser_get_status_flag_accelerometer_enabled(void);
+
+/**@brief Function to retrieve the accelerometer_interrupt-status flag of the advertising-packet.
+ *
+ * @retval 	0			If accelerometer_interrupt is not enabled.
+ * @retval 	1			If accelerometer_interrupt is enabled.
+ */
+uint8_t advertiser_get_status_flag_accelerometer_interrupt_enabled(void);
+
 
 #endif
