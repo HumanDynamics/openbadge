@@ -2,7 +2,6 @@
 #include "storage_lib.h"
 
 
-
 #include "stdio.h"
 #include "string.h"	// For memcpy
 
@@ -777,15 +776,14 @@ ret_code_t filesystem_register_partition(uint16_t* partition_id, uint32_t* requi
 	
 	if(is_dynamic)	
 		element_len = 0;
-		
 	
 	uint32_t partition_start_address = next_free_address; 
 	
 	// Compute the size that is available in storage
 	uint32_t available_size = 0;
 	ret_code_t ret = filesystem_compute_available_size(partition_start_address, *required_size, &available_size);
-	if(ret != NRF_SUCCESS) return ret;
-	
+	if(ret != NRF_SUCCESS) return NRF_ERROR_NO_MEM;
+
 	*partition_id = number_of_partitions;
 	if(is_dynamic)
 		*partition_id |= 0x8000;	
