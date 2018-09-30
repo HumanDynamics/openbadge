@@ -1270,6 +1270,9 @@ class Protocol_creator:
 			self.python_file.append_line("\t\tdef __init__(self):")
 			self.python_file.append_line("\t\t\tself.reset()")
 			self.python_file.append_line()
+			self.python_file.append_line("\t\tdef __repr__(self):")
+			self.python_file.append_line("\t\t\treturn str(self.__dict__)")
+			self.python_file.append_line()
 			self.python_file.append_line("\t\tdef reset(self):")
 			
 			# Declare the variables
@@ -1302,6 +1305,9 @@ class Protocol_creator:
 		self.python_file.append_line()
 		self.python_file.append_line("\tdef __init__(self):")
 		self.python_file.append_line("\t\tself.reset()")
+		self.python_file.append_line()
+		self.python_file.append_line("\tdef __repr__(self):")
+		self.python_file.append_line("\t\treturn str(self.__dict__)")
 		self.python_file.append_line()
 		self.python_file.append_line("\tdef reset(self):")
 		
