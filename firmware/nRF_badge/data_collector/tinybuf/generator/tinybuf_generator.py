@@ -1244,7 +1244,17 @@ class Protocol_creator:
 				
 			self.python_file.append_line()		
 	
+	def python_create_oneof_tags(self, message):
+		message_name = message[0]
+		variables = message[1:]
+		
+		for variable in variables:
+			field_name = variable[0]
+			field_type = variable[1]
+			oneof_tag = variable[5]
 	
+			if(field_type & FIELD_TYPE_ONEOF):
+				self.python_file.append_line(message_name + "_" + field_name +  "_tag = " + str(oneof_tag))
 	
 			
 	def python_create_oneof_classes(self, variables):
@@ -1330,6 +1340,7 @@ class Protocol_creator:
 			self.python_file.append_line(define[0] + " = " + define[1])
 		self.python_file.append_line()
 		
+		# Then create the oneof_tags from the messages		
 		for message in self.messages:
 			self.python_create_oneof_tags(message)
 		self.python_file.append_line()
