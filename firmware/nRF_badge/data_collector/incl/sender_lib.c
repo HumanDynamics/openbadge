@@ -5,7 +5,8 @@
 #include "app_fifo.h"
 #include "app_util_platform.h"
 
-
+//#include "stdio.h"
+//#include "string.h"
 #include "debug_lib.h"
 
 #define TX_FIFO_SIZE			512		/**< Size of the transmit fifo of the BLE (has to be a power of two) */
@@ -31,26 +32,30 @@ static uint8_t	transmit_buf[MAX_BYTES_PER_TRANSMIT];	/**< Buffer where the actua
 static app_fifo_t tx_fifo;								/**< The fifo for transmitting */
 static app_fifo_t rx_fifo;								/**< The fifo for receiving */
 
-
+/**@brief Function to reset the sender state.
+ */
+static void sender_reset(void) {
+	connected = 0;
+	transmitting = 0;
+	// Flush the tx and rx FIFO
+	app_fifo_flush(&tx_fifo);
+	app_fifo_flush(&rx_fifo);
+}
 
 
 /**@brief Function that is called when a connection was established.
  */
 static void on_connect_callback(void) {
+	sender_reset();
 	connected = 1;
-	// Flush the tx and rx FIFO
-	app_fifo_flush(&tx_fifo);
-	app_fifo_flush(&rx_fifo);
 	debug_log_bkgnd("Connected callback\n");
 }
 
 /**@brief Function that is called when disconnected event occurs.
  */
 static void on_disconnect_callback(void) {
+	sender_reset();
 	connected = 0;
-	// Flush the tx and rx FIFO
-	app_fifo_flush(&tx_fifo);
-	app_fifo_flush(&rx_fifo);
 	debug_log_bkgnd("Disconnected callback\n");
 }
 
@@ -88,6 +93,9 @@ static void on_receive_callback(uint8_t* data, uint16_t len) {
  * @retval	NRF_SUCCESS If the data were sent successfully. Otherwise, an error code is returned.
  */
 static ret_code_t transmit_queued_bytes(void) {
+	if(!transmitting)
+		return NRF_ERROR_INVALID_STATE;
+	
 	// Read out how many bytes have to be sent:
 	uint32_t remaining_size = 0;
 	CRITICAL_REGION_ENTER();
@@ -101,11 +109,18 @@ static ret_code_t transmit_queued_bytes(void) {
 	uint32_t len = (remaining_size > sizeof(transmit_buf)) ? sizeof(transmit_buf) : remaining_size;	
 	
 	ret_code_t ret = NRF_SUCCESS;
-	if(len > 0) {		
+	if(len > 0) {	
 		// Read the bytes manually from the fifo to be efficient:
 		for(uint32_t i = 0; i < len; i++) 
 			transmit_buf[i] = tx_fifo.p_buf[(tx_fifo.read_pos + i) & tx_fifo.buf_size_mask];	// extracted from app_fifo.c: "static __INLINE void fifo_peek(app_fifo_t * p_fifo, uint16_t index, uint8_t * p_byte)"
-		
+		/*
+		char out_buf[100];
+		sprintf(out_buf, "Transmit (%u): ", (unsigned int) len);
+		for(uint8_t i = 0; i < len; i++)  
+			sprintf(&out_buf[strlen(out_buf)], "%02X", transmit_buf[i]);
+		debug_log_bkgnd("%s\n",out_buf);
+		systick_delay_millis(100);
+		*/
 		// Now send the bytes via bluetooth
 		ret = ble_transmit(transmit_buf, len);
 		if(ret == NRF_SUCCESS) { // If the transmission was successful, we can "consume" the data in the fifo manually
@@ -123,6 +138,8 @@ ret_code_t sender_init(void) {
 	
 	ret = app_fifo_init(&rx_fifo, rx_fifo_buf, sizeof(rx_fifo_buf));
 	if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;
+	
+	sender_reset();
 	
 	receive_notification_handler = NULL;
 	ble_set_on_connect_callback(on_connect_callback);
@@ -188,7 +205,8 @@ ret_code_t sender_transmit(const uint8_t* data, uint32_t len, uint32_t timeout_m
 	
 	if(len > available_size) 
 		return NRF_ERROR_NO_MEM;
-
+	
+	
 	
 	// If there is enough space in the FIFO, write the data to the FIFO:
 	ret_code_t ret;
@@ -211,6 +229,7 @@ ret_code_t sender_transmit(const uint8_t* data, uint32_t len, uint32_t timeout_m
 
 // TODO: Timeout check and disconnect automatically!!
 void sender_disconnect(void) {
+	sender_reset();
 	ble_disconnect();
 }
 
