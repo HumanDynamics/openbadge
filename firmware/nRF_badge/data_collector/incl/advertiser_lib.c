@@ -70,35 +70,53 @@ void advertiser_set_badge_assignement(BadgeAssignement badge_assignement) {
 }
 
 void advertiser_set_status_flag_is_clock_synced(uint8_t is_clock_synced) {
-	custom_advdata.status_flags |= (is_clock_synced) ? 					(1 << 0) : 0;
+	if(is_clock_synced)
+		custom_advdata.status_flags |= (1 << 0);
+	else
+		custom_advdata.status_flags &= ~(1 << 0);
 	ble_set_advertising_custom_advdata(CUSTOM_COMPANY_IDENTIFIER, (uint8_t*) &custom_advdata, sizeof(custom_advdata));
 }
 
 
 void advertiser_set_status_flag_microphone_enabled(uint8_t microphone_enabled) {
-	custom_advdata.status_flags |= (microphone_enabled) ? 				(1 << 1) : 0;
+	if(microphone_enabled)
+		custom_advdata.status_flags |= (1 << 1);
+	else
+		custom_advdata.status_flags &= ~(1 << 1);
 	ble_set_advertising_custom_advdata(CUSTOM_COMPANY_IDENTIFIER, (uint8_t*) &custom_advdata, sizeof(custom_advdata));
 }
 
 
 void advertiser_set_status_flag_scan_enabled(uint8_t scan_enabled) {
-	custom_advdata.status_flags |= (scan_enabled) ? 					(1 << 2) : 0;
+	if(scan_enabled)
+		custom_advdata.status_flags |= (1 << 2);
+	else
+		custom_advdata.status_flags &= ~(1 << 2);
 	ble_set_advertising_custom_advdata(CUSTOM_COMPANY_IDENTIFIER, (uint8_t*) &custom_advdata, sizeof(custom_advdata));
 }
 
 
 void advertiser_set_status_flag_accelerometer_enabled(uint8_t accelerometer_enabled) {
-	custom_advdata.status_flags |= (accelerometer_enabled) ? 			(1 << 3) : 0;
+	if(accelerometer_enabled)
+		custom_advdata.status_flags |= (1 << 3);
+	else
+		custom_advdata.status_flags &= ~(1 << 3);
 	ble_set_advertising_custom_advdata(CUSTOM_COMPANY_IDENTIFIER, (uint8_t*) &custom_advdata, sizeof(custom_advdata));
 }
 
 void advertiser_set_status_flag_accelerometer_interrupt_enabled(uint8_t accelerometer_interrupt_enabled) {
-	custom_advdata.status_flags |= (accelerometer_interrupt_enabled) ? (1 << 4) : 0;
+	if(accelerometer_interrupt_enabled)
+		custom_advdata.status_flags |= (1 << 4);
+	else
+		custom_advdata.status_flags &= ~(1 << 4);
 	ble_set_advertising_custom_advdata(CUSTOM_COMPANY_IDENTIFIER, (uint8_t*) &custom_advdata, sizeof(custom_advdata));
 }
 
 void advertiser_set_status_flag_battery_enabled(uint8_t battery_enabled) {
-	custom_advdata.status_flags |= (battery_enabled) ? (1 << 5) : 0;
+	if(battery_enabled)
+		custom_advdata.status_flags |= (1 << 5);
+	else
+		custom_advdata.status_flags &= ~(1 << 5);
 	ble_set_advertising_custom_advdata(CUSTOM_COMPANY_IDENTIFIER, (uint8_t*) &custom_advdata, sizeof(custom_advdata));
 }
 
