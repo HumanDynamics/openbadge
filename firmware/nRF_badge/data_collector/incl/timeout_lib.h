@@ -15,6 +15,7 @@
 #include "stdint.h"
 #include "sdk_errors.h"	// Needed for the definition of ret_code_t and the error-codes
 
+
 #define MAX_NUMBER_OF_TIMEOUTS 									20		/**< Maximal number of registerable timeouts. */
 
 /**@brief Timeout handler type. */
@@ -45,6 +46,7 @@ ret_code_t timeout_register(uint32_t* timeout_id, timeout_handler_t timeout_hand
  *
  * @param[in]	timeout_id			The timeout_id that should be started.
  * @param[in]	timeout_ms			The time in milliseconds after the timeout should occur.
+ *									Could also be 0, then no timeout will be started.
  *
  * @retval	NRF_SUCCESS					 If the module was initialized successfully.
  * @retval	NRF_ERROR_INVALID_PARAM		 If timeout_id was not registered.

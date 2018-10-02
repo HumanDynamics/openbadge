@@ -127,6 +127,10 @@ ret_code_t timeout_start(uint32_t timeout_id, uint32_t timeout_ms) {
 	if(timeout_id >= number_of_registered_timeouts)
 		return NRF_ERROR_INVALID_PARAM;
 	
+	if(timeout_ms == 0) {
+		registered_timeouts[timeout_id].active = 0;
+		return NRF_SUCCESS;
+	}
 
 	if(timeout_timer_running) {
 		app_timer_stop(timeout_timer);
@@ -147,6 +151,7 @@ ret_code_t timeout_start(uint32_t timeout_id, uint32_t timeout_ms) {
 		timeout_timer_start_ms = systick_get_continuous_millis();
 		ret = app_timer_start(timeout_timer, APP_TIMER_TICKS(minimal_remaining_ms, 0), NULL);
 	}
+
 	return ret;
 }
 
@@ -170,7 +175,8 @@ void timeout_stop(uint32_t timeout_id) {
 }
 
 void timeout_reset(uint32_t timeout_id) {
-	timeout_start(timeout_id, registered_timeouts[timeout_id].timeout_ms);
+	if(registered_timeouts[timeout_id].active)
+		timeout_start(timeout_id, registered_timeouts[timeout_id].timeout_ms);
 }
 
 
