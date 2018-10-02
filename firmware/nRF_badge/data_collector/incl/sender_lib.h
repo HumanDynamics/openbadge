@@ -19,9 +19,11 @@ typedef void (*sender_receive_notification_handler_t) (receive_notification_t re
  *
  * @retval	NRF_SUCCESS				If initialization was successful.
  * @retval	NRF_ERROR_INTERNAL		If the FIFOs couldn't be initialized correctly.
+ * @retval	NRF_ERROR_NO_MEM		If the disconnect timeout could not be registered.
  *
  * @note ble_init() has to be called before.
  * @note systick_init() has to be called before.
+ * @note timeout_init() has to be called before.
  */
 ret_code_t sender_init(void);
 
@@ -60,6 +62,12 @@ void sender_get_received_data(uint8_t* data, uint32_t* len);
  */
 ret_code_t sender_await_data(uint8_t* data, uint32_t len, uint32_t timeout_ms);
 
+
+/**@brief Function that returns the number of bytes in the transmit-FIFO.
+ *
+ * @retval		Number of bytes in the transmit-FIFO.
+ */
+uint32_t sender_get_transmit_fifo_size(void);
 
 /**@brief Function to transmit bytes via the internal TX-FIFO.
  *

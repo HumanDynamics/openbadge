@@ -4,14 +4,20 @@
 #include "systick_lib.h"	// Needed for the timeout-check 
 #include "app_fifo.h"
 #include "app_util_platform.h"
+#include "timeout_lib.h"	// Needed for disconnecting after N milliseconds
 
 //#include "stdio.h"
 //#include "string.h"
 #include "debug_lib.h"
 
-#define TX_FIFO_SIZE			512		/**< Size of the transmit fifo of the BLE (has to be a power of two) */
-#define RX_FIFO_SIZE			128		/**< Size of the receive fifo of the BLE (has to be a power of two) */
-#define MAX_BYTES_PER_TRANSMIT	20		/**< Number of bytes that could be sent at once via the Nordic Uart Service */		
+#define TX_FIFO_SIZE				512		/**< Size of the transmit fifo of the BLE (has to be a power of two) */
+#define RX_FIFO_SIZE				128		/**< Size of the receive fifo of the BLE (has to be a power of two) */
+#define MAX_BYTES_PER_TRANSMIT		20		/**< Number of bytes that could be sent at once via the Nordic Uart Service */		
+#define DISCONNECT_TIMEOUT_MS		(6*1000) /**< The timeout after the sender should disconnect when no packet was transmitted successfully in this time */
+#define DISCONNECT_TIMEOUT_ENABLED	0		/**<  Disconnect timeout enabled */
+
+
+
 
 static void on_connect_callback(void);
 static void on_disconnect_callback(void);
@@ -32,6 +38,8 @@ static uint8_t	transmit_buf[MAX_BYTES_PER_TRANSMIT];	/**< Buffer where the actua
 static app_fifo_t tx_fifo;								/**< The fifo for transmitting */
 static app_fifo_t rx_fifo;								/**< The fifo for receiving */
 
+static uint32_t disconnect_timeout_id = 0;				/**< The timeout-id for the disconnect timeout */
+
 /**@brief Function to reset the sender state.
  */
 static void sender_reset(void) {
@@ -47,6 +55,10 @@ static void sender_reset(void) {
  */
 static void on_connect_callback(void) {
 	sender_reset();
+	// Start the disconect-timeout:
+	#if DISCONNECT_TIMEOUT_ENABLED
+	timeout_start(disconnect_timeout_id, DISCONNECT_TIMEOUT_MS);
+	#endif
 	connected = 1;
 	debug_log_bkgnd("Connected callback\n");
 }
@@ -55,6 +67,8 @@ static void on_connect_callback(void) {
  */
 static void on_disconnect_callback(void) {
 	sender_reset();
+	// Stop the disconnect-timeout:
+	timeout_stop(disconnect_timeout_id);
 	connected = 0;
 	debug_log_bkgnd("Disconnected callback\n");
 }
@@ -125,6 +139,7 @@ static ret_code_t transmit_queued_bytes(void) {
 		ret = ble_transmit(transmit_buf, len);
 		if(ret == NRF_SUCCESS) { // If the transmission was successful, we can "consume" the data in the fifo manually
 			tx_fifo.read_pos += len;
+			timeout_reset(disconnect_timeout_id);
 		}
 	} 
 	return ret;
@@ -140,6 +155,10 @@ ret_code_t sender_init(void) {
 	if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;
 	
 	sender_reset();
+	
+	// Register the disconnect-timeout:
+	ret = timeout_register(&disconnect_timeout_id, sender_disconnect);
+	if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;
 	
 	receive_notification_handler = NULL;
 	ble_set_on_connect_callback(on_connect_callback);
@@ -191,6 +210,13 @@ ret_code_t sender_await_data(uint8_t* data, uint32_t len, uint32_t timeout_ms) {
 	return NRF_SUCCESS;
 }
 
+uint32_t sender_get_transmit_fifo_size(void) {
+	uint32_t available_size = 0;
+	app_fifo_write(&tx_fifo, NULL, &available_size);
+	
+	return TX_FIFO_SIZE - available_size;
+}
+
 ret_code_t sender_transmit(const uint8_t* data, uint32_t len, uint32_t timeout_ms) {
 	if(!connected)
 		return NRF_ERROR_INVALID_STATE;
@@ -227,8 +253,9 @@ ret_code_t sender_transmit(const uint8_t* data, uint32_t len, uint32_t timeout_m
 	return ret;
 }
 
-// TODO: Timeout check and disconnect automatically!!
+
 void sender_disconnect(void) {
+	//debug_log_bkgnd("sender_disconnect()-called\n");
 	sender_reset();
 	ble_disconnect();
 }
