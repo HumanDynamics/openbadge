@@ -5,6 +5,10 @@
 #include "app_fifo.h"
 #include "app_util_platform.h"
 #include "timeout_lib.h"	// Needed for disconnecting after N milliseconds
+#ifndef UNIT_TEST
+#include "custom_board.h"	// For LED
+#include "nrf_gpio.h"		// For LED
+#endif
 
 //#include "stdio.h"
 //#include "string.h"
@@ -14,8 +18,11 @@
 #define RX_FIFO_SIZE				128		/**< Size of the receive fifo of the BLE (has to be a power of two) */
 #define MAX_BYTES_PER_TRANSMIT		20		/**< Number of bytes that could be sent at once via the Nordic Uart Service */		
 #define DISCONNECT_TIMEOUT_MS		(6*1000) /**< The timeout after the sender should disconnect when no packet was transmitted successfully in this time */
+#ifdef DEBUG_LOG_ENABLE
 #define DISCONNECT_TIMEOUT_ENABLED	0		/**<  Disconnect timeout enabled */
-
+#else
+#define DISCONNECT_TIMEOUT_ENABLED	1		/**<  Disconnect timeout enabled */
+#endif
 
 
 
@@ -59,6 +66,11 @@ static void on_connect_callback(void) {
 	#if DISCONNECT_TIMEOUT_ENABLED
 	timeout_start(disconnect_timeout_id, DISCONNECT_TIMEOUT_MS);
 	#endif
+	#ifdef DEBUG_LOG_ENABLE
+	#ifndef UNIT_TEST
+    nrf_gpio_pin_write(GREEN_LED, LED_ON);  //turn on LED
+	#endif
+	#endif
 	connected = 1;
 	debug_log_bkgnd("Connected callback\n");
 }
@@ -70,6 +82,11 @@ static void on_disconnect_callback(void) {
 	// Stop the disconnect-timeout:
 	timeout_stop(disconnect_timeout_id);
 	connected = 0;
+	#ifdef DEBUG_LOG_ENABLE
+	#ifndef UNIT_TEST
+    nrf_gpio_pin_write(GREEN_LED, LED_OFF);  //turn on LED
+	#endif
+	#endif
 	debug_log_bkgnd("Disconnected callback\n");
 }
 

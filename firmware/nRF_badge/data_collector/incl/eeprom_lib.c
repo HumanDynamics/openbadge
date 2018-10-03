@@ -2,6 +2,9 @@
 
 #include "spi_lib.h"
 #include "nrf_drv_common.h"
+#include "custom_board.h"
+
+#include "app_util_platform.h"
 
 #include "debug_lib.h"
 
@@ -58,19 +61,17 @@ void spi_event_handler(spi_evt_t const * p_event) {
 
 
 ret_code_t eeprom_init(void) {
-	
-	// TODO: retrieve Pin-numbers from the custom_board-file!
-	
+		
 	spi_instance.spi_peripheral = 0;
 	spi_instance.nrf_drv_spi_config.frequency 		= NRF_DRV_SPI_FREQ_8M;
 	spi_instance.nrf_drv_spi_config.bit_order 		= NRF_DRV_SPI_BIT_ORDER_MSB_FIRST;
 	spi_instance.nrf_drv_spi_config.mode			= NRF_DRV_SPI_MODE_3;
 	spi_instance.nrf_drv_spi_config.orc				= 0;
-	spi_instance.nrf_drv_spi_config.irq_priority	= 1; //APP_IRQ_PRIORITY_MID;	
-	spi_instance.nrf_drv_spi_config.ss_pin 			= 0;
-	spi_instance.nrf_drv_spi_config.miso_pin		= 1;
-	spi_instance.nrf_drv_spi_config.mosi_pin		= 4;
-	spi_instance.nrf_drv_spi_config.sck_pin			= 3;
+	spi_instance.nrf_drv_spi_config.irq_priority	= APP_IRQ_PRIORITY_MID; 
+	spi_instance.nrf_drv_spi_config.ss_pin 			= SPIM0_EEPROM_SS_PIN;
+	spi_instance.nrf_drv_spi_config.miso_pin		= SPIM0_MISO_PIN;
+	spi_instance.nrf_drv_spi_config.mosi_pin		= SPIM0_MOSI_PIN;
+	spi_instance.nrf_drv_spi_config.sck_pin			= SPIM0_SCK_PIN;
 	
 	ret_code_t ret = spi_init(&spi_instance);
 	
@@ -361,7 +362,7 @@ uint32_t eeprom_get_size(void) {
 
 bool eeprom_selftest(void) {
 	
-	#define EEPROM_TEST_DATA_LEN	1000
+	#define EEPROM_TEST_DATA_LEN	500
 	#define EEPROM_TEST_ADDRESS		1234
 	
 	uint8_t data[EEPROM_TEST_DATA_LEN + 1];

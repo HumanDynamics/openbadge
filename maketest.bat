@@ -1,1 +1,0 @@
-docker-compose run nrf make test badge_03v6 all run_all LCOV=TRUE LCOV_RM_ZERO=TRUE

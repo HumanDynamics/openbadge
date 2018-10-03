@@ -1,6 +1,6 @@
 #include "microphone_lib.h"
 
-#include "boards.h"		// Needed for the Pin configuration
+#include "custom_board.h"		// Needed for the Pin configuration
 #include "adc_lib.h"
 #include "debug_lib.h"
 #include "systick_lib.h" // Needed for microphone_selftest()
@@ -34,6 +34,7 @@ ret_code_t microphone_read(uint8_t* value) {
 
 
 bool microphone_selftest(void) {
+	debug_log("Waiting for noise for: %u ms.\n", MICROPHONE_SELFTEST_TIME_FOR_NOISE_GENERATION_MS);
 	uint32_t end_ms = systick_get_continuous_millis() + MICROPHONE_SELFTEST_TIME_FOR_NOISE_GENERATION_MS;
 	int16_t min = 0xFF;
 	int16_t max = 0;

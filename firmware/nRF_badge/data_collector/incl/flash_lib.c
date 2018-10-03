@@ -6,8 +6,6 @@
 
 #include "nrf_drv_common.h"			// Needed for data in RAM check
 
-
-
 #include "system_event_lib.h"	// Needed to register an system event handler!
 #include "systick_lib.h"		// Needed for the timeout-checks
 
@@ -24,13 +22,14 @@ static uint32_t const * address_of_word(uint32_t word_num);
 
 
 
-
+volatile fs_ret_t handler_result = 0;
 
 /**
  *@brief Function for handling fstorage events.
  */
 static void fs_evt_handler(fs_evt_t const * const evt, fs_ret_t result)
-{
+{	handler_result = result;
+	
     if (result == FS_SUCCESS) {	// Operation was successful!
 		if(flash_get_operation() & FLASH_ERASE_OPERATION) {
 			flash_operation &= ~FLASH_ERASE_OPERATION;
@@ -62,7 +61,7 @@ FS_REGISTER_CFG(fs_config_t fs_config) =
 {
     .callback  = fs_evt_handler, /**< Function for event callbacks. */
     .num_pages = FLASH_NUM_PAGES,      /**< Number of physical flash pages required. */
-    .priority  = 0xFE            /**< Priority for flash usage. */
+    .priority  = 0x0F            /**< Priority for flash usage. */
 };
 
 ret_code_t flash_init(void) {
@@ -72,6 +71,8 @@ ret_code_t flash_init(void) {
 	
 	
 	fs_ret_t status_init = fs_init();
+	
+	
 	
 	if(status_init != FS_SUCCESS) {
 		return NRF_ERROR_INTERNAL; 
@@ -159,8 +160,10 @@ ret_code_t flash_erase(uint32_t page_num, uint16_t num_pages) {
 	// Wait for the erase operation to terminate with timeout check.
 	uint64_t end_ms = systick_get_continuous_millis() + FLASH_OPERATION_TIMEOUT_MS;
 	while(flash_get_operation() & FLASH_ERASE_OPERATION && systick_get_continuous_millis() < end_ms);
+	
 	if(flash_get_operation() & FLASH_ERASE_OPERATION) {
 		// Reset the erase operation
+		
 		flash_operation &= ~FLASH_ERASE_OPERATION;
 		return NRF_ERROR_TIMEOUT;
 	}
@@ -227,6 +230,7 @@ ret_code_t flash_store(uint32_t word_num, const uint32_t* p_words, uint16_t leng
 	// Wait for the store operation to terminate with timeout check.
 	uint64_t end_ms = systick_get_continuous_millis() + FLASH_OPERATION_TIMEOUT_MS;
 	while(flash_get_operation() & FLASH_STORE_OPERATION && systick_get_continuous_millis() < end_ms);
+	
 	if(flash_get_operation() & FLASH_STORE_OPERATION) {
 		// Reset the store operation
 		flash_operation &= ~FLASH_STORE_OPERATION;
@@ -386,11 +390,11 @@ bool flash_selftest(void) {
 	write_word = 0xFFFFFFFF;	
 	
 	
-	debug_log("Storing to flash at word 0: 0x%X, Ret: %d\n\r", write_word, ret);
 	
-	ret = flash_store(FLASH_TEST_ADDRESS, &write_word, 1);
+	
+	ret = flash_store(FLASH_TEST_ADDRESS + 100, &write_word, 1);
 	//ret = flash_store_bkgnd(0, &write_word, 1);
-	
+	debug_log("Storing to flash at word 0: 0x%X, Ret: %d\n\r", write_word, ret);
 
 	if(ret != NRF_SUCCESS) {
 		if(ret == NRF_ERROR_TIMEOUT) {
@@ -493,7 +497,7 @@ bool flash_selftest(void) {
 	}
 	
 //****************** Large data write ****************************	
-	#define LARGE_WORD_NUMBER	700
+	#define LARGE_WORD_NUMBER	100
 	uint32_t large_words_address = 1234;
 	uint32_t large_write_words[LARGE_WORD_NUMBER];
 	uint32_t large_read_words[LARGE_WORD_NUMBER];
@@ -501,7 +505,6 @@ bool flash_selftest(void) {
 		large_write_words[i] = i;
 		large_read_words[i] = 0;	
 	}
-	
 	
 	ret = flash_erase(0, 15);
 	debug_log("Started erasing: Ret %d\n\r", ret);

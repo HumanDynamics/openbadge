@@ -1,0 +1,135 @@
+import common_messages
+
+extern Timestamp;
+extern BadgeAssignement;
+extern BatteryData;
+extern MicrophoneData;
+extern ScanResultData;
+
+
+define {
+	PROTOCOL_MICROPHONE_DATA_SIZE = 114;
+	PROTOCOL_SCAN_DATA_SIZE = 29;
+}
+
+
+message StatusRequest {
+	required Timestamp timestamp;
+}
+
+message StatusAssignRequest {
+	required Timestamp timestamp;
+	required BadgeAssignement badge_assignement;
+}
+
+message StartMicrophoneRequest {
+	required Timestamp 	timestamp;
+	required uint16		timeout;
+}
+
+message StopMicrophoneRequest {
+
+}
+
+message StartScanRequest {
+	required Timestamp 	timestamp;
+	required uint16		timeout;
+	required uint16		window;
+	required uint16		interval;
+	required uint16		duration;
+	required uint16		period;
+}
+
+message StopScanRequest {
+}
+
+message MicrophoneDataRequest {
+	required Timestamp timestamp;
+}
+
+message ScanDataRequest {
+	required uint32 seconds;
+}
+
+message IdentifyRequest {
+	required uint16 timeout;
+}
+
+
+
+message Request {
+	oneof type {
+		StatusRequest 			status_request (115);
+		StatusAssignRequest	 	status_assign_request (83);
+		StartMicrophoneRequest	start_microphone_request (49);
+		StopMicrophoneRequest	stop_microphone_request (48);
+		StartScanRequest		start_scan_request (112);
+		StopScanRequest			stop_scan_request (113);
+		MicrophoneDataRequest	microphone_data_request (114);
+		ScanDataRequest			scan_data_request (98);
+		IdentifyRequest			identify_request (105);
+	}
+}
+
+
+
+
+message StatusResponse {
+	required uint8 clock_status;
+	required uint8 scan_status;
+	required uint8 collector_status;
+	required Timestamp timestamp;
+	required BatteryData battery_data;
+}
+
+message StartMicrophoneResponse {
+	required Timestamp timestamp;
+}
+
+message StopMicrophoneResponse {
+}
+
+message StartScanResponse {
+	required Timestamp timestamp;
+}
+
+message StopScanResponse {
+}
+
+message MicrophoneDataResponseHeader {
+	required Timestamp timestamp;
+	required BatteryData battery_data;
+	required uint16 sample_period_ms;
+}
+
+message MicrophoneDataResponse {
+	required MicrophoneDataResponseHeader	microphone_data_response_header;
+	repeated MicrophoneData 				microphone_data [PROTOCOL_MICROPHONE_DATA_SIZE];
+}
+
+message ScanDataResponseHeader {
+	required uint32 timestamp_seconds;
+	required BatteryData battery_data;
+}
+
+
+message ScanDataResponse {
+	required ScanDataResponseHeader	scan_data_response_header;
+	repeated ScanResultData 		scan_result_data[PROTOCOL_SCAN_DATA_SIZE];
+}
+
+message IdentifyResponse {
+}
+
+message Response {
+	oneof type {
+		StatusResponse 			status_response (1);
+		StartMicrophoneResponse start_microphone_response (2);
+		StopMicrophoneResponse 	stop_microphone_response (3);
+		StartScanResponse 		start_scan_response (4);
+		StopScanResponse 		stop_scan_response (5);
+		MicrophoneDataResponse	microphone_data_response (6);
+		ScanDataResponse		scan_data_response (7);
+		IdentifyResponse		identify_response (8);
+	}
+}

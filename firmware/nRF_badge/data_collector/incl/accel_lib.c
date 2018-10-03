@@ -6,14 +6,18 @@
 #include "nrf_drv_gpiote.h"		// Needed for the INT-Pin
 
 
-// TODO: remove
-//#include "nrf_gpio.h"
+#include "app_util_platform.h"
 
 #include "systick_lib.h" // Needed for accel_selftest()
 
 
-// TODO: retrieve Pin-numbers from the custom_board-file!
-#define ACCEL_INT1_PIN														25			
+
+
+#if ACCELEROMETER_PRESENT
+#define ACCEL_INT1_PIN														ACCELEROMETER_INT_PIN
+#else
+#define ACCEL_INT1_PIN														25
+#endif
 
 /**< The default configuration parameters for the accelerometer */
 #define	ACCEL_DATARATE_DEFAULT												ACCEL_DATARATE_100_HZ 
@@ -348,17 +352,20 @@ ret_code_t 	accel_init(void) {
 	static uint8_t init_done = 0;
 	
 	if(init_done == 0) {
+		
+		#if ACCELEROMETER_PRESENT
+		
 		// SPI-module intitalization
 		spi_instance.spi_peripheral = 0;
 		spi_instance.nrf_drv_spi_config.frequency 		= NRF_DRV_SPI_FREQ_8M;
 		spi_instance.nrf_drv_spi_config.bit_order 		= NRF_DRV_SPI_BIT_ORDER_MSB_FIRST;
 		spi_instance.nrf_drv_spi_config.mode			= NRF_DRV_SPI_MODE_3;
 		spi_instance.nrf_drv_spi_config.orc				= 0;
-		spi_instance.nrf_drv_spi_config.irq_priority	= 1; //APP_IRQ_PRIORITY_MID;	
-		spi_instance.nrf_drv_spi_config.ss_pin 			= 2;
-		spi_instance.nrf_drv_spi_config.miso_pin		= 1;
-		spi_instance.nrf_drv_spi_config.mosi_pin		= 4;
-		spi_instance.nrf_drv_spi_config.sck_pin			= 3;
+		spi_instance.nrf_drv_spi_config.irq_priority	= APP_IRQ_PRIORITY_MID; 	
+		spi_instance.nrf_drv_spi_config.ss_pin 			= SPIM0_ACCELEROMETER_SS_PIN;
+		spi_instance.nrf_drv_spi_config.miso_pin		= SPIM0_MISO_PIN;
+		spi_instance.nrf_drv_spi_config.mosi_pin		= SPIM0_MOSI_PIN;
+		spi_instance.nrf_drv_spi_config.sck_pin			= SPIM0_SCK_PIN;
 		
 		ret_code_t ret = spi_init(&spi_instance);
 		
@@ -429,6 +436,7 @@ ret_code_t 	accel_init(void) {
 		interrupt_event = ACCEL_INTERRUPT_EVENT_DEFAULT;
 		ret = accel_set_interrupt(ACCEL_INTERRUPT_EVENT_DEFAULT);
 		if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;
+		#endif
 	}
 	init_done = 1;
 		
@@ -1005,7 +1013,7 @@ bool 		accel_selftest(void) {
 	}
 	debug_log("x %d, y %d, z %d\n\r", x[0], y[0], z[0]);
 	
-	debug_log("Accel selftest successful!");
+	debug_log("Accel selftest successful!\n");
 	
 	return 1;
 }

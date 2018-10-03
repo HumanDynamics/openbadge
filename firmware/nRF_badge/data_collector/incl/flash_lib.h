@@ -31,7 +31,7 @@
 #ifdef UNIT_TEST
 #define FLASH_NUM_PAGES 30	
 #else
-#define FLASH_NUM_PAGES 30
+#define FLASH_NUM_PAGES 56
 #endif
 	
 #if   	defined (NRF51)

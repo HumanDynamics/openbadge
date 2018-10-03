@@ -5,6 +5,15 @@
 #include <stdbool.h>
 #include "sdk_errors.h"	// Needed for the definition of ret_code_t and the error-codes
 
+#ifndef UNIT_TEST
+#include "custom_board.h"
+#else
+#define ACCELEROMETER_PRESENT 1
+#endif
+
+#ifndef ACCELEROMETER_PRESENT
+#define ACCELEROMETER_PRESENT 0
+#endif
 
 /**@brief Accelerometer datarate type. 
  * 

@@ -2,8 +2,6 @@
 #define __DEBUG_LIB_H
 
 
-// TODO: retrieving flag from Compiler
-#define DEBUG_ENABLE
 
 
 /** @file
@@ -17,7 +15,7 @@
  
 
 
-#ifdef DEBUG_ENABLE
+#ifdef DEBUG_LOG_ENABLE
 
 #include "stdint.h"
 
@@ -62,14 +60,14 @@ void debug_log( const char* format, ...);
  */
 void debug_log_dump(uint8_t * p_buffer, uint32_t len);
 
-#else // DEBUG_ENABLE
+#else 
 
 #define debug_init(...)
 #define debug_log_bkgnd(...)
 #define debug_log(...)
 #define debug_log_dump(...)
 
-#endif // DEBUG_ENABLE
+#endif 
 
 
 #endif //__DEBUG_LIB_H

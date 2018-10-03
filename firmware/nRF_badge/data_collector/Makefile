@@ -137,6 +137,26 @@ incl/accel_lib.c \
 incl/chunk_fifo_lib.c \
 incl/systick_lib.c \
 incl/ble_lib.c \
+incl/sender_lib.c \
+incl/request_handler_lib_01v1.c \
+incl/request_handler_lib_02v1.c \
+incl/protocol_messages_01v1.c \
+incl/protocol_messages_02v1.c \
+incl/common_messages.c \
+incl/chunk_messages.c \
+incl/stream_messages.c \
+incl/storer_lib.c \
+incl/advertiser_lib.c \
+incl/scanner_lib.c \
+incl/battery_lib.c \
+incl/microphone_lib.c \
+incl/circular_fifo_lib.c \
+incl/sampling_lib.c \
+incl/processing_lib.c \
+incl/timeout_lib.c \
+incl/selftest_lib.c \
+incl/uart_commands_lib.c \
+$(TINYBUF_SRC_PATH)/tinybuf.c \
 $(SDK_PATH)/components/toolchain/system_nrf51.c \
 $(SDK_PATH)/components/drivers_nrf/uart/nrf_drv_uart.c \
 $(SDK_PATH)/components/drivers_nrf/common/nrf_drv_common.c \
@@ -154,7 +174,9 @@ $(SDK_PATH)/components/ble/ble_advertising/ble_advertising.c \
 $(SDK_PATH)/components/ble/common/ble_advdata.c \
 $(SDK_PATH)/components/ble/ble_services/ble_nus/ble_nus.c \
 $(SDK_PATH)/components/ble/common/ble_srv_common.c \
-$(TINYBUF_SRC_PATH)/tinybuf.c \
+$(SDK_PATH)/components/libraries/fifo/app_fifo.c \
+$(SDK_PATH)/components/libraries/scheduler/app_scheduler.c \
+
 
 #incl/accel.c \
 #incl/analog.c \
@@ -231,6 +253,7 @@ ASM_SOURCE_FILES  = $(SDK_PATH)/components/toolchain/gcc/gcc_startup_nrf51.S
 #includes
 INC_PATHS  = -Iconfig
 INC_PATHS += -Iincl
+INC_PATHS += -I$(TINYBUF_SRC_PATH)
 INC_PATHS += -I$(SDK_PATH)/components/device
 INC_PATHS += -I$(SDK_PATH)/components/toolchain
 INC_PATHS += -I$(SDK_PATH)/components/toolchain/gcc
@@ -254,7 +277,9 @@ INC_PATHS += -I$(SDK_PATH)/components/libraries/timer
 INC_PATHS += -I$(SDK_PATH)/components/ble/ble_advertising
 INC_PATHS += -I$(SDK_PATH)/components/ble/common
 INC_PATHS += -I$(SDK_PATH)/components/ble/ble_services/ble_nus
-INC_PATHS += -I$(TINYBUF_SRC_PATH)
+INC_PATHS += -I$(SDK_PATH)/components/libraries/fifo
+INC_PATHS += -I$(SDK_PATH)/components/libraries/scheduler
+
 
 
 #INC_PATHS += -I$(SDK_PATH)/components/libraries/uart
@@ -298,8 +323,50 @@ OUTPUT_BINARY_DIRECTORY = $(OBJECT_DIRECTORY)
 BUILD_DIRECTORIES := $(sort $(OBJECT_DIRECTORY) $(OUTPUT_BINARY_DIRECTORY) $(LISTING_DIRECTORY) )
 
 
+compile_flags:
+ifeq ($(PROTOCOL_VERSION), 1)
+	@echo PROTOCOL_VERSION = 1
+	$(eval COMPILEFLAGS += -DPROTOCOL_01v1)
+else
+	@echo PROTOCOL_VERSION = 2
+	$(eval COMPILEFLAGS += -DPROTOCOL_02v1)
+endif
+
+
+#========== Add the compile flags that are given via cmd-line
+NRF51DK: compile_flags 
+NRF51DK: CFLAGS += $(COMPILEFLAGS) 
+
+badge_03: compile_flags
+badge_03: CFLAGS += $(COMPILEFLAGS)
+badge_03_noDebug: compile_flags
+badge_03_noDebug: CFLAGS += $(COMPILEFLAGS)
+
+badge_03v2_rigado: compile_flags
+badge_03v2_rigado: CFLAGS += $(COMPILEFLAGS)
+badge_03v2_rigado_noDebug: compile_flags
+badge_03v2_rigado_noDebug: CFLAGS += $(COMPILEFLAGS)
+badge_03v2_rigado_tester: compile_flags
+badge_03v2_rigado_tester: CFLAGS += $(COMPILEFLAGS)
+badge_03v2_dynastream: compile_flags
+badge_03v2_dynastream: CFLAGS += $(COMPILEFLAGS)
+
+badge_03v4: compile_flags
+badge_03v4: CFLAGS += $(COMPILEFLAGS)
+badge_03v4_noDebug: compile_flags
+badge_03v4_noDebug: CFLAGS += $(COMPILEFLAGS)
+badge_03v4_tester: compile_flags
+badge_03v4_tester: CFLAGS += $(COMPILEFLAGS)
+
+badge_03v6: compile_flags
+badge_03v6: CFLAGS += $(COMPILEFLAGS)
+badge_03v6_noDebug: compile_flags
+badge_03v6_noDebug: CFLAGS += $(COMPILEFLAGS)
+badge_03v6_tester: compile_flags
+badge_03v6_tester: CFLAGS += $(COMPILEFLAGS)
+
 #======= Target-dependent compiler flags
-NRF51DK: CFLAGS += -DBOARD_PCA10028
+NRF51DK: CFLAGS += -DBOARD_PCA10028 
 
 badge_03: CFLAGS += -DBOARD_CUSTOM
 badge_03: CFLAGS += -DBOARD_BADGE_03
@@ -349,7 +416,8 @@ CFLAGS += -DBLE_STACK_SUPPORT_REQD
 CFLAGS += -DSWI_DISABLE0
 CFLAGS += -mcpu=cortex-m0
 CFLAGS += -mthumb -mabi=aapcs --std=gnu99
-CFLAGS += -Wall -Werror -O3
+#CFLAGS += -Wall -Werror -O3
+CFLAGS += -Wall -Werror -O1
 CFLAGS += -mfloat-abi=soft
 # keep every function in separate section. This will allow linker to dump unused functions
 CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing
@@ -361,6 +429,7 @@ GIT_COMMIT += $(shell git rev-parse --short HEAD)
 CFLAGS += -DGIT_COMMIT='"$(GIT_COMMIT)"'
 CFLAGS += -DGIT_BRANCH='"$(GIT_BRANCH)"'
 CFLAGS += -DGIT_TAG='"$(GIT_TAG)"'
+
 
 #Removed Michael
 #enable SPI

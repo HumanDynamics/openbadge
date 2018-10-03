@@ -1,7 +1,7 @@
 #include "debug_lib.h"
 
 
-#ifdef DEBUG_ENABLE
+#ifdef DEBUG_LOG_ENABLE
 
 #include <stdarg.h>		// Needed for the printf-function
 #include <string.h>		// Needed for the printf-function

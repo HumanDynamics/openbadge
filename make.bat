@@ -1,1 +1,0 @@
-docker-compose run nrf make badge_03v6

@@ -72,6 +72,7 @@ TESTS = flash_lib_mock_unittest \
 		ble_lib_mock_unittest \
 		circular_fifo_lib_unittest \
 		timeout_lib_unittest \
+		scan_integration_unittest \
 				
 FIRMWARE_SRCS = $(FIRMWARE_DIR)/incl/storage1_lib.c \
 				$(FIRMWARE_DIR)/incl/storage2_lib.c \
@@ -82,6 +83,19 @@ FIRMWARE_SRCS = $(FIRMWARE_DIR)/incl/storage1_lib.c \
 				$(FIRMWARE_DIR)/incl/circular_fifo_lib.c \
 				$(FIRMWARE_DIR)/incl/timeout_lib.c \
 				$(SDK_PATH)/components/libraries/fifo/app_fifo.c \
+				$(FIRMWARE_DIR)/incl/sender_lib.c \
+				$(FIRMWARE_DIR)/incl/request_handler_lib_01v1.c \
+				$(FIRMWARE_DIR)/incl/request_handler_lib_02v1.c \
+				$(FIRMWARE_DIR)/incl/protocol_messages_01v1.c \
+				$(FIRMWARE_DIR)/incl/protocol_messages_02v1.c \
+				$(FIRMWARE_DIR)/incl/common_messages.c \
+				$(FIRMWARE_DIR)/incl/chunk_messages.c \
+				$(FIRMWARE_DIR)/incl/stream_messages.c \
+				$(FIRMWARE_DIR)/incl/storer_lib.c \
+				$(FIRMWARE_DIR)/incl/advertiser_lib.c \
+				$(FIRMWARE_DIR)/incl/scanner_lib.c \
+				$(FIRMWARE_DIR)/incl/sampling_lib.c \
+				$(FIRMWARE_DIR)/incl/processing_lib.c \
 				
 
 				
@@ -249,6 +263,8 @@ CFLAGS += -Wall -Werror
 # Add the CFLAGS to the CXXFLAGS
 CXXFLAGS += $(CFLAGS)
 CXXFLAGS += -DUNIT_TEST
+CXXFLAGS += -DDEBUG_LOG_ENABLE
+CXXFLAGS += -DPROTOCOL_02v1
 
 
 
@@ -439,6 +455,8 @@ $(BUILD_DIR)/gtest_main.a : $(BUILD_DIR)/gtest-all.o $(BUILD_DIR)/gtest_main.o
 #==============================  Board option rules  ===================================
 print_info: print_lcov_help
 #	@echo "You can run tests with \"make [${RUN_TESTS}]\" or \"make run_all\""
+
+
 	
 
 compile: clean lcov_flags print_info

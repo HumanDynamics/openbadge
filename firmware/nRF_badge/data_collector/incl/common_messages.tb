@@ -1,0 +1,37 @@
+message Timestamp {
+	required uint32 seconds;
+	required uint16 ms;
+}
+
+message BadgeAssignement {
+	required uint16	ID;
+	required uint8 	group;
+}
+
+message BatteryData {
+	required float voltage;
+}
+
+message MicrophoneData {
+	required uint8 value;
+}
+
+
+message ScanDevice {
+	required uint16 ID;
+	required int8	rssi;
+}
+
+message ScanResultData {
+	required ScanDevice scan_device;
+	required uint8 count;
+}
+
+message AccelerometerData {
+	required uint16 acceleration;
+}
+
+message AccelerometerRawData {
+	fixed_repeated int16 raw_acceleration[3];
+}
+
