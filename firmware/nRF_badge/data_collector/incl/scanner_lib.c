@@ -67,6 +67,7 @@ static void internal_on_scan_report_callback(ble_gap_evt_adv_report_t* scan_repo
 	
 	
 	
+	
 	while ((name_ptr == NULL || manuf_data_ptr == NULL) && index < data_len)  {
         uint8_t field_len = data[index];
         index++;
@@ -81,27 +82,26 @@ static void internal_on_scan_report_callback(ble_gap_evt_adv_report_t* scan_repo
         index += field_len;
     }
 	
+	// To get the advertising message structure
+	/*
+	char tmp[200];
+	sprintf(tmp, "Len (%u): ", data_len);
+	for(uint8_t i = 0; i < data_len; i++)
+		sprintf(&tmp[strlen(tmp)], "%02X, ", data[i]);
+	debug_log_bkgnd("Scan: %u, %u, %d, %s\n", name_ptr-data, manuf_data_ptr-data, rssi, tmp);
+	*/
 	if (manuf_data_len == advertiser_get_manuf_data_len())  {
         if (name_ptr != NULL && memcmp(name_ptr,(const uint8_t *)ADVERTISING_DEVICE_NAME,strlen(ADVERTISING_DEVICE_NAME)) == 0)  {
-            
+           
 			scanner_scan_report.scanner_scan_device_type = SCAN_DEVICE_TYPE_BADGE;
 			BadgeAssignement badge_assignement;
 			
 			advertiser_get_badge_assignement_from_advdata(&badge_assignement, &manuf_data_ptr[2]);
 			scanner_scan_report.ID = badge_assignement.ID;
 			scanner_scan_report.group = badge_assignement.group;
-			/*
-			// To get the advertising message structure
-			char tmp[200];
-			sprintf(tmp, "Len (%u): ", data_len);
-			for(uint8_t i = 0; i < data_len; i++)
-				sprintf(&tmp[strlen(tmp)], "%02X, ", data[i]);
-			debug_log_bkgnd("Scan: %u, %u, %s\n", manuf_data_ptr-data, name_ptr-data, tmp);
-			*/
-			
 			
 
-           // debug_log_bkgnd("---Badge seen: group %d, ID %.4X, rssi %d.\r\n", scanner_scan_report.group, scanner_scan_report.ID, scanner_scan_report.rssi);
+           //debug_log_bkgnd("---Badge seen: group %d, ID %.4X, rssi %d.\r\n", scanner_scan_report.group, scanner_scan_report.ID, scanner_scan_report.rssi);
         }
     } else if (manuf_data_len == IBEACON_MANUF_DATA_LEN)  {
         iBeacon_data_t iBeacon_data;

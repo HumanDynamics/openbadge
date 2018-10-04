@@ -6,6 +6,7 @@
 
 
 #define CUSTOM_COMPANY_IDENTIFIER	0xFF00
+#define CUSTOM_ADVDATA_LEN			11
 
 /**< Structure for organizing custom badge advertising data */
 typedef struct
@@ -26,8 +27,12 @@ extern uint16_t crc16_compute(uint8_t const * p_data, uint32_t size, uint16_t co
 
 void advertiser_init(void) {	
 	memset(&custom_advdata, 0, sizeof(custom_advdata));
-	
-	ble_get_MAC_address(custom_advdata.MAC);
+	// We need to swap the MAC address to be compatible with old code..
+	uint8_t MAC[6];
+	ble_get_MAC_address(MAC);
+	for(uint8_t i = 0; i < 6; i++) {
+		custom_advdata.MAC[i] = MAC[5-i];
+	}
 	
 	// Try to read the badge-assignement from the filesystem/storer:
 	BadgeAssignement badge_assignement;
@@ -40,7 +45,7 @@ void advertiser_init(void) {
 		custom_advdata.ID = crc16_compute(custom_advdata.MAC, 6, NULL);
 	}
 	
-	ble_set_advertising_custom_advdata(CUSTOM_COMPANY_IDENTIFIER, (uint8_t*) &custom_advdata, sizeof(custom_advdata));
+	ble_set_advertising_custom_advdata(CUSTOM_COMPANY_IDENTIFIER, (uint8_t*) &custom_advdata, CUSTOM_ADVDATA_LEN);
 }
 
 ret_code_t advertiser_start_advertising(void) {
@@ -58,7 +63,7 @@ void advertiser_set_battery_voltage(float voltage) {
 	scaled_battery_voltage = (scaled_battery_voltage > 255) ? 255 : scaled_battery_voltage;
 	custom_advdata.battery = (uint8_t) scaled_battery_voltage;
 	
-	ble_set_advertising_custom_advdata(CUSTOM_COMPANY_IDENTIFIER, (uint8_t*) &custom_advdata, sizeof(custom_advdata));
+	ble_set_advertising_custom_advdata(CUSTOM_COMPANY_IDENTIFIER, (uint8_t*) &custom_advdata, CUSTOM_ADVDATA_LEN);
 }
 
 
@@ -66,7 +71,7 @@ void advertiser_set_badge_assignement(BadgeAssignement badge_assignement) {
 	custom_advdata.ID = badge_assignement.ID;
 	custom_advdata.group = badge_assignement.group;	
 	
-	ble_set_advertising_custom_advdata(CUSTOM_COMPANY_IDENTIFIER, (uint8_t*) &custom_advdata, sizeof(custom_advdata));
+	ble_set_advertising_custom_advdata(CUSTOM_COMPANY_IDENTIFIER, (uint8_t*) &custom_advdata, CUSTOM_ADVDATA_LEN);
 }
 
 void advertiser_set_status_flag_is_clock_synced(uint8_t is_clock_synced) {
@@ -74,7 +79,7 @@ void advertiser_set_status_flag_is_clock_synced(uint8_t is_clock_synced) {
 		custom_advdata.status_flags |= (1 << 0);
 	else
 		custom_advdata.status_flags &= ~(1 << 0);
-	ble_set_advertising_custom_advdata(CUSTOM_COMPANY_IDENTIFIER, (uint8_t*) &custom_advdata, sizeof(custom_advdata));
+	ble_set_advertising_custom_advdata(CUSTOM_COMPANY_IDENTIFIER, (uint8_t*) &custom_advdata, CUSTOM_ADVDATA_LEN);
 }
 
 
@@ -83,7 +88,7 @@ void advertiser_set_status_flag_microphone_enabled(uint8_t microphone_enabled) {
 		custom_advdata.status_flags |= (1 << 1);
 	else
 		custom_advdata.status_flags &= ~(1 << 1);
-	ble_set_advertising_custom_advdata(CUSTOM_COMPANY_IDENTIFIER, (uint8_t*) &custom_advdata, sizeof(custom_advdata));
+	ble_set_advertising_custom_advdata(CUSTOM_COMPANY_IDENTIFIER, (uint8_t*) &custom_advdata, CUSTOM_ADVDATA_LEN);
 }
 
 
@@ -92,7 +97,7 @@ void advertiser_set_status_flag_scan_enabled(uint8_t scan_enabled) {
 		custom_advdata.status_flags |= (1 << 2);
 	else
 		custom_advdata.status_flags &= ~(1 << 2);
-	ble_set_advertising_custom_advdata(CUSTOM_COMPANY_IDENTIFIER, (uint8_t*) &custom_advdata, sizeof(custom_advdata));
+	ble_set_advertising_custom_advdata(CUSTOM_COMPANY_IDENTIFIER, (uint8_t*) &custom_advdata, CUSTOM_ADVDATA_LEN);
 }
 
 
@@ -101,7 +106,7 @@ void advertiser_set_status_flag_accelerometer_enabled(uint8_t accelerometer_enab
 		custom_advdata.status_flags |= (1 << 3);
 	else
 		custom_advdata.status_flags &= ~(1 << 3);
-	ble_set_advertising_custom_advdata(CUSTOM_COMPANY_IDENTIFIER, (uint8_t*) &custom_advdata, sizeof(custom_advdata));
+	ble_set_advertising_custom_advdata(CUSTOM_COMPANY_IDENTIFIER, (uint8_t*) &custom_advdata, CUSTOM_ADVDATA_LEN);
 }
 
 void advertiser_set_status_flag_accelerometer_interrupt_enabled(uint8_t accelerometer_interrupt_enabled) {
@@ -109,7 +114,7 @@ void advertiser_set_status_flag_accelerometer_interrupt_enabled(uint8_t accelero
 		custom_advdata.status_flags |= (1 << 4);
 	else
 		custom_advdata.status_flags &= ~(1 << 4);
-	ble_set_advertising_custom_advdata(CUSTOM_COMPANY_IDENTIFIER, (uint8_t*) &custom_advdata, sizeof(custom_advdata));
+	ble_set_advertising_custom_advdata(CUSTOM_COMPANY_IDENTIFIER, (uint8_t*) &custom_advdata, CUSTOM_ADVDATA_LEN);
 }
 
 void advertiser_set_status_flag_battery_enabled(uint8_t battery_enabled) {
@@ -117,7 +122,7 @@ void advertiser_set_status_flag_battery_enabled(uint8_t battery_enabled) {
 		custom_advdata.status_flags |= (1 << 5);
 	else
 		custom_advdata.status_flags &= ~(1 << 5);
-	ble_set_advertising_custom_advdata(CUSTOM_COMPANY_IDENTIFIER, (uint8_t*) &custom_advdata, sizeof(custom_advdata));
+	ble_set_advertising_custom_advdata(CUSTOM_COMPANY_IDENTIFIER, (uint8_t*) &custom_advdata, CUSTOM_ADVDATA_LEN);
 }
 
 
@@ -129,13 +134,16 @@ void advertiser_get_badge_assignement(BadgeAssignement* badge_assignement) {
 }
 
 void advertiser_get_badge_assignement_from_advdata(BadgeAssignement* badge_assignement, void* custom_advdata) {
-	custom_advdata_t* tmp = (custom_advdata_t*) custom_advdata;
-	badge_assignement->ID = tmp->ID;
-	badge_assignement->group = tmp->group;
+	custom_advdata_t tmp;
+	memset(&tmp, 0, sizeof(tmp));
+	memcpy(&tmp, custom_advdata, CUSTOM_ADVDATA_LEN);
+	
+	badge_assignement->ID = tmp.ID;
+	badge_assignement->group = tmp.group;
 }
 
 uint8_t advertiser_get_manuf_data_len(void) {
-	return (uint8_t) (sizeof(custom_advdata)) + 2;	// + 2 for the CUSTOM_COMPANY_IDENTIFIER
+	return (uint8_t) (CUSTOM_ADVDATA_LEN + 2);	// + 2 for the CUSTOM_COMPANY_IDENTIFIER
 }
 
 
