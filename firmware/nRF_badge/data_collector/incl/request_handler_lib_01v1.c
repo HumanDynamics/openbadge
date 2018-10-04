@@ -548,12 +548,12 @@ static void start_microphone_request_handler(void * p_event_data, uint16_t event
 	systick_set_timestamp(request_event.request_timepoint_ticks, timestamp.seconds, timestamp.ms);
 	advertiser_set_status_flag_is_clock_synced(1);
 	
-	uint16_t timeout = (request_event.request).type.start_microphone_request.timeout;
+	uint32_t timeout = (request_event.request).type.start_microphone_request.timeout;
 
 	// TODO: Start the Microphone
 	debug_log("Start microphone with timeout: %u \n", timeout);
 	
-	ret_code_t ret = sampling_start_microphone(timeout, MICROPHONE_SAMPLING_PERIOD_MS, 0);
+	ret_code_t ret = sampling_start_microphone(timeout*60*1000, MICROPHONE_SAMPLING_PERIOD_MS, 0);
 	debug_log("Ret sampling_start_microphone: %d\n\r", ret);
 	
 	if(ret == NRF_SUCCESS) {
@@ -577,7 +577,7 @@ static void start_scan_request_handler(void * p_event_data, uint16_t event_size)
 	systick_set_timestamp(request_event.request_timepoint_ticks, timestamp.seconds, timestamp.ms);
 	advertiser_set_status_flag_is_clock_synced(1);
 	
-	uint16_t timeout	= (request_event.request).type.start_scan_request.timeout;
+	uint32_t timeout	= (request_event.request).type.start_scan_request.timeout;
 	uint16_t window	 	= (request_event.request).type.start_scan_request.window;
 	uint16_t interval 	= (request_event.request).type.start_scan_request.interval;
 	uint16_t duration 	= (request_event.request).type.start_scan_request.duration;
@@ -590,7 +590,7 @@ static void start_scan_request_handler(void * p_event_data, uint16_t event_size)
 	debug_log("Start scanning with timeout: %u, window: %u, interval: %u, duration: %u, period: %u\n", timeout, window, interval, duration, period);
 	BadgeAssignement badge_assignement;
 	advertiser_get_badge_assignement(&badge_assignement);
-	ret_code_t ret = sampling_start_scan(timeout, period, interval, window, duration, badge_assignement.group, SCAN_AGGREGATION_TYPE, 0);
+	ret_code_t ret = sampling_start_scan(timeout*60*1000, period, interval, window, duration, badge_assignement.group, SCAN_AGGREGATION_TYPE, 0);
 	debug_log("Ret sampling_start_scan: %d\n\r", ret);
 	
 	if(ret == NRF_ERROR_INTERNAL) {

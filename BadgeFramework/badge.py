@@ -216,7 +216,7 @@ class OpenBadge(object):
 		request.type.start_microphone_request.timestamp = Timestamp()
 		request.type.start_microphone_request.timestamp.seconds = timestamp_seconds
 		request.type.start_microphone_request.timestamp.ms = timestamp_ms
-		request.type.start_microphone_request.timeout =  int(timeout_minutes*60*1000)
+		request.type.start_microphone_request.timeout =  int(timeout_minutes)
 		request.type.start_microphone_request.period_ms = sampling_period_ms
 		
 		self.send_request(request)
@@ -264,7 +264,7 @@ class OpenBadge(object):
 		request.type.start_scan_request.timestamp = Timestamp()
 		request.type.start_scan_request.timestamp.seconds = timestamp_seconds
 		request.type.start_scan_request.timestamp.ms = timestamp_ms
-		request.type.start_scan_request.timeout =  int(timeout_minutes*60*1000)
+		request.type.start_scan_request.timeout =  int(timeout_minutes)
 		request.type.start_scan_request.window = window_ms
 		request.type.start_scan_request.interval = interval_ms
 		request.type.start_scan_request.duration = duration_seconds
@@ -311,7 +311,7 @@ class OpenBadge(object):
 		request.type.start_accelerometer_request.timestamp = Timestamp()
 		request.type.start_accelerometer_request.timestamp.seconds = timestamp_seconds
 		request.type.start_accelerometer_request.timestamp.ms = timestamp_ms
-		request.type.start_accelerometer_request.timeout =  int(timeout_minutes*60*1000)
+		request.type.start_accelerometer_request.timeout =  int(timeout_minutes)
 		request.type.start_accelerometer_request.operating_mode = operating_mode
 		request.type.start_accelerometer_request.full_scale = full_scale
 		request.type.start_accelerometer_request.datarate = datarate
@@ -356,7 +356,7 @@ class OpenBadge(object):
 		request.type.start_accelerometer_interrupt_request.timestamp = Timestamp()
 		request.type.start_accelerometer_interrupt_request.timestamp.seconds = timestamp_seconds
 		request.type.start_accelerometer_interrupt_request.timestamp.ms = timestamp_ms
-		request.type.start_accelerometer_interrupt_request.timeout =  int(timeout_minutes*60*1000)
+		request.type.start_accelerometer_interrupt_request.timeout =  int(timeout_minutes)
 		request.type.start_accelerometer_interrupt_request.threshold_mg = threshold_mg
 		request.type.start_accelerometer_interrupt_request.minimal_duration_ms = minimal_duration_ms
 		request.type.start_accelerometer_interrupt_request.ignore_duration_ms = ignore_duration_ms
@@ -397,7 +397,7 @@ class OpenBadge(object):
 		request.type.start_battery_request.timestamp = Timestamp()
 		request.type.start_battery_request.timestamp.seconds = timestamp_seconds
 		request.type.start_battery_request.timestamp.ms = timestamp_ms
-		request.type.start_battery_request.timeout = int(timeout_minutes*60*1000)
+		request.type.start_battery_request.timeout = int(timeout_minutes)
 		request.type.start_battery_request.period_ms = sampling_period_ms
 		
 		self.send_request(request)
@@ -652,7 +652,7 @@ class OpenBadge(object):
 		request.type.start_microphone_stream_request.timestamp = Timestamp()
 		request.type.start_microphone_stream_request.timestamp.seconds = timestamp_seconds
 		request.type.start_microphone_stream_request.timestamp.ms = timestamp_ms
-		request.type.start_microphone_stream_request.timeout =  int(timeout_minutes*60*1000)
+		request.type.start_microphone_stream_request.timeout =  int(timeout_minutes)
 		request.type.start_microphone_stream_request.period_ms = sampling_period_ms
 		
 		self.send_request(request)
@@ -684,7 +684,7 @@ class OpenBadge(object):
 		request.type.start_scan_stream_request.timestamp = Timestamp()
 		request.type.start_scan_stream_request.timestamp.seconds = timestamp_seconds
 		request.type.start_scan_stream_request.timestamp.ms = timestamp_ms
-		request.type.start_scan_stream_request.timeout =  int(timeout_minutes*60*1000)
+		request.type.start_scan_stream_request.timeout =  int(timeout_minutes)
 		request.type.start_scan_stream_request.window = window_ms
 		request.type.start_scan_stream_request.interval = interval_ms
 		request.type.start_scan_stream_request.duration = duration_seconds
@@ -723,7 +723,7 @@ class OpenBadge(object):
 		request.type.start_accelerometer_stream_request.timestamp = Timestamp()
 		request.type.start_accelerometer_stream_request.timestamp.seconds = timestamp_seconds
 		request.type.start_accelerometer_stream_request.timestamp.ms = timestamp_ms
-		request.type.start_accelerometer_stream_request.timeout =  int(timeout_minutes*60*1000)
+		request.type.start_accelerometer_stream_request.timeout =  int(timeout_minutes)
 		request.type.start_accelerometer_stream_request.operating_mode = operating_mode
 		request.type.start_accelerometer_stream_request.full_scale = full_scale
 		request.type.start_accelerometer_stream_request.datarate = datarate
@@ -760,7 +760,7 @@ class OpenBadge(object):
 		request.type.start_accelerometer_interrupt_stream_request.timestamp = Timestamp()
 		request.type.start_accelerometer_interrupt_stream_request.timestamp.seconds = timestamp_seconds
 		request.type.start_accelerometer_interrupt_stream_request.timestamp.ms = timestamp_ms
-		request.type.start_accelerometer_interrupt_stream_request.timeout =  int(timeout_minutes*60*1000)
+		request.type.start_accelerometer_interrupt_stream_request.timeout =  int(timeout_minutes)
 		request.type.start_accelerometer_interrupt_stream_request.threshold_mg = threshold_mg
 		request.type.start_accelerometer_interrupt_stream_request.minimal_duration_ms = minimal_duration_ms
 		request.type.start_accelerometer_interrupt_stream_request.ignore_duration_ms = ignore_duration_ms
@@ -795,7 +795,7 @@ class OpenBadge(object):
 		request.type.start_battery_stream_request.timestamp = Timestamp()
 		request.type.start_battery_stream_request.timestamp.seconds = timestamp_seconds
 		request.type.start_battery_stream_request.timestamp.ms = timestamp_ms
-		request.type.start_battery_stream_request.timeout = int(timeout_minutes*60*1000)
+		request.type.start_battery_stream_request.timeout = int(timeout_minutes)
 		request.type.start_battery_stream_request.period_ms = sampling_period_ms
 		
 		self.send_request(request)

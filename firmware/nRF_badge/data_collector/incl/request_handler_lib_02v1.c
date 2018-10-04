@@ -996,13 +996,13 @@ static void start_microphone_request_handler(void * p_event_data, uint16_t event
 	systick_set_timestamp(request_event.request_timepoint_ticks, timestamp.seconds, timestamp.ms);
 	advertiser_set_status_flag_is_clock_synced(1);
 	
-	uint16_t timeout = (request_event.request).type.start_microphone_request.timeout;
+	uint32_t timeout = (request_event.request).type.start_microphone_request.timeout;
 	uint16_t period_ms = (request_event.request).type.start_microphone_request.period_ms;
 
 	// TODO: Start the Microphone
 	debug_log("Start microphone with timeout: %u, period ms %u\n", timeout, period_ms);
 	
-	ret_code_t ret = sampling_start_microphone(timeout, period_ms, 0);
+	ret_code_t ret = sampling_start_microphone(timeout*60*1000, period_ms, 0);
 	debug_log("Ret sampling_start_microphone: %d\n\r", ret);
 	
 	if(ret == NRF_SUCCESS) {
@@ -1029,7 +1029,7 @@ static void start_scan_request_handler(void * p_event_data, uint16_t event_size)
 	systick_set_timestamp(request_event.request_timepoint_ticks, timestamp.seconds, timestamp.ms);
 	advertiser_set_status_flag_is_clock_synced(1);
 	
-	uint16_t timeout	= (request_event.request).type.start_scan_request.timeout;
+	uint32_t timeout	= (request_event.request).type.start_scan_request.timeout;
 	uint16_t window	 	= (request_event.request).type.start_scan_request.window;
 	uint16_t interval 	= (request_event.request).type.start_scan_request.interval;
 	uint16_t duration 	= (request_event.request).type.start_scan_request.duration;
@@ -1042,7 +1042,7 @@ static void start_scan_request_handler(void * p_event_data, uint16_t event_size)
 	debug_log("Start scanning with timeout: %u, window: %u, interval: %u, duration: %u, period: %u, aggregation_type: %u\n", timeout, window, interval, duration, period, aggregation_type);
 	BadgeAssignement badge_assignement;
 	advertiser_get_badge_assignement(&badge_assignement);
-	ret_code_t ret = sampling_start_scan(timeout, period, interval, window, duration, badge_assignement.group, aggregation_type, 0);
+	ret_code_t ret = sampling_start_scan(timeout*60*1000, period, interval, window, duration, badge_assignement.group, aggregation_type, 0);
 	debug_log("Ret sampling_start_scan: %d\n\r", ret);
 	
 	
@@ -1067,7 +1067,7 @@ static void start_accelerometer_request_handler(void * p_event_data, uint16_t ev
 	systick_set_timestamp(request_event.request_timepoint_ticks, timestamp.seconds, timestamp.ms);
 	advertiser_set_status_flag_is_clock_synced(1);
 	
-	uint16_t timeout					= (request_event.request).type.start_accelerometer_request.timeout;
+	uint32_t timeout					= (request_event.request).type.start_accelerometer_request.timeout;
 	uint8_t  operating_mode				= (request_event.request).type.start_accelerometer_request.operating_mode;
 	uint8_t  full_scale					= (request_event.request).type.start_accelerometer_request.full_scale;
 	uint16_t datarate				 	= (request_event.request).type.start_accelerometer_request.datarate;
@@ -1075,7 +1075,7 @@ static void start_accelerometer_request_handler(void * p_event_data, uint16_t ev
 	
 	debug_log("Start accelerometer with timeout: %u, operating_mode: %u, full_scale: %u, datarate: %u, fifo_sampling_period_ms: %u\n", timeout, operating_mode, full_scale, datarate, fifo_sampling_period_ms);
 	
-	ret_code_t ret = sampling_start_accelerometer(timeout, operating_mode, full_scale, datarate, fifo_sampling_period_ms, 0);
+	ret_code_t ret = sampling_start_accelerometer(timeout*60*1000, operating_mode, full_scale, datarate, fifo_sampling_period_ms, 0);
 	debug_log("Ret sampling_start_accelerometer: %d\n\r", ret);
 	
 	if(ret == NRF_SUCCESS) {
@@ -1100,14 +1100,14 @@ static void start_accelerometer_interrupt_request_handler(void * p_event_data, u
 	systick_set_timestamp(request_event.request_timepoint_ticks, timestamp.seconds, timestamp.ms);
 	advertiser_set_status_flag_is_clock_synced(1);
 	
-	uint16_t timeout				= (request_event.request).type.start_accelerometer_interrupt_request.timeout;
+	uint32_t timeout				= (request_event.request).type.start_accelerometer_interrupt_request.timeout;
 	uint16_t threshold_mg			= (request_event.request).type.start_accelerometer_interrupt_request.threshold_mg;
 	uint16_t minimal_duration_ms	= (request_event.request).type.start_accelerometer_interrupt_request.minimal_duration_ms;
 	uint16_t ignore_duration_ms		= (request_event.request).type.start_accelerometer_interrupt_request.ignore_duration_ms;
 	
 	debug_log("Start accelerometer interrupt with timeout: %u, threshold_mg: %u, minimal_duration_ms: %u, ignore_duration_ms: %u\n", timeout, threshold_mg, minimal_duration_ms, ignore_duration_ms);
 	
-	ret_code_t ret = sampling_start_accelerometer_interrupt(timeout, threshold_mg, minimal_duration_ms, ignore_duration_ms, 0);
+	ret_code_t ret = sampling_start_accelerometer_interrupt(timeout*60*1000, threshold_mg, minimal_duration_ms, ignore_duration_ms, 0);
 	debug_log("Ret sampling_start_accelerometer_interrupt: %d\n\r", ret);
 	
 	if(ret == NRF_SUCCESS) {
@@ -1131,12 +1131,12 @@ static void start_battery_request_handler(void * p_event_data, uint16_t event_si
 	systick_set_timestamp(request_event.request_timepoint_ticks, timestamp.seconds, timestamp.ms);
 	advertiser_set_status_flag_is_clock_synced(1);
 	
-	uint16_t timeout   	= (request_event.request).type.start_battery_request.timeout;
+	uint32_t timeout   	= (request_event.request).type.start_battery_request.timeout;
 	uint16_t period_ms 	= (request_event.request).type.start_battery_request.period_ms;
 	
 	debug_log("Start battery with timeout %u, period_ms: %u\n", timeout, period_ms);
 	
-	ret_code_t ret = sampling_start_battery(timeout, period_ms, 0);
+	ret_code_t ret = sampling_start_battery(timeout*60*1000, period_ms, 0);
 	debug_log("Ret sampling_start_battery: %d\n\r", ret);
 	
 	if(ret == NRF_SUCCESS) {
@@ -1235,12 +1235,12 @@ static void start_microphone_stream_request_handler(void * p_event_data, uint16_
 	systick_set_timestamp(request_event.request_timepoint_ticks, timestamp.seconds, timestamp.ms);
 	advertiser_set_status_flag_is_clock_synced(1);
 	
-	uint16_t timeout = (request_event.request).type.start_microphone_stream_request.timeout;
+	uint32_t timeout = (request_event.request).type.start_microphone_stream_request.timeout;
 	uint16_t period_ms = (request_event.request).type.start_microphone_stream_request.period_ms;
 
 	debug_log("Start microphone stream with timeout: %u, period ms %u\n", timeout, period_ms);
 	
-	ret_code_t ret = sampling_start_microphone(timeout, period_ms, 1);
+	ret_code_t ret = sampling_start_microphone(timeout*60*1000, period_ms, 1);
 	debug_log("Ret sampling_start_microphone stream: %d\n\r", ret);
 	
 	if(ret == NRF_SUCCESS) {
@@ -1268,7 +1268,7 @@ static void start_scan_stream_request_handler(void * p_event_data, uint16_t even
 	systick_set_timestamp(request_event.request_timepoint_ticks, timestamp.seconds, timestamp.ms);
 	advertiser_set_status_flag_is_clock_synced(1);
 	
-	uint16_t timeout	= (request_event.request).type.start_scan_stream_request.timeout;
+	uint32_t timeout	= (request_event.request).type.start_scan_stream_request.timeout;
 	uint16_t window	 	= (request_event.request).type.start_scan_stream_request.window;
 	uint16_t interval 	= (request_event.request).type.start_scan_stream_request.interval;
 	uint16_t duration 	= (request_event.request).type.start_scan_stream_request.duration;
@@ -1281,7 +1281,7 @@ static void start_scan_stream_request_handler(void * p_event_data, uint16_t even
 	debug_log("Start scanning stream with timeout: %u, window: %u, interval: %u, duration: %u, period: %u\n", timeout, window, interval, duration, period);
 	BadgeAssignement badge_assignement;
 	advertiser_get_badge_assignement(&badge_assignement);
-	ret_code_t ret = sampling_start_scan(timeout, period, interval, window, duration, badge_assignement.group, aggregation_type, 1);
+	ret_code_t ret = sampling_start_scan(timeout*60*1000, period, interval, window, duration, badge_assignement.group, aggregation_type, 1);
 	debug_log("Ret sampling_start_scan stream: %d\n\r", ret);
 	
 	
@@ -1313,7 +1313,7 @@ static void start_accelerometer_stream_request_handler(void * p_event_data, uint
 	systick_set_timestamp(request_event.request_timepoint_ticks, timestamp.seconds, timestamp.ms);
 	advertiser_set_status_flag_is_clock_synced(1);
 	
-	uint16_t timeout					= (request_event.request).type.start_accelerometer_stream_request.timeout;
+	uint32_t timeout					= (request_event.request).type.start_accelerometer_stream_request.timeout;
 	uint8_t  operating_mode				= (request_event.request).type.start_accelerometer_stream_request.operating_mode;
 	uint8_t  full_scale					= (request_event.request).type.start_accelerometer_stream_request.full_scale;
 	uint16_t datarate				 	= (request_event.request).type.start_accelerometer_stream_request.datarate;
@@ -1321,7 +1321,7 @@ static void start_accelerometer_stream_request_handler(void * p_event_data, uint
 	
 	debug_log("Start accelerometer stream with timeout: %u, operating_mode: %u, full_scale: %u, datarate: %u, fifo_sampling_period_ms: %u\n", timeout, operating_mode, full_scale, datarate, fifo_sampling_period_ms);
 	
-	ret_code_t ret = sampling_start_accelerometer(timeout, operating_mode, full_scale, datarate, fifo_sampling_period_ms, 1);
+	ret_code_t ret = sampling_start_accelerometer(timeout*60*1000, operating_mode, full_scale, datarate, fifo_sampling_period_ms, 1);
 	debug_log("Ret sampling_start_accelerometer stream: %d\n\r", ret);
 	
 	if(ret == NRF_SUCCESS) {
@@ -1350,14 +1350,14 @@ static void start_accelerometer_interrupt_stream_request_handler(void * p_event_
 	systick_set_timestamp(request_event.request_timepoint_ticks, timestamp.seconds, timestamp.ms);
 	advertiser_set_status_flag_is_clock_synced(1);
 	
-	uint16_t timeout				= (request_event.request).type.start_accelerometer_interrupt_stream_request.timeout;
+	uint32_t timeout				= (request_event.request).type.start_accelerometer_interrupt_stream_request.timeout;
 	uint16_t threshold_mg			= (request_event.request).type.start_accelerometer_interrupt_stream_request.threshold_mg;
 	uint16_t minimal_duration_ms	= (request_event.request).type.start_accelerometer_interrupt_stream_request.minimal_duration_ms;
 	uint16_t ignore_duration_ms		= (request_event.request).type.start_accelerometer_interrupt_stream_request.ignore_duration_ms;
 	
 	debug_log("Start accelerometer interrupt stream with timeout: %u, threshold_mg: %u, minimal_duration_ms: %u, ignore_duration_ms: %u\n", timeout, threshold_mg, minimal_duration_ms, ignore_duration_ms);
 	
-	ret_code_t ret = sampling_start_accelerometer_interrupt(timeout, threshold_mg, minimal_duration_ms, ignore_duration_ms, 1);
+	ret_code_t ret = sampling_start_accelerometer_interrupt(timeout*60*1000, threshold_mg, minimal_duration_ms, ignore_duration_ms, 1);
 	debug_log("Ret sampling_start_accelerometer_interrupt stream: %d\n\r", ret);
 	
 	if(ret == NRF_SUCCESS) {
@@ -1387,12 +1387,12 @@ static void start_battery_stream_request_handler(void * p_event_data, uint16_t e
 	systick_set_timestamp(request_event.request_timepoint_ticks, timestamp.seconds, timestamp.ms);
 	advertiser_set_status_flag_is_clock_synced(1);
 	
-	uint16_t timeout   	= (request_event.request).type.start_battery_stream_request.timeout;
+	uint32_t timeout   	= (request_event.request).type.start_battery_stream_request.timeout;
 	uint16_t period_ms	= (request_event.request).type.start_battery_stream_request.period_ms;
 	
 	debug_log("Start battery stream with timeout %u, period_ms: %u\n", timeout, period_ms);
 	
-	ret_code_t ret = sampling_start_battery(timeout, period_ms, 1);
+	ret_code_t ret = sampling_start_battery(timeout*60*1000, period_ms, 1);
 	debug_log("Ret sampling_start_battery stream: %d\n\r", ret);
 	
 	if(ret == NRF_SUCCESS) {

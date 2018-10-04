@@ -427,9 +427,11 @@ ret_code_t sampling_stop_accelerometer(uint8_t streaming) {
 }
 
 void sampling_timeout_accelerometer(void) {
+	debug_log_bkgnd("Accelerometer timed out --> stopping\n");
 	sampling_stop_accelerometer(0);
 }
 void sampling_timeout_accelerometer_stream(void) {
+	debug_log_bkgnd("Accelerometer stream timed out --> stopping\n");
 	sampling_stop_accelerometer(1);
 }
 
@@ -590,9 +592,11 @@ ret_code_t sampling_stop_accelerometer_interrupt(uint8_t streaming) {
 }
 
 void sampling_timeout_accelerometer_interrupt(void) {
+	debug_log_bkgnd("Accelerometer interrupt timed out --> stopping\n");
 	sampling_stop_accelerometer_interrupt(0);
 }
 void sampling_timeout_accelerometer_interrupt_stream(void) {
+	debug_log_bkgnd("Accelerometer interrupt stream timed out --> stopping\n");
 	sampling_stop_accelerometer_interrupt(1);
 }
 
@@ -727,9 +731,11 @@ void sampling_stop_battery(uint8_t streaming) {
 }
 
 void sampling_timeout_battery(void) {
+	debug_log_bkgnd("Battery timed out --> stopping\n");
 	sampling_stop_battery(0);
 }
 void sampling_timeout_battery_stream(void) {
+	debug_log_bkgnd("Battery stream timed out --> stopping\n");
 	sampling_stop_battery(1);
 }
 
@@ -847,9 +853,11 @@ void sampling_stop_microphone(uint8_t streaming) {
 }
 
 void sampling_timeout_microphone(void) {
+	debug_log_bkgnd("Microphone timed out --> stopping\n");
 	sampling_stop_microphone(0);
 }
 void sampling_timeout_microphone_stream(void) {
+	debug_log_bkgnd("Microphone stream timed out --> stopping\n");
 	sampling_stop_microphone(1);
 }
 
@@ -977,9 +985,11 @@ void sampling_stop_scan(uint8_t streaming) {
 }
 
 void sampling_timeout_scan(void) {
+	debug_log_bkgnd("Sampling timed out --> stopping\n");
 	sampling_stop_scan(0);
 }
 void sampling_timeout_scan_stream(void) {
+	debug_log_bkgnd("Sampling stream timed out --> stopping\n");
 	sampling_stop_scan(1);
 }
 
