@@ -3,6 +3,9 @@
 #include "app_timer.h"
 #include "app_util_platform.h"	// Needed for the definitions of CRITICAL_REGION_EXIT/-ENTER
 
+//#include "debug_lib.h"
+
+
 
 #define SYSTICK_TIMER_CALLBACK_PERIOD_MS (100*1000)
 
@@ -59,6 +62,7 @@ ret_code_t systick_init(uint8_t prescaler) {
  * @param[in] 	p_context	Pointer to context provided via the timer (should/could be NULL).
  */
 static void systick_callback(void* p_context) {
+	//debug_log_bkgnd("Systick-callback\n");
 	uint32_t diff_ticks;
 	CRITICAL_REGION_ENTER();
 	uint32_t cur_ticks = app_timer_cnt_get();
@@ -86,6 +90,9 @@ uint64_t systick_get_ticks_since_start(void) {
 
 
 void systick_set_millis(uint64_t ticks_since_start_at_sync, uint64_t millis_sync) {
+	
+	//debug_log_bkgnd("Systick_set_millis: %u, (%u, %u), %f, %u, (%u, %u)\n", (uint32_t) ticks_since_start_at_sync, (uint32_t)(millis_sync/1000), (uint32_t) (millis_sync%1000), millis_per_ticks, (uint32_t) ticks_at_offset, (uint32_t)(millis_offset/1000), (uint32_t) (millis_offset%1000));
+	
 	uint64_t cur_ticks_since_start = systick_get_ticks_since_start();
 	if(ticks_since_start_at_sync > cur_ticks_since_start)	// Only a safety query (the ticks_since_start_at_sync has to be <= the current ticks since start)
 		ticks_since_start_at_sync = cur_ticks_since_start;
@@ -101,18 +108,18 @@ void systick_set_millis(uint64_t ticks_since_start_at_sync, uint64_t millis_sync
 		return;
 	}
 	
-	/*
+	
 	// Easiest way: Just set it
 	CRITICAL_REGION_ENTER();
 	millis_offset = millis_sync;
 	ticks_at_offset = ticks_since_start_at_sync;
 	CRITICAL_REGION_EXIT();
-	*/
 	
+	/*
 	// More complicate way: Adapt the slope (millis_per_ticks) via an moving average filter
 	CRITICAL_REGION_ENTER();
-	float delta_ticks = (float)(ticks_since_start_at_sync - ticks_at_offset);
-	float delta_millis = (float)(millis_sync - millis_offset);
+	float delta_ticks = (float)((ticks_since_start_at_sync > ticks_at_offset) ? (ticks_since_start_at_sync - ticks_at_offset) : 1);
+	float delta_millis = (float)((millis_sync > millis_offset) ? (millis_sync - millis_offset) : 0);
 	float new_millis_per_ticks = delta_millis/delta_ticks;
 	
 	// Now average the new_millis_per_ticks with the global millis_per_ticks via an moving average filter:
@@ -123,6 +130,8 @@ void systick_set_millis(uint64_t ticks_since_start_at_sync, uint64_t millis_sync
 	millis_offset = ((uint64_t)(millis_per_ticks*(ticks_since_start_at_sync - ticks_at_offset))) + millis_offset;
 	ticks_at_offset = ticks_since_start_at_sync;
 	CRITICAL_REGION_EXIT();
+	*/
+	
 	
 	
 	// TODO: Or an even more complex way: Linear regression of N samples!
@@ -162,8 +171,8 @@ uint64_t systick_get_continuous_millis(void) {
 }
 
 void systick_delay_millis(uint64_t millis) {
-	uint64_t end_millis = systick_get_millis() + millis;
-	while(systick_get_millis() < end_millis);
+	uint64_t end_millis = systick_get_continuous_millis() + millis;
+	while(systick_get_continuous_millis() < end_millis);
 }
 
 
@@ -175,4 +184,6 @@ void systick_get_timestamp(uint32_t* seconds, uint16_t* milliseconds) {
 	uint64_t millis = systick_get_millis();
 	*seconds = (uint32_t) (millis/1000);
 	*milliseconds = (uint16_t) (millis % 1000);
+	//debug_log_bkgnd("Systick_get_timestamp: (%u, %u)\n", (uint32_t)(*seconds), (uint32_t) (*milliseconds));
+	
 }
