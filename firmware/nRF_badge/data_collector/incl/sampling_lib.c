@@ -352,20 +352,22 @@ ret_code_t sampling_start_accelerometer(uint32_t timeout_ms, uint8_t operating_m
 	if(ret != NRF_SUCCESS) return ret;
 	
 	if(!streaming) {
-		// Stop the sampling-timer that was probably already started
-		app_timer_stop(sampling_accelerometer_fifo_timer);
-		
-		// If we want to start normal sampling
-		sampling_setup_accelerometer_chunk();
-		
-		// Now start the sampling-timer
-		ret = app_timer_start(sampling_accelerometer_fifo_timer, APP_TIMER_TICKS(fifo_sampling_period_ms, 0), NULL);
-		if(ret != NRF_SUCCESS) return ret;	
-		
-		sampling_configuration = (sampling_configuration_t) (sampling_configuration | SAMPLING_ACCELEROMETER);
-		advertiser_set_status_flag_accelerometer_enabled(1);
-		
-		timeout_start(accelerometer_timeout_id, timeout_ms);
+		if((sampling_configuration & SAMPLING_ACCELEROMETER) == 0) { // Only stop and start the sampling if it is not already running			
+			// Stop the sampling-timer that was probably already started
+			app_timer_stop(sampling_accelerometer_fifo_timer);
+			
+			// If we want to start normal sampling
+			sampling_setup_accelerometer_chunk();
+			
+			// Now start the sampling-timer
+			ret = app_timer_start(sampling_accelerometer_fifo_timer, APP_TIMER_TICKS(fifo_sampling_period_ms, 0), NULL);
+			if(ret != NRF_SUCCESS) return ret;	
+			
+			sampling_configuration = (sampling_configuration_t) (sampling_configuration | SAMPLING_ACCELEROMETER);
+			advertiser_set_status_flag_accelerometer_enabled(1);
+			
+			timeout_start(accelerometer_timeout_id, timeout_ms);
+		}
 		
 	} else {
 		// If we are not already sampling the accelerometer, we have to start the sampling-timer
@@ -681,19 +683,21 @@ ret_code_t sampling_start_battery(uint32_t timeout_ms, uint32_t period_ms, uint8
 	
 	
 	if(!streaming) {
-		// Stop the sampling-timer that was probably already started
-		app_timer_stop(sampling_battery_timer);
-		
-		sampling_setup_battery_chunk();
-		
-		// Now start the sampling-timer
-		ret = app_timer_start(sampling_battery_timer, APP_TIMER_TICKS(period_ms, 0), NULL);
-		if(ret != NRF_SUCCESS) return ret;	
-		
-		sampling_configuration = (sampling_configuration_t) (sampling_configuration | SAMPLING_BATTERY);
-		advertiser_set_status_flag_battery_enabled(1);
-		
-		timeout_start(battery_timeout_id, timeout_ms);
+		if((sampling_configuration & SAMPLING_BATTERY) == 0) { // Only stop and start the sampling if it is not already running			
+			// Stop the sampling-timer that was probably already started
+			app_timer_stop(sampling_battery_timer);
+			
+			sampling_setup_battery_chunk();
+			
+			// Now start the sampling-timer
+			ret = app_timer_start(sampling_battery_timer, APP_TIMER_TICKS(period_ms, 0), NULL);
+			if(ret != NRF_SUCCESS) return ret;	
+			
+			sampling_configuration = (sampling_configuration_t) (sampling_configuration | SAMPLING_BATTERY);
+			advertiser_set_status_flag_battery_enabled(1);
+			
+			timeout_start(battery_timeout_id, timeout_ms);
+		}
 	} else {
 		// If we are not already sampling the battery, we have to start the sampling-timer
 		if((sampling_configuration & SAMPLING_BATTERY) == 0) {
@@ -787,26 +791,28 @@ ret_code_t sampling_start_microphone(uint32_t timeout_ms, uint16_t period_ms, ui
 	microphone_period_ms = period_ms;
 	
 	if(!streaming) {
-		// Stop the sampling-timer that was probably already started
-		app_timer_stop(sampling_microphone_timer);
-		app_timer_stop(sampling_microphone_aggregated_timer);
-		
-		sampling_setup_microphone_chunk();
+		if((sampling_configuration & SAMPLING_MICROPHONE) == 0) { // Only stop and start the sampling if it is not already running			
+			// Stop the sampling-timer that was probably already started
+			app_timer_stop(sampling_microphone_timer);
+			app_timer_stop(sampling_microphone_aggregated_timer);
+			
+			sampling_setup_microphone_chunk();
 
-		// Now start the sampling-timer
-		ret = app_timer_start(sampling_microphone_timer, APP_TIMER_TICKS(period_ms, 0), NULL);
-		if(ret != NRF_SUCCESS) return ret;
+			// Now start the sampling-timer
+			ret = app_timer_start(sampling_microphone_timer, APP_TIMER_TICKS(period_ms, 0), NULL);
+			if(ret != NRF_SUCCESS) return ret;
 
-		// Now start the average-sampling-timer
-		ret = app_timer_start(sampling_microphone_aggregated_timer, APP_TIMER_TICKS(microphone_aggregated_period_ms, 0), NULL);
-		if(ret != NRF_SUCCESS) return ret;
+			// Now start the average-sampling-timer
+			ret = app_timer_start(sampling_microphone_aggregated_timer, APP_TIMER_TICKS(microphone_aggregated_period_ms, 0), NULL);
+			if(ret != NRF_SUCCESS) return ret;
 
-		
-		
-		sampling_configuration = (sampling_configuration_t) (sampling_configuration | SAMPLING_MICROPHONE);
-		advertiser_set_status_flag_microphone_enabled(1);
-		
-		timeout_start(microphone_timeout_id, timeout_ms);
+			
+			
+			sampling_configuration = (sampling_configuration_t) (sampling_configuration | SAMPLING_MICROPHONE);
+			advertiser_set_status_flag_microphone_enabled(1);
+			
+			timeout_start(microphone_timeout_id, timeout_ms);
+		}
 	} else {
 		// If we are not already sampling the microphone, we have to start the sampling-timer
 		if((sampling_configuration & SAMPLING_MICROPHONE) == 0) {
@@ -926,17 +932,19 @@ ret_code_t sampling_start_scan(uint32_t timeout_ms, uint16_t period_seconds, uin
 	
 	
 	if(!streaming) {
-		// Stop the sampling-timer that was probably already started
-		app_timer_stop(sampling_scan_timer);
-		
-		// Now start the sampling-timer
-		ret = app_timer_start(sampling_scan_timer, APP_TIMER_TICKS(((uint32_t)period_seconds)*1000, 0), NULL);
-		if(ret != NRF_SUCCESS) return ret;	
-		
-		sampling_configuration = (sampling_configuration_t) (sampling_configuration | SAMPLING_SCAN);
-		advertiser_set_status_flag_scan_enabled(1);
-		
-		timeout_start(scan_timeout_id, timeout_ms);
+		if((sampling_configuration & SAMPLING_SCAN) == 0) { // Only stop and start the sampling if it is not already running			
+			// Stop the sampling-timer that was probably already started
+			app_timer_stop(sampling_scan_timer);
+			
+			// Now start the sampling-timer
+			ret = app_timer_start(sampling_scan_timer, APP_TIMER_TICKS(((uint32_t)period_seconds)*1000, 0), NULL);
+			if(ret != NRF_SUCCESS) return ret;	
+			
+			sampling_configuration = (sampling_configuration_t) (sampling_configuration | SAMPLING_SCAN);
+			advertiser_set_status_flag_scan_enabled(1);
+			
+			timeout_start(scan_timeout_id, timeout_ms);
+		}
 	} else {
 		// If we are not already sampling the scanner, we have to start the sampling-timer
 		if((sampling_configuration & SAMPLING_SCAN) == 0) {
