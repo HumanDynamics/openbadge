@@ -766,6 +766,7 @@ uint32_t filesystem_get_available_size(void) {
 }
 
 
+
 ret_code_t filesystem_register_partition(uint16_t* partition_id, uint32_t* required_size, uint8_t is_dynamic, uint8_t enable_crc, uint16_t element_len) {
 	if(number_of_partitions >= MAX_NUMBER_OF_PARTITIONS) 
 		return NRF_ERROR_NO_MEM;
@@ -841,6 +842,49 @@ ret_code_t filesystem_register_partition(uint16_t* partition_id, uint32_t* requi
 	return NRF_SUCCESS;
 }
 
+
+ret_code_t filesystem_clear_partition(uint16_t partition_id) {
+	// We just need to clear the first element-header and the header in the SWAP-PAGE to clear a whole partition.
+	
+	uint16_t index = partition_id & 0x3FFF;
+	
+	
+	ret_code_t ret;
+	
+	
+	uint32_t partition_start_address 	= partitions[index].first_element_address;
+	
+	uint16_t element_header_len = filesystem_get_element_header_len(partition_id);
+	
+	
+	// Clear the backup page:	
+	uint32_t first_element_address_swap_page = filesystem_get_swap_page_address_of_partition(partition_id);
+	uint8_t tmp[PARTITION_METADATA_SIZE + element_header_len];
+	memset(tmp, 0xFF, sizeof(tmp));		// Set to an bad metadata + first_element_header
+	ret = filesystem_backup_first_element_header(first_element_address_swap_page, tmp, PARTITION_METADATA_SIZE + element_header_len);
+	if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;
+	
+	// CLear the first element-header:
+	memset(tmp, 0xFF, sizeof(tmp));		// Set to an bad metadata + first_element_header
+	// Write metadata + header to storage
+	ret = storage_store(partition_start_address, &tmp[0], PARTITION_METADATA_SIZE + element_header_len);
+	if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;	
+	// Check if the metadata + header was written successfully
+	uint8_t tmp_read[sizeof(tmp)];
+	ret = storage_read(partition_start_address, &tmp_read[0], PARTITION_METADATA_SIZE + element_header_len);
+	if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;				
+	if(memcmp(tmp, tmp_read, sizeof(tmp)) != 0)	return NRF_ERROR_INTERNAL;
+	
+	
+	// Now reset the state of the partition:
+	partitions[index].has_first_element 		= 0;
+	partitions[index].first_element_address		= partition_start_address;
+	partitions[index].latest_element_address	= partition_start_address;
+	partitions[index].latest_element_record_id	= 1;
+	partitions[index].latest_element_len		= 0;
+
+	return NRF_SUCCESS;
+}
 
 ret_code_t filesystem_store_element(uint16_t partition_id, uint8_t* element_data, uint16_t element_len) {
 	uint16_t index = partition_id & 0x3FFF;

@@ -6,6 +6,7 @@
 
 ret_code_t storer_init(void);
 
+ret_code_t storer_clear(void);
 
 
 ret_code_t storer_store_badge_assignement(BadgeAssignement* badge_assignement);

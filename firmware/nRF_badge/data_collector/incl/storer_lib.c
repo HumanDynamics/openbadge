@@ -12,7 +12,7 @@
 #define STORER_SERIALIZED_BUFFER_SIZE				512
 
 #define STORER_BADGE_ASSIGNEMENT_NUMBER				1
-#define STORER_BATTERY_DATA_NUMBER					200
+#define STORER_BATTERY_DATA_NUMBER					100
 #define STORER_MICROPHONE_DATA_NUMBER				1000
 #define STORER_SCAN_DATA_NUMBER						1000
 #define STORER_ACCELEROMETER_INTERRUPT_DATA_NUMBER	50
@@ -110,6 +110,36 @@ ret_code_t storer_register_partitions(void) {
 	return NRF_SUCCESS;
 }
 
+ret_code_t storer_init(void) {
+	ret_code_t ret;
+	ret = filesystem_init();
+	if(ret != NRF_SUCCESS) return ret;
+	
+	ret = storer_register_partitions();
+	if(ret != NRF_SUCCESS) return ret;
+	
+	return NRF_SUCCESS;
+}
+
+ret_code_t storer_clear(void) {
+	ret_code_t ret = filesystem_clear_partition(partition_id_battery_chunks);
+	if(ret != NRF_SUCCESS) return ret;
+	
+	ret = filesystem_clear_partition(partition_id_microphone_chunks);
+	if(ret != NRF_SUCCESS) return ret;
+	
+	ret = filesystem_clear_partition(partition_id_scan_chunks);
+	if(ret != NRF_SUCCESS) return ret;
+	
+	ret = filesystem_clear_partition(partition_id_accelerometer_interrupt_chunks);
+	if(ret != NRF_SUCCESS) return ret;
+	
+	ret = filesystem_clear_partition(partition_id_accelerometer_chunks);
+	if(ret != NRF_SUCCESS) return ret;	
+	
+	return ret;
+}
+
 /**@brief Function to compare two timestamps. 
  *
  * @retval	-1	timestamp1 > timestamp2
@@ -122,16 +152,7 @@ int8_t storer_compare_timestamps(Timestamp timestamp1, Timestamp timestamp2) {
 	return (t1 > t2) ? -1 : ((t2 > t1) ? 1 : 0);
 } 
 
-ret_code_t storer_init(void) {
-	ret_code_t ret;
-	ret = filesystem_init();
-	if(ret != NRF_SUCCESS) return ret;
-	
-	ret = storer_register_partitions();
-	if(ret != NRF_SUCCESS) return ret;
-	
-	return NRF_SUCCESS;
-}
+
 
 /**
  * @retval NRF_ERROR_INTERNAL		Busy

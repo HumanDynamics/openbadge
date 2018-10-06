@@ -151,6 +151,19 @@ uint32_t filesystem_get_available_size(void);
  */
 ret_code_t filesystem_register_partition(uint16_t* partition_id, uint32_t* required_size, uint8_t is_dynamic, uint8_t enable_crc, uint16_t element_len);
 
+/** @brief Function for clearing a partition.
+ *
+ * @details	The function clears a partition. It removes the first-element-header at the beginning of the partition and in the swap-page.
+ *			Furthermore, it resets the state of the partition to "zero" (the default values after registering a partition).
+ *			After clearing a partition no more elements could be found. The application needn't to register the partition again, but just use it. 
+ *
+ *
+ * @param[in]	partition_id			The identifier of the partition.
+ * 
+ * @retval 		NRF_SUCCESS					If the store operation was succesful.
+ * @retval 		NRF_ERROR_INTERNAL			If there was an internal error (e.g. data couldn't be stored/read because of busy).
+ */
+ret_code_t filesystem_clear_partition(uint16_t partition_id);
 
 /** @brief Function for storing an element (some bytes) to a partition.
  *
