@@ -65,8 +65,10 @@ typedef struct {
 
 
 
-static request_event_t request_event;	/**< Needed a reponse event, to put the timepoint ticks into the structure */
+static request_event_t 	request_event;	/**< Needed a reponse event, to put the timepoint ticks into the structure */
 static response_event_t	response_event; /**< Needed a reponse event, to put the reties and the function to call after success into the structure */
+static Timestamp		response_timestamp; /**< Needed for the status-, and start-requests */
+static uint8_t			response_clock_status;	/**< Needed for the status-, and start-requests */
 
 
 static app_fifo_t receive_notification_fifo;
@@ -204,7 +206,10 @@ static void process_receive_notification(void * p_event_data, uint16_t event_siz
 	}
 	
 	processing_receive_notification = 1;
-
+	
+	// Get the timestamp and clock-sync status before processing the request!
+	systick_get_timestamp(&response_timestamp.seconds, &response_timestamp.ms); 
+	response_clock_status = systick_is_synced();
 	
 		
 	app_fifo_read(&receive_notification_fifo, (uint8_t*) &receive_notification, &notification_size);
@@ -371,10 +376,11 @@ static void send_response(void * p_event_data, uint16_t event_size) {
 
 static void status_response_handler(void * p_event_data, uint16_t event_size) {
 	response_event.response.which_type = Response_status_response_tag;
-	response_event.response.type.status_response.clock_status = advertiser_get_status_flag_is_clock_synced();
+	response_event.response.type.status_response.clock_status = response_clock_status;
 	response_event.response.type.status_response.collector_status = advertiser_get_status_flag_microphone_enabled();
 	response_event.response.type.status_response.scan_status = advertiser_get_status_flag_scan_enabled();
-	systick_get_timestamp(&response_event.response.type.status_response.timestamp.seconds, &response_event.response.type.status_response.timestamp.ms);
+	//systick_get_timestamp(&response_event.response.type.status_response.timestamp.seconds, &response_event.response.type.status_response.timestamp.ms);
+	response_event.response.type.status_response.timestamp = response_timestamp;
 	battery_read_voltage(&(response_event.response.type.status_response.battery_data.voltage));
 	
 	response_event.response_retries = 0;
@@ -390,8 +396,8 @@ static void start_microphone_response_handler(void * p_event_data, uint16_t even
 	response_event.response_retries = 0;
 	response_event.response_success_handler = NULL;
 	
-	systick_get_timestamp(&response_event.response.type.start_microphone_response.timestamp.seconds, &response_event.response.type.start_microphone_response.timestamp.ms);
-	
+	//systick_get_timestamp(&response_event.response.type.start_microphone_response.timestamp.seconds, &response_event.response.type.start_microphone_response.timestamp.ms);
+	response_event.response.type.start_microphone_response.timestamp = response_timestamp;
 	
 	
 	send_response(NULL, 0);	
@@ -412,8 +418,8 @@ static void start_scan_response_handler(void * p_event_data, uint16_t event_size
 	response_event.response.which_type = Response_start_scan_response_tag;
 	response_event.response_retries = 0;
 	response_event.response_success_handler = NULL;
-	systick_get_timestamp(&response_event.response.type.start_scan_response.timestamp.seconds, &response_event.response.type.start_scan_response.timestamp.ms);
-	
+	//systick_get_timestamp(&response_event.response.type.start_scan_response.timestamp.seconds, &response_event.response.type.start_scan_response.timestamp.ms);
+	response_event.response.type.start_scan_response.timestamp = response_timestamp;
 	
 	
 	send_response(NULL, 0);	

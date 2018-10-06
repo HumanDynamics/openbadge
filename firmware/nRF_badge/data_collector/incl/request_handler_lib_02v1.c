@@ -61,7 +61,8 @@ typedef struct {
 
 static request_event_t request_event;	/**< Needed a reponse event, to put the timepoint ticks into the structure */
 static response_event_t	response_event; /**< Needed a reponse event, to put the reties and the function to call after success into the structure */
-
+static Timestamp		response_timestamp; /**< Needed for the status-, and start-requests */
+static uint8_t			response_clock_status;	/**< Needed for the status-, and start-requests */
 
 static app_fifo_t receive_notification_fifo;
 static uint8_t receive_notification_buf[RECEIVE_NOTIFICATION_FIFO_SIZE];
@@ -394,6 +395,9 @@ static void process_receive_notification(void * p_event_data, uint16_t event_siz
 		return;
 	}
 	
+	// Get the timestamp and clock-sync status before processing the request!
+	systick_get_timestamp(&response_timestamp.seconds, &response_timestamp.ms); 
+	response_clock_status = systick_is_synced();
 	
 	uint64_t timepoint_ticks = receive_notification.timepoint_ticks;
 	
@@ -569,18 +573,20 @@ static void status_response_handler(void * p_event_data, uint16_t event_size) {
 	
 
 	response_event.response.which_type = Response_status_response_tag;
-	response_event.response.type.status_response.clock_status = advertiser_get_status_flag_is_clock_synced();
+	response_event.response.type.status_response.clock_status = response_clock_status;
 	response_event.response.type.status_response.microphone_status = advertiser_get_status_flag_microphone_enabled();
 	response_event.response.type.status_response.scan_status = advertiser_get_status_flag_scan_enabled();
 	response_event.response.type.status_response.accelerometer_status = advertiser_get_status_flag_accelerometer_enabled();
 	response_event.response.type.status_response.accelerometer_interrupt_status = advertiser_get_status_flag_accelerometer_interrupt_enabled();
 	response_event.response.type.status_response.battery_status = advertiser_get_status_flag_battery_enabled();
-	systick_get_timestamp(&response_event.response.type.status_response.timestamp.seconds, &response_event.response.type.status_response.timestamp.ms);
+	//systick_get_timestamp(&response_event.response.type.status_response.timestamp.seconds, &response_event.response.type.status_response.timestamp.ms);
+	response_event.response.type.status_response.timestamp = response_timestamp;
 	battery_read_voltage(&(response_event.response.type.status_response.battery_data.voltage));
 	
 	response_event.response_retries = 0;
 	response_event.response_success_handler = NULL;
 	
+	finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification. 
 	send_response(NULL, 0);	
 	
 }
@@ -594,8 +600,10 @@ static void start_microphone_response_handler(void * p_event_data, uint16_t even
 	response_event.response_retries = 0;
 	response_event.response_success_handler = NULL;
 	
-	systick_get_timestamp(&response_event.response.type.start_microphone_response.timestamp.seconds, &response_event.response.type.start_microphone_response.timestamp.ms);
+	//systick_get_timestamp(&response_event.response.type.start_microphone_response.timestamp.seconds, &response_event.response.type.start_microphone_response.timestamp.ms);
+	response_event.response.type.start_microphone_response.timestamp = response_timestamp;
 	
+	finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification. 
 	send_response(NULL, 0);	
 }
 
@@ -607,8 +615,10 @@ static void start_scan_response_handler(void * p_event_data, uint16_t event_size
 	response_event.response.which_type = Response_start_scan_response_tag;
 	response_event.response_retries = 0;
 	response_event.response_success_handler = NULL;
-	systick_get_timestamp(&response_event.response.type.start_scan_response.timestamp.seconds, &response_event.response.type.start_scan_response.timestamp.ms);
+	//systick_get_timestamp(&response_event.response.type.start_scan_response.timestamp.seconds, &response_event.response.type.start_scan_response.timestamp.ms);
+	response_event.response.type.start_scan_response.timestamp = response_timestamp;
 	
+	finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification. 
 	send_response(NULL, 0);	
 }
 
@@ -619,8 +629,10 @@ static void start_accelerometer_response_handler(void * p_event_data, uint16_t e
 	response_event.response.which_type = Response_start_accelerometer_response_tag;
 	response_event.response_retries = 0;
 	response_event.response_success_handler = NULL;
-	systick_get_timestamp(&response_event.response.type.start_accelerometer_response.timestamp.seconds, &response_event.response.type.start_accelerometer_response.timestamp.ms);
+	//systick_get_timestamp(&response_event.response.type.start_accelerometer_response.timestamp.seconds, &response_event.response.type.start_accelerometer_response.timestamp.ms);
+	response_event.response.type.start_accelerometer_response.timestamp = response_timestamp;
 	
+	finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification. 
 	send_response(NULL, 0);	
 }
 
@@ -631,8 +643,10 @@ static void start_accelerometer_interrupt_response_handler(void * p_event_data, 
 	response_event.response.which_type = Response_start_accelerometer_interrupt_response_tag;
 	response_event.response_retries = 0;
 	response_event.response_success_handler = NULL;
-	systick_get_timestamp(&response_event.response.type.start_accelerometer_interrupt_response.timestamp.seconds, &response_event.response.type.start_accelerometer_interrupt_response.timestamp.ms);
+	//systick_get_timestamp(&response_event.response.type.start_accelerometer_interrupt_response.timestamp.seconds, &response_event.response.type.start_accelerometer_interrupt_response.timestamp.ms);
+	response_event.response.type.start_accelerometer_interrupt_response.timestamp = response_timestamp;
 	
+	finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification. 
 	send_response(NULL, 0);	
 }
 
@@ -644,7 +658,10 @@ static void start_battery_response_handler(void * p_event_data, uint16_t event_s
 	response_event.response.which_type = Response_start_battery_response_tag;
 	response_event.response_retries = 0;
 	response_event.response_success_handler = NULL;
-	systick_get_timestamp(&response_event.response.type.start_battery_response.timestamp.seconds, &response_event.response.type.start_battery_response.timestamp.ms);
+	//systick_get_timestamp(&response_event.response.type.start_battery_response.timestamp.seconds, &response_event.response.type.start_battery_response.timestamp.ms);
+	response_event.response.type.start_battery_response.timestamp = response_timestamp;
+	
+	finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification. 
 	send_response(NULL, 0);	
 }
 
@@ -999,7 +1016,8 @@ static void status_request_handler(void * p_event_data, uint16_t event_size) {
 	}
 	
 	app_sched_event_put(NULL, 0, status_response_handler);
-	finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification
+	// Don't finish it here, but in the response-handler (because of the response_timestamp and response_clock_status)
+	//finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification. 
 }
 
 
@@ -1020,7 +1038,8 @@ static void start_microphone_request_handler(void * p_event_data, uint16_t event
 	
 	if(ret == NRF_SUCCESS) {
 		app_sched_event_put(NULL, 0, start_microphone_response_handler);
-		finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification
+		// Don't finish it here, but in the response-handler (because of the response_timestamp and response_clock_status)
+		//finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification. 
 	} else {
 		// TODO: Error counter for rescheduling 
 		app_sched_event_put(NULL, 0, start_microphone_request_handler);
@@ -1061,7 +1080,8 @@ static void start_scan_request_handler(void * p_event_data, uint16_t event_size)
 	
 	if(ret == NRF_SUCCESS) {
 		app_sched_event_put(NULL, 0, start_scan_response_handler);
-		finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification
+		// Don't finish it here, but in the response-handler (because of the response_timestamp and response_clock_status)
+		//finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification. 
 	} else {
 		// TODO: Error counter for rescheduling 
 		app_sched_event_put(NULL, 0, start_scan_request_handler);
@@ -1093,7 +1113,8 @@ static void start_accelerometer_request_handler(void * p_event_data, uint16_t ev
 	
 	if(ret == NRF_SUCCESS) {
 		app_sched_event_put(NULL, 0, start_accelerometer_response_handler);
-		finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification
+		// Don't finish it here, but in the response-handler (because of the response_timestamp and response_clock_status)
+		//finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification. 
 	} else {
 		// TODO: Error counter for rescheduling 
 		app_sched_event_put(NULL, 0, start_accelerometer_request_handler);
@@ -1125,7 +1146,8 @@ static void start_accelerometer_interrupt_request_handler(void * p_event_data, u
 	
 	if(ret == NRF_SUCCESS) {
 		app_sched_event_put(NULL, 0, start_accelerometer_interrupt_response_handler);
-		finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification
+		// Don't finish it here, but in the response-handler (because of the response_timestamp and response_clock_status)
+		//finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification. 
 	} else {
 		// TODO: Error counter for rescheduling 
 		app_sched_event_put(NULL, 0, start_accelerometer_interrupt_request_handler);
@@ -1154,7 +1176,8 @@ static void start_battery_request_handler(void * p_event_data, uint16_t event_si
 	
 	if(ret == NRF_SUCCESS) {
 		app_sched_event_put(NULL, 0, start_battery_response_handler);
-		finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification
+		// Don't finish it here, but in the response-handler (because of the response_timestamp and response_clock_status)
+		//finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification. 
 	} else {
 		// TODO: Error counter for rescheduling 
 		app_sched_event_put(NULL, 0, start_battery_request_handler);
