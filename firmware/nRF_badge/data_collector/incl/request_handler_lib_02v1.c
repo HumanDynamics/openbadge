@@ -969,20 +969,33 @@ static void status_request_handler(void * p_event_data, uint16_t event_size) {
 	systick_set_timestamp(request_event.request_timepoint_ticks, timestamp.seconds, timestamp.ms);
 	advertiser_set_status_flag_is_clock_synced(1);
 	
-	if(request_event.request.type.status_request.has_badge_assignement) {
+	if(request_event.request.type.status_request.has_badge_assignement) {		
+		
 		BadgeAssignement badge_assignement;
 		badge_assignement = request_event.request.type.status_request.badge_assignement;
-		advertiser_set_badge_assignement(badge_assignement);
-		ret_code_t ret = storer_store_badge_assignement(&badge_assignement);
 		
-		if(ret == NRF_ERROR_INTERNAL) {
+		advertiser_set_badge_assignement(badge_assignement);
+		
+		// First read if we have already the correct badge-assignement stored:
+		BadgeAssignement stored_badge_assignement;
+		ret_code_t ret = storer_read_badge_assignement(&stored_badge_assignement);
+		if(ret == NRF_ERROR_INVALID_STATE || ret == NRF_ERROR_INVALID_DATA || (ret == NRF_SUCCESS && (stored_badge_assignement.ID != badge_assignement.ID || stored_badge_assignement.group != badge_assignement.group))) {
+			debug_log("Badge assignements missmatch: --> setting the new badge assignement: Old (%u, %u), New (%u, %u)\n", stored_badge_assignement.ID, stored_badge_assignement.group, badge_assignement.ID, badge_assignement.group);
+			ret = storer_store_badge_assignement(&badge_assignement);
+			if(ret == NRF_ERROR_INTERNAL) {
+				// TODO: Error counter for rescheduling 
+				app_sched_event_put(NULL, 0, status_request_handler);
+				return;
+			} else if (ret != NRF_SUCCESS) {	// There is an error in the configuration of the badge-assignement partition
+				// TODO: Error handling
+				finish_error();
+				return;
+			} 
+		} else if(ret == NRF_ERROR_INTERNAL) {
 			// TODO: Error counter for rescheduling 
-			app_sched_event_put(NULL, 0, status_request_handler);		
+			app_sched_event_put(NULL, 0, status_request_handler);
 			return;
-		} else if (ret != NRF_SUCCESS) {	// There is an error in the configuration of the badge-assignement partition
-			// TODO: Error handling
-			finish_error();
-		} 
+		}
 	}
 	
 	app_sched_event_put(NULL, 0, status_response_handler);

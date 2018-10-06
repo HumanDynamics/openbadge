@@ -525,20 +525,32 @@ static void status_assign_request_handler(void * p_event_data, uint16_t event_si
 	systick_set_timestamp(request_event.request_timepoint_ticks, timestamp.seconds, timestamp.ms);
 	advertiser_set_status_flag_is_clock_synced(1);
 	
-	// TODO: set the badge_assignement!
+
 	BadgeAssignement badge_assignement;
 	badge_assignement = request_event.request.type.status_assign_request.badge_assignement;
 	
 	advertiser_set_badge_assignement(badge_assignement);
 	
-	
-	ret_code_t ret = storer_store_badge_assignement(&badge_assignement);
-	if(ret == NRF_ERROR_INTERNAL) {
+	// First read if we have already the correct badge-assignement stored:
+	BadgeAssignement stored_badge_assignement;
+	ret_code_t ret = storer_read_badge_assignement(&stored_badge_assignement);
+	if(ret == NRF_ERROR_INVALID_STATE || ret == NRF_ERROR_INVALID_DATA || (ret == NRF_SUCCESS && (stored_badge_assignement.ID != badge_assignement.ID || stored_badge_assignement.group != badge_assignement.group))) {
+		debug_log("Badge assignements missmatch: --> setting the new badge assignement: Old (%u, %u), New (%u, %u)\n", stored_badge_assignement.ID, stored_badge_assignement.group, badge_assignement.ID, badge_assignement.group);
+		ret = storer_store_badge_assignement(&badge_assignement);
+		if(ret == NRF_ERROR_INTERNAL) {
+			// TODO: Error counter for rescheduling 
+			app_sched_event_put(NULL, 0, status_assign_request_handler);
+			return;
+		} else if (ret != NRF_SUCCESS) {	// There is an error in the configuration of the badge-assignement partition
+			// TODO: Error handling
+			finish_request_error();
+		} 
+	} else if(ret == NRF_ERROR_INTERNAL) {
 		// TODO: Error counter for rescheduling 
 		app_sched_event_put(NULL, 0, status_assign_request_handler);
 		return;
-	} 
-	app_sched_event_put(NULL, 0, status_response_handler);	
+	}
+	app_sched_event_put(NULL, 0, status_response_handler);
 }
 
 static void start_microphone_request_handler(void * p_event_data, uint16_t event_size) {
@@ -593,15 +605,13 @@ static void start_scan_request_handler(void * p_event_data, uint16_t event_size)
 	ret_code_t ret = sampling_start_scan(timeout*60*1000, period, interval, window, duration, badge_assignement.group, SCAN_AGGREGATION_TYPE, 0);
 	debug_log("Ret sampling_start_scan: %d\n\r", ret);
 	
-	if(ret == NRF_ERROR_INTERNAL) {
+	
+	
+	if(ret == NRF_SUCCESS) {
+		app_sched_event_put(NULL, 0, start_scan_response_handler);
+	} else {
 		// TODO: Error counter for rescheduling 
 		app_sched_event_put(NULL, 0, start_scan_request_handler);
-		
-	} else if (ret == NRF_SUCCESS) {
-		app_sched_event_put(NULL, 0, start_scan_response_handler);
-	} else {	// There is an error in the configuration of the badge-assignement partition
-		// TODO: Error handling
-		finish_request_error();
 	}
 }
 
