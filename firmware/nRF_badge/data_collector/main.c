@@ -23,7 +23,7 @@
 #include "uart_commands_lib.h"
 
 
-#define BATTERY_MEASUREMENT_PERIOD_MS	15000
+#define BATTERY_MEASUREMENT_PERIOD_MS	60000
 
 /**
  * ============================================== MAIN ====================================================
@@ -78,6 +78,9 @@ int main(void)
 	debug_log("Ret selftest_test: %u\n\r", selftest_status);
 	(void) selftest_status;
 	
+	ret = storer_clear();
+	debug_log("Storer clear: %u\n\r", ret);
+	
 	#endif
 		
 	uint8_t mac[6];
@@ -91,7 +94,7 @@ int main(void)
 	
 	ret = request_handler_init();
 	
-	// Directly start the battery-sampling
+	// Directly start the battery-sampling (this does not store the battery, until the time is synced)
 	ret = sampling_start_battery(0, BATTERY_MEASUREMENT_PERIOD_MS, 0);
 	
 	(void) ret;
