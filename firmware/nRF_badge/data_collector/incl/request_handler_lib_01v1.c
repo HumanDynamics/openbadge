@@ -437,7 +437,7 @@ static void microphone_data_response_handler(void * p_event_data, uint16_t event
 
 	ret_code_t ret = storer_get_next_microphone_chunk(&microphone_chunk);
 	if(ret == NRF_SUCCESS) {
-		debug_log("Found microphone data..\n");
+		debug_log("Found microphone data: %u, %u\n", microphone_chunk.timestamp.seconds, microphone_chunk.timestamp.ms);
 		// Send microphone data
 		response_event.response.type.microphone_data_response.microphone_data_response_header.timestamp = microphone_chunk.timestamp;
 		response_event.response.type.microphone_data_response.microphone_data_response_header.battery_data.voltage = 0;

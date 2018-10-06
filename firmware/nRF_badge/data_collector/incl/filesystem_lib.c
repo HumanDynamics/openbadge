@@ -488,6 +488,13 @@ ret_code_t filesystem_get_next_element_header(uint16_t partition_id, uint32_t cu
 	
 	uint32_t partition_start_address 	= partitions[index].first_element_address;
 	uint32_t partition_size				= partitions[index].metadata.partition_size;
+	uint32_t latest_element_record_id	= partitions[index].latest_element_record_id;	// The record id of the latest element. To stop when there are probably some old entries that are consecutive..
+	
+	// Check if we have already reached the latest element --> return
+	if(cur_element_record_id == latest_element_record_id) {
+		return NRF_ERROR_NOT_FOUND;
+	}
+	
 	
 	uint16_t element_header_len = filesystem_get_element_header_len(partition_id);
 	
@@ -504,7 +511,7 @@ ret_code_t filesystem_get_next_element_header(uint16_t partition_id, uint32_t cu
 	if(ret != NRF_SUCCESS)
 		return ret;
 	
-	
+		
 	// Check the record id of the "next element"
 	if(record_id == increment_record_id(cur_element_record_id)) {
 		
