@@ -927,6 +927,80 @@ TEST_F(FilesystemTest, ClearTest) {
 	
 }
 
+TEST_F(FilesystemTest, ClearPartitionTest) {
+	
+	uint16_t partition_id = 0xFFFF;
+	uint32_t required_size = STORAGE1_SIZE_TEST;
+	
+	// Register partition
+	ret_code_t ret = filesystem_register_partition(&partition_id, &required_size, 1, 1, 0);
+	ASSERT_EQ(ret, NRF_SUCCESS);
+	
+	ret = filesystem_iterator_init(partition_id);
+	EXPECT_EQ(ret, NRF_ERROR_INVALID_STATE);
+	
+		
+	// Create 3 elements in partition
+	uint8_t data[3000];	
+	for(uint32_t j = 0; j < 3; j++) {
+		
+		for(uint16_t i =0; i < 1000; i++)
+			data[i] = i % 256;
+	
+		ret_code_t ret = filesystem_store_element(partition_id, data, (j+1)*1000);
+		EXPECT_EQ(ret, NRF_SUCCESS);		
+	}
+	
+	
+	
+	ret = filesystem_iterator_init(partition_id);
+	EXPECT_EQ(ret, NRF_SUCCESS);
+	
+	EXPECT_EQ(partition_iterators[0].iterator_valid, 0xA5);
+	
+	// If we only reset the filesystem, the partition should be still there and we can create an iterator for it
+	ret = filesystem_reset();
+	EXPECT_EQ(ret, NRF_SUCCESS);
+	// Register partition
+	ret = filesystem_register_partition(&partition_id, &required_size, 1, 1, 0);
+	EXPECT_EQ(ret, NRF_SUCCESS);
+	ret = filesystem_iterator_init(partition_id);
+	EXPECT_EQ(ret, NRF_SUCCESS);	
+	EXPECT_EQ(partition_iterators[0].iterator_valid, 0xA5);
+	
+	
+	
+	// Now clear the partition:
+	ret = filesystem_clear_partition(partition_id);
+	EXPECT_EQ(ret, NRF_SUCCESS);	
+	
+	// If we clear the partition, we should not find a valid iterator (because there are no elements anymore)
+	ret = filesystem_iterator_init(partition_id);
+	EXPECT_EQ(ret, NRF_ERROR_INVALID_STATE);
+	
+	// Create 3 elements in partition
+	for(uint32_t j = 0; j < 3; j++) {		
+		for(uint16_t i =0; i < 1000; i++)
+			data[i] = i % 256;
+	
+		ret_code_t ret = filesystem_store_element(partition_id, data, (j+1)*1000);
+		EXPECT_EQ(ret, NRF_SUCCESS);		
+	}
+	
+	// Now we should find an iterator
+	ret = filesystem_iterator_init(partition_id);
+	EXPECT_EQ(ret, NRF_SUCCESS);
+	EXPECT_EQ(partition_iterators[0].iterator_valid, 0xA5);
+	
+	// Check if number of elements is 3:
+	ret = filesystem_iterator_previous(partition_id);
+	EXPECT_EQ(ret, NRF_SUCCESS);
+	ret = filesystem_iterator_previous(partition_id);
+	EXPECT_EQ(ret, NRF_SUCCESS);
+	ret = filesystem_iterator_previous(partition_id);
+	EXPECT_EQ(ret, NRF_ERROR_NOT_FOUND);
+}
+
 TEST_F(FilesystemTest, AvailableSizeTest) {
 	uint32_t available_size = 0;
 	available_size = filesystem_get_available_size();	
