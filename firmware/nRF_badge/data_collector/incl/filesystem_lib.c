@@ -423,7 +423,6 @@ ret_code_t filesystem_read_element_header(uint16_t partition_id, uint32_t elemen
 		if(header_crc == metadata.header_crc) {
 			// Check if the metadata are consistent with the application metadata for the partition
 			if(metadata.partition_id == partitions[index].metadata.partition_id && metadata.partition_size == partitions[index].metadata.partition_size && (is_dynamic || metadata.first_element_len == partitions[index].metadata.first_element_len)) {
-				
 				// Copy the metadata and element header to the storage
 				ret = storage_store(element_address, &tmp[0], PARTITION_METADATA_SIZE + element_header_len);
 				if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;
@@ -488,13 +487,7 @@ ret_code_t filesystem_get_next_element_header(uint16_t partition_id, uint32_t cu
 	
 	uint32_t partition_start_address 	= partitions[index].first_element_address;
 	uint32_t partition_size				= partitions[index].metadata.partition_size;
-	uint32_t latest_element_record_id	= partitions[index].latest_element_record_id;	// The record id of the latest element. To stop when there are probably some old entries that are consecutive..
-	
-	// Check if we have already reached the latest element --> return
-	if(cur_element_record_id == latest_element_record_id) {
-		return NRF_ERROR_NOT_FOUND;
-	}
-	
+		
 	
 	uint16_t element_header_len = filesystem_get_element_header_len(partition_id);
 	
@@ -862,7 +855,19 @@ ret_code_t filesystem_clear_partition(uint16_t partition_id) {
 	uint32_t partition_start_address 	= partitions[index].first_element_address;
 	
 	uint16_t element_header_len = filesystem_get_element_header_len(partition_id);
+	uint16_t record_id, element_crc, previous_len_XOR_cur_len;
 	
+	uint16_t new_record_id = 1;	// The new record-id for the new first element header
+	
+	ret = filesystem_read_element_header(partition_id, partition_start_address, &record_id, &element_crc, &previous_len_XOR_cur_len);
+	if(ret == NRF_SUCCESS) { // We found a first element header
+		// We will use its record_id to update the new_record_id
+		new_record_id = increment_record_id(record_id);
+	} else if(ret == NRF_ERROR_NOT_FOUND) {
+		new_record_id = 1;
+	} else { // ret == NRF_ERROR_INTERNAL
+		return ret;
+	}
 	
 	// Clear the backup page:	
 	uint32_t first_element_address_swap_page = filesystem_get_swap_page_address_of_partition(partition_id);
@@ -887,7 +892,7 @@ ret_code_t filesystem_clear_partition(uint16_t partition_id) {
 	partitions[index].has_first_element 		= 0;
 	partitions[index].first_element_address		= partition_start_address;
 	partitions[index].latest_element_address	= partition_start_address;
-	partitions[index].latest_element_record_id	= 1;
+	partitions[index].latest_element_record_id	= new_record_id;
 	partitions[index].latest_element_len		= 0;
 
 	return NRF_SUCCESS;
@@ -922,16 +927,14 @@ ret_code_t filesystem_store_element(uint16_t partition_id, uint8_t* element_data
 	if(partitions[index].has_first_element == 0) {
 		
 		element_address = partition_start_address;
-		record_id = 1;
+		record_id = partitions[index].latest_element_record_id;
 		previous_len_XOR_cur_len = 0;
 	} else {
 		uint32_t latest_element_address 	= partitions[index].latest_element_address;
 		uint16_t latest_element_record_id 	= partitions[index].latest_element_record_id;
 		uint16_t latest_element_len		 	= partitions[index].latest_element_len;
 		
-		// Compute the (next) element address:
-		
-		
+		// Compute the (next) element address		
 		uint32_t latest_header_len = (latest_element_address == partition_start_address) ? (PARTITION_METADATA_SIZE + element_header_len) : (element_header_len);
 		uint32_t next_element_address = latest_element_address + latest_header_len + latest_element_len;
 	
@@ -954,6 +957,46 @@ ret_code_t filesystem_store_element(uint16_t partition_id, uint8_t* element_data
 	// Check if there is enough space in partition to store the element
 	if(element_address + header_len + element_len > partition_start_address + partition_size)
 		return NRF_ERROR_NO_MEM;
+	
+	
+	
+	
+	
+	
+	
+	/* Check if the next-element header has an record id that would match the next-record id. 
+	* If this is the case, we need to clear it, because when reregistering the partition we could assume that this is the next element, although it is from a former store-operation.
+	* We need to do it before storing the new data (and header), because:
+	* 		- When the supply voltage drops before this clear operation took place, and we have already done the data-storage, we have the same problem again.
+	*		- When flash: 	we first clear it. Probably we erase the page again, when writing the data, but this is ok. It should not happen very often.
+	*						When we wouldn't do it before writing the data, the second erase operation could corrupt the already written data.
+	*		- When in EEPROM: it doesn't matter at all.
+	*/
+	
+	// Therefore, we need to get the next-element header and address:
+	uint32_t next_element_address;
+	uint16_t next_element_record_id, next_element_crc, next_element_previous_len_XOR_cur_len;
+	ret = filesystem_get_next_element_header(partition_id, element_address, record_id, element_len, &next_element_address, &next_element_record_id, &next_element_crc, &next_element_previous_len_XOR_cur_len);
+	if(ret == NRF_SUCCESS) {
+		// Yes there is a problematic candidate that we have to clear
+		// We only need to clear the header of the next element, if the next element is not the first element. So actually we only need to clear if the next_element_address > element_address.
+		if(next_element_address > element_address) {
+			ret = storage_clear(next_element_address, element_header_len);
+			if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;
+		}
+		
+	} else if(ret == NRF_ERROR_NOT_FOUND) {
+		// No there is no problematic candidate that we have to clear
+	} else { // ret == NRF_ERROR_INTERNAL
+		return ret;
+	}
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	// Compute the crc of the element
@@ -1001,6 +1044,13 @@ ret_code_t filesystem_store_element(uint16_t partition_id, uint8_t* element_data
 		partitions[index].first_element_header = element_header;
 	}
 	
+	
+	
+	
+	
+	
+	
+	
 	// Before storing the new first-element-header to storage, store it in the backup page!! (Not the old header, because if first partition address
 	// is erased, the old header doesn't use anything. So we need to backup the current every time we write on the same unit as first element 
 	// --> therefore we need the partitions[index].first_element_header...
@@ -1028,9 +1078,9 @@ ret_code_t filesystem_store_element(uint16_t partition_id, uint8_t* element_data
 		
 		
 	
-		
-		
-		
+   
+	
+	
 	// Now write to the actual storage.
 	if(element_address == partition_start_address) {
 		
@@ -1081,6 +1131,10 @@ ret_code_t filesystem_store_element(uint16_t partition_id, uint8_t* element_data
 	partitions[index].latest_element_len 		= element_len;
 	
 	partitions[index].has_first_element = 1;
+	
+	
+	
+	
 
 	
 	return NRF_SUCCESS;

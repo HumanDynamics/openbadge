@@ -155,7 +155,9 @@ ret_code_t filesystem_register_partition(uint16_t* partition_id, uint32_t* requi
  *
  * @details	The function clears a partition. It removes the first-element-header at the beginning of the partition and in the swap-page.
  *			Furthermore, it resets the state of the partition to "zero" (the default values after registering a partition).
- *			After clearing a partition no more elements could be found. The application needn't to register the partition again, but just use it. 
+ *			After clearing a partition no more elements could be found. The application needn't to register the partition again, but can just use it. 
+ *			If there was already a first-element-header in the partition, it reads out its record_id and increments it, so that the record-id of the 
+ *			new first-element-header is different. This is done, to not clear the (already existing) next element-headers all the time while storing.
  *
  *
  * @param[in]	partition_id			The identifier of the partition.
@@ -176,6 +178,9 @@ ret_code_t filesystem_clear_partition(uint16_t partition_id);
  *			and we wouldn't find it anymore if the whole first unit (in case of flash) is erased/corrupted.
  *			Furthermore, if there are repeated store operations in the first unit, 
  *			this backup is needed to keep a valid partition even if the first-element-header is corrupted during these store-operations.
+ *
+ *			Furthermore, before storing the data to storage, it is checked that the next-element header has not a consecutive record-id, to don't get confused.
+ *			If it has a consecutive record-id the next-element header is cleared before writing the new data.
  *			
  * @note 	It is advantageous to keep the swap-page in a storage part with a unit size of one byte, because if different partitions alternately store in their first unit,
  *			the first-element-header must be backupt each time. If the addresses of the backupt first-element-headers are on the same unit (e.g. in flash), 
