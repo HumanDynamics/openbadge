@@ -181,6 +181,10 @@ ret_code_t filesystem_clear_partition(uint16_t partition_id);
  *
  *			Furthermore, before storing the data to storage, it is checked that the next-element header has not a consecutive record-id, to don't get confused.
  *			If it has a consecutive record-id the next-element header is cleared before writing the new data.
+ *
+ *			Another addition is, that it checks for a conflict with the iterator before storing the data (A conflict means, that the iterator is valid and the storer
+ *			wants to overwrite the element the iterator is currently pointing to. This is not allowed.). When a conflict is present the function returns NRF_ERROR_INTERNAL.
+ *			So it is very important to invalidate the iterator if it is not used anymore by filesystem_iterator_invalidate().
  *			
  * @note 	It is advantageous to keep the swap-page in a storage part with a unit size of one byte, because if different partitions alternately store in their first unit,
  *			the first-element-header must be backupt each time. If the addresses of the backupt first-element-headers are on the same unit (e.g. in flash), 
@@ -194,7 +198,8 @@ ret_code_t filesystem_clear_partition(uint16_t partition_id);
  * @retval 		NRF_SUCCESS					If the store operation was succesful.
  * @retval		NRF_ERROR_INVALID_PARAM		If the partition is static and the element_len != 0 && element_len != registered element_len.
  * @retval		NRF_ERROR_NO_MEM			If the element is too big, to be stored in the partition.
- * @retval 		NRF_ERROR_INTERNAL			If there was an internal error (e.g. data couldn't be stored/read because of busy).
+ * @retval 		NRF_ERROR_INTERNAL			If there was an internal error (e.g. data couldn't be stored/read because of busy). 
+ *											Or there is a conflict between storing and the iterator.
  */
 ret_code_t filesystem_store_element(uint16_t partition_id, uint8_t* element_data, uint16_t element_len);
 
@@ -203,6 +208,9 @@ ret_code_t filesystem_store_element(uint16_t partition_id, uint8_t* element_data
 /** @brief Function for initializing the iterator for a partition.
  *
  * @details	The function initializes and validates the iterator to point to the latest stored element of a partition.
+ *
+ * @note	When an iterator was initialized, it needs to be invalidated (via filesystem_iterator_invalidate()) if it is not used anymore.
+ *			Otherwise the store-function could not overwrite the element where the iterator is currently pointing to.
  * 
  * @param[in]	partition_id				The identifier of the partition.
  *
@@ -211,6 +219,15 @@ ret_code_t filesystem_store_element(uint16_t partition_id, uint8_t* element_data
  * @retval     	NRF_ERROR_INTERNAL  		If there was an internal error (e.g. the data couldn't be read because of busy).
  */
 ret_code_t filesystem_iterator_init(uint16_t partition_id);
+
+/** @brief Function for invalidating the iterator of a partition.
+ *
+ * @details	The function invalidates the iterator of a partition, so that the store-function could overwrite the element 
+ *			where the iterator was pointing to.
+ * 
+ * @param[in]	partition_id				The identifier of the partition.
+ */
+void filesystem_iterator_invalidate(uint16_t partition_id);
 
 /** @brief Function to set the iterator pointing to the next element in a partition.
  *

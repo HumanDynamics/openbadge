@@ -14,6 +14,8 @@ ret_code_t storer_store_badge_assignement(BadgeAssignement* badge_assignement);
 ret_code_t storer_read_badge_assignement(BadgeAssignement* badge_assignement);
 
 
+void storer_invalidate_iterators(void);
+
 
 ret_code_t storer_store_accelerometer_chunk(AccelerometerChunk* accelerometer_chunk);
 

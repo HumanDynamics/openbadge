@@ -190,6 +190,7 @@ static void finish_request_error(void) {
 	debug_log_bkgnd("Error while processing notification/request --> Disconnect!!!\n");
 	sender_disconnect();	// To clear the RX- and TX-FIFO
 	processing_receive_notification = 0;
+	storer_invalidate_iterators();
 }
 
 static void process_receive_notification(void * p_event_data, uint16_t event_size) {
@@ -301,7 +302,7 @@ static void send_response(void * p_event_data, uint16_t event_size) {
 	
 	if(encode_status == 0) {
 		debug_log("Error encoding response!\n");
-		finish_request(); // It should actually not happen, but if it happens, just finish the request (and do the next)
+		finish_request_error();
 		return;
 	}
 	

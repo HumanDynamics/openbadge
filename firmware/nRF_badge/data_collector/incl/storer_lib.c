@@ -178,15 +178,20 @@ ret_code_t storer_store_badge_assignement(BadgeAssignement* badge_assignement) {
 ret_code_t storer_read_badge_assignement(BadgeAssignement* badge_assignement) {
 	memset(badge_assignement, 0, sizeof(BadgeAssignement));
 	ret_code_t ret = filesystem_iterator_init(partition_id_badge_assignement); // Get the latest stored assignement
-	if(ret != NRF_SUCCESS) return ret;
+	if(ret != NRF_SUCCESS) {
+		filesystem_iterator_invalidate(partition_id_badge_assignement);
+		return ret;
+	}
 	uint16_t element_len, record_id;
 	ret = filesystem_iterator_read_element(partition_id_badge_assignement, serialized_buf, &element_len, &record_id);
+	filesystem_iterator_invalidate(partition_id_badge_assignement);
+	
 	if(ret != NRF_SUCCESS) return ret;
 	
 	tb_istream_t istream = tb_istream_from_buffer(serialized_buf, element_len);
 	uint8_t decode_status = tb_decode(&istream, BadgeAssignement_fields, badge_assignement, TB_LITTLE_ENDIAN);
 	if(!decode_status) return NRF_ERROR_INVALID_DATA;
-	
+
 	return NRF_SUCCESS;
 }
 
@@ -217,14 +222,20 @@ static ret_code_t find_chunk_from_timestamp(Timestamp timestamp, uint16_t partit
 	
 	ret_code_t ret = filesystem_iterator_init(partition_id);
 	// If there are no data in partition --> directly return
-	if(ret != NRF_SUCCESS) return ret;
+	if(ret != NRF_SUCCESS) {
+		filesystem_iterator_invalidate(partition_id);
+		return ret;
+	}
 
 	
 	while(1) {		
 		uint16_t element_len, record_id;
 		ret = filesystem_iterator_read_element(partition_id, serialized_buf, &element_len, &record_id);
 		// ret could be NRF_SUCCESS, NRF_ERROR_INVALID_DATA, NRF_ERROR_INVALID_STATE, NRF_ERROR_INTERNAL
-		if(!(ret == NRF_ERROR_INVALID_DATA || ret == NRF_SUCCESS)) return ret;
+		if(!(ret == NRF_ERROR_INVALID_DATA || ret == NRF_SUCCESS)) {
+			filesystem_iterator_invalidate(partition_id);
+			return ret;
+		}
 
 		if(ret == NRF_SUCCESS) { // Only try to decode when the data are not corrupted (NRF_ERROR_INVALID_DATA)
 
@@ -236,6 +247,11 @@ static ret_code_t find_chunk_from_timestamp(Timestamp timestamp, uint16_t partit
 					// We have found the timestamp --> we need to go to the next again
 					ret = filesystem_iterator_next(partition_id);
 					// ret could be NRF_SUCCESS, NRF_ERROR_NOT_FOUND, NRF_ERROR_INVALID_STATE, NRF_ERROR_INTERNAL
+					if(!(ret == NRF_ERROR_NOT_FOUND || ret == NRF_SUCCESS)) {
+						filesystem_iterator_invalidate(partition_id);
+						return ret;
+					}
+					// ret could be NRF_SUCCESS, NRF_ERROR_NOT_FOUND	
 					if(ret == NRF_SUCCESS) {
 						*found_timestamp = 1;
 					} else { // If we have not found a "next" element (because the current one is the latest), we haven't a valid timestamp
@@ -252,7 +268,10 @@ static ret_code_t find_chunk_from_timestamp(Timestamp timestamp, uint16_t partit
 		// Otherwise go to the previous except there is no previous element any more
 		ret = filesystem_iterator_previous(partition_id);
 		// ret could be NRF_SUCCESS, NRF_ERROR_NOT_FOUND, NRF_ERROR_INVALID_STATE, NRF_ERROR_INTERNAL
-		if(!(ret == NRF_ERROR_NOT_FOUND || ret == NRF_SUCCESS)) return ret;
+		if(!(ret == NRF_ERROR_NOT_FOUND || ret == NRF_SUCCESS)) {
+			filesystem_iterator_invalidate(partition_id);
+			return ret;
+		}
 		// ret could be NRF_SUCCESS, NRF_ERROR_NOT_FOUND
 		if(ret == NRF_ERROR_NOT_FOUND) {
 			// We have reached the end of the partition --> stop searching
@@ -261,7 +280,7 @@ static ret_code_t find_chunk_from_timestamp(Timestamp timestamp, uint16_t partit
 			break;
 		}
 	}	
-	return ret;	
+	return ret;	// ret should be NRF_SUCCESS
 }
 
 /**
@@ -281,14 +300,23 @@ static ret_code_t get_next_chunk(uint16_t partition_id, const tb_field_t message
 		if(!(*found_timestamp)) {
 			ret = filesystem_iterator_next(partition_id);
 			// ret could be NRF_SUCCESS, NRF_ERROR_NOT_FOUND, NRF_ERROR_INVALID_STATE, NRF_ERROR_INTERNAL
-			if(ret != NRF_SUCCESS) return ret;
+			if(ret != NRF_SUCCESS) {
+				filesystem_iterator_invalidate(partition_id);
+				return ret;
+			}
 		} 
 		*found_timestamp = 0;	
 		
 		// TODO: What happens if read failed, but we have already done a next-step successfully?
 		ret = filesystem_iterator_read_element(partition_id, serialized_buf, &element_len, &record_id);
 		// ret could be NRF_SUCCESS, NRF_ERROR_INVALID_DATA, NRF_ERROR_INVALID_STATE, NRF_ERROR_INTERNAL
-		if(!(ret == NRF_ERROR_INVALID_DATA || ret == NRF_SUCCESS)) return ret;
+		if(ret == NRF_ERROR_INVALID_STATE) {
+			debug_log("Iterator was invalidated!!\n");
+		}
+		if(!(ret == NRF_ERROR_INVALID_DATA || ret == NRF_SUCCESS)) {
+			filesystem_iterator_invalidate(partition_id);
+			return ret;
+		}
 		// ret could be NRF_SUCCESS, NRF_ERROR_INVALID_DATA
 		if(ret == NRF_SUCCESS) { // Only decode if no invalid data
 			// Now decode it
@@ -301,6 +329,15 @@ static ret_code_t get_next_chunk(uint16_t partition_id, const tb_field_t message
 	return ret; // Should actually always be NRF_SUCCESS
 }
 
+
+
+void storer_invalidate_iterators(void) {
+	filesystem_iterator_invalidate(partition_id_accelerometer_chunks);
+	filesystem_iterator_invalidate(partition_id_accelerometer_interrupt_chunks);
+	filesystem_iterator_invalidate(partition_id_battery_chunks);
+	filesystem_iterator_invalidate(partition_id_scan_chunks);
+	filesystem_iterator_invalidate(partition_id_microphone_chunks);
+}
 
 
 ret_code_t storer_store_accelerometer_chunk(AccelerometerChunk* accelerometer_chunk) {

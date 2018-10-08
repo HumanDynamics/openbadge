@@ -330,6 +330,7 @@ static void finish_error(void) {
 	finish_receive_notification();
 	finish_response();
 	streaming_started = 0;
+	storer_invalidate_iterators();
 }
 
 static ret_code_t receive_notification_fifo_peek(receive_notification_t* receive_notification, uint32_t index) {
@@ -521,7 +522,7 @@ static void send_response(void * p_event_data, uint16_t event_size) {
 	
 	if(encode_status == 0) {
 		debug_log("Error encoding response, len: %u!\n", len);
-		finish_response(); // It should actually not happen, but if it happens, just finish the response (and do the next)
+		finish_error();
 		return;
 	}
 	

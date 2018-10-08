@@ -1047,5 +1047,45 @@ TEST_F(FilesystemTest, AvailableSizeTest) {
 
 }
 
+TEST_F(FilesystemTest, IteratorConflictTest) {
+	
+	uint16_t partition_id = 0xFFFF;
+	uint32_t required_size = 2048;
+	
+	// Register partition
+	ret_code_t ret = filesystem_register_partition(&partition_id, &required_size, 1, 1, 0);
+	ASSERT_EQ(ret, NRF_SUCCESS);
+	
+		
+	// Create 3 elements in partition
+	uint8_t data[1000];	
+	for(uint32_t j = 0; j < 3; j++) {
+		
+		for(uint16_t i =0; i < 1000; i++)
+			data[i] = i % 256;
+	
+		ret_code_t ret = filesystem_store_element(partition_id, data, j);
+		EXPECT_EQ(ret, NRF_SUCCESS);		
+	}
+	
+	
+	ret = filesystem_iterator_init(partition_id);
+	ASSERT_EQ(ret, NRF_SUCCESS);
+	EXPECT_EQ(partition_iterators[0].iterator_valid, 0xA5);
+	
+	// Create some more elements in partition
+	for(uint32_t j = 3; j < 58; j++) {
+		
+		for(uint16_t i =0; i < 1000; i++)
+			data[i] = i % 256;
+	
+		ret_code_t ret = filesystem_store_element(partition_id, data, j);
+		EXPECT_EQ(ret, NRF_SUCCESS);
+	}
+	// At element 59 we have a conflict now..
+	ret = filesystem_store_element(partition_id, data, 59);
+	EXPECT_EQ(ret, NRF_ERROR_INTERNAL);	
+}
+
 };
 

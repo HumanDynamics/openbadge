@@ -5,6 +5,7 @@
 #include "stdio.h"
 #include "string.h"	// For memcpy
 
+#define ITERATOR_VALID_NUMBER	0xA5
 
 uint16_t number_of_partitions = 0;											/**< Number of registered partitions */
 partition_t				partitions			[MAX_NUMBER_OF_PARTITIONS];		/**< Array of partitions (index is referenced through "partition_id & 0x3FFF") */
@@ -14,7 +15,7 @@ partition_iterator_t 	partition_iterators	[MAX_NUMBER_OF_PARTITIONS];		/**< Arra
 
 uint32_t next_free_address = 0; 											/**< The next free address for a new partition */
 
-
+ret_code_t filesystem_check_iterator_conflict(uint16_t partition_id, uint32_t element_address, uint16_t element_len);
 
 /**@brief Function for calculating CRC-16 (CRC-16 CCITT) in blocks.
  *
@@ -898,6 +899,10 @@ ret_code_t filesystem_clear_partition(uint16_t partition_id) {
 	return NRF_SUCCESS;
 }
 
+
+
+
+
 ret_code_t filesystem_store_element(uint16_t partition_id, uint8_t* element_data, uint16_t element_len) {
 	uint16_t index = partition_id & 0x3FFF;
 	uint8_t is_dynamic = (partition_id & 0x8000) ? 1 : 0;
@@ -958,8 +963,10 @@ ret_code_t filesystem_store_element(uint16_t partition_id, uint8_t* element_data
 	if(element_address + header_len + element_len > partition_start_address + partition_size)
 		return NRF_ERROR_NO_MEM;
 	
-	
-	
+	// Check for conflict with iterator
+	if(filesystem_check_iterator_conflict(partition_id, element_address, element_len) != NRF_SUCCESS) {
+		return NRF_ERROR_INTERNAL;
+	}
 	
 	
 	
@@ -1167,7 +1174,7 @@ ret_code_t filesystem_iterator_check_validity(uint16_t partition_id) {
 	uint8_t has_element_crc = (partition_id & 0x4000) ? 1 : 0;
 	
 	
-	if(partition_iterators[index].iterator_valid != 0xA5) {
+	if(partition_iterators[index].iterator_valid != ITERATOR_VALID_NUMBER) {
 		return NRF_ERROR_INVALID_STATE;
 	}
 	
@@ -1199,6 +1206,54 @@ ret_code_t filesystem_iterator_check_validity(uint16_t partition_id) {
 	return NRF_SUCCESS;
 }
 
+/** @brief Function to check for a conflict between iterator and a storing operation.
+ *
+ * @details The function checks if the iterator is valid/enabled. 
+ * 			If yes it checks for conflicts between the current iterator-element and the element to store.
+ *			
+ *
+ * @param[in]	partition_id			The identifier of the partition.
+ * @param[in]	element_address			The address where the new element should be stored to.
+ * @param[in]	element_len				The length of the new element.
+ *
+ * @retval     	NRF_SUCCESS        		If there is no conflict between the iterator and the storer.
+ * @retval     	NRF_ERROR_FORBIDDEN 	If there is a conflict between the iterator and the storer.
+ * @retval     	NRF_ERROR_INTERNAL  	If there was an internal error (e.g. the data couldn't be read because of busy).
+ */
+ret_code_t filesystem_check_iterator_conflict(uint16_t partition_id, uint32_t element_address, uint16_t element_len) {	
+	uint16_t index = partition_id & 0x3FFF;
+	
+	// Check iterator validity?
+	ret_code_t ret = filesystem_iterator_check_validity(partition_id);
+	if(ret == NRF_ERROR_INVALID_STATE) {
+		return NRF_SUCCESS;
+	} else if(ret == NRF_ERROR_INTERNAL) {
+		return NRF_ERROR_INTERNAL;
+	}
+	// Here ret should be NRF_SUCCESS --> we need to check for conflicts
+	
+	
+	uint32_t partition_start_address 	= partitions[index].first_element_address;
+	uint16_t element_header_len = filesystem_get_element_header_len(partition_id);
+	
+	uint32_t element_start_address = element_address;
+	uint32_t element_end_address = element_start_address + element_len + ((element_start_address == partition_start_address) ? (PARTITION_METADATA_SIZE + element_header_len) : (element_header_len));
+
+	uint32_t iterator_start_address = partition_iterators[index].cur_element_address;
+	uint32_t iterator_end_address = iterator_start_address + partition_iterators[index].cur_element_len + ((iterator_start_address == partition_start_address) ? (PARTITION_METADATA_SIZE + element_header_len) : (element_header_len));
+	
+	// Check for conflicts:
+	if(element_start_address >= iterator_start_address && element_start_address < iterator_end_address) {
+		return NRF_ERROR_FORBIDDEN;
+	} else if(element_end_address > iterator_start_address && element_end_address <= iterator_end_address) {
+		return NRF_ERROR_FORBIDDEN;
+	} else if(element_start_address <= iterator_start_address && element_end_address >= iterator_end_address ) {
+		return NRF_ERROR_FORBIDDEN;
+	} else {
+		return NRF_SUCCESS;
+	}
+	
+}
 
 
 ret_code_t filesystem_iterator_init(uint16_t partition_id) {
@@ -1227,10 +1282,16 @@ ret_code_t filesystem_iterator_init(uint16_t partition_id) {
 	
 	
 	// Set iterator to valid (unlikely bitpattern 10100101 = 0xA5)
-	partition_iterators[index].iterator_valid = 0xA5;
+	partition_iterators[index].iterator_valid = ITERATOR_VALID_NUMBER;
 	
 	return NRF_SUCCESS;
 }
+
+void filesystem_iterator_invalidate(uint16_t partition_id) {
+	uint16_t index = partition_id & 0x3FFF;	// Clear the MSBs	
+	partition_iterators[index].iterator_valid = 0;
+}
+
 
 ret_code_t filesystem_iterator_next(uint16_t partition_id) {
 	ret_code_t ret = filesystem_iterator_check_validity(partition_id);
