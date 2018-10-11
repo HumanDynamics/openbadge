@@ -1458,29 +1458,4 @@ static void test_request_handler(void * p_event_data, uint16_t event_size) {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Storer-Modul macht folgendes: read/write Funktion für jede Data-Source
-// Die read-Funktion hat auch eine get_next-Funktion, welche dann zum nächsten element geht. Aber auch eine search funktion
-// Die Funktionen bekommen einen Pointer auf eine Struktur mit übergeben, welche Sie dann decoden.
-// 
-
-
-
 #endif

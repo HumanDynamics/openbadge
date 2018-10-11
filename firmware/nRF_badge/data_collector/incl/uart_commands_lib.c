@@ -27,12 +27,13 @@ extern uart_instance_t uart_instance;	/**< The uart_instance of debug_lib */
 static void on_uart_event(uart_evt_t const * p_event);
 static void on_command_received(const char * command);
 
-// Command Handlers
+/**@brief Command handler function that is called when the restart-command was received.
+ */
 static void on_restart_command(void) {
     NVIC_SystemReset();
 }
 
-// Command lookup table, maps textual string commands to methods executed when they're received.
+/**< The command lookup table, maps textual string commands to methods executed when they're received. */
 static uart_command_t uart_commands[] = {
         {
                 .command = "restart",
@@ -50,8 +51,8 @@ ret_code_t uart_commands_init(void) {
 	return ret;
 }
 
-// Dispatches appropriate handler for matching command.
-// 'command' should be null terminated string <= MAX_COMMAND_LEN
+/**@brief Function that matches the received command to a command-handler and dispatches this handler.
+ */
 static void on_command_received(const char * command) {
     int num_commands = sizeof(uart_commands) / sizeof(uart_commands[0]);
     for (int i = 0; i < num_commands; i++) {
@@ -65,12 +66,10 @@ static void on_command_received(const char * command) {
 }
 
 
+/**@brief The callback-function that is called when there was sth received via the UART-interface.
+ */
 static void on_uart_event(uart_evt_t const * p_event) {
-	
-
-	while(uart_receive_buffer_get(&uart_instance, (uint8_t*) &command_buffer[command_buffer_pos]) == NRF_SUCCESS) {
-		//uart_transmit_bkgnd(&uart_instance, NULL, (uint8_t*) &command_buffer[command_buffer_pos], 1);
-		
+	while(uart_receive_buffer_get(&uart_instance, (uint8_t*) &command_buffer[command_buffer_pos]) == NRF_SUCCESS) {		
 		if(command_buffer[command_buffer_pos] == '\n' || command_buffer[command_buffer_pos] == '\r') {
 			command_buffer[command_buffer_pos] = 0;
 			on_command_received(command_buffer);

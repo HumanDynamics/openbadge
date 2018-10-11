@@ -5,18 +5,11 @@
 #include "tinybuf.h"
 #include "string.h"	// For memset-function
 
-// All the storing/reading stuff must be done in main-context, because share same buffer for serialization.
-// And the storage-modules allow only to be used in main-context and should not be interrupted.
+
 
 
 #define STORER_SERIALIZED_BUFFER_SIZE				512
 
-#define STORER_BADGE_ASSIGNEMENT_NUMBER				1
-#define STORER_BATTERY_DATA_NUMBER					100
-#define STORER_MICROPHONE_DATA_NUMBER				1000
-#define STORER_SCAN_DATA_NUMBER						1000
-#define STORER_ACCELEROMETER_INTERRUPT_DATA_NUMBER	50
-#define STORER_ACCELEROMETER_DATA_NUMBER			100
 
 
 
@@ -122,7 +115,10 @@ ret_code_t storer_init(void) {
 }
 
 ret_code_t storer_clear(void) {
-	ret_code_t ret = filesystem_clear_partition(partition_id_battery_chunks);
+	ret_code_t ret = filesystem_clear_partition(partition_id_badge_assignement);
+	if(ret != NRF_SUCCESS) return ret;
+	
+	ret = filesystem_clear_partition(partition_id_battery_chunks);
 	if(ret != NRF_SUCCESS) return ret;
 	
 	ret = filesystem_clear_partition(partition_id_microphone_chunks);
@@ -154,12 +150,6 @@ int8_t storer_compare_timestamps(Timestamp timestamp1, Timestamp timestamp2) {
 
 
 
-/**
- * @retval NRF_ERROR_INTERNAL		Busy
- * @retval NRF_ERROR_INVALID_DATA	If encoding fails.
- * @retval NRF_SUCCESS				If everything was fine.
- */
- 
 ret_code_t storer_store_badge_assignement(BadgeAssignement* badge_assignement) {
 	tb_ostream_t ostream = tb_ostream_from_buffer(serialized_buf, sizeof(serialized_buf));
 	uint8_t encode_status = tb_encode(&ostream, BadgeAssignement_fields, badge_assignement, TB_LITTLE_ENDIAN);
@@ -168,12 +158,6 @@ ret_code_t storer_store_badge_assignement(BadgeAssignement* badge_assignement) {
 	return filesystem_store_element(partition_id_badge_assignement, serialized_buf, ostream.bytes_written);
 }
 
-/**
- * @retval NRF_ERROR_INTERNAL		Busy
- * @retval NRF_ERROR_INVALID_STATE	Iterator invalidated/no data found.
- * @retval NRF_ERROR_INVALID_DATA	If the CRC does not match.
- * @retval NRF_SUCCESS				If everything was fine.
- */
 
 ret_code_t storer_read_badge_assignement(BadgeAssignement* badge_assignement) {
 	memset(badge_assignement, 0, sizeof(BadgeAssignement));
@@ -197,9 +181,14 @@ ret_code_t storer_read_badge_assignement(BadgeAssignement* badge_assignement) {
 
 
 
-/**
+/**@brief Function to store a chunk of data in a partition.
+ *
+ * @param[in]	partition_id	The partition_id where to store the chunk.
+ * @param[in]	message_fields	The message fields need to encode the message-chunk with tinybuf.
+ * @param[in]	message			Pointer to the message-chunk that should be encoded and stored.
+ * 
  * @retval NRF_ERROR_NO_MEM			If the element is too big, to be stored in the partition.
- * @retval NRF_ERROR_INTERNAL		Busy
+ * @retval NRF_ERROR_INTERNAL		Busy or iterator is pointing to the same address we want to write to.
  * @retval NRF_ERROR_INVALID_DATA	If encoding fails.
  * @retval NRF_SUCCESS				If everything was fine.
  */
@@ -211,7 +200,21 @@ ret_code_t store_chunk(uint16_t partition_id, const tb_field_t message_fields[],
 	return filesystem_store_element(partition_id, serialized_buf, ostream.bytes_written);
 }
 
-/**
+
+/**@brief Function to find a chunk in the partition based on its timestamp.
+ *
+ * @details This function is normally used in connection with get_next_chunk().
+ *			It tries to step back in the partition until it finds the oldest chunk 
+ *			that is still greater than the timestamp. It uses the iterator of the partition
+ *			to step back.
+ *
+ * @param[in]	timestamp			The timestamp since when the data should be requested.
+ * @param[in]	partition_id		The partition_id where to search the chunk.
+ * @param[in]	message_fields		The message fields need to decode the message-chunk with tinybuf.
+ * @param[out]	message				Pointer to a message-chunk (needed for internal decoding).
+ * @param[out]	message_timestamp	Pointer to the timestamp entry in the message-chunk.
+ * @param[out]	found_timestamp		Pointer to a flag-variable that expresses, if an "old" element with a greater timestamp was found.
+ * 
  * @retval NRF_ERROR_INTERNAL		Busy
  * @retval NRF_ERROR_INVALID_STATE	Iterator invalidated/no data found.
  * @retval NRF_SUCCESS				If everything was fine.
@@ -283,13 +286,24 @@ static ret_code_t find_chunk_from_timestamp(Timestamp timestamp, uint16_t partit
 	return ret;	// ret should be NRF_SUCCESS
 }
 
-/**
+
+/**@brief Function to get the next chunk in the partition based on the current status of the partition-iterator.
  *
- * @retval	NRF_SUCCESS
- * @retval	NRF_ERROR_NOT_FOUND			If ready
+ * @details This function is normally called after find_chunk_from_timestamp(). It tries to get the next element stored in partition
+ *			and decodes it with the message_fields.
+ *			
+ *
+ * @param[in]	partition_id		The partition_id where to search the chunk.
+ * @param[in]	message_fields		The message fields need to decode the message-chunk with tinybuf.
+ * @param[out]	message				Pointer to a message-chunk where to store the read chunk.
+ * @param[in]	found_timestamp		Pointer to a flag-variable that expresses, if an "old" element with a greater timestamp was found.
+ * 
+ * @retval	NRF_SUCCESS					If an element was found and returned successfully.
+ * @retval	NRF_ERROR_NOT_FOUND			If no more element in the partition.
  * @retval	NRF_ERROR_INVALID_STATE		If iterator not initialized or invalidated.
- * @retval	NRF_ERROR_INTERNAL			If busy or sth like that
+ * @retval	NRF_ERROR_INTERNAL			If busy.
  *
+ * @note 	The application needs to invalidate the iterator, if the function is not used until no more element is found (because it invalidates it then automatically).
  */
 static ret_code_t get_next_chunk(uint16_t partition_id, const tb_field_t message_fields[], void* message, uint8_t* found_timestamp) {
 	ret_code_t ret;
@@ -310,9 +324,6 @@ static ret_code_t get_next_chunk(uint16_t partition_id, const tb_field_t message
 		// TODO: What happens if read failed, but we have already done a next-step successfully?
 		ret = filesystem_iterator_read_element(partition_id, serialized_buf, &element_len, &record_id);
 		// ret could be NRF_SUCCESS, NRF_ERROR_INVALID_DATA, NRF_ERROR_INVALID_STATE, NRF_ERROR_INTERNAL
-		if(ret == NRF_ERROR_INVALID_STATE) {
-			debug_log("Iterator was invalidated!!\n");
-		}
 		if(!(ret == NRF_ERROR_INVALID_DATA || ret == NRF_SUCCESS)) {
 			filesystem_iterator_invalidate(partition_id);
 			return ret;
@@ -395,7 +406,6 @@ ret_code_t storer_get_next_battery_chunk(BatteryChunk* battery_chunk) {
 
 
 ret_code_t storer_store_scan_chunk(ScanChunk* scan_chunk) {
-	debug_log("Store scan chunk: Timestamp %u, %u\n", scan_chunk->timestamp.seconds, scan_chunk->timestamp.ms);
 	return store_chunk(partition_id_scan_chunks, ScanChunk_fields, scan_chunk);
 }
 

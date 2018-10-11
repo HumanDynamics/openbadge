@@ -280,14 +280,7 @@ void sampling_reset_timeouts(void) {
 
 
 
-/**@brief Function to start the accelerometer data recording.
- *
- * @param[in]	operating_mode 				[0 == power_down, 1 == low_power, 2 == normal, 3 == high_resolution]
- * @param[in]	full_scale					[2, 4, 8, 16]
- * @param[in]	datrate						[1, 10, 25, 50, 100, 200, 400]
- * @param[in]	fifo_sampling_period_ms		The sampling period of the accelerometer output FIFO.
- * @param[in]	streaming					Flag if streaming or data acquisition should be enabled [0 == data-acquisistion, 1 == streaming].
- */
+
 ret_code_t sampling_start_accelerometer(uint32_t timeout_ms, uint8_t operating_mode, uint8_t full_scale, uint16_t datarate, uint16_t fifo_sampling_period_ms, uint8_t streaming) {
 	ret_code_t ret = NRF_SUCCESS;
 	

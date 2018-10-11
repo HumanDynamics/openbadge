@@ -152,6 +152,15 @@ static int compare_by_RSSI(const void* a, const void* b) {
 		return 0;
 }
 
+/**@brief Function that sorts the seen devices in the scan_sampling_chunk-structure.
+ *
+ * @details	As first step the beacons are brought to the begin of the structure and sorted by RSSI-value, 
+ *			to get at least SCAN_PRIORITIZED_BEACONS (or less if there are not that much beacons available) in the scan.
+ *			After that all remaining seen devices are sorted by RSSI-value.
+ *			
+ *
+ * @param[in]	scan_sampling_chunk		Pointer to the ScanSamplingChunk to be sorted.
+ */
 static void sort_scan(ScanSamplingChunk* scan_sampling_chunk) {
 	// First get the number of beacons:
 	uint32_t num_beacons = 0;
