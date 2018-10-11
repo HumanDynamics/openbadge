@@ -1,7 +1,5 @@
 #include "request_handler_lib_02v1.h"
 
-//#define PROTOCOL_02v1
-
 #ifdef PROTOCOL_02v1
 
 
@@ -12,8 +10,9 @@
 #include "systick_lib.h"
 #include "storer_lib.h"
 #include "sampling_lib.h"
-#include "advertiser_lib.h"	// To retrieve the current badge-assignement
+#include "advertiser_lib.h"	// To retrieve the current badge-assignement and set the clock-sync status
 #include "battery_lib.h"
+#include "accel_lib.h"	// For ACCELEROMETER_PRESENT
 
 #include "debug_lib.h"
 
@@ -84,7 +83,7 @@ static BatteryChunk 				battery_chunk;
 static void receive_notification_handler(receive_notification_t receive_notification);
 static void process_receive_notification(void * p_event_data, uint16_t event_size);
 
-// TODO: add respone handler function declaration here
+
 static void status_request_handler(void * p_event_data, uint16_t event_size);
 static void start_microphone_request_handler(void * p_event_data, uint16_t event_size);
 static void stop_microphone_request_handler(void * p_event_data, uint16_t event_size);
@@ -249,9 +248,6 @@ static request_handler_for_type_t request_handlers[] = {
 
 
 
-// App-scheduler has to be initialized before!
-// Sender has to be initialized before!
-// Sampling has to be initialized before!
 ret_code_t request_handler_init(void) {
 	ret_code_t ret = sender_init();
 	if(ret != NRF_SUCCESS) return ret;
@@ -264,28 +260,24 @@ ret_code_t request_handler_init(void) {
 	return NRF_SUCCESS;
 }
 
-
+/**@brief Handler that is called  by the sender-module, when a notification was received.
+ * 
+ * @details It puts the received notification in the notification-fifo and schedules the process_receive_notification to process the notification.
+ */
 static void receive_notification_handler(receive_notification_t receive_notification) {
 	// Put the receive_notification into the fifo
 	uint32_t available_len = 0;
 	uint32_t notification_size = sizeof(receive_notification);
 	app_fifo_write(&receive_notification_fifo, NULL, &available_len);
 	if(available_len < notification_size) {
-		// TODO: Disconnect!
 		debug_log_bkgnd("Not enough bytes in Notification FIFO: %u < %u\n", available_len, notification_size);
 		return;
 	}
 	
 	app_fifo_write(&receive_notification_fifo, (uint8_t*) &receive_notification, &notification_size);
 	
-	
-	
-	// Start the processing of the receive notification (but only if it was not started before/is still running). So it ignores the new notifications until the current
-	// processed notification is ready.
-	//if(!processing_receive_notification) {
-	//	processing_receive_notification = 1;		
 	app_sched_event_put(NULL, 0, process_receive_notification);
-	//}
+
 }
 
 static void finish_receive_notification(void) {
@@ -323,7 +315,6 @@ static ret_code_t start_response(app_sched_event_handler_t reschedule_handler) {
 
 // Called when await data failed, or decoding the notification failed, or request does not exist, or transmitting the response failed (because disconnected or something else)
 static void finish_error(void) {
-	// TODO: Clear all the pending notifictaions here
 	app_fifo_flush(&receive_notification_fifo);
 	debug_log_bkgnd("Error while processing notification/request --> Disconnect!!!\n");
 	sender_disconnect();	// To clear the RX- and TX-FIFO
@@ -332,6 +323,7 @@ static void finish_error(void) {
 	streaming_started = 0;
 	storer_invalidate_iterators();
 }
+
 
 static ret_code_t receive_notification_fifo_peek(receive_notification_t* receive_notification, uint32_t index) {
 	uint32_t notification_size = sizeof(receive_notification_t);
@@ -575,12 +567,11 @@ static void status_response_handler(void * p_event_data, uint16_t event_size) {
 
 	response_event.response.which_type = Response_status_response_tag;
 	response_event.response.type.status_response.clock_status = response_clock_status;
-	response_event.response.type.status_response.microphone_status = advertiser_get_status_flag_microphone_enabled();
-	response_event.response.type.status_response.scan_status = advertiser_get_status_flag_scan_enabled();
-	response_event.response.type.status_response.accelerometer_status = advertiser_get_status_flag_accelerometer_enabled();
-	response_event.response.type.status_response.accelerometer_interrupt_status = advertiser_get_status_flag_accelerometer_interrupt_enabled();
-	response_event.response.type.status_response.battery_status = advertiser_get_status_flag_battery_enabled();
-	//systick_get_timestamp(&response_event.response.type.status_response.timestamp.seconds, &response_event.response.type.status_response.timestamp.ms);
+	response_event.response.type.status_response.microphone_status = (sampling_get_sampling_configuration() & SAMPLING_MICROPHONE) ? 1 : 0;
+	response_event.response.type.status_response.scan_status = (sampling_get_sampling_configuration() & SAMPLING_SCAN) ? 1 : 0; 
+	response_event.response.type.status_response.accelerometer_status = (sampling_get_sampling_configuration() & SAMPLING_ACCELEROMETER) ? 1 : 0; 
+	response_event.response.type.status_response.accelerometer_interrupt_status = (sampling_get_sampling_configuration() & SAMPLING_ACCELEROMETER_INTERRUPT) ? 1 : 0; 
+	response_event.response.type.status_response.battery_status = (sampling_get_sampling_configuration() & SAMPLING_BATTERY) ? 1 : 0; 
 	response_event.response.type.status_response.timestamp = response_timestamp;
 	battery_read_voltage(&(response_event.response.type.status_response.battery_data.voltage));
 	
@@ -600,8 +591,6 @@ static void start_microphone_response_handler(void * p_event_data, uint16_t even
 	response_event.response.which_type = Response_start_microphone_response_tag;
 	response_event.response_retries = 0;
 	response_event.response_success_handler = NULL;
-	
-	//systick_get_timestamp(&response_event.response.type.start_microphone_response.timestamp.seconds, &response_event.response.type.start_microphone_response.timestamp.ms);
 	response_event.response.type.start_microphone_response.timestamp = response_timestamp;
 	
 	finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification. 
@@ -616,7 +605,6 @@ static void start_scan_response_handler(void * p_event_data, uint16_t event_size
 	response_event.response.which_type = Response_start_scan_response_tag;
 	response_event.response_retries = 0;
 	response_event.response_success_handler = NULL;
-	//systick_get_timestamp(&response_event.response.type.start_scan_response.timestamp.seconds, &response_event.response.type.start_scan_response.timestamp.ms);
 	response_event.response.type.start_scan_response.timestamp = response_timestamp;
 	
 	finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification. 
@@ -630,7 +618,6 @@ static void start_accelerometer_response_handler(void * p_event_data, uint16_t e
 	response_event.response.which_type = Response_start_accelerometer_response_tag;
 	response_event.response_retries = 0;
 	response_event.response_success_handler = NULL;
-	//systick_get_timestamp(&response_event.response.type.start_accelerometer_response.timestamp.seconds, &response_event.response.type.start_accelerometer_response.timestamp.ms);
 	response_event.response.type.start_accelerometer_response.timestamp = response_timestamp;
 	
 	finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification. 
@@ -644,7 +631,6 @@ static void start_accelerometer_interrupt_response_handler(void * p_event_data, 
 	response_event.response.which_type = Response_start_accelerometer_interrupt_response_tag;
 	response_event.response_retries = 0;
 	response_event.response_success_handler = NULL;
-	//systick_get_timestamp(&response_event.response.type.start_accelerometer_interrupt_response.timestamp.seconds, &response_event.response.type.start_accelerometer_interrupt_response.timestamp.ms);
 	response_event.response.type.start_accelerometer_interrupt_response.timestamp = response_timestamp;
 	
 	finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification. 
@@ -659,7 +645,6 @@ static void start_battery_response_handler(void * p_event_data, uint16_t event_s
 	response_event.response.which_type = Response_start_battery_response_tag;
 	response_event.response_retries = 0;
 	response_event.response_success_handler = NULL;
-	//systick_get_timestamp(&response_event.response.type.start_battery_response.timestamp.seconds, &response_event.response.type.start_battery_response.timestamp.ms);
 	response_event.response.type.start_battery_response.timestamp = response_timestamp;
 	
 	finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification. 
@@ -850,6 +835,7 @@ static void stream_response_handler(void * p_event_data, uint16_t event_size) {
 	systick_get_timestamp(&response_event.response.type.stream_response.timestamp.seconds, &response_event.response.type.stream_response.timestamp.ms);
 	
 	sampling_configuration_t sampling_configuration = sampling_get_sampling_configuration();
+	#if ACCELEROMETER_PRESENT
 	if(sampling_configuration & STREAMING_ACCELEROMETER) {
 		uint32_t n = circular_fifo_get_size(&accelerometer_stream_fifo) / sizeof(AccelerometerStream);
 		n = n > PROTOCOL_ACCELEROMETER_STREAM_SIZE ? PROTOCOL_ACCELEROMETER_STREAM_SIZE : n;
@@ -865,6 +851,7 @@ static void stream_response_handler(void * p_event_data, uint16_t event_size) {
 		uint32_t len = n*sizeof(AccelerometerInterruptStream);
 		circular_fifo_read(&accelerometer_interrupt_stream_fifo, (uint8_t*) response_event.response.type.stream_response.accelerometer_interrupt_stream, &len);
 	}
+	#endif
 	
 	if(sampling_configuration & STREAMING_BATTERY) {
 		uint32_t n = circular_fifo_get_size(&battery_stream_fifo) / sizeof(BatteryStream);
@@ -1005,7 +992,6 @@ static void status_request_handler(void * p_event_data, uint16_t event_size) {
 				app_sched_event_put(NULL, 0, status_request_handler);
 				return;
 			} else if (ret != NRF_SUCCESS) {	// There is an error in the configuration of the badge-assignement partition
-				// TODO: Error handling
 				finish_error();
 				return;
 			} 
@@ -1031,7 +1017,6 @@ static void start_microphone_request_handler(void * p_event_data, uint16_t event
 	uint32_t timeout = (request_event.request).type.start_microphone_request.timeout;
 	uint16_t period_ms = (request_event.request).type.start_microphone_request.period_ms;
 
-	// TODO: Start the Microphone
 	debug_log("Start microphone with timeout: %u, period ms %u\n", timeout, period_ms);
 	
 	ret_code_t ret = sampling_start_microphone(timeout*60*1000, period_ms, 0);
@@ -1460,7 +1445,6 @@ static void identify_request_handler(void * p_event_data, uint16_t event_size) {
 	nrf_gpio_pin_write(RED_LED, LED_OFF); 
 	#endif
 	
-	// TODO: identify with LED
 	finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification
 }
 static void test_request_handler(void * p_event_data, uint16_t event_size) {

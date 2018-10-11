@@ -165,7 +165,7 @@ static ret_code_t accel_write_reg_8(uint8_t addr, uint8_t value) {
  * @param[in]	action	The action of the pin (e.g. NRF_GPIOTE_POLARITY_LOTOHI)
  *
  */
-static void accel_int1_event_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action) {
+void accel_int1_event_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action) {
 	if(pin == ACCEL_INT1_PIN && action == NRF_GPIOTE_POLARITY_LOTOHI) {
 		if(interrupt_event != ACCEL_NO_INTERRUPT) {
 			// TODO: remove

@@ -12,7 +12,7 @@
 #include "systick_lib.h"
 #include "storer_lib.h"
 #include "sampling_lib.h"
-#include "advertiser_lib.h"	// To retrieve the current badge-assignement
+#include "advertiser_lib.h"	// To retrieve the current badge-assignement and set the clock-sync status
 #include "battery_lib.h"
 
 #include "debug_lib.h"
@@ -161,7 +161,6 @@ static void receive_notification_handler(receive_notification_t receive_notifica
 	uint32_t notification_size = sizeof(receive_notification);
 	app_fifo_write(&receive_notification_fifo, NULL, &available_len);
 	if(available_len < notification_size) {
-		// TODO: Disconnect!
 		debug_log_bkgnd("Not enough bytes in Notification FIFO: %u < %u\n", available_len, notification_size);
 		return;
 	}
@@ -185,7 +184,6 @@ static void finish_request(void) {
 
 // Called when await data failed, or decoding the notification failed, or request does not exist, or transmitting the response failed (because disconnected or something else)
 static void finish_request_error(void) {
-	// TODO: Clear all the pending notifictaions here
 	app_fifo_flush(&receive_notification_fifo);
 	debug_log_bkgnd("Error while processing notification/request --> Disconnect!!!\n");
 	sender_disconnect();	// To clear the RX- and TX-FIFO
@@ -378,9 +376,8 @@ static void send_response(void * p_event_data, uint16_t event_size) {
 static void status_response_handler(void * p_event_data, uint16_t event_size) {
 	response_event.response.which_type = Response_status_response_tag;
 	response_event.response.type.status_response.clock_status = response_clock_status;
-	response_event.response.type.status_response.collector_status = advertiser_get_status_flag_microphone_enabled();
-	response_event.response.type.status_response.scan_status = advertiser_get_status_flag_scan_enabled();
-	//systick_get_timestamp(&response_event.response.type.status_response.timestamp.seconds, &response_event.response.type.status_response.timestamp.ms);
+	response_event.response.type.status_response.collector_status = (sampling_get_sampling_configuration() & SAMPLING_MICROPHONE) ? 1 : 0;
+	response_event.response.type.status_response.scan_status = (sampling_get_sampling_configuration() & SAMPLING_SCAN) ? 1 : 0;
 	response_event.response.type.status_response.timestamp = response_timestamp;
 	battery_read_voltage(&(response_event.response.type.status_response.battery_data.voltage));
 	
@@ -397,7 +394,6 @@ static void start_microphone_response_handler(void * p_event_data, uint16_t even
 	response_event.response_retries = 0;
 	response_event.response_success_handler = NULL;
 	
-	//systick_get_timestamp(&response_event.response.type.start_microphone_response.timestamp.seconds, &response_event.response.type.start_microphone_response.timestamp.ms);
 	response_event.response.type.start_microphone_response.timestamp = response_timestamp;
 	
 	
@@ -419,7 +415,6 @@ static void start_scan_response_handler(void * p_event_data, uint16_t event_size
 	response_event.response.which_type = Response_start_scan_response_tag;
 	response_event.response_retries = 0;
 	response_event.response_success_handler = NULL;
-	//systick_get_timestamp(&response_event.response.type.start_scan_response.timestamp.seconds, &response_event.response.type.start_scan_response.timestamp.ms);
 	response_event.response.type.start_scan_response.timestamp = response_timestamp;
 	
 	
@@ -549,7 +544,6 @@ static void status_assign_request_handler(void * p_event_data, uint16_t event_si
 			app_sched_event_put(NULL, 0, status_assign_request_handler);
 			return;
 		} else if (ret != NRF_SUCCESS) {	// There is an error in the configuration of the badge-assignement partition
-			// TODO: Error handling
 			finish_request_error();
 		} 
 	} else if(ret == NRF_ERROR_INTERNAL) {
@@ -569,7 +563,6 @@ static void start_microphone_request_handler(void * p_event_data, uint16_t event
 	
 	uint32_t timeout = (request_event.request).type.start_microphone_request.timeout;
 
-	// TODO: Start the Microphone
 	debug_log("Start microphone with timeout: %u \n", timeout);
 	
 	ret_code_t ret = sampling_start_microphone(timeout*60*1000, MICROPHONE_SAMPLING_PERIOD_MS, 0);
@@ -605,7 +598,6 @@ static void start_scan_request_handler(void * p_event_data, uint16_t event_size)
 	if(duration > period)
 		period = duration; 
 	
-	// TODO: Start the Scanning sampling
 	debug_log("Start scanning with timeout: %u, window: %u, interval: %u, duration: %u, period: %u\n", timeout, window, interval, duration, period);
 	BadgeAssignement badge_assignement;
 	advertiser_get_badge_assignement(&badge_assignement);
@@ -673,13 +665,5 @@ static void identify_request_handler(void * p_event_data, uint16_t event_size) {
 	#endif
 	app_sched_event_put(NULL, 0, identify_response_handler);
 }
-
-
-// Storer-Modul macht folgendes: read/write Funktion für jede Data-Source
-// Die read-Funktion hat auch eine get_next-Funktion, welche dann zum nächsten element geht. Aber auch eine search funktion
-// Die Funktionen bekommen einen Pointer auf eine Struktur mit übergeben, welche Sie dann decoden.
-// 
-
-
 
 #endif
