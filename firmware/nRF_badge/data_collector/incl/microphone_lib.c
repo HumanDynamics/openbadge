@@ -9,7 +9,7 @@
 #define ABS(x) (((x) >= 0)? (x) : -(x))
 #define MICROPHONE_ZERO_OFFSET								125		/**< The zero noise mmicrophone offset to compensate */
 #define MICROPHONE_SELFTEST_TIME_FOR_NOISE_GENERATION_MS	10000	/**< The time to wait for noise generation, for selftest */
-#define MICROPHONE_SELFTEST_THRESHOLD						80		/**< The threshold that has to be exceeded to pass the selftest */
+#define MICROPHONE_SELFTEST_THRESHOLD						30		/**< The threshold that has to be exceeded to pass the selftest */
 
 static adc_instance_t adc_instance;
 
@@ -32,7 +32,7 @@ ret_code_t microphone_read(uint8_t* value) {
 	return ret;
 }
 
-
+/*
 bool microphone_selftest(void) {
 	debug_log("Waiting for noise for: %u ms.\n", MICROPHONE_SELFTEST_TIME_FOR_NOISE_GENERATION_MS);
 	uint32_t end_ms = systick_get_continuous_millis() + MICROPHONE_SELFTEST_TIME_FOR_NOISE_GENERATION_MS;
@@ -60,6 +60,68 @@ bool microphone_selftest(void) {
 	debug_log("Selftest microphone data diff: %u\n", diff);
 	if(diff > MICROPHONE_SELFTEST_THRESHOLD)
 		return 1;
+	
+	return 0;
+	
+}*/
+
+/**@brief Function that returns the average micorphone value over ~50ms
+ *
+ * @retval The average microphone value.
+ */
+ 
+static uint8_t get_avg_value(void) {
+	uint32_t avg_value = 0;
+	uint32_t avg_counter = 0;
+	for(uint8_t i = 0; i < 25; i++) {
+		systick_delay_millis(2);	
+		uint8_t value = 0;		
+		ret_code_t ret = microphone_read(&value);
+		if(ret != NRF_SUCCESS)
+			return 0;
+		avg_value += value;	
+		avg_counter++;
+	}
+	avg_value /= avg_counter;
+	avg_value = avg_value > 255 ? 255 : avg_value;
+	return (uint8_t) avg_value;
+}
+
+bool microphone_selftest(void) {
+	debug_log("Waiting for noise pattern for: %u ms.\n", MICROPHONE_SELFTEST_TIME_FOR_NOISE_GENERATION_MS);
+	uint32_t end_ms = systick_get_continuous_millis() + MICROPHONE_SELFTEST_TIME_FOR_NOISE_GENERATION_MS;
+	
+	// We need to search for a pattern: Noise, no noise, noise. Or no noise, noise, no noise
+	
+	
+	int16_t cur_reference_value = (int16_t) get_avg_value();	// First read a reference value
+	int8_t search_status = 0; // 0: nothing found yet, 1: found no noise -> noise transition, -1: found noise -> no noise transition
+	debug_log("Microphone ref value: %u\n", cur_reference_value);
+	
+	while(systick_get_continuous_millis() < end_ms) {
+		int16_t cur_value = (int16_t) get_avg_value();
+		
+		if(cur_value > cur_reference_value + MICROPHONE_SELFTEST_THRESHOLD) {	// no noise -> noise transition
+			if(search_status == 0) {
+				cur_reference_value = cur_value;
+				search_status = 1;
+				debug_log("Found noise\n");
+			} else if(search_status == -1) {	// If we have already found a noise -> no noise transition, we can return
+				debug_log("Found noise -> no noise -> noise transition\n");
+				return 1;
+			}
+			
+		} else if(cur_value + MICROPHONE_SELFTEST_THRESHOLD < cur_reference_value) {	// noise -> no noise transition
+			if(search_status == 0) {
+				cur_reference_value = cur_value;
+				search_status = -1;
+				debug_log("Found no noise\n");
+			} else if(search_status == 1) {	// If we have already found a no noise -> noise transition, we can return
+				debug_log("Found no noise -> noise -> no noise transition\n");
+				return 1;
+			}
+		}		
+	}
 	
 	return 0;
 	
