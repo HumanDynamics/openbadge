@@ -188,7 +188,8 @@ ret_code_t sampling_init(void) {
 	
 	/************************ BATTERY *************************************/
 	
-	battery_init();
+	ret = battery_init();
+	if(ret != NRF_SUCCESS) return ret;
 	
 	// create a timer for battery measurement
 	ret = app_timer_create(&sampling_battery_timer, APP_TIMER_MODE_REPEATED, sampling_battery_callback);

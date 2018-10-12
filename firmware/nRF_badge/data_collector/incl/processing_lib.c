@@ -5,7 +5,6 @@
 #include "sampling_lib.h"
 #include "chunk_fifo_lib.h"
 #include "storer_lib.h"
-#include "advertiser_lib.h"
 #include "systick_lib.h"
 
 #include "chunk_messages.h"
@@ -54,16 +53,6 @@ void processing_process_battery_chunk(void * p_event_data, uint16_t event_size) 
 	debug_log("processing_process_battery_chunk...\n");
 	BatteryChunk* battery_chunk;
 	while(chunk_fifo_read_open(&battery_chunk_fifo, (void**) &battery_chunk, NULL) == NRF_SUCCESS) {
-		
-		// Update the advertising data battery-voltage
-		advertiser_set_battery_voltage(battery_chunk->battery_data.voltage);
-		
-		// If the clock is not synced yet, we don't need to store the chunk --> just skip the chunk by closing the read.
-		if(!systick_is_synced()) {
-			chunk_fifo_read_close(&battery_chunk_fifo);	
-			continue;
-		}
-		
 		// Store the battery chunk
 		ret_code_t ret = storer_store_battery_chunk(battery_chunk);		
 		debug_log("Try to store battery chunk: Ret %d\n", ret);

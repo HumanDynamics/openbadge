@@ -22,7 +22,7 @@ DEFAULT_ACCELEROMETER_INTERRUPT_THRESHOLD_MG = 250
 DEFAULT_ACCELEROMETER_INTERRUPT_MINIMAL_DURATION_MS = 10
 DEFAULT_ACCELEROMETER_INTERRUPT_IGNORE_DURATION_MS = 5000
 
-DEFAULT_BATTERY_SAMPLING_PERIOD_MS = 15000
+DEFAULT_BATTERY_SAMPLING_PERIOD_MS = 60000
 
 
 
@@ -780,7 +780,7 @@ class OpenBadge(object):
 
 		
 	
-	def start_battery_stream(self, t=None, sampling_period_ms=DEFAULT_BATTERY_STREAM_SAMPLING_PERIOD_MS):
+	def start_battery_stream(self, t=None, timeout_minutes=0, sampling_period_ms=DEFAULT_BATTERY_STREAM_SAMPLING_PERIOD_MS):
 		if t is None:
 			(timestamp_seconds, timestamp_ms) = get_timestamps()
 		else:

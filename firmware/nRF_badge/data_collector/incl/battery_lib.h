@@ -5,8 +5,17 @@
 #include "sdk_errors.h"
 
 /**@brief Function to initialize the battery-module (with ADC)
+ *
+ * @retval     NRF_SUCCESS               If the timer was successfully created.
+ * @retval     NRF_ERROR_INVALID_STATE   If the application timer module has not been initialized or
+ *                                       the timer is running.
+ * @retval     NRF_ERROR_NO_MEM          If the timer operations queue was full.
+ * @retval     NRF_ERROR_INVALID_PARAM   If the specified peripheral in the adc_instance is not correct.
+ *
+ * @note App-timer has to be initialized before!
+ * @note App-scheduler has to be initialized before!
  */
-void battery_init(void);
+ret_code_t battery_init(void);
 
 /**@brief Function to read the current supply voltage in Volts. Internally the voltage is averaged.
  *

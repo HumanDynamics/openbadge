@@ -2,7 +2,11 @@
 
 #include "adc_lib.h"
 #include "systick_lib.h" // Needed for battery_selftest()
+#include "app_timer.h"
+#include "app_scheduler.h"
+#include "advertiser_lib.h"
 
+#define BATTERY_PERIOD_MS							60000
 #define BATTERY_REFERENCE_VOLTAGE					1.2f 	/**< The internal reference voltage (NRF_ADC_CONFIG_REF_VBG) */
 #define BATTERY_SAMPLES_PER_AVERAGE					5
 #define BATTERY_SELFTEST_NUM_VOLTAGE_MEASUREMENTS	10		/**< Number of measurements for the selftest */
@@ -10,14 +14,29 @@
 static adc_instance_t adc_instance;
 static float average_voltage = 0;
 
-void battery_init(void) {
+APP_TIMER_DEF(internal_battery_timer);
+static void internal_battery_callback(void* p_context);
+static void update_advertiser_voltage(void * p_event_data, uint16_t event_size);
+
+ret_code_t battery_init(void) {
 	adc_instance.adc_peripheral = 0;
 	adc_instance.nrf_adc_config.resolution 	= NRF_ADC_CONFIG_RES_10BIT;
 	adc_instance.nrf_adc_config.scaling		= NRF_ADC_CONFIG_SCALING_SUPPLY_ONE_THIRD;
 	adc_instance.nrf_adc_config.reference	= NRF_ADC_CONFIG_REF_VBG;
 	adc_instance.nrf_adc_config_input		= NRF_ADC_CONFIG_INPUT_DISABLED;
 	
-	adc_init(&adc_instance);
+	ret_code_t ret = adc_init(&adc_instance);
+	if(ret != NRF_SUCCESS) return ret;
+	
+	// create a timer for periodic battery measurement
+	ret = app_timer_create(&internal_battery_timer, APP_TIMER_MODE_REPEATED, internal_battery_callback);
+	if(ret != NRF_SUCCESS) return ret;
+	
+	// Now start the timer
+	ret = app_timer_start(internal_battery_timer, APP_TIMER_TICKS(BATTERY_PERIOD_MS, 0), NULL);
+	if(ret != NRF_SUCCESS) return ret;	
+	
+	return NRF_SUCCESS;
 }
 
 ret_code_t battery_read_voltage(float* voltage) {
@@ -35,6 +54,21 @@ ret_code_t battery_read_voltage(float* voltage) {
 	average_voltage += (*voltage) * (1.f / (float) BATTERY_SAMPLES_PER_AVERAGE);
 	*voltage = average_voltage;
 	return NRF_SUCCESS;
+}
+
+
+static void internal_battery_callback(void* p_context) {
+	float voltage = 0;
+	ret_code_t ret = battery_read_voltage(&voltage);
+	if(ret != NRF_SUCCESS) return;
+	
+	// Here we want to update the advertising data, but this should be done in main-context not in timer context.
+	app_sched_event_put(NULL, 0, update_advertiser_voltage);
+}
+
+static void update_advertiser_voltage(void * p_event_data, uint16_t event_size) {
+	// Update the advertising data battery-voltage
+	advertiser_set_battery_voltage(average_voltage);
 }
 
 

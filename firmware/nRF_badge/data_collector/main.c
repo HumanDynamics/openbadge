@@ -23,8 +23,6 @@
 #include "uart_commands_lib.h"
 
 
-#define BATTERY_MEASUREMENT_PERIOD_MS	60000
-
 /**
  * ============================================== MAIN ====================================================
  */
@@ -93,9 +91,7 @@ int main(void)
 	ret = advertiser_start_advertising();	
 	
 	ret = request_handler_init();
-	
-	// Directly start the battery-sampling (this does not store the battery, until the time is synced)
-	ret = sampling_start_battery(0, BATTERY_MEASUREMENT_PERIOD_MS, 0);
+
 	
 	(void) ret;
 	
