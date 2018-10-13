@@ -743,9 +743,8 @@ void sampling_battery_callback(void* p_context) {
 	if((sampling_configuration & SAMPLING_BATTERY) == 0 && (sampling_configuration & STREAMING_BATTERY) == 0)
 		return;
 	
-	float voltage = 0;
-	ret_code_t ret = battery_read_voltage(&voltage);
-	if(ret != NRF_SUCCESS) return;
+	
+	float voltage = battery_get_voltage();
 	
 	if(sampling_configuration & SAMPLING_BATTERY) {	
 		systick_get_timestamp(&(battery_chunk->timestamp.seconds), &(battery_chunk->timestamp.ms));

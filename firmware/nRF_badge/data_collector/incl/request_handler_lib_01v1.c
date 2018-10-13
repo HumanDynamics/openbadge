@@ -185,7 +185,7 @@ static void finish_request(void) {
 // Called when await data failed, or decoding the notification failed, or request does not exist, or transmitting the response failed (because disconnected or something else)
 static void finish_request_error(void) {
 	app_fifo_flush(&receive_notification_fifo);
-	debug_log_bkgnd("Error while processing notification/request --> Disconnect!!!\n");
+	debug_log_bkgnd("Error while processing request/response --> Disconnect!!!\n");
 	sender_disconnect();	// To clear the RX- and TX-FIFO
 	processing_receive_notification = 0;
 	storer_invalidate_iterators();
@@ -379,7 +379,7 @@ static void status_response_handler(void * p_event_data, uint16_t event_size) {
 	response_event.response.type.status_response.collector_status = (sampling_get_sampling_configuration() & SAMPLING_MICROPHONE) ? 1 : 0;
 	response_event.response.type.status_response.scan_status = (sampling_get_sampling_configuration() & SAMPLING_SCAN) ? 1 : 0;
 	response_event.response.type.status_response.timestamp = response_timestamp;
-	battery_read_voltage(&(response_event.response.type.status_response.battery_data.voltage));
+	response_event.response.type.status_response.battery_data.voltage = battery_get_voltage();
 	
 	response_event.response_retries = 0;
 	response_event.response_success_handler = NULL;

@@ -17,14 +17,11 @@
  */
 ret_code_t battery_init(void);
 
-/**@brief Function to read the current supply voltage in Volts. Internally the voltage is averaged.
+/**@brief Function to retrieve the internal averaged battery voltage.
  *
- * @param[out]	voltage		Read supply voltage in Volts.
- *
- * @retval 	NRF_SUCCESS		On success.
- * @retval	NRF_ERROR_BUSY	If the ADC-interface is busy.
+ * @retval The current averaged battery voltage.
  */
-ret_code_t battery_read_voltage(float* voltage);
+float battery_get_voltage(void);
 
 
 /**@brief Function for testing the battery-module.

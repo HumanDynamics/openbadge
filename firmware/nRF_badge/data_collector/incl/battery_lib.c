@@ -5,14 +5,15 @@
 #include "app_timer.h"
 #include "app_scheduler.h"
 #include "advertiser_lib.h"
+#include "app_util_platform.h"
 
-#define BATTERY_PERIOD_MS							60000
+#define BATTERY_PERIOD_MS							10000
 #define BATTERY_REFERENCE_VOLTAGE					1.2f 	/**< The internal reference voltage (NRF_ADC_CONFIG_REF_VBG) */
 #define BATTERY_SAMPLES_PER_AVERAGE					5
 #define BATTERY_SELFTEST_NUM_VOLTAGE_MEASUREMENTS	10		/**< Number of measurements for the selftest */
 
 static adc_instance_t adc_instance;
-static float average_voltage = 0;
+static volatile float average_voltage = 0;
 
 APP_TIMER_DEF(internal_battery_timer);
 static void internal_battery_callback(void* p_context);
@@ -39,20 +40,39 @@ ret_code_t battery_init(void) {
 	return NRF_SUCCESS;
 }
 
-ret_code_t battery_read_voltage(float* voltage) {
+float battery_get_voltage(void) {
+	float tmp = 0;
+	CRITICAL_REGION_ENTER();
+	tmp = average_voltage;
+	CRITICAL_REGION_EXIT();
+	return tmp;
+}
+
+/**@brief Function to read the current supply voltage in Volts. Internally the voltage is averaged.
+ *
+ * @param[out]	voltage		Read supply voltage in Volts.
+ *
+ * @retval 	NRF_SUCCESS		On success.
+ * @retval	NRF_ERROR_BUSY	If the ADC-interface is busy.
+ */
+static ret_code_t battery_read_voltage(float* voltage) {
 	ret_code_t ret = adc_read_voltage(&adc_instance, voltage, BATTERY_REFERENCE_VOLTAGE);
 	if(ret != NRF_SUCCESS) return ret;
 	
 	static uint8_t first_read = 1;
 	if(first_read) {
 		first_read = 0;
+		CRITICAL_REGION_ENTER();
 		average_voltage = *voltage;
+		CRITICAL_REGION_EXIT();
 		return NRF_SUCCESS;
 	}
 	
+	CRITICAL_REGION_ENTER();
 	average_voltage -= average_voltage * (1.f / (float) BATTERY_SAMPLES_PER_AVERAGE);
 	average_voltage += (*voltage) * (1.f / (float) BATTERY_SAMPLES_PER_AVERAGE);
 	*voltage = average_voltage;
+	CRITICAL_REGION_EXIT();
 	return NRF_SUCCESS;
 }
 
@@ -67,8 +87,12 @@ static void internal_battery_callback(void* p_context) {
 }
 
 static void update_advertiser_voltage(void * p_event_data, uint16_t event_size) {
+	float tmp = 0;
+	CRITICAL_REGION_ENTER();
+	tmp = average_voltage;
+	CRITICAL_REGION_EXIT();
 	// Update the advertising data battery-voltage
-	advertiser_set_battery_voltage(average_voltage);
+	advertiser_set_battery_voltage(tmp);
 }
 
 
