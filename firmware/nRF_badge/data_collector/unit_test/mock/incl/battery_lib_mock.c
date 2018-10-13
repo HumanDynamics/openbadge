@@ -5,14 +5,12 @@
 #include "data_generator_lib.h"
 
 
-void battery_init(void) {
-	
+ret_code_t battery_init(void) {
+	return NRF_SUCCESS;
 }
 
-ret_code_t battery_read_voltage(float* voltage) {
-	*voltage = 3.0;
-	
-	return NRF_SUCCESS;
+float battery_get_voltage(void) {
+	return 3.0;
 }
 
 
