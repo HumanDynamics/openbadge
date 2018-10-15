@@ -225,8 +225,8 @@ ret_code_t ble_start_scanning(uint16_t scan_interval_ms, uint16_t scan_window_ms
 	scan_params.active = 0;  			// passive scanning, only looking for advertising packets
     scan_params.selective = 0;  		// non-selective, don't use whitelist
     scan_params.p_whitelist = NULL;  	// no whitelist
-    scan_params.interval 	= (uint16_t)(((uint32_t)(scan_interval_ms)) * 1000) / 625;	// scan_params uses interval in units of 0.625ms
-    scan_params.window 		= (uint16_t)(((uint32_t)(scan_window_ms)) * 1000) / 625;  	// window also in units of 0.625ms
+    scan_params.interval 	= (uint16_t)((((uint32_t)(scan_interval_ms)) * 1000) / 625);	// scan_params uses interval in units of 0.625ms
+    scan_params.window 		= (uint16_t)((((uint32_t)(scan_window_ms)) * 1000) / 625);  	// window also in units of 0.625ms
     scan_params.timeout 	= scan_duration_seconds;                			// timeout is in s
 	
 	sd_ble_gap_scan_stop();  // stop any in-progress scans

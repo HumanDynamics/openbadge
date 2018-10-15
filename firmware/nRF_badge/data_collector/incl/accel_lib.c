@@ -20,8 +20,8 @@
 #endif
 
 /**< The default configuration parameters for the accelerometer */
-#define	ACCEL_DATARATE_DEFAULT												ACCEL_DATARATE_100_HZ 
-#define ACCEL_OPERATING_MODE_DEFAULT										ACCEL_NORMAL_MODE
+#define	ACCEL_DATARATE_DEFAULT												ACCEL_DATARATE_10_HZ 
+#define ACCEL_OPERATING_MODE_DEFAULT										ACCEL_POWER_DOWN_MODE
 #define ACCEL_AXIS_DEFAULT													(ACCEL_X_AXIS_ENABLE | ACCEL_Y_AXIS_ENABLE | ACCEL_Z_AXIS_ENABLE)
 #define ACCEL_FULL_SCALE_DEFAULT											ACCEL_FULL_SCALE_2G
 #define ACCEL_FIFO_DEFAULT													ACCEL_FIFO_DISABLE
@@ -391,8 +391,8 @@ ret_code_t 	accel_init(void) {
 		
 		
 		// GPIOTE_CONFIG_IN_SENSE_LOTOHI(true) or GPIOTE_CONFIG_IN_SENSE_HITOLO(true)
-		nrf_drv_gpiote_in_config_t in_config = GPIOTE_CONFIG_IN_SENSE_LOTOHI(true);
-		in_config.pull = NRF_GPIO_PIN_PULLUP;
+		nrf_drv_gpiote_in_config_t in_config = GPIOTE_CONFIG_IN_SENSE_LOTOHI(false);
+		in_config.pull = NRF_GPIO_PIN_NOPULL;
 		ret = nrf_drv_gpiote_in_init(ACCEL_INT1_PIN, &in_config, accel_int1_event_handler);
 		if(ret != NRF_SUCCESS) return NRF_ERROR_INTERNAL;
 		nrf_drv_gpiote_in_event_enable(ACCEL_INT1_PIN, true);
