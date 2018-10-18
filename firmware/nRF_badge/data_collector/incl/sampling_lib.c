@@ -33,8 +33,9 @@
 #define AGGREGATE_SCAN_SAMPLE_MEAN(sample, aggregated) 	((aggregated) + (sample))
 #define PROCESS_SCAN_SAMPLE_MEAN(aggregated, count) 	((aggregated)/(count))
 
-
-
+#define MICROPHONE_READING_PERIOD_MS			(1000.0f / 700.0f)
+#define MICROPHONE_READING_SLEEP_RATIO          0.075
+#define MICROPHONE_READING_WINDOW_MS            (MICROPHONE_READING_PERIOD_MS * MICROPHONE_READING_SLEEP_RATIO)
 
 
 static sampling_configuration_t sampling_configuration;
@@ -66,7 +67,7 @@ static uint32_t battery_stream_timeout_id;
 chunk_fifo_t 	microphone_chunk_fifo;
 circular_fifo_t microphone_stream_fifo;
 static MicrophoneChunk* microphone_chunk = NULL;
-static const uint16_t microphone_aggregated_period_ms = 2;
+static const float microphone_aggregated_period_ms = MICROPHONE_READING_PERIOD_MS;
 static uint16_t microphone_period_ms = 0;
 static uint32_t microphone_aggregated = 0;
 static uint32_t microphone_aggregated_count = 0;
@@ -861,13 +862,19 @@ void sampling_timeout_microphone_stream(void) {
 }
 
 void sampling_microphone_callback(void* p_context) {
+	if(microphone_aggregated_count == 0) {
+		debug_log("SAMPLING: Microphone aggregated count == 0!\n");
+		return;
+	}
+	
+	if(microphone_aggregated_count <= 5) {
+		debug_log("SAMPLING: Microphone aggregated count <= 5. We need more samples!\n");
+	}
 
-	uint8_t value = 0;
-	// To not get confused by the timestamps when we got not enough data points, we just take a value of 0.
-	if(microphone_aggregated_count <= 5) 
-		value = 0;
-	else
-		value = (uint8_t)(microphone_aggregated/microphone_aggregated_count);
+	uint32_t tmp = (microphone_aggregated/(microphone_aggregated_count/2));
+	uint8_t value = (tmp > 255) ? 255 : ((uint8_t) tmp);
+
+	
 	microphone_aggregated = 0;
 	microphone_aggregated_count = 0;
 	
@@ -890,12 +897,14 @@ void sampling_microphone_callback(void* p_context) {
 }
 
 void sampling_microphone_aggregated_callback(void* p_context) {
-	uint8_t value = 0;
-	ret_code_t ret = microphone_read(&value);
-	if(ret != NRF_SUCCESS) return;
-	
-	microphone_aggregated += value;
-	microphone_aggregated_count++;
+	uint64_t end_ticks = systick_get_ticks_since_start() + APP_TIMER_TICKS(MICROPHONE_READING_WINDOW_MS, 0);
+	while(end_ticks > systick_get_ticks_since_start()) {
+		uint8_t value = 0;
+		ret_code_t ret = microphone_read(&value);	
+		if(ret != NRF_SUCCESS) continue;
+		microphone_aggregated += value;
+		microphone_aggregated_count++;
+	}		
 }
 
 void sampling_setup_microphone_chunk(void) {

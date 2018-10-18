@@ -22,7 +22,7 @@ void microphone_init(void) {
 	adc_instance.nrf_adc_config_input		= MIC_PIN;	//NRF_ADC_CONFIG_INPUT_6; //ADC_CONFIG_PSEL_AnalogInput6;
 	
 	
-	adc_init(&adc_instance);
+	adc_init(&adc_instance, 1);
 }
 
 ret_code_t microphone_read(uint8_t* value) {

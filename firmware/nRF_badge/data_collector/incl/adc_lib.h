@@ -49,11 +49,17 @@ typedef struct {
  *
  *
  * @param[in,out]   adc_instance		Pointer to an preconfigured adc_instance.
+ * @param[in]   	default_instance	Flag if it is the default instance or not (1 or 0).
+ *
+ * @details	If it is the default instance, every time the adc_read_raw (or adc_read_voltage)
+ *			function is called, it reconfigures the adc-configuration to the default one.
+ *			This is done to achieve very fast readings through the function adc_read_raw_default,
+ *			where no configuration has to be done.
  *
  * @retval  NRF_SUCCESS    				If the adc_instance was successfully initialized.
  * @retval  NRF_ERROR_INVALID_PARAM  	If the specified peripheral in the adc_instance is not correct.
  */
-ret_code_t adc_init(adc_instance_t* adc_instance);
+ret_code_t adc_init(adc_instance_t* adc_instance, uint8_t default_instance);
 
 
 /**@brief   Function for reading a raw ADC value on the input of the specified adc_instance in blocking mode.
@@ -69,6 +75,21 @@ ret_code_t adc_init(adc_instance_t* adc_instance);
  */
 ret_code_t adc_read_raw(const adc_instance_t* adc_instance, int32_t* raw);
 
+
+
+/**@brief   Function for reading a raw ADC value on the input of the specified adc_instance in blocking mode (The specified adc_instance has to be the default one!).
+ *
+ * @details This function reads out the raw ADC value of the specified adc_instance in blocking mode.
+ *			It tries to minimize the configuration and input-selection calls to be more efficiently.
+ *
+ * @param[in]   adc_instance		Pointer to an initialized adc_instance.
+ * @param[out]  raw					Pointer to memory, where the sampled ADC value, depending on the configuration of the adc_instance and the input voltage, is stored.
+ *
+ * @retval  NRF_SUCCESS    			If the ADC read was successful.
+ * @retval  NRF_ERROR_BUSY  		If the selected ADC peripheral is currently in use.
+ * @retval  NRF_ERROR_INVALID_PARAM	If the adc_instance is not the default one.
+ */
+__attribute__((long_call, section(".data"))) ret_code_t adc_read_raw_default(const adc_instance_t* adc_instance, int32_t* raw);
 
 /**@brief   Function for reading the voltage on the input of specified adc_instance in blocking mode.
  *
