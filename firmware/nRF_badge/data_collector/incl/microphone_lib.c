@@ -34,7 +34,7 @@ ret_code_t microphone_read(uint8_t* value) {
 
 /*
 bool microphone_selftest(void) {
-	debug_log("Waiting for noise for: %u ms.\n", MICROPHONE_SELFTEST_TIME_FOR_NOISE_GENERATION_MS);
+	debug_log("MICROPHONE: Waiting for noise for: %u ms.\n", MICROPHONE_SELFTEST_TIME_FOR_NOISE_GENERATION_MS);
 	uint32_t end_ms = systick_get_continuous_millis() + MICROPHONE_SELFTEST_TIME_FOR_NOISE_GENERATION_MS;
 	int16_t min = 0xFF;
 	int16_t max = 0;
@@ -57,7 +57,7 @@ bool microphone_selftest(void) {
 		if(diff > MICROPHONE_SELFTEST_THRESHOLD)
 			break;
 	}
-	debug_log("Selftest microphone data diff: %u\n", diff);
+	debug_log("MICROPHONE: Selftest microphone data diff: %u\n", diff);
 	if(diff > MICROPHONE_SELFTEST_THRESHOLD)
 		return 1;
 	
@@ -88,7 +88,7 @@ static uint8_t get_avg_value(void) {
 }
 
 bool microphone_selftest(void) {
-	debug_log("Waiting for noise pattern for: %u ms.\n", MICROPHONE_SELFTEST_TIME_FOR_NOISE_GENERATION_MS);
+	debug_log("MICROPHONE: Waiting for noise pattern for: %u ms.\n", MICROPHONE_SELFTEST_TIME_FOR_NOISE_GENERATION_MS);
 	uint32_t end_ms = systick_get_continuous_millis() + MICROPHONE_SELFTEST_TIME_FOR_NOISE_GENERATION_MS;
 	
 	// We need to search for a pattern: Noise, no noise, noise. Or no noise, noise, no noise
@@ -96,7 +96,7 @@ bool microphone_selftest(void) {
 	
 	int16_t cur_reference_value = (int16_t) get_avg_value();	// First read a reference value
 	int8_t search_status = 0; // 0: nothing found yet, 1: found no noise -> noise transition, -1: found noise -> no noise transition
-	debug_log("Microphone ref value: %u\n", cur_reference_value);
+	debug_log("MICROPHONE: Microphone ref value: %u\n", cur_reference_value);
 	
 	while(systick_get_continuous_millis() < end_ms) {
 		int16_t cur_value = (int16_t) get_avg_value();
@@ -105,9 +105,9 @@ bool microphone_selftest(void) {
 			if(search_status == 0) {
 				cur_reference_value = cur_value;
 				search_status = 1;
-				debug_log("Found noise\n");
+				debug_log("MICROPHONE: Found noise\n");
 			} else if(search_status == -1) {	// If we have already found a noise -> no noise transition, we can return
-				debug_log("Found noise -> no noise -> noise transition\n");
+				debug_log("MICROPHONE: Found noise -> no noise -> noise transition\n");
 				return 1;
 			}
 			
@@ -115,9 +115,9 @@ bool microphone_selftest(void) {
 			if(search_status == 0) {
 				cur_reference_value = cur_value;
 				search_status = -1;
-				debug_log("Found no noise\n");
+				debug_log("MICROPHONE: Found no noise\n");
 			} else if(search_status == 1) {	// If we have already found a no noise -> noise transition, we can return
-				debug_log("Found no noise -> noise -> no noise transition\n");
+				debug_log("MICROPHONE: Found no noise -> noise -> no noise transition\n");
 				return 1;
 			}
 		}		

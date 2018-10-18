@@ -52,7 +52,7 @@ ret_code_t storer_register_partitions(void) {
 	// Register a static partition with CRC for the badge-assignement	
 	ret = filesystem_register_partition(&partition_id_badge_assignement, &required_size, 0, 1, serialized_badge_assignement_len);
 	if(ret != NRF_SUCCESS) return ret;	
-	//debug_log("Available size: %u\n", filesystem_get_available_size());
+	//debug_log("STORER: Available size: %u\n", filesystem_get_available_size());
 	
 	/****************** BATTERY *****************************/
 	uint32_t serialized_battery_data_len = tb_get_max_encoded_len(BatteryChunk_fields);
@@ -61,7 +61,7 @@ ret_code_t storer_register_partitions(void) {
 	// Register a static partition without CRC for the battery-data	
 	ret = filesystem_register_partition(&partition_id_battery_chunks, &required_size, 0, 0, serialized_battery_data_len);
 	if(ret != NRF_SUCCESS) return ret;	
-	//debug_log("Available size: %u\n", filesystem_get_available_size());
+	//debug_log("STORER: Available size: %u\n", filesystem_get_available_size());
 	
 	/****************** MICROPHONE ******************************/
 	uint32_t serialized_microphone_data_len = tb_get_max_encoded_len(MicrophoneChunk_fields);
@@ -70,7 +70,7 @@ ret_code_t storer_register_partitions(void) {
 	// Register a static partition with CRC for the microphone-data	
 	ret = filesystem_register_partition(&partition_id_microphone_chunks, &required_size, 0, 1, serialized_microphone_data_len);
 	if(ret != NRF_SUCCESS) return ret;
-	//debug_log("Available size: %u\n", filesystem_get_available_size());
+	//debug_log("STORER: Available size: %u\n", filesystem_get_available_size());
 	
 	/******************* SCAN *********************************/
 	uint32_t max_serialized_scan_data_len = tb_get_max_encoded_len(ScanChunk_fields);
@@ -79,7 +79,7 @@ ret_code_t storer_register_partitions(void) {
 	// Register a dynamic partition with CRC for the scan-data	
 	ret = filesystem_register_partition(&partition_id_scan_chunks, &required_size, 1, 1, 0);
 	if(ret != NRF_SUCCESS) return ret;	
-	//debug_log("Available size: %u\n", filesystem_get_available_size());
+	//debug_log("STORER: Available size: %u\n", filesystem_get_available_size());
 	
 	/****************** ACCELEROMETER INTERRUPT *****************/
 	uint32_t serialized_accelerometer_interrupt_data_len = tb_get_max_encoded_len(AccelerometerInterruptChunk_fields);
@@ -88,7 +88,7 @@ ret_code_t storer_register_partitions(void) {
 	// Register a static partition with CRC for the accelerometer interrupt-data	
 	ret = filesystem_register_partition(&partition_id_accelerometer_interrupt_chunks, &required_size, 0, 1, serialized_accelerometer_interrupt_data_len);
 	if(ret != NRF_SUCCESS) return ret;
-	//debug_log("Available size: %u\n", filesystem_get_available_size());
+	//debug_log("STORER: Available size: %u\n", filesystem_get_available_size());
 	
 	/********************** ACCELEROMETER ***********************/
 	uint32_t serialized_accelerometer_data_len = tb_get_max_encoded_len(AccelerometerChunk_fields);
@@ -97,7 +97,7 @@ ret_code_t storer_register_partitions(void) {
 	// Register a static partition with CRC for the accelerometer-data	
 	ret = filesystem_register_partition(&partition_id_accelerometer_chunks, &required_size, 0, 1, serialized_accelerometer_data_len);
 	if(ret != NRF_SUCCESS) return ret;
-	debug_log("Available size: %u\n", filesystem_get_available_size());
+	debug_log("STORER: Available size: %u\n", filesystem_get_available_size());
 	
 	
 	return NRF_SUCCESS;

@@ -78,7 +78,7 @@ ret_code_t ble_init(void) {
     
 	// Enable the BLE
 	ret = softdevice_enable(&ble_enable_params);
-	//debug_log("Ret softdevice_enable %u\n", ret);
+	//debug_log("BLE: Ret softdevice_enable %u\n", ret);
 	if(ret != NRF_SUCCESS) return ret;
 	
 	
@@ -98,12 +98,12 @@ ret_code_t ble_init(void) {
 	
 	
 	ret = ble_init_advertising();
-	//debug_log("Ret init advertising %u\n", ret);
+	//debug_log("BLE: Ret init advertising %u\n", ret);
     if(ret != NRF_SUCCESS) return ret;
 	
 	
 	ret = ble_init_services();
-	//debug_log("Ret init services %u\n", ret);
+	//debug_log("BLE: Ret init services %u\n", ret);
 	if(ret != NRF_SUCCESS) return ret;
 	
 	return NRF_SUCCESS;	
@@ -395,7 +395,7 @@ static void ble_on_scan_report_callback(ble_gap_evt_adv_report_t* scan_report) {
 	if(external_ble_on_scan_report_callback != NULL)
 		external_ble_on_scan_report_callback(scan_report);
 
-	//debug_log_bkgnd("BLE on scan report callback. RSSI: %d\n", scan_report->rssi);
+	//debug_log("BLE: BLE on scan report callback. RSSI: %d\n", scan_report->rssi);
 }
 
 /**@brief Handler function that is called when the scan process timed-out.
@@ -405,7 +405,7 @@ static void ble_on_scan_timeout_callback(void) {
 	if(external_ble_on_scan_timeout_callback != NULL)
 		external_ble_on_scan_timeout_callback();
 	
-	//debug_log_bkgnd("BLE on scan timeout callback\n");
+	//debug_log("BLE: BLE on scan timeout callback\n");
 }
 
 

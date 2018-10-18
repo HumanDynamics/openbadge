@@ -62,7 +62,7 @@ ret_code_t systick_init(uint8_t prescaler) {
  * @param[in] 	p_context	Pointer to context provided via the timer (should/could be NULL).
  */
 static void systick_callback(void* p_context) {
-	//debug_log_bkgnd("Systick-callback\n");
+	//debug_log("SYSTICK: Systick-callback\n");
 	uint32_t diff_ticks;
 	CRITICAL_REGION_ENTER();
 	uint32_t cur_ticks = app_timer_cnt_get();
@@ -91,7 +91,7 @@ uint64_t systick_get_ticks_since_start(void) {
 
 void systick_set_millis(uint64_t ticks_since_start_at_sync, uint64_t millis_sync) {
 	
-	//debug_log_bkgnd("Systick_set_millis: %u, (%u, %u), %f, %u, (%u, %u)\n", (uint32_t) ticks_since_start_at_sync, (uint32_t)(millis_sync/1000), (uint32_t) (millis_sync%1000), millis_per_ticks, (uint32_t) ticks_at_offset, (uint32_t)(millis_offset/1000), (uint32_t) (millis_offset%1000));
+	//debug_log("SYSTICK: Systick_set_millis: %u, (%u, %u), %f, %u, (%u, %u)\n", (uint32_t) ticks_since_start_at_sync, (uint32_t)(millis_sync/1000), (uint32_t) (millis_sync%1000), millis_per_ticks, (uint32_t) ticks_at_offset, (uint32_t)(millis_offset/1000), (uint32_t) (millis_offset%1000));
 	
 	uint64_t cur_ticks_since_start = systick_get_ticks_since_start();
 	if(ticks_since_start_at_sync > cur_ticks_since_start)	// Only a safety query (the ticks_since_start_at_sync has to be <= the current ticks since start)
@@ -184,6 +184,6 @@ void systick_get_timestamp(uint32_t* seconds, uint16_t* milliseconds) {
 	uint64_t millis = systick_get_millis();
 	*seconds = (uint32_t) (millis/1000);
 	*milliseconds = (uint16_t) (millis % 1000);
-	//debug_log_bkgnd("Systick_get_timestamp: (%u, %u)\n", (uint32_t)(*seconds), (uint32_t) (*milliseconds));
+	//debug_log("SYSTICK: Systick_get_timestamp: (%u, %u)\n", (uint32_t)(*seconds), (uint32_t) (*milliseconds));
 	
 }

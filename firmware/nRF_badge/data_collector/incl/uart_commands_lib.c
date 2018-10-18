@@ -20,7 +20,7 @@ typedef struct {
 static char command_buffer[COMMAND_BUF_SIZE];
 static int command_buffer_pos = 0;
 
-extern uart_instance_t uart_instance;	/**< The uart_instance of debug_lib */
+static uart_instance_t uart_instance;	/**< The private uart_instance. */
 
 
 
@@ -44,8 +44,25 @@ static uart_command_t uart_commands[] = {
 
 ret_code_t uart_commands_init(void) {
 	
+	
+	
+	uart_instance.uart_peripheral = 0;
+	uart_instance.nrf_drv_uart_config.baudrate = (nrf_uart_baudrate_t) NRF_UART_BAUDRATE_115200;
+    uart_instance.nrf_drv_uart_config.hwfc = HWFC_ENABLED ? NRF_UART_HWFC_ENABLED : NRF_UART_HWFC_DISABLED;
+    uart_instance.nrf_drv_uart_config.interrupt_priority = APP_IRQ_PRIORITY_MID;
+    uart_instance.nrf_drv_uart_config.parity = NRF_UART_PARITY_EXCLUDED;
+    uart_instance.nrf_drv_uart_config.pselcts = UART_CTS_PIN;
+    uart_instance.nrf_drv_uart_config.pselrts = UART_RTS_PIN;
+    uart_instance.nrf_drv_uart_config.pselrxd = UART_RX_PIN;
+    uart_instance.nrf_drv_uart_config.pseltxd = UART_TX_PIN;
+	
+	ret_code_t ret;
+	UART_BUFFER_INIT(&uart_instance, UART_RX_BUFFER_SIZE, 0, &ret);	
+	
+	if(ret != NRF_SUCCESS) return ret;
+	
 	memset(command_buffer, 0, sizeof(command_buffer));
-	ret_code_t ret = uart_receive_buffer_bkgnd(&uart_instance, on_uart_event);
+	ret = uart_receive_buffer_bkgnd(&uart_instance, on_uart_event);
 	
 	
 	return ret;
@@ -62,7 +79,7 @@ static void on_command_received(const char * command) {
         }
     }
 
-    debug_log_bkgnd("Unknown command: %s\n", command);
+    debug_log("UART_COMMANDS: Unknown command: %s\n", command);
 }
 
 

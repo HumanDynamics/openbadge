@@ -423,11 +423,11 @@ ret_code_t sampling_stop_accelerometer(uint8_t streaming) {
 }
 
 void sampling_timeout_accelerometer(void) {
-	debug_log_bkgnd("Accelerometer timed out --> stopping\n");
+	debug_log("SAMPLING: Accelerometer timed out --> stopping\n");
 	sampling_stop_accelerometer(0);
 }
 void sampling_timeout_accelerometer_stream(void) {
-	debug_log_bkgnd("Accelerometer stream timed out --> stopping\n");
+	debug_log("SAMPLING: Accelerometer stream timed out --> stopping\n");
 	sampling_stop_accelerometer(1);
 }
 
@@ -440,13 +440,13 @@ void sampling_setup_accelerometer_chunk(void) {
 	systick_get_timestamp(&((accelerometer_chunk->timestamp).seconds), &((accelerometer_chunk->timestamp).ms));
 	accelerometer_chunk->accelerometer_data_count = 0;
 	
-	debug_log_bkgnd("Setup accelerometer chunk\n");
+	debug_log("SAMPLING: Setup accelerometer chunk\n");
 	#endif
 }
 
 void sampling_finalize_accelerometer_chunk(void) {	
 	#if SAMPLING_ACCEL_ENABLED
-	debug_log_bkgnd("Finalize accelerometer chunk\n");
+	debug_log("SAMPLING: Finalize accelerometer chunk\n");
 	
 	// Close the chunk in the FIFO
 	chunk_fifo_write_close(&accelerometer_chunk_fifo);
@@ -477,7 +477,7 @@ void sampling_accelerometer_fifo_callback(void* p_context) {
 	ret_code_t ret = accel_read_acceleration(x, y, z, &num_samples, remaining_num_samples);
 	if(ret != NRF_SUCCESS)
 		return;
-	//debug_log_bkgnd("Read accel fifo: n=%u, remain=%u, ms=%u\n", num_samples, remaining_num_samples, (uint32_t) systick_get_millis());
+	//debug_log("SAMPLING: Read accel fifo: n=%u, remain=%u, ms=%u\n", num_samples, remaining_num_samples, (uint32_t) systick_get_millis());
 	if(sampling_configuration & SAMPLING_ACCELEROMETER) {	// Fill the chunk if we want to
 		for(uint8_t i = 0; i < num_samples; i++) {	
 			accelerometer_chunk->accelerometer_data[num + i].acceleration = (ABS(x[i]) + ABS(y[i]) + ABS(z[i]));	
@@ -588,17 +588,17 @@ ret_code_t sampling_stop_accelerometer_interrupt(uint8_t streaming) {
 }
 
 void sampling_timeout_accelerometer_interrupt(void) {
-	debug_log_bkgnd("Accelerometer interrupt timed out --> stopping\n");
+	debug_log("SAMPLING: Accelerometer interrupt timed out --> stopping\n");
 	sampling_stop_accelerometer_interrupt(0);
 }
 void sampling_timeout_accelerometer_interrupt_stream(void) {
-	debug_log_bkgnd("Accelerometer interrupt stream timed out --> stopping\n");
+	debug_log("SAMPLING: Accelerometer interrupt stream timed out --> stopping\n");
 	sampling_stop_accelerometer_interrupt(1);
 }
 
 void sampling_setup_accelerometer_interrupt_chunk(void * p_event_data, uint16_t event_size) {
 	#if SAMPLING_ACCEL_ENABLED
-	debug_log_bkgnd("Setup accelerometer interrupt chunk\n");
+	debug_log("SAMPLING: Setup accelerometer interrupt chunk\n");
 	
 	// Open a chunk in the FIFO
 	chunk_fifo_write_open(&accelerometer_interrupt_chunk_fifo, (void**) &accelerometer_interrupt_chunk, NULL);
@@ -610,7 +610,7 @@ void sampling_setup_accelerometer_interrupt_chunk(void * p_event_data, uint16_t 
 
 void sampling_finalize_accelerometer_interrupt_chunk(void) {	
 	#if SAMPLING_ACCEL_ENABLED
-	debug_log_bkgnd("Finalize accelerometer interrupt chunk: %ums\n");
+	debug_log("SAMPLING: Finalize accelerometer interrupt chunk\n");
 	
 	// Close the chunk in the FIFO
 	chunk_fifo_write_close(&accelerometer_interrupt_chunk_fifo);
@@ -642,7 +642,7 @@ void sampling_accelerometer_interrupt_reset_callback(void* p_context) {
  */
 void sampling_accelerometer_interrupt_callback(accel_interrupt_event_t const * p_event) {
 	#if SAMPLING_ACCEL_ENABLED
-	debug_log_bkgnd("sampling_accelerometer_interrupt_callback\n");
+	debug_log("SAMPLING: sampling_accelerometer_interrupt_callback\n");
 	
 	if((sampling_configuration & SAMPLING_ACCELEROMETER_INTERRUPT) == 0 && (sampling_configuration & STREAMING_ACCELEROMETER_INTERRUPT) == 0)
 		return;
@@ -729,16 +729,16 @@ void sampling_stop_battery(uint8_t streaming) {
 }
 
 void sampling_timeout_battery(void) {
-	debug_log_bkgnd("Battery timed out --> stopping\n");
+	debug_log("SAMPLING: Battery timed out --> stopping\n");
 	sampling_stop_battery(0);
 }
 void sampling_timeout_battery_stream(void) {
-	debug_log_bkgnd("Battery stream timed out --> stopping\n");
+	debug_log("SAMPLING: Battery stream timed out --> stopping\n");
 	sampling_stop_battery(1);
 }
 
 void sampling_battery_callback(void* p_context) {
-	//debug_log_bkgnd("sampling_battery_callback\n");
+	//debug_log("SAMPLING: sampling_battery_callback\n");
 	
 	if((sampling_configuration & SAMPLING_BATTERY) == 0 && (sampling_configuration & STREAMING_BATTERY) == 0)
 		return;
@@ -852,26 +852,29 @@ void sampling_stop_microphone(uint8_t streaming) {
 }
 
 void sampling_timeout_microphone(void) {
-	debug_log_bkgnd("Microphone timed out --> stopping\n");
+	debug_log("SAMPLING: Microphone timed out --> stopping\n");
 	sampling_stop_microphone(0);
 }
 void sampling_timeout_microphone_stream(void) {
-	debug_log_bkgnd("Microphone stream timed out --> stopping\n");
+	debug_log("SAMPLING: Microphone stream timed out --> stopping\n");
 	sampling_stop_microphone(1);
 }
 
 void sampling_microphone_callback(void* p_context) {
-	if(microphone_aggregated_count <= 5) 
-		return;
 
-	uint8_t value = (uint8_t)(microphone_aggregated/microphone_aggregated_count);
+	uint8_t value = 0;
+	// To not get confused by the timestamps when we got not enough data points, we just take a value of 0.
+	if(microphone_aggregated_count <= 5) 
+		value = 0;
+	else
+		value = (uint8_t)(microphone_aggregated/microphone_aggregated_count);
 	microphone_aggregated = 0;
 	microphone_aggregated_count = 0;
 	
 	if(sampling_configuration & SAMPLING_MICROPHONE) {
 		microphone_chunk->microphone_data[microphone_chunk->microphone_data_count].value = value;
 		microphone_chunk->microphone_data_count++;
-		//debug_log_bkgnd("Mic value: %u, %u\n", value, microphone_chunk->microphone_data_count);
+		//debug_log("SAMPLING: Mic value: %u, %u\n", value, microphone_chunk->microphone_data_count);
 		if(microphone_chunk->microphone_data_count >= MICROPHONE_CHUNK_DATA_SIZE) {
 			sampling_finalize_microphone_chunk();
 		}
@@ -896,7 +899,7 @@ void sampling_microphone_aggregated_callback(void* p_context) {
 }
 
 void sampling_setup_microphone_chunk(void) {
-	debug_log_bkgnd("sampling_setup_microphone_chunk\n");
+	debug_log("SAMPLING: sampling_setup_microphone_chunk\n");
 	
 	microphone_aggregated = 0;
 	microphone_aggregated_count = 0;
@@ -910,7 +913,7 @@ void sampling_setup_microphone_chunk(void) {
 }
 
 void sampling_finalize_microphone_chunk(void) {
-	debug_log_bkgnd("sampling_finalize_microphone_chunk\n");
+	debug_log("SAMPLING: sampling_finalize_microphone_chunk\n");
 	// Close the chunk in the FIFO
 	chunk_fifo_write_close(&microphone_chunk_fifo);
 	
@@ -986,11 +989,11 @@ void sampling_stop_scan(uint8_t streaming) {
 }
 
 void sampling_timeout_scan(void) {
-	debug_log_bkgnd("Sampling timed out --> stopping\n");
+	debug_log("SAMPLING: Sampling timed out --> stopping\n");
 	sampling_stop_scan(0);
 }
 void sampling_timeout_scan_stream(void) {
-	debug_log_bkgnd("Sampling stream timed out --> stopping\n");
+	debug_log("SAMPLING: Sampling stream timed out --> stopping\n");
 	sampling_stop_scan(1);
 }
 
@@ -1009,7 +1012,7 @@ void sampling_on_scan_timeout_callback(void) {
 }
 
 void sampling_on_scan_report_callback(scanner_scan_report_t* scanner_scan_report) {
-	debug_log_bkgnd("Scan report: ID %u, RSSI: %d\n", scanner_scan_report->ID, scanner_scan_report->rssi);
+	debug_log("SAMPLING: Scan report: ID %u, RSSI: %d\n", scanner_scan_report->ID, scanner_scan_report->rssi);
 
 	if(scan_group_filter != scan_no_group_filter_pattern) { // If we need to check the group
 		if(scanner_scan_report->group != scan_group_filter) {
@@ -1060,7 +1063,7 @@ void sampling_on_scan_report_callback(scanner_scan_report_t* scanner_scan_report
 
 void sampling_setup_scan_sampling_chunk(void) {
 	
-	debug_log_bkgnd("sampling_setup_scan_sampling_chunk\n");
+	debug_log("SAMPLING: sampling_setup_scan_sampling_chunk\n");
 	// Open a chunk in the FIFO
 	chunk_fifo_write_open(&scan_sampling_chunk_fifo, (void**) &scan_sampling_chunk, NULL);
 	
@@ -1072,7 +1075,7 @@ void sampling_setup_scan_sampling_chunk(void) {
 
 void sampling_finalize_scan_sampling_chunk(void) {
 
-	debug_log_bkgnd("sampling_finalize_scan_sampling_chunk\n");
+	debug_log("SAMPLING: sampling_finalize_scan_sampling_chunk\n");
 	// Now interpret/Process the aggregated rssi values:
 	for(uint32_t i = 0; i < scan_sampling_chunk->scan_result_data_count; i++) {
 		if(scan_aggregation_type == SCAN_CHUNK_AGGREGATE_TYPE_MAX) { // Use max
@@ -1082,10 +1085,10 @@ void sampling_finalize_scan_sampling_chunk(void) {
 		}
 		
 
-		//debug_log_bkgnd("Scanning ended: ID %u, RSSI %d, count %u\n", scan_sampling_chunk->scan_result_data[i].scan_device.ID, scan_sampling_chunk->scan_result_data[i].scan_device.rssi, scan_sampling_chunk->scan_result_data[i].count);
+		//debug_log("SAMPLING: Scanning ended: ID %u, RSSI %d, count %u\n", scan_sampling_chunk->scan_result_data[i].scan_device.ID, scan_sampling_chunk->scan_result_data[i].scan_device.rssi, scan_sampling_chunk->scan_result_data[i].count);
 		//systick_delay_millis(100);
 	}
-	//debug_log_bkgnd("Scanning ended. Seen devices: %u\n", scan_sampling_chunk->scan_result_data_count);
+	//debug_log("SAMPLING: Scanning ended. Seen devices: %u\n", scan_sampling_chunk->scan_result_data_count);
 	
 	// Close the chunk in the FIFO
 	chunk_fifo_write_close(&scan_sampling_chunk_fifo);

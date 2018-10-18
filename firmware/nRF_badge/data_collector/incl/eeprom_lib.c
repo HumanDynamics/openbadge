@@ -375,15 +375,15 @@ bool eeprom_selftest(void) {
 	
 	
 	
-	debug_log("Started EEPROM selftest...\n\r");
+	debug_log("EEPROM: Started EEPROM selftest...\n\r");
 	
 	
 	
 //********************** Read and write Tests ***********************
 	ret_code_t ret = eeprom_store(EEPROM_TEST_ADDRESS, (uint8_t*) data, EEPROM_TEST_DATA_LEN);
-	debug_log("Test store, Ret: %d\n\r", ret);
+	debug_log("EEPROM: Test store, Ret: %d\n\r", ret);
 	if(ret != NRF_SUCCESS) {
-		debug_log("Store failed!\n\r");
+		debug_log("EEPROM: Store failed!\n\r");
 		return 0;
 	}
 	
@@ -393,15 +393,15 @@ bool eeprom_selftest(void) {
 	rx_data[EEPROM_TEST_DATA_LEN] = 0;
 	data[EEPROM_TEST_DATA_LEN] = 0;
 	
-	debug_log("Test read, Ret: %d\n", ret);
+	debug_log("EEPROM: Test read, Ret: %d\n", ret);
 	if(ret != NRF_SUCCESS) {
-		debug_log("Read failed!\n\r");
+		debug_log("EEPROM: Read failed!\n\r");
 		return 0;
 	}
 	
 	
 	if(memcmp(data, rx_data, EEPROM_TEST_DATA_LEN) != 0) {
-		debug_log("Read data don't match written data!");
+		debug_log("EEPROM: Read data don't match written data!");
 		return 0;
 	}
 	
@@ -409,31 +409,31 @@ bool eeprom_selftest(void) {
 	char* test = "HELLO";
 	ret = eeprom_store(EEPROM_TEST_ADDRESS, (uint8_t*) test, 5);
 	
-	debug_log("Test store non RAM data, Ret: %d\n\r", ret);
+	debug_log("EEPROM: Test store non RAM data, Ret: %d\n\r", ret);
 	if(ret != NRF_ERROR_INVALID_PARAM) {
-		debug_log("Test store non RAM data failed!\n\r");
+		debug_log("EEPROM: Test store non RAM data failed!\n\r");
 		return 0;
 	}
 	
 	
 	ret = eeprom_read(EEPROM_TEST_ADDRESS, (uint8_t*) test, 5);
 	
-	debug_log("Test read to non RAM data, Ret: %d\n\r", ret);
+	debug_log("EEPROM: Test read to non RAM data, Ret: %d\n\r", ret);
 	if(ret != NRF_ERROR_INVALID_PARAM) {
-		debug_log("Test read to non RAM data failed!\n\r");
+		debug_log("EEPROM: Test read to non RAM data failed!\n\r");
 		return 0;
 	}
 
 //******************* False address test **************************
 	ret = eeprom_store(EEPROM_SIZE - 2, (uint8_t*) data, EEPROM_TEST_DATA_LEN);
 	
-	debug_log("Test invalid address, Ret: %d\n\r", ret);
+	debug_log("EEPROM: Test invalid address, Ret: %d\n\r", ret);
 	if(ret != NRF_ERROR_INVALID_PARAM) {
-		debug_log("Test invalid address failed!\n\r");
+		debug_log("EEPROM: Test invalid address failed!\n\r");
 		return 0;
 	}
 	
-	debug_log("EEPROM test successful!!\n\r");	
+	debug_log("EEPROM: EEPROM test successful!!\n\r");	
 	
 	
 	return 1;

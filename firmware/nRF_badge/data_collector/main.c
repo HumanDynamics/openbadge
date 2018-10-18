@@ -45,7 +45,7 @@ int main(void)
 	
 	debug_init();
 	
-	debug_log("Start...\n\r");
+	debug_log("MAIN: Start...\n\r");
 
 	
 	nrf_clock_lf_cfg_t clock_lf_cfg =  {.source        = NRF_CLOCK_LF_SRC_XTAL,            
@@ -73,17 +73,17 @@ int main(void)
 	ret = uart_commands_init();
 		
 	selftest_status_t selftest_status = selftest_test();
-	debug_log("Ret selftest_test: %u\n\r", selftest_status);
+	debug_log("MAIN: Ret selftest_test: %u\n\r", selftest_status);
 	(void) selftest_status;
 	
 	ret = storer_clear();
-	debug_log("Storer clear: %u\n\r", ret);
+	debug_log("MAIN: Storer clear: %u\n\r", ret);
 	
 	#endif
 		
 	uint8_t mac[6];
 	ble_get_MAC_address(mac);
-	debug_log("MAC address: %.2X:%.2X:%.2X:%.2X:%.2X:%.2X\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+	debug_log("MAIN: MAC address: %.2X:%.2X:%.2X:%.2X:%.2X:%.2X\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
 	
 	advertiser_init();
@@ -96,8 +96,8 @@ int main(void)
 	(void) ret;
 	
 
-	while(1) {
-		sd_app_evt_wait();
-		app_sched_execute();
+	while(1) {		
+		app_sched_execute();	// Executes the events in the scheduler queue
+		sd_app_evt_wait();		// Sleeps until an event/interrupt occurs
 	}	
 }

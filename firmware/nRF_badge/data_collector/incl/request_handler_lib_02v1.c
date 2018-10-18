@@ -270,7 +270,7 @@ static void receive_notification_handler(receive_notification_t receive_notifica
 	uint32_t notification_size = sizeof(receive_notification);
 	app_fifo_write(&receive_notification_fifo, NULL, &available_len);
 	if(available_len < notification_size) {
-		debug_log_bkgnd("Not enough bytes in Notification FIFO: %u < %u\n", available_len, notification_size);
+		debug_log("REQUEST_HANDLER: Not enough bytes in Notification FIFO: %u < %u\n", available_len, notification_size);
 		return;
 	}
 	
@@ -316,7 +316,7 @@ static ret_code_t start_response(app_sched_event_handler_t reschedule_handler) {
 // Called when await data failed, or decoding the notification failed, or request does not exist, or transmitting the response failed (because disconnected or something else)
 static void finish_error(void) {
 	app_fifo_flush(&receive_notification_fifo);
-	debug_log_bkgnd("Error while processing request/response --> Disconnect!!!\n");
+	debug_log("REQUEST_HANDLER: Error while processing request/response --> Disconnect!!!\n");
 	sender_disconnect();	// To clear the RX- and TX-FIFO
 	finish_receive_notification();
 	finish_response();
@@ -398,7 +398,7 @@ static void process_receive_notification(void * p_event_data, uint16_t event_siz
 	uint8_t length_header[2];
 	ret = sender_await_data(length_header, 2, AWAIT_DATA_TIMEOUT_MS);
 	if(ret != NRF_SUCCESS) {
-		debug_log("sender_await_data() error for length header\n");
+		debug_log("REQUEST_HANDLER: sender_await_data() error for length header\n");
 		app_fifo_flush(&receive_notification_fifo);
 		finish_error();
 		return;
@@ -409,7 +409,7 @@ static void process_receive_notification(void * p_event_data, uint16_t event_siz
 	// Now wait for the actual data
 	ret = sender_await_data(serialized_buf, len, AWAIT_DATA_TIMEOUT_MS);
 	if(ret != NRF_SUCCESS) {
-		debug_log("sender_await_data() error\n");
+		debug_log("REQUEST_HANDLER: sender_await_data() error\n");
 		app_fifo_flush(&receive_notification_fifo);
 		finish_error();
 		return;
@@ -433,13 +433,13 @@ static void process_receive_notification(void * p_event_data, uint16_t event_siz
 		} else {			
 			// Adapt the notification-len of the consume_index-th notification
 			receive_notification.notification_len = receive_notification.notification_len - consume_len;
-			//debug_log("Adapt %u. notification len to %u\n", consume_index, receive_notification.notification_len);
+			//debug_log("REQUEST_HANDLER: Adapt %u. notification len to %u\n", consume_index, receive_notification.notification_len);
 			receive_notification_fifo_set_receive_notification(&receive_notification, consume_index);
 			// Set consume len to 0
 			consume_len = 0;
 		}
 	}
-	//debug_log("Consume %u notifications\n", consume_index);
+	//debug_log("REQUEST_HANDLER: Consume %u notifications\n", consume_index);
 	
 	// Now manually consume the notifications
 	for(uint32_t i = 0; i < consume_index; i++) {
@@ -452,20 +452,20 @@ static void process_receive_notification(void * p_event_data, uint16_t event_siz
 	tb_istream_t istream = tb_istream_from_buffer(serialized_buf, len);
 	uint8_t decode_status = tb_decode(&istream, Request_fields, &(request_event.request), TB_BIG_ENDIAN);
 	if(decode_status == 0) {
-		debug_log("Error decoding\n");
+		debug_log("REQUEST_HANDLER: Error decoding\n");
 		finish_error();
 		return;
 	}
-	debug_log("Decoded successfully\n");
+	debug_log("REQUEST_HANDLER: Decoded successfully\n");
 	
 	if(istream.bytes_read < len) {
-		debug_log("Warning decoding: %u bytes have not been read.\n", len - istream.bytes_read);
+		debug_log("REQUEST_HANDLER: Warning decoding: %u bytes have not been read.\n", len - istream.bytes_read);
 	}
 	
 	request_event.request_timepoint_ticks = timepoint_ticks;
 
 	
-	debug_log("Which request type: %u, Ticks: %u\n", request_event.request.which_type, request_event.request_timepoint_ticks);
+	debug_log("REQUEST_HANDLER: Which request type: %u, Ticks: %u\n", request_event.request.which_type, request_event.request_timepoint_ticks);
 	
 	request_handler_t request_handler = NULL;
 	for(uint8_t i = 0; i < sizeof(request_handlers)/sizeof(request_handler_for_type_t); i++) {
@@ -484,7 +484,7 @@ static void process_receive_notification(void * p_event_data, uint16_t event_siz
 		request_handler(NULL, 0);
 	} else {
 		// Should actually not happen, but to be sure...
-		debug_log("Have not found a corresponding request handler for which_type: %u\n", request_event.request.which_type);
+		debug_log("REQUEST_HANDLER: Have not found a corresponding request handler for which_type: %u\n", request_event.request.which_type);
 		finish_error();
 	}
 }
@@ -513,7 +513,7 @@ static void send_response(void * p_event_data, uint16_t event_size) {
 	
 	
 	if(encode_status == 0) {
-		debug_log("Error encoding response, len: %u!\n", len);
+		debug_log("REQUEST_HANDLER: Error encoding response, len: %u!\n", len);
 		finish_error();
 		return;
 	}
@@ -526,7 +526,7 @@ static void send_response(void * p_event_data, uint16_t event_size) {
 	serialized_buf[1] = (uint8_t)(((uint16_t) len) & 0xFF);
 	ret = sender_transmit(serialized_buf, len+2, TRANSMIT_DATA_TIMEOUT_MS);	
 	
-	debug_log("Transmit status %u!\n", ret);
+	debug_log("REQUEST_HANDLER: Transmit status %u!\n", ret);
 	
 	
 	if(ret == NRF_SUCCESS) {
@@ -663,7 +663,7 @@ static void microphone_data_response_handler(void * p_event_data, uint16_t event
 
 	ret_code_t ret = storer_get_next_microphone_chunk(&microphone_chunk);
 	if(ret == NRF_SUCCESS) {
-		debug_log("Found microphone data..\n");
+		debug_log("REQUEST_HANDLER: Found microphone data..\n");
 		// Send microphone data
 		response_event.response.type.microphone_data_response.last_response = 0;
 		response_event.response.type.microphone_data_response.timestamp = microphone_chunk.timestamp;
@@ -674,7 +674,7 @@ static void microphone_data_response_handler(void * p_event_data, uint16_t event
 		
 		send_response(NULL, 0);	
 	} else if(ret == NRF_ERROR_NOT_FOUND || ret == NRF_ERROR_INVALID_STATE) {
-		debug_log("Could not fetch Mic-data. Sending end Header..\n");
+		debug_log("REQUEST_HANDLER: Could not fetch Mic-data. Sending end Header..\n");
 		response_event.response.type.microphone_data_response.last_response = 1;
 		response_event.response.type.microphone_data_response.microphone_data_count = 0;
 		
@@ -699,7 +699,7 @@ static void scan_data_response_handler(void * p_event_data, uint16_t event_size)
 	
 	ret_code_t ret = storer_get_next_scan_chunk(&scan_chunk);
 	if(ret == NRF_SUCCESS) {
-		debug_log("Found scan data..\n");
+		debug_log("REQUEST_HANDLER: Found scan data..\n");
 		// Send scan data
 		response_event.response.type.scan_data_response.last_response = 0;
 		response_event.response.type.scan_data_response.timestamp = scan_chunk.timestamp;
@@ -710,7 +710,7 @@ static void scan_data_response_handler(void * p_event_data, uint16_t event_size)
 		
 		send_response(NULL, 0);	
 	} else if(ret == NRF_ERROR_NOT_FOUND || ret == NRF_ERROR_INVALID_STATE) {
-		debug_log("Could not fetch Scan-data. Sending end Header..\n");
+		debug_log("REQUEST_HANDLER: Could not fetch Scan-data. Sending end Header..\n");
 		response_event.response.type.scan_data_response.last_response = 1;
 		response_event.response.type.scan_data_response.scan_result_data_count = 0;
 		
@@ -734,7 +734,7 @@ static void accelerometer_data_response_handler(void * p_event_data, uint16_t ev
 	
 	ret_code_t ret = storer_get_next_accelerometer_chunk(&accelerometer_chunk);
 	if(ret == NRF_SUCCESS) {
-		debug_log("Found accelerometer data..\n");
+		debug_log("REQUEST_HANDLER: Found accelerometer data..\n");
 		// Send accelerometer data
 		response_event.response.type.accelerometer_data_response.last_response = 0;
 		response_event.response.type.accelerometer_data_response.timestamp = accelerometer_chunk.timestamp;
@@ -745,7 +745,7 @@ static void accelerometer_data_response_handler(void * p_event_data, uint16_t ev
 		
 		send_response(NULL, 0);	
 	} else if(ret == NRF_ERROR_NOT_FOUND || ret == NRF_ERROR_INVALID_STATE) {
-		debug_log("Could not fetch accelerometer-data. Sending end Header..\n");
+		debug_log("REQUEST_HANDLER: Could not fetch accelerometer-data. Sending end Header..\n");
 		response_event.response.type.accelerometer_data_response.last_response = 1;
 		response_event.response.type.accelerometer_data_response.accelerometer_data_count = 0;
 		
@@ -769,14 +769,14 @@ static void accelerometer_interrupt_data_response_handler(void * p_event_data, u
 	
 	ret_code_t ret = storer_get_next_accelerometer_interrupt_chunk(&accelerometer_interrupt_chunk);
 	if(ret == NRF_SUCCESS) {
-		debug_log("Found accelerometer interrupt data..\n");
+		debug_log("REQUEST_HANDLER: Found accelerometer interrupt data..\n");
 		// Send accelerometer interrupt data
 		response_event.response.type.accelerometer_interrupt_data_response.last_response = 0;
 		response_event.response.type.accelerometer_interrupt_data_response.timestamp = accelerometer_interrupt_chunk.timestamp;
 		
 		send_response(NULL, 0);	
 	} else if(ret == NRF_ERROR_NOT_FOUND || ret == NRF_ERROR_INVALID_STATE) {
-		debug_log("Could not fetch accelerometer interrupt-data. Sending end Header..\n");
+		debug_log("REQUEST_HANDLER: Could not fetch accelerometer interrupt-data. Sending end Header..\n");
 		response_event.response.type.accelerometer_interrupt_data_response.last_response = 1;
 		
 		// Send end-header
@@ -798,7 +798,7 @@ static void battery_data_response_handler(void * p_event_data, uint16_t event_si
 	
 	ret_code_t ret = storer_get_next_battery_chunk(&battery_chunk);
 	if(ret == NRF_SUCCESS) {
-		debug_log("Found battery data..\n");
+		debug_log("REQUEST_HANDLER: Found battery data..\n");
 		// Send accelerometer interrupt data
 		response_event.response.type.battery_data_response.last_response = 0;
 		response_event.response.type.battery_data_response.timestamp = battery_chunk.timestamp;
@@ -806,7 +806,7 @@ static void battery_data_response_handler(void * p_event_data, uint16_t event_si
 		
 		send_response(NULL, 0);	
 	} else if(ret == NRF_ERROR_NOT_FOUND || ret == NRF_ERROR_INVALID_STATE) {
-		debug_log("Could not fetch battery-data. Sending end Header..\n");
+		debug_log("REQUEST_HANDLER: Could not fetch battery-data. Sending end Header..\n");
 		response_event.response.type.battery_data_response.last_response = 1;
 		
 		// Send end-header
@@ -985,7 +985,7 @@ static void status_request_handler(void * p_event_data, uint16_t event_size) {
 		BadgeAssignement stored_badge_assignement;
 		ret_code_t ret = storer_read_badge_assignement(&stored_badge_assignement);
 		if(ret == NRF_ERROR_INVALID_STATE || ret == NRF_ERROR_INVALID_DATA || (ret == NRF_SUCCESS && (stored_badge_assignement.ID != badge_assignement.ID || stored_badge_assignement.group != badge_assignement.group))) {
-			debug_log("Badge assignements missmatch: --> setting the new badge assignement: Old (%u, %u), New (%u, %u)\n", stored_badge_assignement.ID, stored_badge_assignement.group, badge_assignement.ID, badge_assignement.group);
+			debug_log("REQUEST_HANDLER: Badge assignements missmatch: --> setting the new badge assignement: Old (%u, %u), New (%u, %u)\n", stored_badge_assignement.ID, stored_badge_assignement.group, badge_assignement.ID, badge_assignement.group);
 			ret = storer_store_badge_assignement(&badge_assignement);
 			if(ret == NRF_ERROR_INTERNAL) {
 				// TODO: Error counter for rescheduling 
@@ -1017,10 +1017,10 @@ static void start_microphone_request_handler(void * p_event_data, uint16_t event
 	uint32_t timeout = (request_event.request).type.start_microphone_request.timeout;
 	uint16_t period_ms = (request_event.request).type.start_microphone_request.period_ms;
 
-	debug_log("Start microphone with timeout: %u, period ms %u\n", timeout, period_ms);
+	debug_log("REQUEST_HANDLER: Start microphone with timeout: %u, period ms %u\n", timeout, period_ms);
 	
 	ret_code_t ret = sampling_start_microphone(timeout*60*1000, period_ms, 0);
-	debug_log("Ret sampling_start_microphone: %d\n\r", ret);
+	debug_log("REQUEST_HANDLER: Ret sampling_start_microphone: %d\n\r", ret);
 	
 	if(ret == NRF_SUCCESS) {
 		app_sched_event_put(NULL, 0, start_microphone_response_handler);
@@ -1036,7 +1036,7 @@ static void stop_microphone_request_handler(void * p_event_data, uint16_t event_
 
 	sampling_stop_microphone(0);
 	
-	debug_log("Stop microphone\n");
+	debug_log("REQUEST_HANDLER: Stop microphone\n");
 	finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification
 }
 
@@ -1057,11 +1057,11 @@ static void start_scan_request_handler(void * p_event_data, uint16_t event_size)
 	if(duration > period)
 		period = duration; 
 	
-	debug_log("Start scanning with timeout: %u, window: %u, interval: %u, duration: %u, period: %u, aggregation_type: %u\n", timeout, window, interval, duration, period, aggregation_type);
+	debug_log("REQUEST_HANDLER: Start scanning with timeout: %u, window: %u, interval: %u, duration: %u, period: %u, aggregation_type: %u\n", timeout, window, interval, duration, period, aggregation_type);
 	BadgeAssignement badge_assignement;
 	advertiser_get_badge_assignement(&badge_assignement);
 	ret_code_t ret = sampling_start_scan(timeout*60*1000, period, interval, window, duration, badge_assignement.group, aggregation_type, 0);
-	debug_log("Ret sampling_start_scan: %d\n\r", ret);
+	debug_log("REQUEST_HANDLER: Ret sampling_start_scan: %d\n\r", ret);
 	
 	
 	if(ret == NRF_SUCCESS) {
@@ -1076,7 +1076,7 @@ static void start_scan_request_handler(void * p_event_data, uint16_t event_size)
 
 static void stop_scan_request_handler(void * p_event_data, uint16_t event_size) {
 	sampling_stop_scan(0);	
-	debug_log("Stop scan\n");
+	debug_log("REQUEST_HANDLER: Stop scan\n");
 	finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification
 }
 
@@ -1092,10 +1092,10 @@ static void start_accelerometer_request_handler(void * p_event_data, uint16_t ev
 	uint16_t datarate				 	= (request_event.request).type.start_accelerometer_request.datarate;
 	uint16_t fifo_sampling_period_ms	= (request_event.request).type.start_accelerometer_request.fifo_sampling_period_ms;
 	
-	debug_log("Start accelerometer with timeout: %u, operating_mode: %u, full_scale: %u, datarate: %u, fifo_sampling_period_ms: %u\n", timeout, operating_mode, full_scale, datarate, fifo_sampling_period_ms);
+	debug_log("REQUEST_HANDLER: Start accelerometer with timeout: %u, operating_mode: %u, full_scale: %u, datarate: %u, fifo_sampling_period_ms: %u\n", timeout, operating_mode, full_scale, datarate, fifo_sampling_period_ms);
 	
 	ret_code_t ret = sampling_start_accelerometer(timeout*60*1000, operating_mode, full_scale, datarate, fifo_sampling_period_ms, 0);
-	debug_log("Ret sampling_start_accelerometer: %d\n\r", ret);
+	debug_log("REQUEST_HANDLER: Ret sampling_start_accelerometer: %d\n\r", ret);
 	
 	if(ret == NRF_SUCCESS) {
 		app_sched_event_put(NULL, 0, start_accelerometer_response_handler);
@@ -1109,7 +1109,7 @@ static void start_accelerometer_request_handler(void * p_event_data, uint16_t ev
 
 static void stop_accelerometer_request_handler(void * p_event_data, uint16_t event_size) {
 	sampling_stop_accelerometer(0);
-	debug_log("Stop accelerometer\n");
+	debug_log("REQUEST_HANDLER: Stop accelerometer\n");
 	finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification
 }
 
@@ -1125,10 +1125,10 @@ static void start_accelerometer_interrupt_request_handler(void * p_event_data, u
 	uint16_t minimal_duration_ms	= (request_event.request).type.start_accelerometer_interrupt_request.minimal_duration_ms;
 	uint16_t ignore_duration_ms		= (request_event.request).type.start_accelerometer_interrupt_request.ignore_duration_ms;
 	
-	debug_log("Start accelerometer interrupt with timeout: %u, threshold_mg: %u, minimal_duration_ms: %u, ignore_duration_ms: %u\n", timeout, threshold_mg, minimal_duration_ms, ignore_duration_ms);
+	debug_log("REQUEST_HANDLER: Start accelerometer interrupt with timeout: %u, threshold_mg: %u, minimal_duration_ms: %u, ignore_duration_ms: %u\n", timeout, threshold_mg, minimal_duration_ms, ignore_duration_ms);
 	
 	ret_code_t ret = sampling_start_accelerometer_interrupt(timeout*60*1000, threshold_mg, minimal_duration_ms, ignore_duration_ms, 0);
-	debug_log("Ret sampling_start_accelerometer_interrupt: %d\n\r", ret);
+	debug_log("REQUEST_HANDLER: Ret sampling_start_accelerometer_interrupt: %d\n\r", ret);
 	
 	if(ret == NRF_SUCCESS) {
 		app_sched_event_put(NULL, 0, start_accelerometer_interrupt_response_handler);
@@ -1142,7 +1142,7 @@ static void start_accelerometer_interrupt_request_handler(void * p_event_data, u
 
 static void stop_accelerometer_interrupt_request_handler(void * p_event_data, uint16_t event_size) {
 	sampling_stop_accelerometer_interrupt(0);
-	debug_log("Stop accelerometer interrupt\n");
+	debug_log("REQUEST_HANDLER: Stop accelerometer interrupt\n");
 	finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification
 }
 
@@ -1155,10 +1155,10 @@ static void start_battery_request_handler(void * p_event_data, uint16_t event_si
 	uint32_t timeout   	= (request_event.request).type.start_battery_request.timeout;
 	uint16_t period_ms 	= (request_event.request).type.start_battery_request.period_ms;
 	
-	debug_log("Start battery with timeout %u, period_ms: %u\n", timeout, period_ms);
+	debug_log("REQUEST_HANDLER: Start battery with timeout %u, period_ms: %u\n", timeout, period_ms);
 	
 	ret_code_t ret = sampling_start_battery(timeout*60*1000, period_ms, 0);
-	debug_log("Ret sampling_start_battery: %d\n\r", ret);
+	debug_log("REQUEST_HANDLER: Ret sampling_start_battery: %d\n\r", ret);
 	
 	if(ret == NRF_SUCCESS) {
 		app_sched_event_put(NULL, 0, start_battery_response_handler);
@@ -1171,13 +1171,13 @@ static void start_battery_request_handler(void * p_event_data, uint16_t event_si
 }
 static void stop_battery_request_handler(void * p_event_data, uint16_t event_size) {
 	sampling_stop_battery(0);
-	debug_log("Stop battery\n");
+	debug_log("REQUEST_HANDLER: Stop battery\n");
 	finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification
 }
 
 static void microphone_data_request_handler(void * p_event_data, uint16_t event_size) {
 	Timestamp timestamp = request_event.request.type.microphone_data_request.timestamp;
-	debug_log("Pull microphone data since: %u s, %u ms\n", timestamp.seconds, timestamp.ms);
+	debug_log("REQUEST_HANDLER: Pull microphone data since: %u s, %u ms\n", timestamp.seconds, timestamp.ms);
 	
 	ret_code_t ret = storer_find_microphone_chunk_from_timestamp(timestamp, &microphone_chunk);
 	if(ret == NRF_SUCCESS || ret == NRF_ERROR_INVALID_STATE) {
@@ -1192,7 +1192,7 @@ static void microphone_data_request_handler(void * p_event_data, uint16_t event_
 
 static void scan_data_request_handler(void * p_event_data, uint16_t event_size) {	
 	Timestamp timestamp =  request_event.request.type.scan_data_request.timestamp;	
-	debug_log("Pull scan data since: %u s, %u ms\n", timestamp.seconds, timestamp.ms);
+	debug_log("REQUEST_HANDLER: Pull scan data since: %u s, %u ms\n", timestamp.seconds, timestamp.ms);
 	
 	ret_code_t ret = storer_find_scan_chunk_from_timestamp(timestamp, &scan_chunk);
 	if(ret == NRF_SUCCESS || ret == NRF_ERROR_INVALID_STATE) {
@@ -1208,7 +1208,7 @@ static void scan_data_request_handler(void * p_event_data, uint16_t event_size) 
 static void accelerometer_data_request_handler(void * p_event_data, uint16_t event_size) {
 	
 	Timestamp timestamp =  request_event.request.type.accelerometer_data_request.timestamp;	
-	debug_log("Pull accelerometer data since: %u s, %u ms\n", timestamp.seconds, timestamp.ms);
+	debug_log("REQUEST_HANDLER: Pull accelerometer data since: %u s, %u ms\n", timestamp.seconds, timestamp.ms);
 	
 	ret_code_t ret = storer_find_accelerometer_chunk_from_timestamp(timestamp, &accelerometer_chunk);
 	if(ret == NRF_SUCCESS || ret == NRF_ERROR_INVALID_STATE) {
@@ -1224,7 +1224,7 @@ static void accelerometer_data_request_handler(void * p_event_data, uint16_t eve
 static void accelerometer_interrupt_data_request_handler(void * p_event_data, uint16_t event_size) {
 	
 	Timestamp timestamp =  request_event.request.type.accelerometer_interrupt_data_request.timestamp;	
-	debug_log("Pull accelerometer interrupt data since: %u s, %u ms\n", timestamp.seconds, timestamp.ms);
+	debug_log("REQUEST_HANDLER: Pull accelerometer interrupt data since: %u s, %u ms\n", timestamp.seconds, timestamp.ms);
 	
 	ret_code_t ret = storer_find_accelerometer_interrupt_chunk_from_timestamp(timestamp, &accelerometer_interrupt_chunk);
 	if(ret == NRF_SUCCESS || ret == NRF_ERROR_INVALID_STATE) {
@@ -1239,7 +1239,7 @@ static void accelerometer_interrupt_data_request_handler(void * p_event_data, ui
 
 static void battery_data_request_handler(void * p_event_data, uint16_t event_size) {
 	Timestamp timestamp =  request_event.request.type.battery_data_request.timestamp;	
-	debug_log("Pull battery data since: %u s, %u ms\n", timestamp.seconds, timestamp.ms);
+	debug_log("REQUEST_HANDLER: Pull battery data since: %u s, %u ms\n", timestamp.seconds, timestamp.ms);
 	
 	ret_code_t ret = storer_find_battery_chunk_from_timestamp(timestamp, &battery_chunk);
 	if(ret == NRF_SUCCESS || ret == NRF_ERROR_INVALID_STATE) {
@@ -1260,10 +1260,10 @@ static void start_microphone_stream_request_handler(void * p_event_data, uint16_
 	uint32_t timeout = (request_event.request).type.start_microphone_stream_request.timeout;
 	uint16_t period_ms = (request_event.request).type.start_microphone_stream_request.period_ms;
 
-	debug_log("Start microphone stream with timeout: %u, period ms %u\n", timeout, period_ms);
+	debug_log("REQUEST_HANDLER: Start microphone stream with timeout: %u, period ms %u\n", timeout, period_ms);
 	
 	ret_code_t ret = sampling_start_microphone(timeout*60*1000, period_ms, 1);
-	debug_log("Ret sampling_start_microphone stream: %d\n\r", ret);
+	debug_log("REQUEST_HANDLER: Ret sampling_start_microphone stream: %d\n\r", ret);
 	
 	if(ret == NRF_SUCCESS) {
 		if(!streaming_started) 	{	
@@ -1280,7 +1280,7 @@ static void start_microphone_stream_request_handler(void * p_event_data, uint16_
 static void stop_microphone_stream_request_handler(void * p_event_data, uint16_t event_size) {
 	sampling_stop_microphone(1);
 	
-	debug_log("Stop microphone stream\n");
+	debug_log("REQUEST_HANDLER: Stop microphone stream\n");
 	finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification
 }
 
@@ -1300,11 +1300,11 @@ static void start_scan_stream_request_handler(void * p_event_data, uint16_t even
 	if(duration > period)
 		period = duration; 
 	
-	debug_log("Start scanning stream with timeout: %u, window: %u, interval: %u, duration: %u, period: %u\n", timeout, window, interval, duration, period);
+	debug_log("REQUEST_HANDLER: Start scanning stream with timeout: %u, window: %u, interval: %u, duration: %u, period: %u\n", timeout, window, interval, duration, period);
 	BadgeAssignement badge_assignement;
 	advertiser_get_badge_assignement(&badge_assignement);
 	ret_code_t ret = sampling_start_scan(timeout*60*1000, period, interval, window, duration, badge_assignement.group, aggregation_type, 1);
-	debug_log("Ret sampling_start_scan stream: %d\n\r", ret);
+	debug_log("REQUEST_HANDLER: Ret sampling_start_scan stream: %d\n\r", ret);
 	
 	
 	if(ret == NRF_SUCCESS) {
@@ -1322,7 +1322,7 @@ static void start_scan_stream_request_handler(void * p_event_data, uint16_t even
 static void stop_scan_stream_request_handler(void * p_event_data, uint16_t event_size) {
 	sampling_stop_scan(1);
 	
-	debug_log("Stop scan stream\n");
+	debug_log("REQUEST_HANDLER: Stop scan stream\n");
 	finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification
 }
 
@@ -1341,10 +1341,10 @@ static void start_accelerometer_stream_request_handler(void * p_event_data, uint
 	uint16_t datarate				 	= (request_event.request).type.start_accelerometer_stream_request.datarate;
 	uint16_t fifo_sampling_period_ms	= (request_event.request).type.start_accelerometer_stream_request.fifo_sampling_period_ms;
 	
-	debug_log("Start accelerometer stream with timeout: %u, operating_mode: %u, full_scale: %u, datarate: %u, fifo_sampling_period_ms: %u\n", timeout, operating_mode, full_scale, datarate, fifo_sampling_period_ms);
+	debug_log("REQUEST_HANDLER: Start accelerometer stream with timeout: %u, operating_mode: %u, full_scale: %u, datarate: %u, fifo_sampling_period_ms: %u\n", timeout, operating_mode, full_scale, datarate, fifo_sampling_period_ms);
 	
 	ret_code_t ret = sampling_start_accelerometer(timeout*60*1000, operating_mode, full_scale, datarate, fifo_sampling_period_ms, 1);
-	debug_log("Ret sampling_start_accelerometer stream: %d\n\r", ret);
+	debug_log("REQUEST_HANDLER: Ret sampling_start_accelerometer stream: %d\n\r", ret);
 	
 	if(ret == NRF_SUCCESS) {
 		if(!streaming_started) 	{	
@@ -1360,7 +1360,7 @@ static void start_accelerometer_stream_request_handler(void * p_event_data, uint
 static void stop_accelerometer_stream_request_handler(void * p_event_data, uint16_t event_size) {
 	sampling_stop_accelerometer(1);
 	
-	debug_log("Stop accelerometer stream\n");
+	debug_log("REQUEST_HANDLER: Stop accelerometer stream\n");
 	finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification
 }
 
@@ -1377,10 +1377,10 @@ static void start_accelerometer_interrupt_stream_request_handler(void * p_event_
 	uint16_t minimal_duration_ms	= (request_event.request).type.start_accelerometer_interrupt_stream_request.minimal_duration_ms;
 	uint16_t ignore_duration_ms		= (request_event.request).type.start_accelerometer_interrupt_stream_request.ignore_duration_ms;
 	
-	debug_log("Start accelerometer interrupt stream with timeout: %u, threshold_mg: %u, minimal_duration_ms: %u, ignore_duration_ms: %u\n", timeout, threshold_mg, minimal_duration_ms, ignore_duration_ms);
+	debug_log("REQUEST_HANDLER: Start accelerometer interrupt stream with timeout: %u, threshold_mg: %u, minimal_duration_ms: %u, ignore_duration_ms: %u\n", timeout, threshold_mg, minimal_duration_ms, ignore_duration_ms);
 	
 	ret_code_t ret = sampling_start_accelerometer_interrupt(timeout*60*1000, threshold_mg, minimal_duration_ms, ignore_duration_ms, 1);
-	debug_log("Ret sampling_start_accelerometer_interrupt stream: %d\n\r", ret);
+	debug_log("REQUEST_HANDLER: Ret sampling_start_accelerometer_interrupt stream: %d\n\r", ret);
 	
 	if(ret == NRF_SUCCESS) {
 		if(!streaming_started) 	{	
@@ -1396,7 +1396,7 @@ static void start_accelerometer_interrupt_stream_request_handler(void * p_event_
 static void stop_accelerometer_interrupt_stream_request_handler(void * p_event_data, uint16_t event_size) {
 	sampling_stop_accelerometer_interrupt(1);
 	
-	debug_log("Stop accelerometer interrupt stream\n");
+	debug_log("REQUEST_HANDLER: Stop accelerometer interrupt stream\n");
 	finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification
 }
 
@@ -1412,10 +1412,10 @@ static void start_battery_stream_request_handler(void * p_event_data, uint16_t e
 	uint32_t timeout   	= (request_event.request).type.start_battery_stream_request.timeout;
 	uint16_t period_ms	= (request_event.request).type.start_battery_stream_request.period_ms;
 	
-	debug_log("Start battery stream with timeout %u, period_ms: %u\n", timeout, period_ms);
+	debug_log("REQUEST_HANDLER: Start battery stream with timeout %u, period_ms: %u\n", timeout, period_ms);
 	
 	ret_code_t ret = sampling_start_battery(timeout*60*1000, period_ms, 1);
-	debug_log("Ret sampling_start_battery stream: %d\n\r", ret);
+	debug_log("REQUEST_HANDLER: Ret sampling_start_battery stream: %d\n\r", ret);
 	
 	if(ret == NRF_SUCCESS) {
 		if(!streaming_started) 	{	
@@ -1431,14 +1431,14 @@ static void start_battery_stream_request_handler(void * p_event_data, uint16_t e
 static void stop_battery_stream_request_handler(void * p_event_data, uint16_t event_size) {
 	sampling_stop_battery(1);
 	
-	debug_log("Stop battery stream\n");
+	debug_log("REQUEST_HANDLER: Stop battery stream\n");
 	finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification
 }
 
 static void identify_request_handler(void * p_event_data, uint16_t event_size) {
 	uint16_t timeout = (request_event.request).type.identify_request.timeout;
 	(void) timeout;
-	debug_log("Identify request with timeout: %u\n", timeout);
+	debug_log("REQUEST_HANDLER: Identify request with timeout: %u\n", timeout);
 	#ifndef UNIT_TEST
 	nrf_gpio_pin_write(RED_LED, LED_ON); 
 	systick_delay_millis(timeout*1000);
@@ -1448,7 +1448,7 @@ static void identify_request_handler(void * p_event_data, uint16_t event_size) {
 	finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification
 }
 static void test_request_handler(void * p_event_data, uint16_t event_size) {
-	debug_log("Test request handler\n");
+	debug_log("REQUEST_HANDLER: Test request handler\n");
 	
 	app_sched_event_put(NULL, 0, test_response_handler);
 	finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification

@@ -16,12 +16,12 @@ static ScanChunk scan_chunk;	/**< A Scan-chunk structure, needed to convert from
 
 /************************** ACCELEROMETER ***********************/
 void processing_process_accelerometer_chunk(void * p_event_data, uint16_t event_size) {
-	debug_log("processing_process_accelerometer_chunk...\n");
+	//debug_log("PROCESSING: processing_process_accelerometer_chunk...\n");
 	AccelerometerChunk* 	accelerometer_chunk;
 	while(chunk_fifo_read_open(&accelerometer_chunk_fifo, (void**) &accelerometer_chunk, NULL) == NRF_SUCCESS) {
 		
 		ret_code_t ret = storer_store_accelerometer_chunk(accelerometer_chunk);
-		debug_log("Try to store accelerometer chunk: Ret %d\n", ret);
+		debug_log("PROCESSING: Try to store accelerometer chunk: Ret %d\n", ret);
 		if(ret == NRF_ERROR_INTERNAL) {	// E.g. if busy --> reschedule
 			app_sched_event_put(NULL, 0, processing_process_accelerometer_chunk);
 			break;
@@ -33,12 +33,12 @@ void processing_process_accelerometer_chunk(void * p_event_data, uint16_t event_
 
 /********************* ACCELEROMTER INTERRUPT **********************/
 void processing_process_accelerometer_interrupt_chunk(void * p_event_data, uint16_t event_size) {
-	debug_log("processing_process_accelerometer_interrupt_chunk...\n");
+	//debug_log("PROCESSING: processing_process_accelerometer_interrupt_chunk...\n");
 	AccelerometerInterruptChunk* 	accelerometer_interrupt_chunk;
 	while(chunk_fifo_read_open(&accelerometer_interrupt_chunk_fifo, (void**) &accelerometer_interrupt_chunk, NULL) == NRF_SUCCESS) {
 		
 		ret_code_t ret = storer_store_accelerometer_interrupt_chunk(accelerometer_interrupt_chunk);
-		debug_log("Try to store accelerometer interrupt chunk: Ret %d\n", ret);
+		debug_log("PROCESSING: Try to store accelerometer interrupt chunk: Ret %d\n", ret);
 		if(ret == NRF_ERROR_INTERNAL) {	// E.g. if busy --> reschedule
 			app_sched_event_put(NULL, 0, processing_process_accelerometer_interrupt_chunk);
 			break;
@@ -50,12 +50,12 @@ void processing_process_accelerometer_interrupt_chunk(void * p_event_data, uint1
 
 /******************************** BATTERY *********************************/
 void processing_process_battery_chunk(void * p_event_data, uint16_t event_size) {
-	debug_log("processing_process_battery_chunk...\n");
+	//debug_log("PROCESSING: processing_process_battery_chunk...\n");
 	BatteryChunk* battery_chunk;
 	while(chunk_fifo_read_open(&battery_chunk_fifo, (void**) &battery_chunk, NULL) == NRF_SUCCESS) {
 		// Store the battery chunk
 		ret_code_t ret = storer_store_battery_chunk(battery_chunk);		
-		debug_log("Try to store battery chunk: Ret %d\n", ret);
+		debug_log("PROCESSING: Try to store battery chunk: Ret %d\n", ret);
 		if(ret == NRF_ERROR_INTERNAL) {	// E.g. if busy --> reschedule
 			app_sched_event_put(NULL, 0, processing_process_battery_chunk);
 			break;
@@ -69,11 +69,11 @@ void processing_process_battery_chunk(void * p_event_data, uint16_t event_size) 
 
 /******************************* MICROPHONE *********************************/
 void processing_process_microphone_chunk(void * p_event_data, uint16_t event_size) {
-	debug_log("processing_process_microphone_chunk...\n");
+	//debug_log("PROCESSING: processing_process_microphone_chunk...\n");
 	MicrophoneChunk* microphone_chunk;
 	while(chunk_fifo_read_open(&microphone_chunk_fifo, (void**) &microphone_chunk, NULL) == NRF_SUCCESS) {
 		ret_code_t ret = storer_store_microphone_chunk(microphone_chunk);		
-		debug_log("Try to store microphone chunk: Ret %d\n", ret);
+		debug_log("PROCESSING: Try to store microphone chunk: Ret %d\n", ret);
 		if(ret == NRF_ERROR_INTERNAL) {	// E.g. if busy --> reschedule
 			app_sched_event_put(NULL, 0, processing_process_microphone_chunk);
 			break;
@@ -172,7 +172,7 @@ static void sort_scan(ScanSamplingChunk* scan_sampling_chunk) {
 }
 
 void processing_process_scan_sampling_chunk(void * p_event_data, uint16_t event_size) {
-	debug_log("processing_process_scan_sampling_chunk...\n");
+	//debug_log("PROCESSING: processing_process_scan_sampling_chunk...\n");
 	ScanSamplingChunk* scan_sampling_chunk;
 		
 	while(chunk_fifo_read_open(&scan_sampling_chunk_fifo, (void**) &scan_sampling_chunk, NULL) == NRF_SUCCESS) {
@@ -189,7 +189,7 @@ void processing_process_scan_sampling_chunk(void * p_event_data, uint16_t event_
 		}		
 		
 		ret_code_t ret = storer_store_scan_chunk(&scan_chunk);
-		debug_log("Try to store scan chunk: Ret %d\n", ret);
+		debug_log("PROCESSING: Try to store scan chunk: Ret %d\n", ret);
 		if(ret == NRF_ERROR_INTERNAL) {	// E.g. if busy --> reschedule
 			app_sched_event_put(NULL, 0, processing_process_scan_sampling_chunk);
 			break;

@@ -284,13 +284,13 @@ uint32_t flash_get_page_number(void) {
 
 bool flash_selftest(void) {
 	
-	debug_log("Started flash selftest...\n\r");
+	debug_log("FLASH: Started flash selftest...\n\r");
 	
-	debug_log("Flash page addresses: From %p to %p\n\r", address_of_page(0), address_of_page(FLASH_NUM_PAGES-1));
+	debug_log("FLASH: Flash page addresses: From %p to %p\n\r", address_of_page(0), address_of_page(FLASH_NUM_PAGES-1));
 	
-	debug_log("Flash word addresses: From %p to %p\n\r", address_of_word(0), address_of_word(flash_get_page_size_words()*flash_get_page_number()-1));
+	debug_log("FLASH: Flash word addresses: From %p to %p\n\r", address_of_word(0), address_of_word(flash_get_page_size_words()*flash_get_page_number()-1));
 	
-	debug_log("Page size words: %u, Number of pages: %u\n\r", flash_get_page_size_words(), flash_get_page_number());
+	debug_log("FLASH: Page size words: %u, Number of pages: %u\n\r", flash_get_page_size_words(), flash_get_page_number());
 	
 	
 	// Just a dummy write to test erasing..
@@ -303,16 +303,16 @@ bool flash_selftest(void) {
 	if(flash_get_operation() & FLASH_STORE_OPERATION) {
 		// Reset the store operation
 		flash_operation &= ~FLASH_STORE_OPERATION;
-		debug_log("Flash store operation timed out!\n\r");
+		debug_log("FLASH: Flash store operation timed out!\n\r");
 		return 0;
 	}
 	
 	
 //******************** Test erasing 2 pages *************************	
 	ret_code_t ret = flash_erase_bkgnd(0, 2);
-	debug_log("Started erasing: Ret %d\n\r", ret);
+	debug_log("FLASH: Started erasing: Ret %d\n\r", ret);
 	if(ret != NRF_SUCCESS) {
-		debug_log("Start erasing failed!\n\r");
+		debug_log("FLASH: Start erasing failed!\n\r");
 		return 0;
 	}
 	
@@ -326,15 +326,15 @@ bool flash_selftest(void) {
 	if(erase_operation & FLASH_ERASE_OPERATION) {
 		// Reset the erase operation
 		flash_operation &= ~FLASH_ERASE_OPERATION;
-		debug_log("Flash erase operation timed out!\n\r");
+		debug_log("FLASH: Flash erase operation timed out!\n\r");
 		return 0;
 	}
 	
 	if(erase_operation & FLASH_ERASE_ERROR) {
-		debug_log("Erasing error!\n\r");
+		debug_log("FLASH: Erasing error!\n\r");
 		return 0;
 	}
-	debug_log("Erasing success!\n\r");
+	debug_log("FLASH: Erasing success!\n\r");
 	
 	
 	
@@ -343,9 +343,9 @@ bool flash_selftest(void) {
 	uint32_t write_word = 0x1234ABCD;	// Should be != 0xFFFFFFFF --> next test will assume this!
 	
 	ret = flash_store_bkgnd(FLASH_TEST_ADDRESS, &write_word, 1);
-	debug_log("Started storing to flash at word 0: 0x%X, Ret: %d\n\r", write_word, ret);
+	debug_log("FLASH: Started storing to flash at word 0: 0x%X, Ret: %d\n\r", write_word, ret);
 	if(ret != NRF_SUCCESS) {
-		debug_log("Start storing word failed!\n\r");
+		debug_log("FLASH: Start storing word failed!\n\r");
 		return 0;
 	}
 	
@@ -359,12 +359,12 @@ bool flash_selftest(void) {
 	if(store_operation & FLASH_STORE_OPERATION) {
 		// Reset the erase operation
 		flash_operation &= ~FLASH_STORE_OPERATION;
-		debug_log("Flash store operation timed out!\n\r");
+		debug_log("FLASH: Flash store operation timed out!\n\r");
 		return 0;
 	}
 	
 	if(store_operation & FLASH_STORE_ERROR) {
-		debug_log("Storing error!\n\r");
+		debug_log("FLASH: Storing error!\n\r");
 		return 0;
 	}
 	
@@ -374,17 +374,17 @@ bool flash_selftest(void) {
 	// Check if the stored word is the correct word!
 	ret = flash_read(FLASH_TEST_ADDRESS, &read_word, 1);
 	if(ret != NRF_SUCCESS) {
-		debug_log("Read failed!\n\r");
+		debug_log("FLASH: Read failed!\n\r");
 		return 0;
 	}
 	
 	if(read_word != write_word) {
-		debug_log("Stored word is not the right word!\n\r");
+		debug_log("FLASH: Stored word is not the right word!\n\r");
 		return 0;
 	}
 	
 	
-	debug_log("Storing success!\n\r");
+	debug_log("FLASH: Storing success!\n\r");
 
 //******************** Test writing to the same position another value *************************
 	write_word = 0xFFFFFFFF;	
@@ -394,13 +394,13 @@ bool flash_selftest(void) {
 	
 	ret = flash_store(FLASH_TEST_ADDRESS + 100, &write_word, 1);
 	//ret = flash_store_bkgnd(0, &write_word, 1);
-	debug_log("Storing to flash at word 0: 0x%X, Ret: %d\n\r", write_word, ret);
+	debug_log("FLASH: Storing to flash at word 0: 0x%X, Ret: %d\n\r", write_word, ret);
 
 	if(ret != NRF_SUCCESS) {
 		if(ret == NRF_ERROR_TIMEOUT) {
-			debug_log("Storing word timed out!\n\r");
+			debug_log("FLASH: Storing word timed out!\n\r");
 		} else {
-			debug_log("Storing word failed!\n\r");
+			debug_log("FLASH: Storing word failed!\n\r");
 		}
 		return 0;
 	}
@@ -408,18 +408,18 @@ bool flash_selftest(void) {
 	// Check if the stored word is the correct word!
 	ret = flash_read(FLASH_TEST_ADDRESS, &read_word, 1);
 	if(ret != NRF_SUCCESS) {
-		debug_log("Read failed!\n\r");
+		debug_log("FLASH: Read failed!\n\r");
 		return 0;
 	}	
 	
 	if(read_word == write_word) {
-		debug_log("Store word should actually fail!! Written: 0x%X, Read: 0x%X\n\r", write_word, read_word);
+		debug_log("FLASH: Store word should actually fail!! Written: 0x%X, Read: 0x%X\n\r", write_word, read_word);
 		return 0;
 	}
 
 	
 	
-	debug_log("Store different word at same position behaves as expected!\n\r");
+	debug_log("FLASH: Store different word at same position behaves as expected!\n\r");
 	
 	
 //******************** Test a overflowing write operation over 2 pages *************************
@@ -427,9 +427,9 @@ bool flash_selftest(void) {
 	uint32_t write_address = (flash_get_page_size_words())-2;
 	uint32_t write_words[WORD_NUMBER];
 	ret = flash_store_bkgnd(write_address, write_words, WORD_NUMBER);
-	debug_log("Started storing words at address: %u, Ret: %d\n\r",write_address, ret);
+	debug_log("FLASH: Started storing words at address: %u, Ret: %d\n\r",write_address, ret);
 	if(ret != NRF_SUCCESS) {
-		debug_log("Start storing words failed!\n\r");
+		debug_log("FLASH: Start storing words failed!\n\r");
 		return 0;
 	}
 	
@@ -443,29 +443,29 @@ bool flash_selftest(void) {
 	if(store_operation & FLASH_STORE_OPERATION) {
 		// Reset the erase operation
 		flash_operation &= ~FLASH_STORE_OPERATION;
-		debug_log("Flash store operation timed out!\n\r");
+		debug_log("FLASH: Flash store operation timed out!\n\r");
 		return 0;
 	}
 	
 	
 	if(store_operation & FLASH_STORE_ERROR) {
-		debug_log("Storing words error!\n\r");
+		debug_log("FLASH: Storing words error!\n\r");
 		return 0;
 	}
 	// Check if the stored words are correct!
 	uint32_t read_words[WORD_NUMBER];
 	ret = flash_read(write_address, read_words, WORD_NUMBER);
 	if(ret != NRF_SUCCESS) {
-		debug_log("Read failed!\n\r");
+		debug_log("FLASH: Read failed!\n\r");
 		return 0;
 	}	
 	
 	if(memcmp((uint8_t*)&write_words[0], (uint8_t*)&read_words[0], sizeof(uint32_t)*WORD_NUMBER) != 0) {
-		debug_log("Stored words are not the right words!\n\r");
+		debug_log("FLASH: Stored words are not the right words!\n\r");
 		return 0;
 	}
 	
-	debug_log("Storing words success!\n\r");	
+	debug_log("FLASH: Storing words success!\n\r");	
 	
 //******************* Test read to non RAM memory **************************************
 
@@ -475,7 +475,7 @@ bool flash_selftest(void) {
 	
 	ret = flash_read(0, p_non_ram, 1);
 	if(ret == NRF_SUCCESS) {
-		debug_log("No RAM memory test failed!\n\r");
+		debug_log("FLASH: No RAM memory test failed!\n\r");
 		return 0;
 	}	
 
@@ -483,16 +483,16 @@ bool flash_selftest(void) {
 //******************* False address test **************************
 	
 	ret = flash_store(flash_get_page_size_words()*flash_get_page_number()-2, write_words, WORD_NUMBER);
-	debug_log("Test invalid address store, Ret: %d\n\r", ret);
+	debug_log("FLASH: Test invalid address store, Ret: %d\n\r", ret);
 	if(ret != NRF_ERROR_INVALID_PARAM) {
-		debug_log("Test invalid address store failed!\n\r");
+		debug_log("FLASH: Test invalid address store failed!\n\r");
 		return 0;
 	}
 	
 	ret = flash_read(flash_get_page_size_words()*flash_get_page_number()-2, write_words, WORD_NUMBER);
-	debug_log("Test invalid address read, Ret: %d\n\r", ret);
+	debug_log("FLASH: Test invalid address read, Ret: %d\n\r", ret);
 	if(ret != NRF_ERROR_INVALID_PARAM) {
-		debug_log("Test invalid address read failed!\n\r");
+		debug_log("FLASH: Test invalid address read failed!\n\r");
 		return 0;
 	}
 	
@@ -507,32 +507,32 @@ bool flash_selftest(void) {
 	}
 	
 	ret = flash_erase(0, 15);
-	debug_log("Started erasing: Ret %d\n\r", ret);
+	debug_log("FLASH: Started erasing: Ret %d\n\r", ret);
 	if(ret != NRF_SUCCESS) {
-		debug_log("Start erasing failed! @ %u\n\r", __LINE__);
+		debug_log("FLASH: Start erasing failed! @ %u\n\r", __LINE__);
 		return 0;
 	}
 	
 	ret = flash_store(large_words_address, large_write_words, LARGE_WORD_NUMBER);
-	debug_log("Test large words store, Ret: %d\n\r", ret);
+	debug_log("FLASH: Test large words store, Ret: %d\n\r", ret);
 	if(ret != NRF_SUCCESS) {
-		debug_log("Test large words store failed! @ %u\n\r", __LINE__);
+		debug_log("FLASH: Test large words store failed! @ %u\n\r", __LINE__);
 		return 0;
 	}
 	
 	ret = flash_read(large_words_address, large_read_words, LARGE_WORD_NUMBER);
-	debug_log("Test large words read, Ret: %d\n\r", ret);
+	debug_log("FLASH: Test large words read, Ret: %d\n\r", ret);
 	if(ret != NRF_SUCCESS) {
-		debug_log("Test large words read failed! @ %u\n\r", __LINE__);
+		debug_log("FLASH: Test large words read failed! @ %u\n\r", __LINE__);
 		return 0;
 	}
 	
 	if(memcmp((uint8_t*)&large_write_words[0], (uint8_t*)&large_read_words[0], sizeof(uint32_t)*LARGE_WORD_NUMBER) != 0) {
-		debug_log("Stored words are not the right words! @ %u\n\r", __LINE__);
+		debug_log("FLASH: Stored words are not the right words! @ %u\n\r", __LINE__);
 		return 0;
 	}
 	
-	debug_log("Flash test successful!!\n\r");	
+	debug_log("FLASH: Flash test successful!!\n\r");	
 	
 	
 	return 1;

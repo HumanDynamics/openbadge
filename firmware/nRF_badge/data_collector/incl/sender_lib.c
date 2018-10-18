@@ -72,7 +72,7 @@ static void on_connect_callback(void) {
 	#endif
 	#endif
 	connected = 1;
-	debug_log_bkgnd("Connected callback\n");
+	debug_log("SENDER: Connected callback\n");
 }
 
 /**@brief Function that is called when disconnected event occurs.
@@ -87,7 +87,7 @@ static void on_disconnect_callback(void) {
     nrf_gpio_pin_write(GREEN_LED, LED_OFF);  //turn on LED
 	#endif
 	#endif
-	debug_log_bkgnd("Disconnected callback\n");
+	debug_log("SENDER: Disconnected callback\n");
 }
 
 /**@brief Function that is called when the transmission was successful.
@@ -107,7 +107,7 @@ static void on_receive_callback(uint8_t* data, uint16_t len) {
 	uint64_t timepoint_ticks = systick_get_ticks_since_start();
 	uint32_t len_32 = len;
 	app_fifo_write(&rx_fifo, data, &len_32);
-	//debug_log_bkgnd("Received: %u\n", len_32);
+	//debug_log("SENDER: Received: %u\n", len_32);
 	if(receive_notification_handler != NULL) {
 		
 		// Prepare a receive_notification-struct and call the notification-handler
@@ -146,10 +146,10 @@ static ret_code_t transmit_queued_bytes(void) {
 			transmit_buf[i] = tx_fifo.p_buf[(tx_fifo.read_pos + i) & tx_fifo.buf_size_mask];	// extracted from app_fifo.c: "static __INLINE void fifo_peek(app_fifo_t * p_fifo, uint16_t index, uint8_t * p_byte)"
 		/*
 		char out_buf[100];
-		sprintf(out_buf, "Transmit (%u): ", (unsigned int) len);
+		sprintf(out_buf, "SENDER: Transmit (%u): ", (unsigned int) len);
 		for(uint8_t i = 0; i < len; i++)  
 			sprintf(&out_buf[strlen(out_buf)], "%02X", transmit_buf[i]);
-		debug_log_bkgnd("%s\n",out_buf);
+		debug_log("%s\n",out_buf);
 		systick_delay_millis(100);
 		*/
 		// Now send the bytes via bluetooth
@@ -272,7 +272,7 @@ ret_code_t sender_transmit(const uint8_t* data, uint32_t len, uint32_t timeout_m
 
 
 void sender_disconnect(void) {
-	//debug_log_bkgnd("sender_disconnect()-called\n");
+	//debug_log("SENDER: sender_disconnect()-called\n");
 	sender_reset();
 	ble_disconnect();
 }

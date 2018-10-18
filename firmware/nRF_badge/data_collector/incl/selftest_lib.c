@@ -40,69 +40,69 @@ static void user_intervention_test_passed(void) {
 // All modules need to be initialized before using this function
 selftest_status_t selftest_test(void) {
 	
-	debug_log("Starting selftest...\n");
+	debug_log("SELFTEST: Starting selftest...\n");
 	selftest_status_t selftest_status = SELFTEST_PASSED;
 	
 	
 	/********** BATTERY **************/
 	simple_test_start();
-	debug_log("Starting battery selftest:\n");
+	debug_log("SELFTEST: Starting battery selftest:\n");
 	if(!battery_selftest()) {
-		debug_log("Battery selftest failed!!\n");
+		debug_log("SELFTEST: Battery selftest failed!!\n");
 		selftest_status = (selftest_status_t) (selftest_status | SELFTEST_FAILED_BATTERY);
 		return selftest_status;
 	} else {
-		debug_log("Battery selftest successful!!\n");
+		debug_log("SELFTEST: Battery selftest successful!!\n");
 	}
 	simple_test_passed();
 	
 	/************ EEPROM ****************/
 	simple_test_start();
-	debug_log("Starting eeprom selftest:\n");
+	debug_log("SELFTEST: Starting eeprom selftest:\n");
 	if(!eeprom_selftest()) {
-		debug_log("EEPROM selftest failed!!\n");
+		debug_log("SELFTEST: EEPROM selftest failed!!\n");
 		selftest_status = (selftest_status_t) (selftest_status | SELFTEST_FAILED_EEPROM);
 		return selftest_status;
 	} else {
-		debug_log("EEPROM selftest successful!!\n");
+		debug_log("SELFTEST: EEPROM selftest successful!!\n");
 	}
 	simple_test_passed();
 	
 	
 	/*********** FLASH *************/
 	simple_test_start();
-	debug_log("Starting flash selftest:\n");
+	debug_log("SELFTEST: Starting flash selftest:\n");
 	if(!flash_selftest()) {
-		debug_log("Flash selftest failed!!\n");
+		debug_log("SELFTEST: Flash selftest failed!!\n");
 		selftest_status = (selftest_status_t) (selftest_status | SELFTEST_FAILED_FLASH);
 		return selftest_status;
 	} else {
-		debug_log("Flash selftest successful!!\n");
+		debug_log("SELFTEST: Flash selftest successful!!\n");
 	}
 	simple_test_passed();
 	
 	/*************** MICROPHONE ******************/
 	user_intervention_test_start();
-	debug_log("Starting microphone selftest:  (Please make some noise!)\n");
+	debug_log("SELFTEST: Starting microphone selftest:  (Please make some noise!)\n");
 	if(!microphone_selftest()) {
-		debug_log("Microphone selftest failed!!\n");
+		debug_log("SELFTEST: Microphone selftest failed!!\n");
 		selftest_status = (selftest_status_t) (selftest_status | SELFTEST_FAILED_MICROPHONE);
 		return selftest_status;
 	} else {
-		debug_log("Microphone selftest successful!!\n");
+		debug_log("SELFTEST: Microphone selftest successful!!\n");
 	}
 	user_intervention_test_passed();
 	
 	/************** ACCELEROMETER *********************/	
 	#if ACCELEROMETER_PRESENT
 	user_intervention_test_start();	
-	debug_log("Starting accelerometer selftest: (Please move the badge!)\n");
+	debug_log("SELFTEST: Starting accelerometer selftest: (Please move the badge!)\n");
 	if(!accel_selftest()) {
-		debug_log("Accelerometer selftest failed!!\n");
+		debug_log("SELFTEST: Accelerometer selftest failed!!\n");
 		selftest_status = (selftest_status_t) (selftest_status | SELFTEST_FAILED_ACCELEROMETER);
 		return selftest_status;
 	} else {
-		debug_log("Accelerometer selftest successful!!\n");
+		debug_log("SELFTEST: Accelerometer selftest successful!!\n");
 	}
 	user_intervention_test_passed();
 

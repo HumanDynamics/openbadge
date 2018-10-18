@@ -869,7 +869,7 @@ static void selftest_interrupt_handler(accel_interrupt_event_t const * event) {
 }
 
 bool 		accel_selftest(void) {
-	debug_log("Start accel selftest...\n\r");
+	debug_log("ACCEL: Start accel selftest...\n\r");
 	
 	uint8_t selftest_failed = 0;
 	
@@ -890,31 +890,31 @@ bool 		accel_selftest(void) {
 	// Configure for selftest 
 	ret = accel_set_operating_mode(ACCEL_LOW_POWER_MODE);
 	if(ret != NRF_SUCCESS) {
-		debug_log("Accel_set_operating_mode failed!\n\r");
+		debug_log("ACCEL: Accel_set_operating_mode failed!\n\r");
 		selftest_failed = 1;
 	}
 	
 	ret = accel_set_datarate(ACCEL_DATARATE_100_HZ);
 	if(ret != NRF_SUCCESS) {
-		debug_log("Accel_set_datarate failed!\n\r");
+		debug_log("ACCEL: Accel_set_datarate failed!\n\r");
 		selftest_failed = 1;
 	}
 	
 	ret = accel_set_full_scale(ACCEL_FULL_SCALE_2G);
 	if(ret != NRF_SUCCESS) {
-		debug_log("Accel_set_full_scale failed!\n\r");
+		debug_log("ACCEL: Accel_set_full_scale failed!\n\r");
 		selftest_failed = 1;
 	}
 	
 	ret = accel_set_HP_filter(ACCEL_HP_FILTER_DISABLE);
 	if(ret != NRF_SUCCESS) {
-		debug_log("Accel_set_HP_filter failed!\n\r");
+		debug_log("ACCEL: Accel_set_HP_filter failed!\n\r");
 		selftest_failed = 1;
 	}
 	
 	ret = accel_set_motion_interrupt_parameters(ACCEL_SELFTEST_INTERRUPT_THRESHOLD_MG, ACCEL_SELFTEST_INTERRUPT_MINIMAL_DURATION_MS);
 	if(ret != NRF_SUCCESS) {
-		debug_log("Accel_set_motion_interrupt_parameters failed!\n\r");
+		debug_log("ACCEL: Accel_set_motion_interrupt_parameters failed!\n\r");
 		selftest_failed = 1;
 	}
 	
@@ -922,17 +922,17 @@ bool 		accel_selftest(void) {
 	
 	ret = accel_set_interrupt(ACCEL_MOTION_INTERRUPT);
 	if(ret != NRF_SUCCESS) {
-		debug_log("Accel_set_interrupt failed!\n\r");
+		debug_log("ACCEL: Accel_set_interrupt failed!\n\r");
 		selftest_failed = 1;
 	}
 	
 	ret = accel_reset_interrupt();
 	if(ret != NRF_SUCCESS) {
-		debug_log("Accel_reset_interrupt failed!\n\r");
+		debug_log("ACCEL: Accel_reset_interrupt failed!\n\r");
 		selftest_failed = 1;
 	}
 	
-	debug_log("Waiting for an wake-up interrupt for %u ms.\n\r", ACCEL_SELFTEST_TIME_FOR_INTERRUPT_GENERATION_MS);
+	debug_log("ACCEL: Waiting for an wake-up interrupt for %u ms.\n\r", ACCEL_SELFTEST_TIME_FOR_INTERRUPT_GENERATION_MS);
 	
 	// This is the actual test:
 	// Waiting for an interrupt:
@@ -948,14 +948,14 @@ bool 		accel_selftest(void) {
 	uint8_t num_samples = 0;	
 	ret = accel_read_acceleration(x, y, z, &num_samples, 32);
 	if(ret != NRF_SUCCESS) {
-		debug_log("Accel_read_acceleration failed!\n\r");
+		debug_log("ACCEL: Accel_read_acceleration failed!\n\r");
 		selftest_failed = 1;
 	}
 	
 	
 	ret = accel_reset_interrupt();
 	if(ret != NRF_SUCCESS) {
-		debug_log("Accel_reset_interrupt failed!\n\r");
+		debug_log("ACCEL: Accel_reset_interrupt failed!\n\r");
 		selftest_failed = 1;
 	}
 	
@@ -964,31 +964,31 @@ bool 		accel_selftest(void) {
 	// Restore the former configuration 
 	ret = accel_set_operating_mode(former_operating_mode);
 	if(ret != NRF_SUCCESS) {
-		debug_log("Accel_set_operating_mode failed!\n\r");
+		debug_log("ACCEL: Accel_set_operating_mode failed!\n\r");
 		selftest_failed = 1;
 	}
 	
 	ret = accel_set_datarate(former_datarate);
 	if(ret != NRF_SUCCESS) {
-		debug_log("Accel_set_datarate failed!\n\r");
+		debug_log("ACCEL: Accel_set_datarate failed!\n\r");
 		selftest_failed = 1;
 	}
 	
 	ret = accel_set_full_scale(former_full_scale);
 	if(ret != NRF_SUCCESS) {
-		debug_log("Accel_set_full_scale failed!\n\r");
+		debug_log("ACCEL: Accel_set_full_scale failed!\n\r");
 		selftest_failed = 1;
 	}
 	
 	ret = accel_set_HP_filter(former_HP_filter);
 	if(ret != NRF_SUCCESS) {
-		debug_log("Accel_set_HP_filter failed!\n\r");
+		debug_log("ACCEL: Accel_set_HP_filter failed!\n\r");
 		selftest_failed = 1;
 	}
 	
 	ret = accel_set_motion_interrupt_parameters(former_motion_interrupt_parameter_threshold_mg, former_motion_interrupt_parameter_minimal_duration_ms);
 	if(ret != NRF_SUCCESS) {
-		debug_log("Accel_set_motion_interrupt_parameters failed!\n\r");
+		debug_log("ACCEL: Accel_set_motion_interrupt_parameters failed!\n\r");
 		selftest_failed = 1;
 	}
 	
@@ -996,24 +996,24 @@ bool 		accel_selftest(void) {
 	
 	ret = accel_set_interrupt(former_interrupt_event);
 	if(ret != NRF_SUCCESS) {
-		debug_log("Accel_set_interrupt failed!\n\r");
+		debug_log("ACCEL: Accel_set_interrupt failed!\n\r");
 		selftest_failed = 1;
 	}
 	
 	
 	// Check if the selftest was successful
 	if(selftest_failed == 1) {
-		debug_log("Accel selftest failed!\n\r");
+		debug_log("ACCEL: Accel selftest failed!\n\r");
 		return 0;
 	}
 	
 	if(selftest_event_counter == 0 || (x[0] == 0 && y[0] == 0 && z[0] == 0)) {
-		debug_log("Accel selftest failed: No interrupt was generated in %u ms OR the accelerometer reading failed!\n\r", ACCEL_SELFTEST_TIME_FOR_INTERRUPT_GENERATION_MS);
+		debug_log("ACCEL: Accel selftest failed: No interrupt was generated in %u ms OR the accelerometer reading failed!\n\r", ACCEL_SELFTEST_TIME_FOR_INTERRUPT_GENERATION_MS);
 		return 0;
 	}
-	debug_log("x %d, y %d, z %d\n\r", x[0], y[0], z[0]);
+	debug_log("ACCEL: x %d, y %d, z %d\n\r", x[0], y[0], z[0]);
 	
-	debug_log("Accel selftest successful!\n");
+	debug_log("ACCEL: Accel selftest successful!\n");
 	
 	return 1;
 }

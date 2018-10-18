@@ -161,7 +161,7 @@ static void receive_notification_handler(receive_notification_t receive_notifica
 	uint32_t notification_size = sizeof(receive_notification);
 	app_fifo_write(&receive_notification_fifo, NULL, &available_len);
 	if(available_len < notification_size) {
-		debug_log_bkgnd("Not enough bytes in Notification FIFO: %u < %u\n", available_len, notification_size);
+		debug_log("REQUEST_HANDLER: Not enough bytes in Notification FIFO: %u < %u\n", available_len, notification_size);
 		return;
 	}
 	
@@ -185,7 +185,7 @@ static void finish_request(void) {
 // Called when await data failed, or decoding the notification failed, or request does not exist, or transmitting the response failed (because disconnected or something else)
 static void finish_request_error(void) {
 	app_fifo_flush(&receive_notification_fifo);
-	debug_log_bkgnd("Error while processing request/response --> Disconnect!!!\n");
+	debug_log("REQUEST_HANDLER: Error while processing request/response --> Disconnect!!!\n");
 	sender_disconnect();	// To clear the RX- and TX-FIFO
 	processing_receive_notification = 0;
 	storer_invalidate_iterators();
@@ -218,7 +218,7 @@ static void process_receive_notification(void * p_event_data, uint16_t event_siz
 	uint64_t timepoint_ticks = receive_notification.timepoint_ticks;
 	ret_code_t ret = sender_await_data(serialized_buf, serialized_len, AWAIT_DATA_TIMEOUT_MS);
 	if(ret != NRF_SUCCESS) {
-		debug_log("sender_await_data() error\n");
+		debug_log("REQUEST_HANDLER: sender_await_data() error\n");
 		finish_request_error();
 		return;
 	}
@@ -228,14 +228,14 @@ static void process_receive_notification(void * p_event_data, uint16_t event_siz
 	tb_istream_t istream = tb_istream_from_buffer(serialized_buf, serialized_len);
 	uint8_t decode_status = tb_decode(&istream, Request_fields, &(request_event.request), TB_LITTLE_ENDIAN);
 	if(decode_status == 0) {
-		debug_log("Error decoding\n");
+		debug_log("REQUEST_HANDLER: Error decoding\n");
 		finish_request_error();
 		return;
 	}
-	debug_log("Decoded successfully\n");
+	debug_log("REQUEST_HANDLER: Decoded successfully\n");
 	
 	if(istream.bytes_read < serialized_len) {
-		debug_log("Warning decoding: %u bytes have not been read.\n", serialized_len - istream.bytes_read);
+		debug_log("REQUEST_HANDLER: Warning decoding: %u bytes have not been read.\n", serialized_len - istream.bytes_read);
 	}
 	// We need to handle the StatusRequestAssignment message manually, because the old protocol sucks a little bit..
 	if(request_event.request.which_type == Request_status_request_tag) {
@@ -252,7 +252,7 @@ static void process_receive_notification(void * p_event_data, uint16_t event_siz
 
 	
 	
-	debug_log("Which request type: %u, Ticks: %u\n", request_event.request.which_type, request_event.request_timepoint_ticks);
+	debug_log("REQUEST_HANDLER: Which request type: %u, Ticks: %u\n", request_event.request.which_type, request_event.request_timepoint_ticks);
 	
 	request_handler_t request_handler = NULL;
 	for(uint8_t i = 0; i < sizeof(request_handlers)/sizeof(request_handler_for_type_t); i++) {
@@ -272,7 +272,7 @@ static void process_receive_notification(void * p_event_data, uint16_t event_siz
 		request_handler(NULL, 0);
 	} else {
 		// Should actually not happen, but to be sure...
-		debug_log("Have not found a corresponding request handler for which_type: %u\n", request_event.request.which_type);
+		debug_log("REQUEST_HANDLER: Have not found a corresponding request handler for which_type: %u\n", request_event.request.which_type);
 		finish_request_error();
 	}
 }
@@ -299,7 +299,7 @@ static void send_response(void * p_event_data, uint16_t event_size) {
 	
 	
 	if(encode_status == 0) {
-		debug_log("Error encoding response!\n");
+		debug_log("REQUEST_HANDLER: Error encoding response!\n");
 		finish_request_error();
 		return;
 	}
@@ -341,7 +341,7 @@ static void send_response(void * p_event_data, uint16_t event_size) {
 	}
 	
 	
-	debug_log("Transmit status %u!\n", ret);
+	debug_log("REQUEST_HANDLER: Transmit status %u!\n", ret);
 	
 	
 	if(ret == NRF_SUCCESS) {
@@ -384,7 +384,7 @@ static void status_response_handler(void * p_event_data, uint16_t event_size) {
 	response_event.response_retries = 0;
 	response_event.response_success_handler = NULL;
 	
-	debug_log("Status response: %u, %u\n", (uint32_t)response_event.response.type.status_response.timestamp.seconds, response_event.response.type.status_response.timestamp.ms);
+	debug_log("REQUEST_HANDLER: Status response: %u, %u\n", (uint32_t)response_event.response.type.status_response.timestamp.seconds, response_event.response.type.status_response.timestamp.ms);
 	
 	send_response(NULL, 0);	
 }
@@ -439,7 +439,7 @@ static void microphone_data_response_handler(void * p_event_data, uint16_t event
 
 	ret_code_t ret = storer_get_next_microphone_chunk(&microphone_chunk);
 	if(ret == NRF_SUCCESS) {
-		debug_log("Found microphone data: %u, %u\n", microphone_chunk.timestamp.seconds, microphone_chunk.timestamp.ms);
+		debug_log("REQUEST_HANDLER: Found microphone data: %u, %u\n", microphone_chunk.timestamp.seconds, microphone_chunk.timestamp.ms);
 		// Send microphone data
 		response_event.response.type.microphone_data_response.microphone_data_response_header.timestamp = microphone_chunk.timestamp;
 		response_event.response.type.microphone_data_response.microphone_data_response_header.battery_data.voltage = 0;
@@ -450,7 +450,7 @@ static void microphone_data_response_handler(void * p_event_data, uint16_t event
 		
 		send_response(NULL, 0);	
 	} else if(ret == NRF_ERROR_NOT_FOUND || ret == NRF_ERROR_INVALID_STATE) {
-		debug_log("Could not fetch Mic-data. Sending end Header..\n");
+		debug_log("REQUEST_HANDLER: Could not fetch Mic-data. Sending end Header..\n");
 		memset(&(response_event.response.type.microphone_data_response.microphone_data_response_header), 0,  sizeof(response_event.response.type.microphone_data_response.microphone_data_response_header));
 		response_event.response.type.microphone_data_response.microphone_data_count = 0;
 		
@@ -471,7 +471,7 @@ static void scan_data_response_handler(void * p_event_data, uint16_t event_size)
 	
 	ret_code_t ret = storer_get_next_scan_chunk(&scan_chunk);
 	if(ret == NRF_SUCCESS) {
-		debug_log("Found scan data..\n");
+		debug_log("REQUEST_HANDLER: Found scan data..\n");
 		// Send scan data
 		response_event.response.type.scan_data_response.scan_data_response_header.timestamp_seconds = scan_chunk.timestamp.seconds;
 		response_event.response.type.scan_data_response.scan_data_response_header.battery_data.voltage = 0;
@@ -482,7 +482,7 @@ static void scan_data_response_handler(void * p_event_data, uint16_t event_size)
 		
 		send_response(NULL, 0);	
 	} else if(ret == NRF_ERROR_NOT_FOUND || ret == NRF_ERROR_INVALID_STATE) {
-		debug_log("Could not fetch Scan-data. Sending end Header..\n");
+		debug_log("REQUEST_HANDLER: Could not fetch Scan-data. Sending end Header..\n");
 		memset(&(response_event.response.type.scan_data_response.scan_data_response_header), 0,  sizeof(response_event.response.type.scan_data_response.scan_data_response_header));
 		response_event.response.type.scan_data_response.scan_result_data_count = 0;
 		
@@ -537,7 +537,7 @@ static void status_assign_request_handler(void * p_event_data, uint16_t event_si
 	BadgeAssignement stored_badge_assignement;
 	ret_code_t ret = storer_read_badge_assignement(&stored_badge_assignement);
 	if(ret == NRF_ERROR_INVALID_STATE || ret == NRF_ERROR_INVALID_DATA || (ret == NRF_SUCCESS && (stored_badge_assignement.ID != badge_assignement.ID || stored_badge_assignement.group != badge_assignement.group))) {
-		debug_log("Badge assignements missmatch: --> setting the new badge assignement: Old (%u, %u), New (%u, %u)\n", stored_badge_assignement.ID, stored_badge_assignement.group, badge_assignement.ID, badge_assignement.group);
+		debug_log("REQUEST_HANDLER: Badge assignements missmatch: --> setting the new badge assignement: Old (%u, %u), New (%u, %u)\n", stored_badge_assignement.ID, stored_badge_assignement.group, badge_assignement.ID, badge_assignement.group);
 		ret = storer_store_badge_assignement(&badge_assignement);
 		if(ret == NRF_ERROR_INTERNAL) {
 			// TODO: Error counter for rescheduling 
@@ -563,10 +563,10 @@ static void start_microphone_request_handler(void * p_event_data, uint16_t event
 	
 	uint32_t timeout = (request_event.request).type.start_microphone_request.timeout;
 
-	debug_log("Start microphone with timeout: %u \n", timeout);
+	debug_log("REQUEST_HANDLER: Start microphone with timeout: %u \n", timeout);
 	
 	ret_code_t ret = sampling_start_microphone(timeout*60*1000, MICROPHONE_SAMPLING_PERIOD_MS, 0);
-	debug_log("Ret sampling_start_microphone: %d\n\r", ret);
+	debug_log("REQUEST_HANDLER: Ret sampling_start_microphone: %d\n\r", ret);
 	
 	if(ret == NRF_SUCCESS) {
 		app_sched_event_put(NULL, 0, start_microphone_response_handler);
@@ -579,7 +579,7 @@ static void start_microphone_request_handler(void * p_event_data, uint16_t event
 static void stop_microphone_request_handler(void * p_event_data, uint16_t event_size) {
 	sampling_stop_microphone(0);
 	
-	debug_log("Stop microphone\n");
+	debug_log("REQUEST_HANDLER: Stop microphone\n");
 	app_sched_event_put(NULL, 0, stop_microphone_response_handler);
 }
 
@@ -598,11 +598,11 @@ static void start_scan_request_handler(void * p_event_data, uint16_t event_size)
 	if(duration > period)
 		period = duration; 
 	
-	debug_log("Start scanning with timeout: %u, window: %u, interval: %u, duration: %u, period: %u\n", timeout, window, interval, duration, period);
+	debug_log("REQUEST_HANDLER: Start scanning with timeout: %u, window: %u, interval: %u, duration: %u, period: %u\n", timeout, window, interval, duration, period);
 	BadgeAssignement badge_assignement;
 	advertiser_get_badge_assignement(&badge_assignement);
 	ret_code_t ret = sampling_start_scan(timeout*60*1000, period, interval, window, duration, badge_assignement.group, SCAN_AGGREGATION_TYPE, 0);
-	debug_log("Ret sampling_start_scan: %d\n\r", ret);
+	debug_log("REQUEST_HANDLER: Ret sampling_start_scan: %d\n\r", ret);
 	
 	
 	
@@ -617,14 +617,14 @@ static void start_scan_request_handler(void * p_event_data, uint16_t event_size)
 static void stop_scan_request_handler(void * p_event_data, uint16_t event_size) {
 	sampling_stop_scan(0);
 	
-	debug_log("Stop scan\n");
+	debug_log("REQUEST_HANDLER: Stop scan\n");
 	app_sched_event_put(NULL, 0, stop_scan_response_handler);
 }
 
 
 static void microphone_data_request_handler(void * p_event_data, uint16_t event_size) {
 	Timestamp timestamp = request_event.request.type.microphone_data_request.timestamp;
-	debug_log("Pull microphone data since: %u s, %u ms\n", timestamp.seconds, timestamp.ms);
+	debug_log("REQUEST_HANDLER: Pull microphone data since: %u s, %u ms\n", timestamp.seconds, timestamp.ms);
 	
 	ret_code_t ret = storer_find_microphone_chunk_from_timestamp(timestamp, &microphone_chunk);
 	if(ret == NRF_SUCCESS || ret == NRF_ERROR_INVALID_STATE) {
@@ -641,7 +641,7 @@ static void scan_data_request_handler(void * p_event_data, uint16_t event_size) 
 	Timestamp timestamp;
 	timestamp.seconds	= request_event.request.type.scan_data_request.seconds;
 	timestamp.ms		= 0;
-	debug_log("Pull scan data since: %u s, %u ms\n", timestamp.seconds, timestamp.ms);
+	debug_log("REQUEST_HANDLER: Pull scan data since: %u s, %u ms\n", timestamp.seconds, timestamp.ms);
 	
 	ret_code_t ret = storer_find_scan_chunk_from_timestamp(timestamp, &scan_chunk);
 	if(ret == NRF_SUCCESS || ret == NRF_ERROR_INVALID_STATE) {
@@ -657,7 +657,7 @@ static void scan_data_request_handler(void * p_event_data, uint16_t event_size) 
 static void identify_request_handler(void * p_event_data, uint16_t event_size) {
 	uint16_t timeout = (request_event.request).type.identify_request.timeout;
 	(void) timeout;
-	debug_log("Identify request with timeout: %u\n", timeout);
+	debug_log("REQUEST_HANDLER: Identify request with timeout: %u\n", timeout);
 	#ifndef UNIT_TEST
 	nrf_gpio_pin_write(RED_LED, LED_ON); 
 	systick_delay_millis(timeout*1000);
