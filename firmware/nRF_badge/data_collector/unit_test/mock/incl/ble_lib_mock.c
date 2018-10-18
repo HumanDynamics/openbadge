@@ -122,7 +122,7 @@ static void ble_nus_on_receive_callback(uint8_t * p_data, uint16_t length) {
 	if(!(ble_state & BLE_STATE_CONNECTED))
 		return;
 	
-	debug_log_bkgnd("BLE on receive callback. Len = %u\n", length);
+	debug_log("BLE: BLE on receive callback. Len = %u\n", length);
 	
 	// TODO: (I think it is ok, but...) The trigger function for receive has to be called (because we don't want to wait for the next ble_on_connect-event to receive sth again!) This doesn't work!
 	// Could not call its own trigger-function in an executing trigger..
@@ -139,7 +139,7 @@ static void ble_nus_on_transmit_complete_callback(void) {
 	if(!(ble_state & BLE_STATE_CONNECTED))
 		return;
 	
-	debug_log_bkgnd("BLE on transmit complete callback\n");
+	debug_log("BLE: BLE on transmit complete callback\n");
 	
 	if(external_ble_on_transmit_callback != NULL) 
 		external_ble_on_transmit_callback();
@@ -153,7 +153,7 @@ static void ble_on_connect_callback(void) {
 	if(ble_state & BLE_STATE_CONNECTED)
 		return;
 	
-	debug_log_bkgnd("BLE on connect callback\n");
+	debug_log("BLE: BLE on connect callback\n");
 	
 	// The trigger function for receive has to be called
 	callback_generator_ble_on_receive_trigger();
@@ -174,7 +174,7 @@ static void ble_on_disconnect_callback(void) {
 	if(!(ble_state & BLE_STATE_CONNECTED))
 		return;
 	
-	debug_log_bkgnd("BLE on disconnect callback\n");
+	debug_log("BLE: BLE on disconnect callback\n");
 	
 	// The trigger function for the ble_on_connect_callback has be called
 	callback_generator_ble_on_connect_trigger();
@@ -196,7 +196,7 @@ static void ble_on_scan_report_callback(ble_gap_evt_adv_report_t* scan_report) {
 	if(external_ble_on_scan_report_callback != NULL)
 		external_ble_on_scan_report_callback(scan_report);
 
-	debug_log_bkgnd("BLE on scan report callback. RSSI: %d\n", scan_report->rssi);
+	debug_log("BLE: BLE on scan report callback. RSSI: %d\n", scan_report->rssi);
 }
 
 // For this a callback-generator has to be implemented
@@ -210,7 +210,7 @@ static void ble_on_scan_timeout_callback(void) {
 	if(external_ble_on_scan_timeout_callback != NULL)
 		external_ble_on_scan_timeout_callback();
 	
-	debug_log_bkgnd("BLE on scan timeout callback\n");
+	debug_log("BLE: BLE on scan timeout callback\n");
 }
 
 
