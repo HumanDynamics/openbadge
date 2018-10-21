@@ -2,7 +2,7 @@
 #include "ble_lib.h"
 #include "string.h" // For memset
 #include "storer_lib.h"
-
+#include "debug_lib.h"
 
 
 #define CUSTOM_COMPANY_IDENTIFIER	0xFF00
@@ -24,6 +24,12 @@ static custom_advdata_t custom_advdata;	/**< The custom advertising data structu
 
 extern uint16_t crc16_compute(uint8_t const * p_data, uint32_t size, uint16_t const * p_crc); /**< In filesystem_lib.c */
 
+static void advertiser_get_default_badge_assignement(BadgeAssignement* badge_assignement) {
+	badge_assignement->ID = crc16_compute(custom_advdata.MAC, 6, NULL);;
+	badge_assignement->group = ADVERTISING_DEFAULT_GROUP;
+}
+
+
 
 void advertiser_init(void) {	
 	memset(&custom_advdata, 0, sizeof(custom_advdata));
@@ -37,13 +43,14 @@ void advertiser_init(void) {
 	// Try to read the badge-assignement from the filesystem/storer:
 	BadgeAssignement badge_assignement;
 	ret_code_t ret = storer_read_badge_assignement(&badge_assignement);
-	if(ret == NRF_SUCCESS) {
-		custom_advdata.group = badge_assignement.group;
-		custom_advdata.ID = badge_assignement.ID;
+	if(ret != NRF_SUCCESS) {
+		advertiser_get_default_badge_assignement(&badge_assignement);
+		debug_log("ADVERTISER: Could not find badge assignement in storage -> Take default: (%u, %u)\n", badge_assignement.ID, badge_assignement.group);	
 	} else {
-		custom_advdata.group = 0;
-		custom_advdata.ID = crc16_compute(custom_advdata.MAC, 6, NULL);
+		debug_log("ADVERTISER: Read out badge assignement from storage: (%u, %u)\n", badge_assignement.ID, badge_assignement.group);	
 	}
+	custom_advdata.group = badge_assignement.group;
+	custom_advdata.ID = badge_assignement.ID;
 	
 	ble_set_advertising_custom_advdata(CUSTOM_COMPANY_IDENTIFIER, (uint8_t*) &custom_advdata, CUSTOM_ADVDATA_LEN);
 }
@@ -67,11 +74,50 @@ void advertiser_set_battery_voltage(float voltage) {
 }
 
 
-void advertiser_set_badge_assignement(BadgeAssignement badge_assignement) {
+
+
+ret_code_t advertiser_set_badge_assignement(BadgeAssignement badge_assignement) {
+	
+	uint8_t reset_badge_assignement = 0;
+	if(badge_assignement.ID == ADVERTISING_RESET_ID && badge_assignement.group == ADVERTISING_RESET_GROUP) {
+		advertiser_get_default_badge_assignement(&badge_assignement);
+		debug_log("ADVERTISER: Reset badge assignement -> Take default: (%u, %u)\n", badge_assignement.ID, badge_assignement.group);
+		reset_badge_assignement = 1;
+	}
+	
 	custom_advdata.ID = badge_assignement.ID;
 	custom_advdata.group = badge_assignement.group;	
 	
 	ble_set_advertising_custom_advdata(CUSTOM_COMPANY_IDENTIFIER, (uint8_t*) &custom_advdata, CUSTOM_ADVDATA_LEN);
+	
+	
+	// Check if we need to reset the badge assignement, or if we should store it.
+	if(reset_badge_assignement) {
+		debug_log("ADVERTISER: Delete badge assignement from storage...\n");
+		return storer_clear_badge_assignement();		
+	} else {	// We want to store the new badge assignement
+		// First read if we have already the correct badge-assignement stored:
+		BadgeAssignement stored_badge_assignement;
+		ret_code_t ret = storer_read_badge_assignement(&stored_badge_assignement);
+		if(ret == NRF_ERROR_INVALID_STATE || ret == NRF_ERROR_INVALID_DATA || (ret == NRF_SUCCESS && (stored_badge_assignement.ID != badge_assignement.ID || stored_badge_assignement.group != badge_assignement.group))) {
+			// If we have not found any entry or the badge assignement mismatches --> store it.
+			debug_log("ADVERTISER: Badge assignement missmatch: --> setting the new badge assignement: Old (%u, %u), New (%u, %u)\n", stored_badge_assignement.ID, stored_badge_assignement.group, badge_assignement.ID, badge_assignement.group);
+			return storer_store_badge_assignement(&badge_assignement);
+			/*
+			if(ret == NRF_ERROR_INTERNAL) {
+				return NRF_ERROR_INTERNAL;
+			} else if (ret != NRF_SUCCESS) {	// There is an error in the configuration of the badge-assignement partition
+				return NRF_ERROR_NOT_SUPPORTED;
+			} 
+			*/
+		} else if(ret == NRF_ERROR_INTERNAL) {
+			return NRF_ERROR_INTERNAL;
+		} else {
+			debug_log("ADVERTISER: Badge assignement already up to date  (%u, %u)\n", badge_assignement.ID, badge_assignement.group);
+		}
+	}
+	
+	return NRF_SUCCESS;
 }
 
 void advertiser_set_status_flag_is_clock_synced(uint8_t is_clock_synced) {

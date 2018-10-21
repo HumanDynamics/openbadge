@@ -81,7 +81,6 @@ static uint16_t scan_interval_ms = 0;
 static uint16_t scan_window_ms = 0;
 static uint16_t scan_duration_seconds = 0;
 static uint8_t 	scan_group_filter = 0;
-static const uint8_t	scan_no_group_filter_pattern = 0xFF;
 static uint8_t	scan_aggregation_type = SCAN_CHUNK_AGGREGATE_TYPE_MAX;	/**< The type of the aggregation: [SCAN_CHUNK_AGGREGATE_TYPE_MAX] == MAX, [SCAN_CHUNK_AGGREGATE_TYPE_MEAN] == MEAN */
 static int32_t  scan_aggregated_rssi[SCAN_SAMPLING_CHUNK_DATA_SIZE];		/**< Temporary array to aggregate the rssi-data */
 static uint32_t scan_timeout_id;
@@ -1023,11 +1022,10 @@ void sampling_on_scan_timeout_callback(void) {
 void sampling_on_scan_report_callback(scanner_scan_report_t* scanner_scan_report) {
 	debug_log("SAMPLING: Scan report: ID %u, RSSI: %d\n", scanner_scan_report->ID, scanner_scan_report->rssi);
 
-	if(scan_group_filter != scan_no_group_filter_pattern) { // If we need to check the group
-		if(scanner_scan_report->group != scan_group_filter) {
-			return;
-		}
+	if(scanner_scan_report->group != scan_group_filter) {
+		return;
 	}
+
 	
 	if(sampling_configuration & SAMPLING_SCAN) {
 	

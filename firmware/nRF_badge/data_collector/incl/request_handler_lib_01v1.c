@@ -531,27 +531,14 @@ static void status_assign_request_handler(void * p_event_data, uint16_t event_si
 	BadgeAssignement badge_assignement;
 	badge_assignement = request_event.request.type.status_assign_request.badge_assignement;
 	
-	advertiser_set_badge_assignement(badge_assignement);
-	
-	// First read if we have already the correct badge-assignement stored:
-	BadgeAssignement stored_badge_assignement;
-	ret_code_t ret = storer_read_badge_assignement(&stored_badge_assignement);
-	if(ret == NRF_ERROR_INVALID_STATE || ret == NRF_ERROR_INVALID_DATA || (ret == NRF_SUCCESS && (stored_badge_assignement.ID != badge_assignement.ID || stored_badge_assignement.group != badge_assignement.group))) {
-		debug_log("REQUEST_HANDLER: Badge assignements missmatch: --> setting the new badge assignement: Old (%u, %u), New (%u, %u)\n", stored_badge_assignement.ID, stored_badge_assignement.group, badge_assignement.ID, badge_assignement.group);
-		ret = storer_store_badge_assignement(&badge_assignement);
-		if(ret == NRF_ERROR_INTERNAL) {
-			// TODO: Error counter for rescheduling 
-			app_sched_event_put(NULL, 0, status_assign_request_handler);
-			return;
-		} else if (ret != NRF_SUCCESS) {	// There is an error in the configuration of the badge-assignement partition
-			finish_request_error();
-		} 
-	} else if(ret == NRF_ERROR_INTERNAL) {
-		// TODO: Error counter for rescheduling 
+	ret_code_t ret = advertiser_set_badge_assignement(badge_assignement);
+	if(ret == NRF_ERROR_INTERNAL) {
 		app_sched_event_put(NULL, 0, status_assign_request_handler);
-		return;
+	} else if(ret != NRF_SUCCESS) {
+		finish_request_error();
+	} else { // ret should be NRF_SUCCESS here
+		app_sched_event_put(NULL, 0, status_response_handler);
 	}
-	app_sched_event_put(NULL, 0, status_response_handler);
 }
 
 static void start_microphone_request_handler(void * p_event_data, uint16_t event_size) {

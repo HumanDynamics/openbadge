@@ -10,6 +10,11 @@
 #define ADVERTISING_INTERVAL_MS		  	200   		/**< The advertising interval. */
 #define ADVERTISING_TIMEOUT_SECONDS    	6           /**< The advertising timeout interval. */
 
+#define ADVERTISING_RESET_ID			0xFFFF
+#define ADVERTISING_RESET_GROUP			0xFF
+
+#define ADVERTISING_DEFAULT_GROUP		1
+
 
 /**@brief Function to initialize the advertiser.
  *
@@ -36,9 +41,17 @@ void advertiser_set_battery_voltage(float voltage);
 
 /**@brief Function to set the badge assignement (ID + group) of the advertising-packet.
  *
+ * @details	This function also tries to store the badge assignement to the filesystem, if necessary.
+ *			If the badge assignement is ADVERTISING_RESET_ID, ADVERTISING_RESET_GROUP the 
+ *			default ID and group will be taken, and the badge-assignement will be deleted from the filesystem.
+ *
  * @param[in]	badge_assignement		The badge assignement to set.
+ *
+ * @retval		NRF_SUCCESS			If everything was successful.
+ * @retval		NRF_ERROR_INTERNAL	If an internal error occured (e.g. busy) --> retry it.
+ * @retval		Another error code	Probably of a false configuration of the filesystem partition for the badge assignement.
  */
-void advertiser_set_badge_assignement(BadgeAssignement badge_assignement);
+ret_code_t advertiser_set_badge_assignement(BadgeAssignement badge_assignement);
 
 
 /**@brief Function to set the is_clock_synced-status flag of the advertising-packet.

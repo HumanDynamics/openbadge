@@ -136,6 +136,8 @@ ret_code_t storer_clear(void) {
 	return ret;
 }
 
+
+
 /**@brief Function to compare two timestamps. 
  *
  * @retval	-1	timestamp1 > timestamp2
@@ -148,7 +150,9 @@ int8_t storer_compare_timestamps(Timestamp timestamp1, Timestamp timestamp2) {
 	return (t1 > t2) ? -1 : ((t2 > t1) ? 1 : 0);
 } 
 
-
+ret_code_t storer_clear_badge_assignement(void) {
+	return filesystem_clear_partition(partition_id_badge_assignement);
+}
 
 ret_code_t storer_store_badge_assignement(BadgeAssignement* badge_assignement) {
 	tb_ostream_t ostream = tb_ostream_from_buffer(serialized_buf, sizeof(serialized_buf));

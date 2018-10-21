@@ -35,6 +35,14 @@ ret_code_t storer_init(void);
  */
 ret_code_t storer_clear(void);
 
+
+/**@brief Function to clear the badge-assignement in the filesystem.
+ *
+ * @retval NRF_SUCCESS				If everything was fine.
+ * @retval NRF_ERROR_INTERNAL		Busy.
+ */
+ret_code_t storer_clear_badge_assignement(void);
+
 /**@brief Function to store a badge-assignement in the filesystem.
  *
  * @retval NRF_ERROR_INTERNAL		Busy.
