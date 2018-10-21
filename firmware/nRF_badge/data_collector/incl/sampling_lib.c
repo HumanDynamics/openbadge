@@ -47,6 +47,14 @@ static sampling_configuration_t sampling_configuration;
 chunk_fifo_t 	accelerometer_chunk_fifo;
 circular_fifo_t accelerometer_stream_fifo;
 static AccelerometerChunk*	accelerometer_chunk = NULL;
+typedef struct {
+	uint32_t 				accelerometer_timeout_ms;
+	uint32_t 				accelerometer_stream_timeout_ms;
+	accel_datarate_t		accelerometer_datarate;
+	accel_operating_mode_t	accelerometer_operating_mode;
+	accel_full_scale_t		accelerometer_full_scale;
+} sampling_accelerometer_parameters_t;
+static sampling_accelerometer_parameters_t sampling_accelerometer_parameters;
 static uint32_t accelerometer_timeout_id;
 static uint32_t accelerometer_stream_timeout_id;
 
@@ -61,6 +69,12 @@ static uint32_t accelerometer_interrupt_stream_timeout_id;
 chunk_fifo_t 	battery_chunk_fifo;
 circular_fifo_t battery_stream_fifo;
 static BatteryChunk* battery_chunk = NULL;
+typedef struct {
+	uint32_t battery_timeout_ms;
+	uint32_t battery_stream_timeout_ms;
+	uint32_t battery_period_ms;
+} sampling_battery_parameters_t;
+static sampling_battery_parameters_t sampling_battery_parameters;
 static uint32_t battery_timeout_id;
 static uint32_t battery_stream_timeout_id;
 
@@ -68,7 +82,12 @@ chunk_fifo_t 	microphone_chunk_fifo;
 circular_fifo_t microphone_stream_fifo;
 static MicrophoneChunk* microphone_chunk = NULL;
 static const float microphone_aggregated_period_ms = MICROPHONE_READING_PERIOD_MS;
-static uint16_t microphone_period_ms = 0;
+typedef struct {
+	uint32_t microphone_timeout_ms;
+	uint32_t microphone_stream_timeout_ms;
+	uint16_t microphone_period_ms;
+} sampling_microphone_parameters_t;
+static sampling_microphone_parameters_t sampling_microphone_parameters;
 static uint32_t microphone_aggregated = 0;
 static uint32_t microphone_aggregated_count = 0;
 static uint32_t microphone_timeout_id;
@@ -77,11 +96,25 @@ static uint32_t microphone_stream_timeout_id;
 chunk_fifo_t 	scan_sampling_chunk_fifo;
 circular_fifo_t scan_stream_fifo;
 static ScanSamplingChunk* scan_sampling_chunk = NULL;
+typedef struct {
+	uint32_t scan_timeout_ms;
+	uint32_t scan_stream_timeout_ms;
+	uint16_t scan_period_seconds;
+	uint16_t scan_interval_ms;
+	uint16_t scan_window_ms;
+	uint16_t scan_duration_seconds;
+	uint8_t scan_group_filter;
+	uint8_t	scan_aggregation_type;	/**< The type of the aggregation: [SCAN_CHUNK_AGGREGATE_TYPE_MAX] == MAX, [SCAN_CHUNK_AGGREGATE_TYPE_MEAN] == MEAN */
+} sampling_scan_parameters_t;
+static sampling_scan_parameters_t sampling_scan_parameters;
+/*
 static uint16_t scan_interval_ms = 0;
 static uint16_t scan_window_ms = 0;
 static uint16_t scan_duration_seconds = 0;
 static uint8_t 	scan_group_filter = 0;
-static uint8_t	scan_aggregation_type = SCAN_CHUNK_AGGREGATE_TYPE_MAX;	/**< The type of the aggregation: [SCAN_CHUNK_AGGREGATE_TYPE_MAX] == MAX, [SCAN_CHUNK_AGGREGATE_TYPE_MEAN] == MEAN */
+static uint8_t	scan_aggregation_type = SCAN_CHUNK_AGGREGATE_TYPE_MAX;	
+*/
+
 static int32_t  scan_aggregated_rssi[SCAN_SAMPLING_CHUNK_DATA_SIZE];		/**< Temporary array to aggregate the rssi-data */
 static uint32_t scan_timeout_id;
 static uint32_t scan_stream_timeout_id;
@@ -345,8 +378,34 @@ ret_code_t sampling_start_accelerometer(uint32_t timeout_ms, uint8_t operating_m
 	ret = accel_set_operating_mode(accelerometer_operating_mode);
 	if(ret != NRF_SUCCESS) return ret;
 	
+	
+	
+	uint8_t parameters_changed_sampling = 0;
+	// Check if the parameters has been changed
+	if((sampling_accelerometer_parameters.accelerometer_timeout_ms != timeout_ms) && !streaming) {
+		parameters_changed_sampling = 1;
+	}
+	
+	if(sampling_accelerometer_parameters.accelerometer_datarate != accelerometer_datarate ||
+		sampling_accelerometer_parameters.accelerometer_operating_mode != accelerometer_operating_mode ||
+		sampling_accelerometer_parameters.accelerometer_full_scale != accelerometer_full_scale) 
+	{
+		parameters_changed_sampling = 1;
+	}
+	
+	// Update the parameters
+	sampling_accelerometer_parameters.accelerometer_timeout_ms = (!streaming) ? timeout_ms : sampling_accelerometer_parameters.accelerometer_timeout_ms;
+	sampling_accelerometer_parameters.accelerometer_stream_timeout_ms = (streaming) ? timeout_ms : sampling_accelerometer_parameters.accelerometer_stream_timeout_ms;
+	sampling_accelerometer_parameters.accelerometer_datarate = accelerometer_datarate;
+	sampling_accelerometer_parameters.accelerometer_operating_mode = accelerometer_operating_mode;
+	sampling_accelerometer_parameters.accelerometer_full_scale = accelerometer_full_scale;
+
+	
+	
+	
 	if(!streaming) {
-		if((sampling_configuration & SAMPLING_ACCELEROMETER) == 0) { // Only stop and start the sampling if it is not already running			
+		if((sampling_configuration & SAMPLING_ACCELEROMETER) == 0 || parameters_changed_sampling) { // Only stop and start the sampling if it is not already running or the parameters changed	
+			debug_log("SAMPLING: (Re-)start accelerometer sampling\n");
 			// Stop the sampling-timer that was probably already started
 			app_timer_stop(sampling_accelerometer_fifo_timer);
 			
@@ -361,17 +420,28 @@ ret_code_t sampling_start_accelerometer(uint32_t timeout_ms, uint8_t operating_m
 			advertiser_set_status_flag_accelerometer_enabled(1);
 			
 			timeout_start(accelerometer_timeout_id, timeout_ms);
+		} else {
+			debug_log("SAMPLING: Ignoring start accelerometer sampling\n");
 		}
 		
 	} else {
-		// If we are not already sampling the accelerometer, we have to start the sampling-timer
-		if((sampling_configuration & SAMPLING_ACCELEROMETER) == 0) {
+		// If already sampling, but the parameters changed
+		if((sampling_configuration & SAMPLING_ACCELEROMETER) && parameters_changed_sampling) {
+			debug_log("SAMPLING: (Re-)start accelerometer sampling on stream request (because parameters changed)\n");
+			app_timer_stop(sampling_accelerometer_fifo_timer);
+			sampling_setup_accelerometer_chunk();
+			ret = app_timer_start(sampling_accelerometer_fifo_timer, APP_TIMER_TICKS(fifo_sampling_period_ms, 0), NULL);
+			if(ret != NRF_SUCCESS) return ret;	
+		} else if((sampling_configuration & SAMPLING_ACCELEROMETER) == 0) { // If we are not already sampling the accelerometer, we have to start the sampling-timer
+			debug_log("SAMPLING: Start accelerometer stream\n");
 			// Stop the sampling-timer that was probably already started
 			app_timer_stop(sampling_accelerometer_fifo_timer);
 			
 			// Now start the sampling-timer
 			ret = app_timer_start(sampling_accelerometer_fifo_timer, APP_TIMER_TICKS(fifo_sampling_period_ms, 0), NULL);
 			if(ret != NRF_SUCCESS) return ret;	
+		} else {
+			debug_log("SAMPLING: Nothing to do to start accelerometer stream\n");
 		}
 			
 		sampling_configuration = (sampling_configuration_t) (sampling_configuration | STREAMING_ACCELEROMETER);
@@ -526,6 +596,7 @@ ret_code_t sampling_start_accelerometer_interrupt(uint32_t timeout_ms, uint16_t 
 		if(ret != NRF_SUCCESS) return ret;
 	}
 	
+	// We don't need to check the parameters here, because we always update them
 	
 	ret = accel_set_motion_interrupt_parameters(threshold_mg, minimal_duration_ms);
 	if(ret != NRF_SUCCESS) return ret;	
@@ -540,6 +611,7 @@ ret_code_t sampling_start_accelerometer_interrupt(uint32_t timeout_ms, uint16_t 
 	
 	
 	if(!streaming) {
+		debug_log("SAMPLING: (Re-)start accelerometer interrupt sampling\n");
 		sampling_setup_accelerometer_interrupt_chunk(NULL, 0);
 		
 		sampling_configuration = (sampling_configuration_t) (sampling_configuration | SAMPLING_ACCELEROMETER_INTERRUPT);
@@ -547,6 +619,7 @@ ret_code_t sampling_start_accelerometer_interrupt(uint32_t timeout_ms, uint16_t 
 		
 		timeout_start(accelerometer_interrupt_timeout_id, timeout_ms);
 	} else {
+		debug_log("SAMPLING: Start accelerometer interrupt stream\n");
 		sampling_configuration = (sampling_configuration_t) (sampling_configuration | STREAMING_ACCELEROMETER_INTERRUPT);
 		timeout_start(accelerometer_interrupt_stream_timeout_id, timeout_ms);
 	}
@@ -676,8 +749,27 @@ ret_code_t sampling_start_battery(uint32_t timeout_ms, uint32_t period_ms, uint8
 	ret_code_t ret = NRF_SUCCESS;
 	
 	
+	
+	uint8_t parameters_changed_sampling = 0;
+	// Check if the parameters has been changed
+	if((sampling_battery_parameters.battery_timeout_ms != timeout_ms) && !streaming) {
+		parameters_changed_sampling = 1;
+	}
+
+		
+	if(sampling_battery_parameters.battery_period_ms != period_ms) {
+		parameters_changed_sampling = 1;
+	}
+	
+	// Update the parameters
+	sampling_battery_parameters.battery_timeout_ms = (!streaming) ? timeout_ms : sampling_battery_parameters.battery_timeout_ms;
+	sampling_battery_parameters.battery_stream_timeout_ms = (streaming) ? timeout_ms : sampling_battery_parameters.battery_stream_timeout_ms;
+	sampling_battery_parameters.battery_period_ms = period_ms;
+
+	
 	if(!streaming) {
-		if((sampling_configuration & SAMPLING_BATTERY) == 0) { // Only stop and start the sampling if it is not already running			
+		if((sampling_configuration & SAMPLING_BATTERY) == 0 || parameters_changed_sampling) { // Only stop and start the sampling if it is not already running or the parameters changed
+			debug_log("SAMPLING: (Re-)start battery sampling\n");
 			// Stop the sampling-timer that was probably already started
 			app_timer_stop(sampling_battery_timer);
 			
@@ -691,16 +783,26 @@ ret_code_t sampling_start_battery(uint32_t timeout_ms, uint32_t period_ms, uint8
 			advertiser_set_status_flag_battery_enabled(1);
 			
 			timeout_start(battery_timeout_id, timeout_ms);
+		} else {
+			debug_log("SAMPLING: Ignoring start battery sampling\n");
 		}
 	} else {
-		// If we are not already sampling the battery, we have to start the sampling-timer
-		if((sampling_configuration & SAMPLING_BATTERY) == 0) {
-			// Stop the sampling-timer that was probably already started
+		// If already sampling but parameters changed
+		if((sampling_configuration & SAMPLING_BATTERY) && parameters_changed_sampling) {
+			debug_log("SAMPLING: (Re-)start battery sampling on stream request (because parameters changed)\n");
 			app_timer_stop(sampling_battery_timer);
-			
+			sampling_setup_battery_chunk();
+			ret = app_timer_start(sampling_battery_timer, APP_TIMER_TICKS(period_ms, 0), NULL);
+			if(ret != NRF_SUCCESS) return ret;	
+		} else if((sampling_configuration & SAMPLING_BATTERY) == 0) { // If we are not already sampling the battery, we have to start the sampling-timer
+			debug_log("SAMPLING: Start battery stream\n");
+			// Stop the sampling-timer that was probably already started
+			app_timer_stop(sampling_battery_timer);			
 			// Now start the sampling-timer
 			ret = app_timer_start(sampling_battery_timer, APP_TIMER_TICKS(period_ms, 0), NULL);
 			if(ret != NRF_SUCCESS) return ret;	
+		} else {
+			debug_log("SAMPLING: Nothing to do to start battery stream\n");
 		}
 			
 		sampling_configuration = (sampling_configuration_t) (sampling_configuration | STREAMING_BATTERY);
@@ -780,11 +882,26 @@ void sampling_finalize_battery_chunk(void) {
 ret_code_t sampling_start_microphone(uint32_t timeout_ms, uint16_t period_ms, uint8_t streaming) {
 	ret_code_t ret = NRF_SUCCESS;
 	
-	// This needs to be setted, because sampling_setup_microphone_chunk() needs it
-	microphone_period_ms = period_ms;
+	uint8_t parameters_changed_sampling = 0;
+	// Check if the parameters has been changed
+	if((sampling_microphone_parameters.microphone_timeout_ms != timeout_ms) && !streaming) {
+		parameters_changed_sampling = 1;
+	}
+
+
+		
+	if(sampling_microphone_parameters.microphone_period_ms != period_ms) {
+		parameters_changed_sampling = 1;
+	}
+	
+	// Update the parameters
+	sampling_microphone_parameters.microphone_timeout_ms = (!streaming) ? timeout_ms : sampling_microphone_parameters.microphone_timeout_ms;
+	sampling_microphone_parameters.microphone_stream_timeout_ms = (streaming) ? timeout_ms : sampling_microphone_parameters.microphone_stream_timeout_ms;
+	sampling_microphone_parameters.microphone_period_ms = period_ms;
 	
 	if(!streaming) {
-		if((sampling_configuration & SAMPLING_MICROPHONE) == 0) { // Only stop and start the sampling if it is not already running			
+		if((sampling_configuration & SAMPLING_MICROPHONE) == 0 || parameters_changed_sampling) { // Only stop and start the sampling if it is not already running or the parameters changed	
+			debug_log("SAMPLING: (Re-)start microphone sampling\n");
 			// Stop the sampling-timer that was probably already started
 			app_timer_stop(sampling_microphone_timer);
 			app_timer_stop(sampling_microphone_aggregated_timer);
@@ -798,29 +915,35 @@ ret_code_t sampling_start_microphone(uint32_t timeout_ms, uint16_t period_ms, ui
 			// Now start the average-sampling-timer
 			ret = app_timer_start(sampling_microphone_aggregated_timer, APP_TIMER_TICKS(microphone_aggregated_period_ms, 0), NULL);
 			if(ret != NRF_SUCCESS) return ret;
-
-			
 			
 			sampling_configuration = (sampling_configuration_t) (sampling_configuration | SAMPLING_MICROPHONE);
 			advertiser_set_status_flag_microphone_enabled(1);
 			
 			timeout_start(microphone_timeout_id, timeout_ms);
+		} else {
+			debug_log("SAMPLING: Ignoring start microphone sampling\n");
 		}
 	} else {
-		// If we are not already sampling the microphone, we have to start the sampling-timer
-		if((sampling_configuration & SAMPLING_MICROPHONE) == 0) {
-			
-			// Stop the sampling-timer that was probably already started
+		// If already sampling but parameters changed
+		if((sampling_configuration & SAMPLING_MICROPHONE) && parameters_changed_sampling) {
+			debug_log("SAMPLING: (Re-)start microphone sampling on stream request (because parameters changed)\n");
 			app_timer_stop(sampling_microphone_timer);
 			app_timer_stop(sampling_microphone_aggregated_timer);
-		
-			// Now start the sampling-timer
+			sampling_setup_microphone_chunk();
 			ret = app_timer_start(sampling_microphone_timer, APP_TIMER_TICKS(period_ms, 0), NULL);
 			if(ret != NRF_SUCCESS) return ret;
-
-			// Now start the average-sampling-timer
 			ret = app_timer_start(sampling_microphone_aggregated_timer, APP_TIMER_TICKS(microphone_aggregated_period_ms, 0), NULL);
 			if(ret != NRF_SUCCESS) return ret;
+		} else if((sampling_configuration & SAMPLING_MICROPHONE) == 0) { // If we are not already sampling the microphone, we have to start the sampling-timer
+			debug_log("SAMPLING: Start microphone stream\n");
+			app_timer_stop(sampling_microphone_timer);
+			app_timer_stop(sampling_microphone_aggregated_timer);
+			ret = app_timer_start(sampling_microphone_timer, APP_TIMER_TICKS(period_ms, 0), NULL);
+			if(ret != NRF_SUCCESS) return ret;
+			ret = app_timer_start(sampling_microphone_aggregated_timer, APP_TIMER_TICKS(microphone_aggregated_period_ms, 0), NULL);
+			if(ret != NRF_SUCCESS) return ret;
+		}  else {
+			debug_log("SAMPLING: Nothing to do to start microphone stream\n");
 		}
 			
 		sampling_configuration = (sampling_configuration_t) (sampling_configuration | STREAMING_MICROPHONE);
@@ -916,7 +1039,7 @@ void sampling_setup_microphone_chunk(void) {
 	chunk_fifo_write_open(&microphone_chunk_fifo, (void**) &microphone_chunk, NULL);
 	
 	systick_get_timestamp(&(microphone_chunk->timestamp.seconds), &(microphone_chunk->timestamp.ms));
-	microphone_chunk->sample_period_ms = microphone_period_ms;
+	microphone_chunk->sample_period_ms = sampling_microphone_parameters.microphone_period_ms;
 	microphone_chunk->microphone_data_count = 0;	
 }
 
@@ -934,9 +1057,34 @@ void sampling_finalize_microphone_chunk(void) {
 ret_code_t sampling_start_scan(uint32_t timeout_ms, uint16_t period_seconds, uint16_t interval_ms, uint16_t window_ms, uint16_t duration_seconds, uint8_t group_filter, uint8_t aggregation_type, uint8_t streaming) {
 	ret_code_t ret = NRF_SUCCESS;
 	
+	uint8_t parameters_changed_sampling = 0;
+	
+	if((timeout_ms != sampling_scan_parameters.scan_timeout_ms) && !streaming) 
+		parameters_changed_sampling = 1;
+
+	if(	period_seconds != sampling_scan_parameters.scan_period_seconds || 
+		interval_ms != sampling_scan_parameters.scan_interval_ms ||
+		duration_seconds != sampling_scan_parameters.scan_duration_seconds || 
+		group_filter != sampling_scan_parameters.scan_group_filter || 
+		aggregation_type != sampling_scan_parameters.scan_aggregation_type) 
+		{
+			parameters_changed_sampling = 1;
+		}
+	
+	// Update the parameters
+	sampling_scan_parameters.scan_timeout_ms = (!streaming) ? timeout_ms : sampling_scan_parameters.scan_timeout_ms;
+	sampling_scan_parameters.scan_stream_timeout_ms = (!streaming) ? timeout_ms : sampling_scan_parameters.scan_stream_timeout_ms;
+	sampling_scan_parameters.scan_period_seconds = period_seconds;
+	sampling_scan_parameters.scan_interval_ms = interval_ms;	
+	sampling_scan_parameters.scan_duration_seconds = duration_seconds;
+	sampling_scan_parameters.scan_group_filter = group_filter;
+	sampling_scan_parameters.scan_aggregation_type = aggregation_type;
+	
+	
 	
 	if(!streaming) {
-		if((sampling_configuration & SAMPLING_SCAN) == 0) { // Only stop and start the sampling if it is not already running			
+		if((sampling_configuration & SAMPLING_SCAN) == 0 || parameters_changed_sampling) { 		// Only stop and start the sampling if it is not already running or the parameter changed
+			debug_log("SAMPLING: (Re-)start scan sampling\n");
 			// Stop the sampling-timer that was probably already started
 			app_timer_stop(sampling_scan_timer);
 			
@@ -948,16 +1096,24 @@ ret_code_t sampling_start_scan(uint32_t timeout_ms, uint16_t period_seconds, uin
 			advertiser_set_status_flag_scan_enabled(1);
 			
 			timeout_start(scan_timeout_id, timeout_ms);
+		} else {
+			debug_log("SAMPLING: Ignoring start scan sampling\n");
 		}
 	} else {
-		// If we are not already sampling the scanner, we have to start the sampling-timer
-		if((sampling_configuration & SAMPLING_SCAN) == 0) {
-			// Stop the sampling-timer that was probably already started
+		// If we are already sampling, we need to restart everything, if the parameters changed for sampling
+		if((sampling_configuration & SAMPLING_SCAN) && parameters_changed_sampling) {
+			debug_log("SAMPLING: (Re-)start scan sampling on stream request (because parameters changed)\n");
 			app_timer_stop(sampling_scan_timer);
-			
-			// Now start the sampling-timer
 			ret = app_timer_start(sampling_scan_timer, APP_TIMER_TICKS(((uint32_t)period_seconds)*1000, 0), NULL);
 			if(ret != NRF_SUCCESS) return ret;	
+			// timeout_start(scan_timeout_id, timeout_ms); // Don't update the timeout for the sampling
+		} else if((sampling_configuration & SAMPLING_SCAN) == 0) { // If we are not already sampling the scanner, we have to start the sampling-timer
+			debug_log("SAMPLING: Start scan stream\n");
+			app_timer_stop(sampling_scan_timer);
+			ret = app_timer_start(sampling_scan_timer, APP_TIMER_TICKS(((uint32_t)period_seconds)*1000, 0), NULL);
+			if(ret != NRF_SUCCESS) return ret;	
+		}  else { // else case: sampling && !parameters_changed
+			debug_log("SAMPLING: Nothing to do to start scan stream\n");
 		}
 			
 		sampling_configuration = (sampling_configuration_t) (sampling_configuration | STREAMING_SCAN);
@@ -965,11 +1121,6 @@ ret_code_t sampling_start_scan(uint32_t timeout_ms, uint16_t period_seconds, uin
 		timeout_start(scan_stream_timeout_id, timeout_ms);
 	}
 	
-	scan_interval_ms = interval_ms;
-	scan_window_ms = window_ms;
-	scan_duration_seconds = duration_seconds;
-	scan_group_filter = group_filter;
-	scan_aggregation_type = aggregation_type;
 	
 	
 	
@@ -1010,7 +1161,7 @@ void sampling_scan_callback(void* p_context) {
 		sampling_setup_scan_sampling_chunk();
 	}
 	// Start the scan procedure:
-	scanner_start_scanning(scan_interval_ms, scan_window_ms, scan_duration_seconds);
+	scanner_start_scanning(sampling_scan_parameters.scan_interval_ms, sampling_scan_parameters.scan_window_ms, sampling_scan_parameters.scan_duration_seconds);
 }
 
 void sampling_on_scan_timeout_callback(void) {
@@ -1022,7 +1173,7 @@ void sampling_on_scan_timeout_callback(void) {
 void sampling_on_scan_report_callback(scanner_scan_report_t* scanner_scan_report) {
 	debug_log("SAMPLING: Scan report: ID %u, RSSI: %d\n", scanner_scan_report->ID, scanner_scan_report->rssi);
 
-	if(scanner_scan_report->group != scan_group_filter) {
+	if(scanner_scan_report->group != sampling_scan_parameters.scan_group_filter) {
 		return;
 	}
 
@@ -1035,7 +1186,7 @@ void sampling_on_scan_report_callback(scanner_scan_report_t* scanner_scan_report
 				if(scan_sampling_chunk->scan_result_data[i].count < 255) { // Check if we haven't 255 counts for this device
 					
 					// Check which aggregation type to use:
-					if(scan_aggregation_type == SCAN_CHUNK_AGGREGATE_TYPE_MAX) {
+					if(sampling_scan_parameters.scan_aggregation_type == SCAN_CHUNK_AGGREGATE_TYPE_MAX) {
 						scan_aggregated_rssi[i] = AGGREGATE_SCAN_SAMPLE_MAX(scan_aggregated_rssi[i], scanner_scan_report->rssi);
 					} else {	// Use mean
 						scan_aggregated_rssi[i] = AGGREGATE_SCAN_SAMPLE_MEAN(scan_aggregated_rssi[i], scanner_scan_report->rssi);
@@ -1085,7 +1236,7 @@ void sampling_finalize_scan_sampling_chunk(void) {
 	debug_log("SAMPLING: sampling_finalize_scan_sampling_chunk\n");
 	// Now interpret/Process the aggregated rssi values:
 	for(uint32_t i = 0; i < scan_sampling_chunk->scan_result_data_count; i++) {
-		if(scan_aggregation_type == SCAN_CHUNK_AGGREGATE_TYPE_MAX) { // Use max
+		if(sampling_scan_parameters.scan_aggregation_type == SCAN_CHUNK_AGGREGATE_TYPE_MAX) { // Use max
 			scan_sampling_chunk->scan_result_data[i].scan_device.rssi = (int8_t) PROCESS_SCAN_SAMPLE_MAX(scan_aggregated_rssi[i], (int32_t)scan_sampling_chunk->scan_result_data[i].count);
 		} else {	// Use mean
 			scan_sampling_chunk->scan_result_data[i].scan_device.rssi = (int8_t) PROCESS_SCAN_SAMPLE_MEAN(scan_aggregated_rssi[i], (int32_t)scan_sampling_chunk->scan_result_data[i].count);
