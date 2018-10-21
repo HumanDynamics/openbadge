@@ -7,10 +7,10 @@
 /**< The number of entries in each partition (can be adopted on the user's needs) */ 
 #define STORER_BADGE_ASSIGNEMENT_NUMBER				1
 #define STORER_BATTERY_DATA_NUMBER					100
-#define STORER_MICROPHONE_DATA_NUMBER				1000
-#define STORER_SCAN_DATA_NUMBER						1000
+#define STORER_MICROPHONE_DATA_NUMBER				1340
+#define STORER_SCAN_DATA_NUMBER						960
 #define STORER_ACCELEROMETER_INTERRUPT_DATA_NUMBER	50
-#define STORER_ACCELEROMETER_DATA_NUMBER			100
+#define STORER_ACCELEROMETER_DATA_NUMBER			50
 
 
 /**@brief Function to initialize the storer-module.
