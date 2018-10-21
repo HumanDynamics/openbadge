@@ -87,6 +87,7 @@ selftest_status_t selftest_test(void) {
 	if(!microphone_selftest()) {
 		debug_log("SELFTEST: Microphone selftest failed!!\n");
 		selftest_status = (selftest_status_t) (selftest_status | SELFTEST_FAILED_MICROPHONE);
+		user_intervention_test_start();	// So that both LEDs go on again
 		return selftest_status;
 	} else {
 		debug_log("SELFTEST: Microphone selftest successful!!\n");
@@ -100,6 +101,7 @@ selftest_status_t selftest_test(void) {
 	if(!accel_selftest()) {
 		debug_log("SELFTEST: Accelerometer selftest failed!!\n");
 		selftest_status = (selftest_status_t) (selftest_status | SELFTEST_FAILED_ACCELEROMETER);
+		user_intervention_test_start();	// So that both LEDs go on again (just for safety)
 		return selftest_status;
 	} else {
 		debug_log("SELFTEST: Accelerometer selftest successful!!\n");
