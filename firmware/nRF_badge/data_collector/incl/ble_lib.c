@@ -23,6 +23,8 @@
 
 
 
+
+
 static ble_uuid_t adv_uuids[] = {{BLE_UUID_NUS_SERVICE,     BLE_UUID_TYPE_BLE}};  	/**< Universally unique service identifiers of the NUS service for advertising. */
 static ble_gap_sec_params_t		ble_sec_params;                               		/**< Security requirements for this application. */
 static ble_nus_t                ble_nus;   											/**< Struct for Nordic UART Service module. */
@@ -141,7 +143,7 @@ static ret_code_t ble_init_advertising(void) {
 	ret = system_event_register_handler(ble_advertising_on_sys_evt);
 	if(ret != NRF_SUCCESS) return ret;
 	
-	
+
     ble_gap_conn_sec_mode_t sec_mode;
     BLE_GAP_CONN_SEC_MODE_SET_OPEN(&sec_mode);  //no security needed
 	
@@ -153,6 +155,8 @@ static ret_code_t ble_init_advertising(void) {
     ret = sd_ble_gap_appearance_set(BLE_APPEARANCE_GENERIC_TAG);
     if(ret != NRF_SUCCESS) return ret;
 	
+
+
 	
     // Build advertising data struct to pass into @ref ble_advertising_init.
     ble_advdata_t advdata;    
@@ -278,6 +282,7 @@ static void ble_evt_handler(ble_evt_t * p_ble_evt) {
             ble_nus_on_transmit_complete_callback();
             break;
         case BLE_GAP_EVT_CONNECTED:  //on BLE connect event
+            debug_log("BLE: connection intervals: %u, %u, %u, %u\n", p_ble_evt->evt.gap_evt.params.connected.conn_params.min_conn_interval, p_ble_evt->evt.gap_evt.params.connected.conn_params.max_conn_interval, p_ble_evt->evt.gap_evt.params.connected.conn_params.slave_latency, p_ble_evt->evt.gap_evt.params.connected.conn_params.conn_sup_timeout);
             ble_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
             ble_on_connect_callback();
             break;

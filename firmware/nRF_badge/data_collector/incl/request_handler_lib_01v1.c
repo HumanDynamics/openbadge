@@ -312,10 +312,16 @@ static void send_response(void * p_event_data, uint16_t event_size) {
 	// If it is empty we check if we need to transmit microphone-data or scan-data,
 	// because these two types have to be handled separately (first a header has to be sent)
 	// and after that the actual data have to be sent.
+	
 	uint32_t transmit_fifo_size = sender_get_transmit_fifo_size();
+	uint64_t end_ms = systick_get_continuous_millis() + TRANSMIT_DATA_TIMEOUT_MS;
+	while(transmit_fifo_size != 0 && systick_get_continuous_millis() < end_ms) {
+		transmit_fifo_size = sender_get_transmit_fifo_size();
+	}
+	
+	
 	if(transmit_fifo_size != 0) {
 		ret = NRF_ERROR_NO_MEM;
-		systick_delay_millis(TRANSMIT_DATA_TIMEOUT_MS);
 	} else {
 		// In the old Protocol there should be no which_field indicating the response-type, so we ignore the first byte
 		uint32_t transmit_len = len-1;				

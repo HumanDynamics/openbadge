@@ -73,6 +73,11 @@ uint32_t sender_get_transmit_fifo_size(void);
  *
  * @details	If the data couldn't be put in the TX-FIFO in timeout_ms milliseconds,
  *			this function returns NRF_ERROR_NO_MEM.
+ *			Internally, an app-timer is used to send the queued bytes in the FIFO.
+ *			This timer periodically calls (every TRANSMIT_QUEUED_BYTES_PERIOD_MS) 
+ *			the (20 byte) ble-transmitting function,
+ *			to transmit the bytes (probably it would return that it couldn't send the
+ *			bytes currently, but the timer holds with trying).
  *
  * @param[in] 	data		Pointer to data that should be sent.
  * @param[in] 	len			Number of bytes to read.

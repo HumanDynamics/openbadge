@@ -5,6 +5,7 @@
 #include "app_fifo.h"
 #include "app_util_platform.h"
 #include "timeout_lib.h"	// Needed for disconnecting after N milliseconds
+#include "app_timer.h"
 #ifndef UNIT_TEST
 #include "custom_board.h"	// For LED
 #include "nrf_gpio.h"		// For LED
@@ -14,6 +15,7 @@
 //#include "string.h"
 #include "debug_lib.h"
 
+#define TRANSMIT_QUEUED_BYTES_PERIOD_MS		5	/**< The timer period where the transmit_queued_bytes-function is called */
 #define TX_FIFO_SIZE				512		/**< Size of the transmit fifo of the BLE (has to be a power of two) */
 #define RX_FIFO_SIZE				128		/**< Size of the receive fifo of the BLE (has to be a power of two) */
 #define MAX_BYTES_PER_TRANSMIT		20		/**< Number of bytes that could be sent at once via the Nordic Uart Service */		
@@ -31,7 +33,7 @@ static void on_disconnect_callback(void);
 static void on_transmit_callback(void);
 static void on_receive_callback(uint8_t* data, uint16_t len);
 static ret_code_t transmit_queued_bytes(void);
-
+void transmit_queued_bytes_timer_callback(void* p_context);
 
 static volatile uint8_t connected = 0;			/**< Flag, if there is a ble-connection. */
 static volatile uint8_t transmitting = 0;		/**< Flag, if there is currently an ongoing transmit_queued_bytes()-operation. */
@@ -46,6 +48,9 @@ static app_fifo_t tx_fifo;								/**< The fifo for transmitting */
 static app_fifo_t rx_fifo;								/**< The fifo for receiving */
 
 static uint32_t disconnect_timeout_id = 0;				/**< The timeout-id for the disconnect timeout */
+
+APP_TIMER_DEF(transmit_queued_bytes_timer);				/**< The app-timer to periodically call the transmit_queued_bytes */
+
 
 /**@brief Function to reset the sender state.
  */
@@ -96,7 +101,7 @@ static void on_disconnect_callback(void) {
  */
 static void on_transmit_callback(void) {
 	// Reschedule the transmit of the queued bytes
-	transmit_queued_bytes();
+	// transmit_queued_bytes();
 }
 
 /**@brief Function that is called when data are received.
@@ -119,13 +124,23 @@ static void on_receive_callback(uint8_t* data, uint16_t len) {
 	
 }
 
+void transmit_queued_bytes_timer_callback(void* p_context) {
+	transmit_queued_bytes();
+}
+
+
 /**@brief Function transmits the data in tx_fifo in small portions (MAX_BYTES_PER_TRANSMIT).
  *
  * @retval	NRF_SUCCESS If the data were sent successfully. Otherwise, an error code is returned.
  */
 static ret_code_t transmit_queued_bytes(void) {
-	if(!transmitting)
+	if(!transmitting) {
+		app_timer_stop(transmit_queued_bytes_timer);
 		return NRF_ERROR_INVALID_STATE;
+	}
+
+	//uint32_t ms = (uint32_t) systick_get_continuous_millis();
+	//debug_log("Queued %u ms\n", ms);
 	
 	// Read out how many bytes have to be sent:
 	uint32_t remaining_size = 0;
@@ -156,8 +171,10 @@ static ret_code_t transmit_queued_bytes(void) {
 		ret = ble_transmit(transmit_buf, len);
 		if(ret == NRF_SUCCESS) { // If the transmission was successful, we can "consume" the data in the fifo manually
 			tx_fifo.read_pos += len;
-			timeout_reset(disconnect_timeout_id);
+			//timeout_reset(disconnect_timeout_id);
 		}
+	} else {
+		app_timer_stop(transmit_queued_bytes_timer);
 	} 
 	return ret;
 }
@@ -182,6 +199,11 @@ ret_code_t sender_init(void) {
 	ble_set_on_disconnect_callback(on_disconnect_callback);
 	ble_set_on_transmit_callback(on_transmit_callback);
 	ble_set_on_receive_callback(on_receive_callback);
+	
+	
+	
+	ret = app_timer_create(&transmit_queued_bytes_timer, APP_TIMER_MODE_REPEATED, transmit_queued_bytes_timer_callback);
+	if(ret != NRF_SUCCESS) return ret;
 	
 	return NRF_SUCCESS;
 }
@@ -238,6 +260,8 @@ ret_code_t sender_transmit(const uint8_t* data, uint32_t len, uint32_t timeout_m
 	if(!connected)
 		return NRF_ERROR_INVALID_STATE;
 	
+	
+	
 	// First check available space in tx-fifo:
 	uint64_t start_ms = systick_get_continuous_millis();
 	uint32_t available_size = 0;
@@ -249,7 +273,8 @@ ret_code_t sender_transmit(const uint8_t* data, uint32_t len, uint32_t timeout_m
 	if(len > available_size) 
 		return NRF_ERROR_NO_MEM;
 	
-	
+	// Reset the disconnect timeout timer if we can queue the new packet
+	timeout_reset(disconnect_timeout_id);
 	
 	// If there is enough space in the FIFO, write the data to the FIFO:
 	ret_code_t ret;
@@ -265,7 +290,9 @@ ret_code_t sender_transmit(const uint8_t* data, uint32_t len, uint32_t timeout_m
 	ret = NRF_SUCCESS;
 	if(!transmitting) {	// Only start the transmit_queued_bytes()-function, if it is not already transmitting the data of the FIFO
 		transmitting = 1;
-		ret = transmit_queued_bytes();
+		//ret = transmit_queued_bytes();
+		//if(ret != NRF_SUCCESS) return ret;
+		app_timer_start(transmit_queued_bytes_timer, APP_TIMER_TICKS(TRANSMIT_QUEUED_BYTES_PERIOD_MS, 0), NULL);
 	} 
 	return ret;
 }
