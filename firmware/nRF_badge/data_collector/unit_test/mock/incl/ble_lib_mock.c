@@ -89,6 +89,9 @@ void ble_stop_advertising(void) {
 
 ret_code_t ble_start_scanning(uint16_t scan_interval_ms, uint16_t scan_window_ms, uint16_t scan_duration_seconds) {
 	
+	if(scan_interval_ms == 0 || scan_window_ms == 0 || scan_duration_seconds == 0)
+		return NRF_ERROR_INVALID_PARAM;
+	
 	// The trigger function for ble_on_scan_report_callback has to be called
 	callback_generator_ble_on_scan_report_trigger();
 	

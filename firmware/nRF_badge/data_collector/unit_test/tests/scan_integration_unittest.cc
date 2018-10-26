@@ -66,7 +66,7 @@ static void on_scan_report_generator(ble_gap_evt_adv_report_t* scan_report) {
 
 static void check_scan_chunk(ScanChunk* scan_chunk) {
 	debug_log("Scan Chunk size %u\n", scan_chunk->scan_result_data_count);
-	EXPECT_LE(scan_chunk->scan_result_data_count, SCAN_CHUNK_DATA_SIZE);
+	EXPECT_EQ(scan_chunk->scan_result_data_count, SCAN_CHUNK_DATA_SIZE);
 	
 	
 	for(uint32_t i = 0; i < scan_chunk->scan_result_data_count; i++) {
@@ -159,12 +159,12 @@ TEST_F(ScanIntegrationTest, Test) {
 	ret = sampling_start_scan(0, 15, 300, 100, 14, SCAN_GROUP_ID, 0, 0);
 	EXPECT_EQ(ret, NRF_SUCCESS);
 	
-	
-	while(!callback_generator_ble_on_scan_report_is_ready() || !callback_generator_ble_on_scan_timeout_is_ready()) {
+	uint64_t end_ms = systick_get_continuous_millis() + (90*1000);
+	while((!callback_generator_ble_on_scan_report_is_ready() || !callback_generator_ble_on_scan_timeout_is_ready()) && (systick_get_continuous_millis() < end_ms) ) {
 		app_sched_execute();
 	}
 	// Give some more time for the storing...
-	uint64_t end_ms = systick_get_continuous_millis() + (1*1000);
+	end_ms = systick_get_continuous_millis() + (1*1000);
 	while(systick_get_continuous_millis() < end_ms) {
 		app_sched_execute();
 	}
