@@ -53,6 +53,7 @@ typedef struct {
 	accel_datarate_t		accelerometer_datarate;
 	accel_operating_mode_t	accelerometer_operating_mode;
 	accel_full_scale_t		accelerometer_full_scale;
+	uint16_t				accelerometer_fifo_sampling_period_ms;
 } sampling_accelerometer_parameters_t;
 static sampling_accelerometer_parameters_t sampling_accelerometer_parameters;
 static uint32_t accelerometer_timeout_id;
@@ -388,7 +389,8 @@ ret_code_t sampling_start_accelerometer(uint32_t timeout_ms, uint8_t operating_m
 	
 	if(sampling_accelerometer_parameters.accelerometer_datarate != accelerometer_datarate ||
 		sampling_accelerometer_parameters.accelerometer_operating_mode != accelerometer_operating_mode ||
-		sampling_accelerometer_parameters.accelerometer_full_scale != accelerometer_full_scale) 
+		sampling_accelerometer_parameters.accelerometer_full_scale != accelerometer_full_scale ||
+		sampling_accelerometer_parameters.accelerometer_fifo_sampling_period_ms != fifo_sampling_period_ms) 
 	{
 		parameters_changed_sampling = 1;
 	}
@@ -399,6 +401,7 @@ ret_code_t sampling_start_accelerometer(uint32_t timeout_ms, uint8_t operating_m
 	sampling_accelerometer_parameters.accelerometer_datarate = accelerometer_datarate;
 	sampling_accelerometer_parameters.accelerometer_operating_mode = accelerometer_operating_mode;
 	sampling_accelerometer_parameters.accelerometer_full_scale = accelerometer_full_scale;
+	sampling_accelerometer_parameters.accelerometer_fifo_sampling_period_ms = fifo_sampling_period_ms;
 
 	
 	
@@ -1064,6 +1067,7 @@ ret_code_t sampling_start_scan(uint32_t timeout_ms, uint16_t period_seconds, uin
 
 	if(	period_seconds != sampling_scan_parameters.scan_period_seconds || 
 		interval_ms != sampling_scan_parameters.scan_interval_ms ||
+		window_ms != sampling_scan_parameters.scan_window_ms ||
 		duration_seconds != sampling_scan_parameters.scan_duration_seconds || 
 		group_filter != sampling_scan_parameters.scan_group_filter || 
 		aggregation_type != sampling_scan_parameters.scan_aggregation_type) 
@@ -1076,6 +1080,7 @@ ret_code_t sampling_start_scan(uint32_t timeout_ms, uint16_t period_seconds, uin
 	sampling_scan_parameters.scan_stream_timeout_ms = (!streaming) ? timeout_ms : sampling_scan_parameters.scan_stream_timeout_ms;
 	sampling_scan_parameters.scan_period_seconds = period_seconds;
 	sampling_scan_parameters.scan_interval_ms = interval_ms;	
+	sampling_scan_parameters.scan_window_ms = window_ms;	
 	sampling_scan_parameters.scan_duration_seconds = duration_seconds;
 	sampling_scan_parameters.scan_group_filter = group_filter;
 	sampling_scan_parameters.scan_aggregation_type = aggregation_type;
@@ -1161,7 +1166,9 @@ void sampling_scan_callback(void* p_context) {
 		sampling_setup_scan_sampling_chunk();
 	}
 	// Start the scan procedure:
-	scanner_start_scanning(sampling_scan_parameters.scan_interval_ms, sampling_scan_parameters.scan_window_ms, sampling_scan_parameters.scan_duration_seconds);
+	ret_code_t ret = scanner_start_scanning(sampling_scan_parameters.scan_interval_ms, sampling_scan_parameters.scan_window_ms, sampling_scan_parameters.scan_duration_seconds);
+	// If an error occurs, directly call the timeout-callback
+	if(ret != NRF_SUCCESS) sampling_on_scan_timeout_callback();
 }
 
 void sampling_on_scan_timeout_callback(void) {
