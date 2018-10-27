@@ -415,7 +415,7 @@ TEST_F(Storage1Test, StoreAndReadTest) {
 	for(uint32_t i = 0; i < len; i++) {
 		store_data[i] = i;
 	}
-	
+	memset(read_data, 0, sizeof(read_data));
 	// Erase page 0 and store data
 	ret = storage1_store(0, store_data, len);
 	EXPECT_EQ(ret, NRF_SUCCESS);
@@ -427,7 +427,7 @@ TEST_F(Storage1Test, StoreAndReadTest) {
 	EXPECT_EQ(ret, NRF_SUCCESS);	
 	EXPECT_TRUE(memcmp(store_data, read_data, len) == 0);
 	
-	
+	memset(read_data, 0, sizeof(read_data));
 	// Write again to page 0 directly behind the former data (page should not be erased)
 	ret = storage1_store(len, store_data, len);
 	EXPECT_EQ(ret, NRF_SUCCESS);
@@ -444,7 +444,7 @@ TEST_F(Storage1Test, StoreAndReadTest) {
 	EXPECT_TRUE(memcmp(store_data, read_data, len) == 0);
 	
 	
-	
+	memset(read_data, 0, sizeof(read_data));
 	// Write again to page 0 to the same address like before (page should be erased, and the former data should be restored)
 	ret = storage1_store(len, store_data, len);
 	EXPECT_EQ(ret, NRF_SUCCESS);
@@ -469,7 +469,7 @@ TEST_F(Storage1Test, StoreAndReadTest) {
 		store_data1[i] = (uint8_t) (i % 256);
 	}
 	
-	
+	memset(read_data1, 0, sizeof(read_data1));
 	// Write to multiple pages (should erase the pages, and restore data on the first page that was erased)
 	ret = storage1_store(FLASH_PAGE_SIZE_WORDS_TEST*sizeof(uint32_t) + 1, store_data1, len1);
 	EXPECT_EQ(ret, NRF_SUCCESS);
@@ -520,6 +520,7 @@ TEST_F(Storage1Test, ClearTest) {
 	ret = storage1_clear(len/4, len/2);
 	EXPECT_EQ(ret, NRF_SUCCESS);
 	
+	memset(read_data, 0, sizeof(read_data));
 	ret = storage1_read(0, read_data, len);
 	EXPECT_EQ(ret, NRF_SUCCESS);	
 	for(uint32_t i = 0; i < len; i++) {

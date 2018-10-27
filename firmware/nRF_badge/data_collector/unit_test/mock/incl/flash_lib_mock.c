@@ -132,6 +132,8 @@ ret_code_t flash_store_bkgnd(uint32_t word_num, const uint32_t* p_words, uint16_
 	if(p_words == NULL)
 		return NRF_ERROR_INVALID_PARAM;
 	
+	if(((uintptr_t)p_words) % sizeof(uint32_t) != 0)
+		return NRF_ERROR_INVALID_PARAM;
 
 	if(word_num + length_words > flash_get_page_number()*flash_get_page_size_words())
 		return NRF_ERROR_INVALID_PARAM;
@@ -204,6 +206,9 @@ ret_code_t flash_read(uint32_t word_num, uint32_t* p_words, uint16_t length_word
 		return NRF_ERROR_INVALID_PARAM;
 	
 	if(p_words == NULL)
+		return NRF_ERROR_INVALID_PARAM;
+	
+	if(((uintptr_t)p_words) % sizeof(uint32_t) != 0)
 		return NRF_ERROR_INVALID_PARAM;
 	
 	memcpy(p_words, &flash_words[word_num],  length_words*sizeof(uint32_t));

@@ -14,7 +14,7 @@
 #include "custom_board.h"
 
 #define DEBUG_PRINTF_BUFFER_SIZE	200		/**< Buffer Size for one printf decoding */
-#define DEBUG_FIFO_BUFFER_SIZE		1024		/**< Has to be a power of two */
+#define DEBUG_FIFO_BUFFER_SIZE		2048		/**< Has to be a power of two */
 #define UART_TRANSMIT_BUFFER_SIZE	100		/**< Size of the buffer of one UART transmit operation */
 
 static uint8_t debug_fifo_buf[DEBUG_FIFO_BUFFER_SIZE];			/**< The buffer for the FIFO */

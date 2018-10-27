@@ -5,7 +5,6 @@
 #include "string.h"	// For memset function
 
 
-
 #define STORAGE1_SIZE	(FLASH_PAGE_SIZE_WORDS*FLASH_NUM_PAGES*sizeof(uint32_t)) /**< Size of storage1 in bytes */
 
 #define STORAGE1_CLEARED_BYTE	(0xFF)	/**< The byte that should be written to storage1 to clear the cell. */
@@ -16,11 +15,15 @@
 	#define STORAGE1_LAST_STORED_ELEMENT_ADDRESSES_SIZE	15	 /**< Number of addresses in storage1_last_stored_element_addresses-array, during normal operation. */
 #endif
 
+#define WORDS_BUF_SIZE	100									/**< The word buffer size for the storage/read operations. */
+
 int32_t storage1_last_stored_element_addresses[STORAGE1_LAST_STORED_ELEMENT_ADDRESSES_SIZE]; /**< Array to save the last/end addresses of stored elements */
 
 
 uint8_t backup_data[FLASH_PAGE_SIZE_WORDS*sizeof(uint32_t)];					/**< Array to backup a whole flash page, needed for restoring bytes after a page erase */
 
+
+uint32_t words_buf[WORDS_BUF_SIZE];						/** The buffer where big flash-operations (read/store) are splitted to */
 
 /** @brief Retrieve the address of a page.
  * 
@@ -242,7 +245,7 @@ ret_code_t storage1_store_uint8_as_uint32(uint32_t address, uint8_t* data, uint3
 	
 	// first write the intermediate bytes as words to flash
 	if(intermediate_num_bytes > 0) {
-		
+		uint32_t word;
 		if(intermediate_num_bytes < sizeof(uint32_t)) { // in this case leading_num_bytes and final_num_bytes should be 0.
 		
 			uint8_t tmp[sizeof(uint32_t)];		
@@ -254,33 +257,52 @@ ret_code_t storage1_store_uint8_as_uint32(uint32_t address, uint8_t* data, uint3
 			for(uint8_t i = start_index; i < end_index; i++) {
 				tmp[i] = data[i - start_index];
 			}
-			
+			memcpy(&word, tmp, sizeof(uint32_t));
 			// Cast to word pointer
-			words = (uint32_t*) tmp;
+			words = &word;
 			// Calculate aligned word address with integer truncation
 			word_address_aligned = (address/sizeof(uint32_t));
 			// Set the number of words to 1
 			length_words = 1;
 			
+			// Store the words to flash
+			ret = flash_store(word_address_aligned, words, length_words);
+			if(ret != NRF_SUCCESS) {	// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INTERNAL, NRF_ERROR_INVALID_PARAM, NRF_ERROR_TIMEOUT
+				return ret;
+			}
 		} else {
 			// Cast to word pointer
-			words = (uint32_t*) (&data[leading_num_bytes]);
+			//words = (uint32_t*) (&data[leading_num_bytes]);
 			// Calculate aligned word address with integer truncation
 			word_address_aligned = (address + leading_num_bytes)/sizeof(uint32_t);
 			// Calculate the number of words with integer truncation
 			length_words = intermediate_num_bytes/sizeof(uint32_t);	
-		}
-		
-		// Store the words to flash
-		ret = flash_store(word_address_aligned, words, length_words);
-		if(ret != NRF_SUCCESS) {	// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INTERNAL, NRF_ERROR_INVALID_PARAM, NRF_ERROR_TIMEOUT
-			return ret;
+			
+			
+			for(uint32_t i = 0; i < length_words/WORDS_BUF_SIZE; i++) {
+				memcpy(words_buf, &data[leading_num_bytes + i*sizeof(uint32_t)*WORDS_BUF_SIZE], sizeof(uint32_t) * WORDS_BUF_SIZE);
+				
+				// Store the words to flash
+				ret = flash_store(word_address_aligned + i*WORDS_BUF_SIZE, words_buf, WORDS_BUF_SIZE);
+				if(ret != NRF_SUCCESS) return ret;	// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INTERNAL, NRF_ERROR_INVALID_PARAM, NRF_ERROR_TIMEOUT
+			}
+			// If there are remaining words to store, store them
+			uint32_t remaining_length_words = length_words % WORDS_BUF_SIZE;
+			if(remaining_length_words > 0) {
+				memcpy(words_buf, &data[leading_num_bytes + (length_words/WORDS_BUF_SIZE)*sizeof(uint32_t)*WORDS_BUF_SIZE], sizeof(uint32_t)*remaining_length_words);
+				
+				// Store the words to flash
+				ret = flash_store(word_address_aligned + (length_words/WORDS_BUF_SIZE)*WORDS_BUF_SIZE, words_buf, remaining_length_words);
+				if(ret != NRF_SUCCESS) return ret;	// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INTERNAL, NRF_ERROR_INVALID_PARAM, NRF_ERROR_TIMEOUT
+			}
+			
 		}
 	}
 	
 	
 	// then write the leading bytes as words to flash
 	if(leading_num_bytes > 0) {
+		uint32_t word;
 		// Generate a word that is 0xFF where no data byte is.
 		uint8_t tmp[sizeof(uint32_t)];		
 		uint8_t start_index = sizeof(uint32_t) - leading_num_bytes;
@@ -292,12 +314,14 @@ ret_code_t storage1_store_uint8_as_uint32(uint32_t address, uint8_t* data, uint3
 			}
 		}	
 		
+		memcpy(&word, tmp, sizeof(uint32_t));
 		// Cast to word pointer
-		words = (uint32_t*) tmp;
+		words = &word;
 		// Calculate aligned word address with integer truncation
 		word_address_aligned = (address/sizeof(uint32_t));
 		// Set the number of words to 1
 		length_words = 1;
+		
 		// Store the words to flash
 		ret = flash_store(word_address_aligned, words, length_words);
 		if(ret != NRF_SUCCESS) {	// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INTERNAL, NRF_ERROR_INVALID_PARAM, NRF_ERROR_TIMEOUT
@@ -312,6 +336,7 @@ ret_code_t storage1_store_uint8_as_uint32(uint32_t address, uint8_t* data, uint3
 	
 	// eventually, write the final bytes as words to flash
 	if(final_num_bytes > 0) {
+		uint32_t word;
 		// Generate a word that is 0xFF where no data byte is.
 		uint8_t tmp[sizeof(uint32_t)];		
 		for(uint8_t i = 0; i < sizeof(uint32_t); i++) {
@@ -321,12 +346,14 @@ ret_code_t storage1_store_uint8_as_uint32(uint32_t address, uint8_t* data, uint3
 				tmp[i] = 0xFF;
 			}
 		}
+		memcpy(&word, tmp, sizeof(uint32_t));
 		// Cast to word pointer
-		words = (uint32_t*) tmp;
+		words = &word;
 		// Calculate aligned word address with integer truncation
 		word_address_aligned = (address + leading_num_bytes + intermediate_num_bytes)/sizeof(uint32_t);
 		// Set the number of words to 1
 		length_words = 1;
+		
 		// Store the words to flash
 		ret = flash_store(word_address_aligned, words, length_words);
 		if(ret != NRF_SUCCESS) {	// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INTERNAL, NRF_ERROR_INVALID_PARAM, NRF_ERROR_TIMEOUT
@@ -392,16 +419,28 @@ ret_code_t storage1_read_uint32_as_uint8(uint32_t address, uint8_t* data, uint32
 			for(uint8_t i = start_index; i < end_index; i++) {
 				data[i - start_index] = tmp[i];
 			}
-		} else {
+		} else {			
 			// Calculate aligned word address with integer truncation
 			word_address_aligned = (address + leading_num_bytes)/sizeof(uint32_t);
 			// Calculate the number of words with integer truncation
-			length_words = intermediate_num_bytes/sizeof(uint32_t);
+			length_words = intermediate_num_bytes/sizeof(uint32_t);	
 			
-			// Read the words/bytes from flash
-			ret = flash_read(word_address_aligned, (uint32_t*) (&data[leading_num_bytes]), length_words);
-			if(ret != NRF_SUCCESS) { // ret could be NRF_SUCCESS, NRF_ERROR_INVALID_PARAM
-				return ret;
+			
+			for(uint32_t i = 0; i < length_words/WORDS_BUF_SIZE; i++) {
+				// Read the words from flash
+				ret = flash_read(word_address_aligned + i*WORDS_BUF_SIZE, words_buf, WORDS_BUF_SIZE);
+				if(ret != NRF_SUCCESS) return ret;	// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INTERNAL, NRF_ERROR_INVALID_PARAM, NRF_ERROR_TIMEOUT
+				
+				memcpy(&data[leading_num_bytes + i*sizeof(uint32_t)*WORDS_BUF_SIZE], words_buf, sizeof(uint32_t) * WORDS_BUF_SIZE);
+			}
+			// If there are remaining words to store, store them
+			uint32_t remaining_length_words = length_words % WORDS_BUF_SIZE;
+			if(remaining_length_words > 0) {
+				// Read the words from flash
+				ret = flash_read(word_address_aligned + (length_words/WORDS_BUF_SIZE)*WORDS_BUF_SIZE, words_buf, remaining_length_words);
+				if(ret != NRF_SUCCESS) return ret;	// ret could be NRF_SUCCESS, NRF_ERROR_BUSY, NRF_ERROR_INTERNAL, NRF_ERROR_INVALID_PARAM, NRF_ERROR_TIMEOUT
+				
+				memcpy(&data[leading_num_bytes + (length_words/WORDS_BUF_SIZE)*sizeof(uint32_t)*WORDS_BUF_SIZE], words_buf, sizeof(uint32_t)*remaining_length_words);
 			}
 		}
 	}

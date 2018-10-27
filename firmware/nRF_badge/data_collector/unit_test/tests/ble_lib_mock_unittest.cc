@@ -216,10 +216,14 @@ TEST_F(BLELibMockTest, ScanTest) {
 	ret_code_t ret = ble_init();
 	ble_set_on_scan_report_callback(on_scan_report);
 	ble_set_on_scan_timeout_callback(on_scan_timeout);
-	
-	ble_start_scanning(0, 0, 1);
-	
 	EXPECT_EQ(ret, NRF_SUCCESS);
+	
+	ret = ble_start_scanning(0, 200, 2);
+	EXPECT_EQ(ret, NRF_ERROR_INVALID_PARAM);
+	
+	ret = ble_start_scanning(100, 200, 2);
+	EXPECT_EQ(ret, NRF_SUCCESS);
+	
 	EXPECT_EQ(scan_timeout, 0);
 	EXPECT_EQ(scan_report_count, 0);
 	
