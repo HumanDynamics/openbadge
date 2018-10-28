@@ -206,12 +206,16 @@ static void process_receive_notification(void * p_event_data, uint16_t event_siz
 	
 	processing_receive_notification = 1;
 	
-	// Get the timestamp and clock-sync status before processing the request!
-	systick_get_timestamp(&response_timestamp.seconds, &response_timestamp.ms); 
-	response_clock_status = systick_is_synced();
+	
+	
 	
 		
 	app_fifo_read(&receive_notification_fifo, (uint8_t*) &receive_notification, &notification_size);
+	
+	// Get the timestamp and clock-sync status before processing the request!
+	response_timestamp.seconds = receive_notification.timepoint_seconds;
+	response_timestamp.ms = receive_notification.timepoint_milliseconds;
+	response_clock_status = systick_is_synced();
 	
 	// Read out the received data of the notification
 	uint32_t serialized_len = receive_notification.notification_len;

@@ -7,6 +7,8 @@
 typedef struct {
 	uint16_t notification_len;
 	uint64_t timepoint_ticks;
+	uint32_t timepoint_seconds;
+	uint16_t timepoint_milliseconds;
 } receive_notification_t;
 
 

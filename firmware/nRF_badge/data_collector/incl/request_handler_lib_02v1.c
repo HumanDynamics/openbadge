@@ -389,7 +389,8 @@ static void process_receive_notification(void * p_event_data, uint16_t event_siz
 	}
 	
 	// Get the timestamp and clock-sync status before processing the request!
-	systick_get_timestamp(&response_timestamp.seconds, &response_timestamp.ms); 
+	response_timestamp.seconds = receive_notification.timepoint_seconds;
+	response_timestamp.ms = receive_notification.timepoint_milliseconds;
 	response_clock_status = systick_is_synced();
 	
 	uint64_t timepoint_ticks = receive_notification.timepoint_ticks;

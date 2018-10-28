@@ -110,6 +110,9 @@ static void on_transmit_callback(void) {
  */
 static void on_receive_callback(uint8_t* data, uint16_t len) {
 	uint64_t timepoint_ticks = systick_get_ticks_since_start();
+	uint32_t timepoint_seconds;
+	uint16_t timepoint_milliseconds;
+	systick_get_timestamp(&timepoint_seconds, &timepoint_milliseconds);
 	uint32_t len_32 = len;
 	app_fifo_write(&rx_fifo, data, &len_32);
 	//debug_log("SENDER: Received: %u\n", len_32);
@@ -119,6 +122,8 @@ static void on_receive_callback(uint8_t* data, uint16_t len) {
 		receive_notification_t receive_notification;
 		receive_notification.notification_len = len;
 		receive_notification.timepoint_ticks = timepoint_ticks;
+		receive_notification.timepoint_seconds = timepoint_seconds;
+		receive_notification.timepoint_milliseconds = timepoint_milliseconds;
 		receive_notification_handler(receive_notification);
 	}
 	
