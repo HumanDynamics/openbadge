@@ -42,3 +42,6 @@ The framework includes two tools for testing firmware code
 
 Note that in order to run the integration tests, you'll need to have a badge connected with a serial interface. A regular J-Link debugger/programmer does not include these. We recommend using a nRF51 dev-kit as a programmer for this purpose (see our wiki/documentations on how to make one).
 
+## Related Projects/Code
+
+- [`jmueller17/sociometrics`](https://github.com/jmueller17/sociometrics). R tools for data analysis. (Previous badge version)
