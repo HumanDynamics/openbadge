@@ -1353,6 +1353,10 @@ ret_code_t filesystem_iterator_previous(uint16_t partition_id) {
 	else
 		previous_element_len = partitions[index].metadata.first_element_len;
 	
+	// Just for safety reasons (when last-element-address points to some data with correct record-id, but some invalid data-length)
+	if(previous_element_address + filesystem_get_element_header_len(partition_id) + previous_element_len > partitions[index].first_element_address + partitions[index].metadata.partition_size)
+		return NRF_ERROR_NOT_FOUND;
+	
 	partition_iterators[index].cur_element_address 	= previous_element_address;
 	partition_iterators[index].cur_element_len	 	= previous_element_len;
 	partition_iterators[index].cur_element_header 	= previous_element_header;
