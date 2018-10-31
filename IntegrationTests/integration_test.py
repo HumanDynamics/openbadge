@@ -9,7 +9,7 @@ import threading
 
 sys.path.append('../BadgeFramework')
 from ble_badge_connection import BLEBadgeConnection
-from badge import OpenBadge
+from badge_legacy import OpenBadge
 
 logging.basicConfig(filename="integration_test.log", level=logging.DEBUG)
 logger = logging.getLogger(__name__)

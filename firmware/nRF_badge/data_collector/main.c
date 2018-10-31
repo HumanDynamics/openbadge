@@ -68,9 +68,9 @@ int main(void)
 	
 	ret = storer_init();
 	
-	#ifdef TESTER_ENABLE
-	
 	ret = uart_commands_init();
+	
+	#ifdef TESTER_ENABLE	
 		
 	selftest_status_t selftest_status = selftest_test();
 	debug_log("MAIN: Ret selftest_test: %u\n\r", selftest_status);

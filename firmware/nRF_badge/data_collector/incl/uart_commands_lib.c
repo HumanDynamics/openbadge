@@ -4,6 +4,8 @@
 #include "app_util_platform.h"
 #include "custom_board.h"
 
+#ifdef DEBUG_LOG_ENABLE
+
 
 #define MAX_COMMAND_LEN   32
 #define COMMAND_BUF_SIZE  (MAX_COMMAND_LEN + 1)
@@ -105,3 +107,10 @@ static void on_uart_event(uart_evt_t const * p_event) {
 
 }
 
+#else
+	
+ret_code_t uart_commands_init(void) {
+	return NRF_SUCCESS;
+}
+
+#endif

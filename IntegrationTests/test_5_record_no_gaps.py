@@ -19,10 +19,10 @@ class RecordNoGapsTestCase(IntegrationTest):
 	def testCase(self, badge, logger):
 		# Sync time
 		status = badge.get_status()
-		time.sleep(.25)
-
+		
+		test_start_time = time.time()	# Set this here (before 0.25sec wait) because of the moving average clock mechanism on the badge
+		time.sleep(.25)		
 		badge.start_recording()
-		test_start_time = time.time()
 		time.sleep(TEST_LENGTH_SECONDS)
 		badge.stop_recording()
 
@@ -51,7 +51,7 @@ class RecordNoGapsTestCase(IntegrationTest):
 		# Check that there were the correct number of total samples for the amount of time spent recording
 		actual_test_duration = expected_next_chunk_time - first_chunk_time
 		expected_num_samples = actual_test_duration * SAMPLES_PER_SECOND
-		self.assertAlmostEqual(TEST_LENGTH_SECONDS, actual_test_duration, delta=2.5)
+		self.assertAlmostEqual(TEST_LENGTH_SECONDS, actual_test_duration, delta=5) # Increased to 5 becuase we don't send partial chunks
 		self.assertAlmostEqual(num_samples_taken, expected_num_samples, delta=1)
 
 if __name__ == "__main__":
