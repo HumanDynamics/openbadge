@@ -19,7 +19,7 @@
 #define TX_FIFO_SIZE				512		/**< Size of the transmit fifo of the BLE (has to be a power of two) */
 #define RX_FIFO_SIZE				128		/**< Size of the receive fifo of the BLE (has to be a power of two) */
 #define MAX_BYTES_PER_TRANSMIT		20		/**< Number of bytes that could be sent at once via the Nordic Uart Service */		
-#define DISCONNECT_TIMEOUT_MS		(6*1000) /**< The timeout after the sender should disconnect when no packet was transmitted successfully in this time */
+#define DISCONNECT_TIMEOUT_MS		(15*1000) /**< The timeout after the sender should disconnect when no packet was transmitted successfully in this time */
 #ifdef DEBUG_LOG_ENABLE
 #define DISCONNECT_TIMEOUT_ENABLED	0		/**<  Disconnect timeout enabled */
 #else
@@ -126,7 +126,8 @@ static void on_receive_callback(uint8_t* data, uint16_t len) {
 		receive_notification.timepoint_milliseconds = timepoint_milliseconds;
 		receive_notification_handler(receive_notification);
 	}
-	
+	// Reset the disconnect timeout timer if we receive sth
+	timeout_reset(disconnect_timeout_id);
 }
 
 void transmit_queued_bytes_timer_callback(void* p_context) {
