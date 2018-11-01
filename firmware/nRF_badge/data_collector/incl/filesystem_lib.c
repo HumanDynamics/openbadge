@@ -1240,7 +1240,11 @@ ret_code_t filesystem_check_iterator_conflict(uint16_t partition_id, uint32_t el
 	uint32_t element_end_address = element_start_address + element_len + ((element_start_address == partition_start_address) ? (PARTITION_METADATA_SIZE + element_header_len) : (element_header_len));
 
 	uint32_t iterator_start_address = partition_iterators[index].cur_element_address;
-	uint32_t iterator_end_address = iterator_start_address + partition_iterators[index].cur_element_len + ((iterator_start_address == partition_start_address) ? (PARTITION_METADATA_SIZE + element_header_len) : (element_header_len));
+	uint32_t iterator_element_len = partition_iterators[index].cur_element_len + ((iterator_start_address == partition_start_address) ? (PARTITION_METADATA_SIZE + element_header_len) : (element_header_len));
+	uint32_t iterator_end_address = iterator_start_address + iterator_element_len;
+	uint32_t dummy;
+	ret = storage_get_unit_address_limits(iterator_start_address, iterator_element_len, &iterator_start_address, &dummy);
+	if(ret != NRF_SUCCESS)	return NRF_ERROR_INTERNAL;
 	
 	// Check for conflicts:
 	if(element_start_address >= iterator_start_address && element_start_address < iterator_end_address) {
