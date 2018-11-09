@@ -32,7 +32,7 @@ class SyncStartStopTestCase(IntegrationTest):
 		status = badge.get_status()
 		logger.info("Status after time set: {}".format(status))
 		# FIRMWARE BUG: Badge time is always off by four seconds. (Why?)
-		self.assertAlmostEqual(status.timestamp_seconds, time.time(), delta=1)
+		self.assertAlmostEqual(status.timestamp, time.time(), delta=1)
 
 		# Start microphone, check that status changes.
 		badge.start_microphone()
