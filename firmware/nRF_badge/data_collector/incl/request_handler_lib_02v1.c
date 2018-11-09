@@ -1450,7 +1450,9 @@ static void test_request_handler(void * p_event_data, uint16_t event_size) {
 
 static void restart_request_handler(void * p_event_data, uint16_t event_size) {
 	debug_log("REQUEST_HANDLER: Restart request handler\n");
+	#ifndef UNIT_TEST
 	NVIC_SystemReset();
+	#endif
 	finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification
 }
 

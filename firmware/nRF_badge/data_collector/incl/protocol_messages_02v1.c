@@ -1,6 +1,9 @@
 #include "tinybuf.h"
 #include "protocol_messages_02v1.h"
 
+//#define PROTOCOL_02v1
+#ifdef PROTOCOL_02v1
+
 const tb_field_t StatusRequest_fields[3] = {
 	{513, tb_offsetof(StatusRequest, timestamp), 0, 0, tb_membersize(StatusRequest, timestamp), 0, 0, 0, &Timestamp_fields},
 	{514, tb_offsetof(StatusRequest, badge_assignement), tb_delta(StatusRequest, has_badge_assignement, badge_assignement), 1, tb_membersize(StatusRequest, badge_assignement), 0, 0, 0, &BadgeAssignement_fields},
@@ -309,4 +312,4 @@ const tb_field_t Response_fields[14] = {
 	{528, tb_offsetof(Response, type.test_response), tb_delta(Response, which_type, type.test_response), 1, tb_membersize(Response, type.test_response), 0, 13, 0, &TestResponse_fields},
 	TB_LAST_FIELD,
 };
-
+#endif
