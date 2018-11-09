@@ -1,11 +1,6 @@
 #include "tinybuf.h"
 #include "protocol_messages_02v1.h"
 
-
-//#define PROTOCOL_02v1
-#ifdef PROTOCOL_02v1
-
-
 const tb_field_t StatusRequest_fields[3] = {
 	{513, tb_offsetof(StatusRequest, timestamp), 0, 0, tb_membersize(StatusRequest, timestamp), 0, 0, 0, &Timestamp_fields},
 	{514, tb_offsetof(StatusRequest, badge_assignement), tb_delta(StatusRequest, has_badge_assignement, badge_assignement), 1, tb_membersize(StatusRequest, badge_assignement), 0, 0, 0, &BadgeAssignement_fields},
@@ -174,7 +169,11 @@ const tb_field_t TestRequest_fields[1] = {
 	TB_LAST_FIELD,
 };
 
-const tb_field_t Request_fields[29] = {
+const tb_field_t RestartRequest_fields[1] = {
+	TB_LAST_FIELD,
+};
+
+const tb_field_t Request_fields[30] = {
 	{528, tb_offsetof(Request, type.status_request), tb_delta(Request, which_type, type.status_request), 1, tb_membersize(Request, type.status_request), 0, 1, 1, &StatusRequest_fields},
 	{528, tb_offsetof(Request, type.start_microphone_request), tb_delta(Request, which_type, type.start_microphone_request), 1, tb_membersize(Request, type.start_microphone_request), 0, 2, 0, &StartMicrophoneRequest_fields},
 	{528, tb_offsetof(Request, type.stop_microphone_request), tb_delta(Request, which_type, type.stop_microphone_request), 1, tb_membersize(Request, type.stop_microphone_request), 0, 3, 0, &StopMicrophoneRequest_fields},
@@ -203,6 +202,7 @@ const tb_field_t Request_fields[29] = {
 	{528, tb_offsetof(Request, type.stop_battery_stream_request), tb_delta(Request, which_type, type.stop_battery_stream_request), 1, tb_membersize(Request, type.stop_battery_stream_request), 0, 26, 0, &StopBatteryStreamRequest_fields},
 	{528, tb_offsetof(Request, type.identify_request), tb_delta(Request, which_type, type.identify_request), 1, tb_membersize(Request, type.identify_request), 0, 27, 0, &IdentifyRequest_fields},
 	{528, tb_offsetof(Request, type.test_request), tb_delta(Request, which_type, type.test_request), 1, tb_membersize(Request, type.test_request), 0, 28, 0, &TestRequest_fields},
+	{528, tb_offsetof(Request, type.restart_request), tb_delta(Request, which_type, type.restart_request), 1, tb_membersize(Request, type.restart_request), 0, 29, 0, &RestartRequest_fields},
 	TB_LAST_FIELD,
 };
 
@@ -289,7 +289,7 @@ const tb_field_t StreamResponse_fields[7] = {
 };
 
 const tb_field_t TestResponse_fields[2] = {
-	{65, tb_offsetof(TestResponse, test_passed), 0, 0, tb_membersize(TestResponse, test_passed), 0, 0, 0, NULL},
+	{65, tb_offsetof(TestResponse, test_failed), 0, 0, tb_membersize(TestResponse, test_failed), 0, 0, 0, NULL},
 	TB_LAST_FIELD,
 };
 
@@ -310,4 +310,3 @@ const tb_field_t Response_fields[14] = {
 	TB_LAST_FIELD,
 };
 
-#endif

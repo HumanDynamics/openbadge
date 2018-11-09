@@ -45,6 +45,7 @@ Request_start_battery_stream_request_tag = 25
 Request_stop_battery_stream_request_tag = 26
 Request_identify_request_tag = 27
 Request_test_request_tag = 28
+Request_restart_request_tag = 29
 Response_status_response_tag = 1
 Response_start_microphone_response_tag = 2
 Response_start_scan_response_tag = 3
@@ -2050,6 +2051,37 @@ class TestRequest:
 		pass
 
 
+class RestartRequest:
+
+	def __init__(self):
+		self.reset()
+
+	def __repr__(self):
+		return str(self.__dict__)
+
+	def reset(self):
+		pass
+
+	def encode(self):
+		ostream = _Ostream()
+		self.encode_internal(ostream)
+		return ostream.buf
+
+	def encode_internal(self, ostream):
+		pass
+
+
+	@classmethod
+	def decode(cls, buf):
+		obj = cls()
+		obj.decode_internal(_Istream(buf))
+		return obj
+
+	def decode_internal(self, istream):
+		self.reset()
+		pass
+
+
 class Request:
 
 	def __init__(self):
@@ -2121,6 +2153,7 @@ class Request:
 			self.stop_battery_stream_request = None
 			self.identify_request = None
 			self.test_request = None
+			self.restart_request = None
 			pass
 
 		def encode_internal(self, ostream):
@@ -2154,6 +2187,7 @@ class Request:
 				26: self.encode_stop_battery_stream_request,
 				27: self.encode_identify_request,
 				28: self.encode_test_request,
+				29: self.encode_restart_request,
 			}
 			options[self.which](ostream)
 			pass
@@ -2242,6 +2276,9 @@ class Request:
 		def encode_test_request(self, ostream):
 			self.test_request.encode_internal(ostream)
 
+		def encode_restart_request(self, ostream):
+			self.restart_request.encode_internal(ostream)
+
 
 		def decode_internal(self, istream):
 			self.reset()
@@ -2275,6 +2312,7 @@ class Request:
 				26: self.decode_stop_battery_stream_request,
 				27: self.decode_identify_request,
 				28: self.decode_test_request,
+				29: self.decode_restart_request,
 			}
 			options[self.which](istream)
 			pass
@@ -2390,6 +2428,10 @@ class Request:
 		def decode_test_request(self, istream):
 			self.test_request = TestRequest()
 			self.test_request.decode_internal(istream)
+
+		def decode_restart_request(self, istream):
+			self.restart_request = RestartRequest()
+			self.restart_request.decode_internal(istream)
 
 
 class StatusResponse:
@@ -3149,7 +3191,7 @@ class TestResponse:
 		return str(self.__dict__)
 
 	def reset(self):
-		self.test_passed = 0
+		self.test_failed = 0
 		pass
 
 	def encode(self):
@@ -3158,11 +3200,11 @@ class TestResponse:
 		return ostream.buf
 
 	def encode_internal(self, ostream):
-		self.encode_test_passed(ostream)
+		self.encode_test_failed(ostream)
 		pass
 
-	def encode_test_passed(self, ostream):
-		ostream.write(struct.pack('>B', self.test_passed))
+	def encode_test_failed(self, ostream):
+		ostream.write(struct.pack('>B', self.test_failed))
 
 
 	@classmethod
@@ -3173,11 +3215,11 @@ class TestResponse:
 
 	def decode_internal(self, istream):
 		self.reset()
-		self.decode_test_passed(istream)
+		self.decode_test_failed(istream)
 		pass
 
-	def decode_test_passed(self, istream):
-		self.test_passed= struct.unpack('>B', istream.read(1))[0]
+	def decode_test_failed(self, istream):
+		self.test_failed= struct.unpack('>B', istream.read(1))[0]
 
 
 class Response:
@@ -3370,4 +3412,5 @@ class Response:
 		def decode_test_response(self, istream):
 			self.test_response = TestResponse()
 			self.test_response.decode_internal(istream)
+
 

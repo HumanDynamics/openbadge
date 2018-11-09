@@ -43,6 +43,7 @@
 #define Request_stop_battery_stream_request_tag 26
 #define Request_identify_request_tag 27
 #define Request_test_request_tag 28
+#define Request_restart_request_tag 29
 #define Response_status_response_tag 1
 #define Response_start_microphone_response_tag 2
 #define Response_start_scan_response_tag 3
@@ -199,6 +200,9 @@ typedef struct {
 } TestRequest;
 
 typedef struct {
+} RestartRequest;
+
+typedef struct {
 	uint8_t which_type;
 	union {
 		StatusRequest status_request;
@@ -229,6 +233,7 @@ typedef struct {
 		StopBatteryStreamRequest stop_battery_stream_request;
 		IdentifyRequest identify_request;
 		TestRequest test_request;
+		RestartRequest restart_request;
 	} type;
 } Request;
 
@@ -311,7 +316,7 @@ typedef struct {
 } StreamResponse;
 
 typedef struct {
-	uint8_t test_passed;
+	uint8_t test_failed;
 } TestResponse;
 
 typedef struct {
@@ -361,7 +366,8 @@ extern const tb_field_t StartBatteryStreamRequest_fields[4];
 extern const tb_field_t StopBatteryStreamRequest_fields[1];
 extern const tb_field_t IdentifyRequest_fields[2];
 extern const tb_field_t TestRequest_fields[1];
-extern const tb_field_t Request_fields[29];
+extern const tb_field_t RestartRequest_fields[1];
+extern const tb_field_t Request_fields[30];
 extern const tb_field_t StatusResponse_fields[9];
 extern const tb_field_t StartMicrophoneResponse_fields[2];
 extern const tb_field_t StartScanResponse_fields[2];

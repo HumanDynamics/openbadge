@@ -54,6 +54,7 @@ def main():
 		print("  get_battery_data [seconds of battery data to request]")
 		print("  identify [led duration seconds | 'off']")
 		print("  test")
+		print("  restart")
 		print("  help")
 		print("  start_microphone_stream")
 		print("  stop_microphone_stream")
@@ -178,6 +179,9 @@ def main():
 
 	def handle_test_request(args):
 		print(badge.test())
+	
+	def handle_restart_request(args):
+		print(badge.restart())
 		
 		
 		
@@ -242,6 +246,7 @@ def main():
 		"get_battery_data": handle_get_battery_data,
 		"identify": handle_identify_request,
 		"test": handle_test_request,
+		"restart": handle_restart_request,
 		"start_microphone_stream": handle_start_microphone_stream_request,
 		"stop_microphone_stream": handle_stop_microphone_stream_request,
 		"start_scan_stream": handle_start_scan_stream_request,

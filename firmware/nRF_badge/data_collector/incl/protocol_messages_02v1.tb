@@ -175,6 +175,9 @@ message IdentifyRequest {
 message TestRequest {
 }
 
+message RestartRequest {
+}
+
 message Request {
 	oneof type {
 		StatusRequest 								status_request (1);
@@ -205,6 +208,7 @@ message Request {
 		StopBatteryStreamRequest					stop_battery_stream_request (26);
 		IdentifyRequest								identify_request (27);
 		TestRequest									test_request (28);
+		RestartRequest								restart_request (29);
 	}
 }
 
@@ -296,7 +300,7 @@ message StreamResponse {
 
 
 message TestResponse {
-	required uint8					test_passed;
+	required uint8					test_failed;
 }
 
 

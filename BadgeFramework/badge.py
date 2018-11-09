@@ -458,7 +458,17 @@ class OpenBadge(object):
 			self.receive_response()
 			
 		return self.test_response_queue.get()
+	
+	def restart(self):
+	
+		request = Request()
+		request.type.which = Request_restart_request_tag
+		request.type.restart_request = RestartRequest()
 		
+		self.send_request(request)
+		
+		return True
+	
 
 	# Send a request to the badge for recorded microphone data starting at the given timestamp.
 	# Returns a list of tuples of (MicrophoneDataHeader(), microphone_sample_chunk_data), where each tuple

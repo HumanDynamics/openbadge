@@ -112,6 +112,7 @@ static void start_battery_stream_request_handler(void * p_event_data, uint16_t e
 static void stop_battery_stream_request_handler(void * p_event_data, uint16_t event_size);
 static void identify_request_handler(void * p_event_data, uint16_t event_size);
 static void test_request_handler(void * p_event_data, uint16_t event_size);
+static void restart_request_handler(void * p_event_data, uint16_t event_size);
 
 
 static void status_response_handler(void * p_event_data, uint16_t event_size);
@@ -243,6 +244,10 @@ static request_handler_for_type_t request_handlers[] = {
 		{
                 .type = Request_test_request_tag,
                 .handler = test_request_handler,
+        },
+		{
+                .type = Request_restart_request_tag,
+                .handler = restart_request_handler,
         }
 };
 
@@ -928,7 +933,7 @@ static void test_response_handler(void * p_event_data, uint16_t event_size) {
 	
 	selftest_status_t status = selftest_test();
 	
-	response_event.response.type.test_response.test_passed = (uint8_t) status;
+	response_event.response.type.test_response.test_failed = (uint8_t) status;
 	
 	send_response(NULL, 0);	
 }
@@ -1443,7 +1448,11 @@ static void test_request_handler(void * p_event_data, uint16_t event_size) {
 	finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification
 }
 
-
+static void restart_request_handler(void * p_event_data, uint16_t event_size) {
+	debug_log("REQUEST_HANDLER: Restart request handler\n");
+	NVIC_SystemReset();
+	finish_and_reschedule_receive_notification();	// Now we are done with processing the request --> we can now advance to the next receive-notification
+}
 
 
 
