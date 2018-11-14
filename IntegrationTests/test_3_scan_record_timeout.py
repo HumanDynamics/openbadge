@@ -5,30 +5,45 @@ from integration_test import *
 class ScanRecordTimeoutTestCase(IntegrationTest):
 
 	def testCase(self, badge, logger):
+		# sync time
+		badge.get_status()
+
+		# start recording all for 1 minute
 		badge.start_microphone(timeout_minutes=1)
 		badge.start_scan(timeout_minutes=1)
 		badge.start_accelerometer(timeout_minutes=1)
+		badge.start_accelerometer_interrupt(timeout_minutes=1)
 		badge.start_battery(timeout_minutes=1)
 
-		status = badge.get_status()
-		self.assertTrue(status.microphone_status)
-		self.assertTrue(status.scan_status)
-		self.assertTrue(status.accelerometer_status)
-		self.assertTrue(status.battery_status)
+		time.sleep(.25)
 
-		time.sleep(59)
+		# just make sure it all got started
 		status = badge.get_status()
-		self.assertTrue(status.microphone_status)
-		self.assertTrue(status.scan_status)
-		self.assertTrue(status.accelerometer_status)
-		self.assertTrue(status.battery_status)
+		expected_values = {
+			'microphone_status': True,
+			'scan_status': True,
+			'accelerometer_status': True,
+			'accelerometer_interrupt_status': True,
+			'battery_status': True,
+		}
+		self.assertStatusesEqual(status, expected_values)
 
-		time.sleep(121)
+
+		# badge should still be recording
+		time.sleep(55)
 		status = badge.get_status()
-		self.assertFalse(status.microphone_status)
-		self.assertFalse(status.scan_status)
-		self.assertFalse(status.accelerometer_status)
-		self.assertFalse(status.battery_status)
+		self.assertStatusesEqual(status, expected_values)
+
+		# ok, we should be finished now
+		# note that every time you call status (or send any message to the badge),
+		# the timer resets
+		time.sleep(122)
+
+		for key, val in expected_values:
+			expected_values[key] = False
+
+		status = badge.get_status()
+		self.assertStatusesEqual(status, expected_values)
 
 if __name__ == "__main__":
 	if len(sys.argv) != 2:

@@ -9,12 +9,12 @@ class ClockTestCase(IntegrationTest):
 
 		time.sleep(.25)
 
-		start_time = badge.get_status().timestamp
+		start_time = badge.get_status().timestamp.seconds
 		logger.info("Start time: %f", start_time)
 
 		time.sleep(5)
 
-		end_time = badge.get_status().timestamp
+		end_time = badge.get_status().timestamp.seconds
 		logger.info("End time: %f", end_time)
 
 		self.assertAlmostEqual(end_time, start_time + 5, delta=1)

@@ -5,15 +5,6 @@ from integration_test import *
 class SyncStartStopTestCase(IntegrationTest):
 
 
-	def assertStatuses(self, status, expected_values):
-		self.assertEqual(status.microphone_status,
-				 expected_values.microphone_status)
-		self.assertEqual(status.scan_status,
-				 expected_values.scan_status)
-		self.assertEqual(status.accelerometer_status,
-				 expected_values.accelerometer_status)
-		self.assertEqual(status.battery_status,
-				 expected_values.battery_status)
 
 	def testCase(self, badge, logger):
 		# Sync time
@@ -25,6 +16,7 @@ class SyncStartStopTestCase(IntegrationTest):
 			'microphone_status': False,
 			'scan_status': False,
 			'accelerometer_status': False,
+			'accelerometer_interrupt_status': False,
 			'battery_status': False,
 		}
 
@@ -32,56 +24,71 @@ class SyncStartStopTestCase(IntegrationTest):
 		status = badge.get_status()
 		logger.info("Status after time set: {}".format(status))
 		# FIRMWARE BUG: Badge time is always off by four seconds. (Why?)
-		self.assertAlmostEqual(status.timestamp, time.time(), delta=1)
+                # TODO - is this still true?
+		self.assertAlmostEqual(status.timestamp.seconds, time.time(), delta=1)
 
 		# Start microphone, check that status changes.
 		badge.start_microphone()
 		time.sleep(.25)
 		status = badge.get_status()
 		expected_values.microphone_status = True
-		self.assertStatuses(status, expected_values)
+		self.assertStatusesEqual(status, expected_values)
 
 		# Start scanner, check that status changes.
 		badge.start_scan()
 		time.sleep(.25)
 		status = badge.get_status()
 		expected_values.scan_status = True
-		self.assertStatuses(status, expected_values)
+		self.assertStatusesEqual(status, expected_values)
 
 		# Start accelerometer, check that status changes.
 		badge.start_accelerometer()
 		time.sleep(.25)
 		status = badge.get_status()
 		expected_values.accelerometer_status = True
-		self.assertStatuses(status, expected_values)
+		self.assertStatusesEqual(status, expected_values)
+
+		# Start accelerometer, check that status changes.
+		badge.start_accelerometer_interrupt()
+		time.sleep(.25)
+		status = badge.get_status()
+		expected_values.accelerometer_interrupt_status = True
+		self.assertStatusesEqual(status, expected_values)
 
 		# Start battery, check that status changes & prev statuses remain.
 		badge.start_battery()
 		time.sleep(.25)
 		status = badge.get_status()
 		expected_values.battery_status = True
-		self.assertStatuses(status, expected_values)
+		self.assertStatusesEqual(status, expected_values)
 
 		# Stop scanner, check that status changes.
 		badge.stop_scan()
 		time.sleep(.25)
 		status = badge.get_status()
 		expected_values.scan_status = False
-		self.assertStatuses(status, expected_values)
+		self.assertStatusesEqual(status, expected_values)
 
 		# Stop battery, check that status changes.
 		badge.stop_battery()
 		time.sleep(.25)
 		status = badge.get_status()
 		expected_values.battery_status = False
-		self.assertStatuses(status, expected_values)
+		self.assertStatusesEqual(status, expected_values)
 
 		# Stop accelerometer, check that status changes.
 		badge.stop_accelerometer()
 		time.sleep(.25)
 		status = badge.get_status()
 		expected_values.accelerometer_status = False
-		self.assertStatuses(status, expected_values)
+		self.assertStatusesEqual(status, expected_values)
+
+		# Stop accelerometer_interrupt, check that status changes.
+		badge.stop_accelerometer_interrupt()
+		time.sleep(.25)
+		status = badge.get_status()
+		expected_values.accelerometer_interrupt_status = False
+		self.assertStatusesEqual(status, expected_values)
 
 		# Stop microphone, check that status changes.
 		# Note that microphone will only stop after scanning and recording does.
@@ -90,7 +97,7 @@ class SyncStartStopTestCase(IntegrationTest):
 		time.sleep(.25)
 		status = badge.get_status()
 		expected_values.microphone_status = False
-		self.assertStatuses(status, expected_values)
+		self.assertStatusesEqual(status, expected_values)
 
 if __name__ == "__main__":
 	if len(sys.argv) != 2:

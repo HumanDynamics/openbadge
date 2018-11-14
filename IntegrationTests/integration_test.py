@@ -9,7 +9,7 @@ import threading
 
 sys.path.append('../BadgeFramework')
 from ble_badge_connection import BLEBadgeConnection
-from badge_legacy import OpenBadge
+from badge import OpenBadge
 
 logging.basicConfig(filename="integration_test.log", level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -22,15 +22,20 @@ logger.addHandler(stdout_handler)
 # Uncomment this line to make logging very verbose.
 # logging.getLogger().addHandler(stdout_handler)
 
-# Special badge restart command only used for testing purposes
-def restart_badge(serial):
-	serial.write("restart\n")
-	time.sleep(5)
-
 class IntegrationTest(unittest.TestCase):
 	def __init__(self, device_addr):
 		self.device_addr = device_addr
 		unittest.TestCase.__init__(self)
+
+	def assertStatusesEqual(self, status, expected_values):
+		"""
+		Takes a status response from a badge
+		And a dict with expected values
+		Note that the keys in <expected_values> must match
+		 those in <status> exactly
+		"""
+		for key, expected_val in expected_values:
+			self.assertEqual(status[key], expected_val)
 
 	def runTest(self):
 		self.runTest_startUART()
@@ -64,11 +69,11 @@ class IntegrationTest(unittest.TestCase):
 		logger.info("UART:" + data)
 
 	def runTest_MainLoop(self):
-		restart_badge(self.uartSerial)
 
 		connection = BLEBadgeConnection.get_connection_to_badge(self.device_addr)
 		connection.connect()
 		badge = OpenBadge(connection)
+		badge.restart()
 
 		try:
 			self.testCase(badge, logger)
