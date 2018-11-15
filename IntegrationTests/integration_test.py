@@ -9,6 +9,7 @@ import threading
 
 sys.path.append('../BadgeFramework')
 from ble_badge_connection import BLEBadgeConnection
+from bluepy.btle import BTLEException
 from badge import OpenBadge
 
 logging.basicConfig(filename="integration_test.log", level=logging.DEBUG)
@@ -27,6 +28,13 @@ class IntegrationTest(unittest.TestCase):
 		self.device_addr = device_addr
 		unittest.TestCase.__init__(self)
 
+	def restart_badge(self, badge):
+		try:
+			badge.restart()
+		except BTLEException as e:
+			self.connection.connect()
+			return OpenBadge(self.connection)
+
 	def assertStatusesEqual(self, status, expected_values):
 		"""
 		Takes a status response from a badge
@@ -34,8 +42,14 @@ class IntegrationTest(unittest.TestCase):
 		Note that the keys in <expected_values> must match
 		 those in <status> exactly
 		"""
-		for key, expected_val in expected_values:
-			self.assertEqual(status[key], expected_val)
+		for key, expected_val in expected_values.iteritems():
+			actual_val = getattr(status, key)
+			self.assertEqual(actual_val, expected_val, msg="""
+			Actual and expected status values did not match for
+			status: {}\n
+			Expected value: {}\n
+			Actual value: {}
+			""".format(key, expected_val, actual_val))
 
 	def runTest(self):
 		self.runTest_startUART()
@@ -70,10 +84,12 @@ class IntegrationTest(unittest.TestCase):
 
 	def runTest_MainLoop(self):
 
-		connection = BLEBadgeConnection.get_connection_to_badge(self.device_addr)
-		connection.connect()
-		badge = OpenBadge(connection)
-		badge.restart()
+		self.connection = BLEBadgeConnection.get_connection_to_badge(self.device_addr)
+		self.connection.connect()
+		badge = OpenBadge(self.connection)
+
+		badge = self.restart_badge(badge)
+
 
 		try:
 			self.testCase(badge, logger)
