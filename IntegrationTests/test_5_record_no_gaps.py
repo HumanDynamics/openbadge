@@ -19,34 +19,39 @@ class RecordNoGapsTestCase(IntegrationTest):
 	def testCase(self, badge, logger):
 		# Sync time
 		status = badge.get_status()
-		
-		test_start_time = time.time()	# Set this here (before 0.25sec wait) because of the moving average clock mechanism on the badge
-		time.sleep(.25)		
-		badge.start_recording()
-		time.sleep(TEST_LENGTH_SECONDS)
-		badge.stop_recording()
 
-		mic_data = badge.get_mic_data(t=test_start_time)
+		# Set this here (before 0.25sec wait) because of the moving average clock mechanism on the badge
+		# TODO what?
+		test_start_time = time.time()
+		time.sleep(.25)		
+		badge.start_microphone()
+		time.sleep(TEST_LENGTH_SECONDS)
+		badge.stop_microphone()
+
+		mic_data = badge.get_microphone_data(t=test_start_time)
 
 		num_samples_taken = 0
 
 		# We give extra leway on the first chunk to allow for startup time.
-		first_chunk_header, first_chunk_data = mic_data[0]
-		first_chunk_time = timestamps_to_time(first_chunk_header.timestamp_seconds, first_chunk_header.timestamp_miliseconds)
+		first_chunk = mic_data[0]
+		first_chunk_time = timestamps_to_time(first_chunk.timestamp.seconds, first_chunk.timestamp.ms)
 		self.assertAlmostEqual(test_start_time, first_chunk_time, delta=MAX_ALLOWED_STARTUP_DELAY)
 		# If we passed our startup delay test, use our first_chunk_time to calibrate all other expected times
 		expected_next_chunk_time = first_chunk_time
+		for data in mic_data:
+			# <data> has four keys:
+			# 'sample_period_ms': an int
+			# 'timestamp': an object with two key/val pairs, 'seconds' and 'ms'
+			# 'microphone_data': an array of objects with a single key/val pair, 'value'
+			# 'last_response': an int, TODO on what it means
 
-		for header, data in mic_data:
-			# Check that there's the correct number of samples
-			self.assertEqual(header.num_samples_in_chunk, len(data))
-			num_samples_taken += header.num_samples_in_chunk
+			num_samples_taken += len(data.microphone_data)
 
 			# Check that timestamps are continous
-			sample_time = timestamps_to_time(header.timestamp_seconds, header.timestamp_miliseconds)
+			sample_time = timestamps_to_time(data.timestamp.seconds, data.timestamp.ms)
 			self.assertAlmostEqual(expected_next_chunk_time, sample_time, delta=0.005)
-			print("Chunk {}: OK".format(header))
-			expected_next_chunk_time = sample_time + (float(header.num_samples_in_chunk) / SAMPLES_PER_SECOND)
+			print("Chunk {}: OK".format(data))
+			expected_next_chunk_time = sample_time + (float(len(data.microphone_data)) / SAMPLES_PER_SECOND)
 
 		# Check that there were the correct number of total samples for the amount of time spent recording
 		actual_test_duration = expected_next_chunk_time - first_chunk_time
