@@ -39,7 +39,7 @@ class ScanRecordTimeoutTestCase(IntegrationTest):
 		# the timer resets
 		time.sleep(122)
 
-		for key, val in expected_values:
+		for key, val in expected_values.iteritems():
 			expected_values[key] = False
 
 		status = badge.get_status()
