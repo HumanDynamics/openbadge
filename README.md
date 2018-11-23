@@ -3,6 +3,8 @@
 Welcome to the Open Badge project, an open-source framework and toolkit for measuring and shaping face-to-face social interactions using either custom hardware devices or smart phones, and real-time web-based visualizations. Open Badges is a modular system that allows researchers to monitor and collect interaction data from people engaged in real-life social settings. For more information, please [read our publication](https://www.media.mit.edu/publications/open-badges-a-low-cost-toolkit-for-measuring-team-communication-and-dynamics/) or visit our [wiki](https://github.com/HumanDynamics/OpenBadge/wiki).
 
 Additional repositories that are part of this project:
+* https://github.com/mitmedialab/rhythm-badge-programmer - schematics, vector files and instructions for making a programming rig 
+
 * https://github.com/HumanDynamics/openbadge-hub-py - a python based hub (base station) for pulling data from badges
 
 * https://github.com/HumanDynamics/openbadge-hub - a Javascript/Cordova app that communicates with the badges and stores
