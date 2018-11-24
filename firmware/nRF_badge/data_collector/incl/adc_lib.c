@@ -81,7 +81,7 @@ ret_code_t adc_read_raw(const adc_instance_t* adc_instance, int32_t* raw) {
 	return NRF_SUCCESS;
 }
 
-__attribute__((long_call, section(".data"))) ret_code_t adc_read_raw_default(const adc_instance_t* adc_instance, int32_t* raw) {
+ret_code_t adc_read_raw_default(const adc_instance_t* adc_instance, int32_t* raw) {
 	
 	
 	uint8_t peripheral_index = adc_instance->adc_peripheral;

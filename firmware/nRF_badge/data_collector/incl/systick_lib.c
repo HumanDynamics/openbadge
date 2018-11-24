@@ -23,7 +23,7 @@ static float millis_per_ticks_default = (1000.0f / ((0 + 1) * APP_TIMER_CLOCK_FR
 // +/- 20ppm oscillator --> +/- 0.655 Hz deviation. But we are conservative --> up to 50Hz deviation possible
 // default millis per ticks: 0.03051757812
 
-#define CLOCK_FREQ_DEVIATION_HZ			50.0f
+#define CLOCK_FREQ_DEVIATION_HZ			5.0f
 #define	MIN_MILLIS_PER_TICKS			(1000.0f / ((0 + 1.0f) * (APP_TIMER_CLOCK_FREQ + CLOCK_FREQ_DEVIATION_HZ)))
 #define	MAX_MILLIS_PER_TICKS			(1000.0f / ((0 + 1.0f) * (APP_TIMER_CLOCK_FREQ - CLOCK_FREQ_DEVIATION_HZ)))
 
@@ -116,6 +116,9 @@ void systick_set_millis(uint64_t ticks_since_start_at_sync, uint64_t millis_sync
 	}
 	
 	
+	debug_log("SYSTICK: millis_sync: %u%03u; ticks_at_sync: %u\n", (uint32_t)(millis_sync/1000), (uint32_t) (millis_sync%1000), (uint32_t) ticks_since_start_at_sync);
+	
+	
 	int32_t error_millis = 0;
 	CRITICAL_REGION_ENTER();
 	error_millis = (int32_t)(((int64_t)millis_sync) - ((int64_t)(((int64_t)(millis_per_ticks * (ticks_since_start_at_sync - ticks_at_offset))) + millis_offset)));
@@ -133,17 +136,14 @@ void systick_set_millis(uint64_t ticks_since_start_at_sync, uint64_t millis_sync
 	
 	
 	// More complicate way: Adapt the slope (millis_per_ticks) via an moving average filter
-	
-	//float want_new_millis_per_ticks = 0;
+
 	float new_millis_per_ticks = 0;
 	uint64_t delta_ticks = 0;
 	uint64_t delta_millis = 0;
-	float alpha = 0;	
+	float alpha = 0.1;	
 	CRITICAL_REGION_ENTER();
 	delta_ticks = ((ticks_since_start_at_sync > ticks_at_offset) ? (ticks_since_start_at_sync - ticks_at_offset) : 0);
 	delta_millis = ((millis_sync > millis_offset) ? (millis_sync - millis_offset) : 0);
-	//float delta_ticks = (float)((ticks_since_start_at_sync > ticks_at_offset) ? (ticks_since_start_at_sync - ticks_at_offset) : 1);
-	//float delta_millis = (float)((millis_sync > millis_offset) ? (millis_sync - millis_offset) : 0);
 	new_millis_per_ticks = 0;
 	if(delta_ticks == 0) {
 		new_millis_per_ticks = MAX_MILLIS_PER_TICKS;
@@ -156,25 +156,15 @@ void systick_set_millis(uint64_t ticks_since_start_at_sync, uint64_t millis_sync
 		new_millis_per_ticks = (new_millis_per_ticks < MIN_MILLIS_PER_TICKS) ? MIN_MILLIS_PER_TICKS : ((new_millis_per_ticks > MAX_MILLIS_PER_TICKS) ? MAX_MILLIS_PER_TICKS : new_millis_per_ticks);
 	}
 	
-	
-	const float max_alpha = 0.3;
-	const float slope_alpha = max_alpha / (120*1000.0f);
-	
-	alpha = ((float) delta_millis) * slope_alpha;	
-	alpha = alpha > max_alpha ? max_alpha : alpha;	// The exponential moving average filter coefficient. Has to be <= 1.
-	
 	// Now average the new_millis_per_ticks with the global millis_per_ticks via an moving average filter:
 	millis_per_ticks = new_millis_per_ticks*alpha + millis_per_ticks*(1-alpha);
 	
 	// Calculate the new millis_offset via the new millis_per_ticks 
-	millis_offset = ((uint64_t)(millis_per_ticks*(ticks_since_start_at_sync - ticks_at_offset))) + millis_offset;
+	millis_offset = millis_sync;
 	ticks_at_offset = ticks_since_start_at_sync;
 	CRITICAL_REGION_EXIT();
 	
-	//debug_log("SYSTICK: want new_millis_per_ticks: %f\n", want_new_millis_per_ticks);
-	//debug_log("SYSTICK: delta_ticks: %u, delta_millis: %u, new_millis_per_ticks: %f, millis_per_ticks: %f, max: %f, min: %f, alpha: %f\n", (uint32_t) delta_ticks, (uint32_t) delta_millis, new_millis_per_ticks, millis_per_ticks, MAX_MILLIS_PER_TICKS, MIN_MILLIS_PER_TICKS, alpha);
-	
-	
+	debug_log("SYSTICK: updated millis_per_ticks: %f\n", millis_per_ticks);
 	
 	
 	// TODO: Or an even more complex way: Linear regression of N samples!

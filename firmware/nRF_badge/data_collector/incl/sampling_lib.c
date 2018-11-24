@@ -255,7 +255,7 @@ ret_code_t sampling_init(void) {
 	if(ret != NRF_SUCCESS) return ret;
 	
 	// initialize the chunk-fifo for the microphone data
-	CHUNK_FIFO_INIT(ret, microphone_chunk_fifo, 2, sizeof(MicrophoneChunk), 0);
+	CHUNK_FIFO_INIT(ret, microphone_chunk_fifo, 3, sizeof(MicrophoneChunk), 0);
 	if(ret != NRF_SUCCESS) return ret;
 	
 	// initialize the circular-fifo for the stream of the microphone data

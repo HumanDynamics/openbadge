@@ -89,7 +89,7 @@ ret_code_t adc_read_raw(const adc_instance_t* adc_instance, int32_t* raw);
  * @retval  NRF_ERROR_BUSY  		If the selected ADC peripheral is currently in use.
  * @retval  NRF_ERROR_INVALID_PARAM	If the adc_instance is not the default one.
  */
-__attribute__((long_call, section(".data"))) ret_code_t adc_read_raw_default(const adc_instance_t* adc_instance, int32_t* raw);
+ret_code_t adc_read_raw_default(const adc_instance_t* adc_instance, int32_t* raw);
 
 /**@brief   Function for reading the voltage on the input of specified adc_instance in blocking mode.
  *
