@@ -1,4 +1,4 @@
 wheel
 bluepy==1.0.4
 pyserial
-
+matplotlib

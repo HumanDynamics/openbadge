@@ -46,6 +46,8 @@ copy compose/JLink_Linux_V616i_x86_64.deb /opt/downloads/JLink_Linux_V616i_x86_6
 
 RUN dpkg -i downloads/JLink_Linux_V616i_x86_64.deb
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 ################################
 ## Bluetooth Python environment
 ################################
@@ -54,6 +56,7 @@ RUN apt-get update && apt-get install -y \
     python-dev \
     python-pip \
     python-setuptools \
+	python-tk \
     gcc \
     build-essential \
     libglib2.0-dev \
@@ -63,3 +66,5 @@ RUN apt-get update && apt-get install -y \
 
 COPY ./requirements.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt
+
+ENV DISPLAY :0
