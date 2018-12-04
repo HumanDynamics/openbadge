@@ -28,11 +28,9 @@ ret_code_t circular_fifo_get(circular_fifo_t * p_fifo, uint8_t* byte) {
 	ret_code_t ret = NRF_ERROR_NOT_FOUND;
 	
 	if(p_fifo->read_pos != p_fifo->write_pos) {
-		p_fifo->read_flag   = 1;
 		*byte = p_fifo->p_buf[p_fifo->read_pos];
 		p_fifo->read_pos = (p_fifo->read_pos + 1) % (p_fifo->buf_size + 1);		
-		ret = NRF_SUCCESS;	
-		p_fifo->read_flag   = 0;
+		ret = NRF_SUCCESS;
 	}
 	return ret;
 }
@@ -54,12 +52,14 @@ void circular_fifo_put(circular_fifo_t * p_fifo, uint8_t byte) {
 
 void circular_fifo_read(circular_fifo_t * p_fifo, uint8_t * p_byte_array, uint32_t * p_size) {
 	uint32_t index = 0;	
+	p_fifo->read_flag   = 1;
 	while(index < *p_size) {
 		if(circular_fifo_get(p_fifo, &(p_byte_array[index])) != NRF_SUCCESS) {
 			break;
 		}
 		index++;
 	}
+	p_fifo->read_flag   = 0;
 	*p_size = index;	
 }
 
