@@ -15,15 +15,17 @@ Protocol:
 		Status Request			|	Request to retrieve the current status of the badge, setting the time, 
 									and optionally setting the ID and group number.
 			->
-		Status Response			|	Response returns the current status of the badge: clock_status, microphone_status, 
-									scan_status, accelerometer_interrupt_status, battery status. Additionally, 
-									a local timestamp of the badge and the current battery-data is returned.
+		Status Response			|	Response returns the current status of the badge: clock_status, 									microphone_status, scan_status, accelerometer_interrupt_status, battery status. 
+							Additionally, a local timestamp of the badge and the current 
+							battery-data is returned.
 		-------------------------------------------------------------------------------------------------------------
 		Start Request			| 	Request to start a certain data source for recording and storing. 
-									Each data source has its own parameters that are specified via the request. 
+									Each data source has its own parameters that are specified via 
+									the request. 
 									Additionally, the time is synchronized via these requests.
 									The timeout-parameter specifies the timeout in minutes: 
-									If this time expires without contact to a hub the data recording stops.
+									If this time expires without contact to a hub the data recording 
+									stops.
 			->
 		Start Response			|	Response containing the local timestamp of the badge.
 		-------------------------------------------------------------------------------------------------------------
@@ -38,11 +40,12 @@ Protocol:
 		-------------------------------------------------------------------------------------------------------------
 		Start Stream Request	|	Starts the streaming of a data source with certain parameters. 
 									Can be enabled while storing is active.
-									Watch out that the selected parameters influence the recording for storage.
+									Watch out that the selected parameters influence the recording 
+									for storage.
 			->
 		StreamResponse			|	This is a message that contains all data points of the streamed data sources. 
-									It is transmitted continously.
-									(If a data source is not activated, the repeated field is empty)
+							It is transmitted continously. (If a data source is not activated, 
+							the repeated field is empty)
 		-------------------------------------------------------------------------------------------------------------
 		Stop Stream Request		|	Stops the streaming of a certain data source.
 			->
