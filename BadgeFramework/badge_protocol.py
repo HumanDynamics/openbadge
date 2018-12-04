@@ -1,13 +1,5 @@
 import struct
 
-
-
-STREAM_BATTERY_FIFO_SIZE = 10
-STREAM_MICROPHONE_FIFO_SIZE = 100
-STREAM_SCAN_FIFO_SIZE = 100
-STREAM_ACCELEROMETER_FIFO_SIZE = 100
-STREAM_ACCELEROMETER_INTERRUPT_FIFO_SIZE = 10
-
 PROTOCOL_MICROPHONE_DATA_SIZE = 114
 PROTOCOL_SCAN_DATA_SIZE = 29
 PROTOCOL_ACCELEROMETER_DATA_SIZE = 100
@@ -60,9 +52,6 @@ Response_battery_data_response_tag = 11
 Response_stream_response_tag = 12
 Response_test_response_tag = 13
 
-
-
-
 class _Ostream:
 	def __init__(self):
 		self.buf = b''
@@ -78,7 +67,6 @@ class _Istream:
 		ret = self.buf[0:l]
 		self.buf = self.buf[l:]
 		return ret
-
 
 class Timestamp:
 
@@ -440,9 +428,7 @@ class AccelerometerRawData:
 		for i in range(0, count):
 			self.raw_acceleration.append(struct.unpack('>h', istream.read(2))[0])
 
-			
-			
-			
+
 class BatteryStream:
 
 	def __init__(self):
@@ -648,15 +634,6 @@ class AccelerometerInterruptStream:
 		self.timestamp.decode_internal(istream)
 
 
-
-
-
-
-
-
-
-		
-		
 class StatusRequest:
 
 	def __init__(self):

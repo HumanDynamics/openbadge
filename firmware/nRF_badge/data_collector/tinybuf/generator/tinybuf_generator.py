@@ -3,92 +3,129 @@ import struct
 import sys
 import os.path
 import re
+import traceback
 
 
 
-SUPPORTED_OUTPUT_FORMATS = ['-c', '-python']		
+SUPPORTED_OUTPUT_FORMATS = ['-c', '-python']	
 
-# These special characters should be seperated from other characters
-SPECIAL_CHARACTERS = [';', '{', '}', '[' , ']', '(' , ')']
-
-FIELD_TYPE_REQUIRED 		= 1
-FIELD_TYPE_OPTIONAL 		= 2
-FIELD_TYPE_REPEATED 		= 4
-FIELD_TYPE_FIXED_REPEATED 	= 8
-FIELD_TYPE_ONEOF 			= 16
-DATA_TYPE_INT 				= 32
-DATA_TYPE_UINT 				= 64
-DATA_TYPE_FLOAT 			= 128
-DATA_TYPE_DOUBLE 			= 256
-DATA_TYPE_MESSAGE 			= 512
-
+BIG_ENDIANNESS = 0
+LITTLE_ENDIANNESS = 1
 	
-SUPPORTED_DATA_TYPES =[	['uint8', DATA_TYPE_UINT, 1],
-						['int8', DATA_TYPE_INT, 1],
-						['uint16', DATA_TYPE_UINT, 2],
-						['int16', DATA_TYPE_INT, 2],
-						['uint32', DATA_TYPE_UINT, 4],
-						['int32', DATA_TYPE_INT, 4],
-						['uint64', DATA_TYPE_UINT, 8],
-						['int64', DATA_TYPE_INT, 8],
-						['float', DATA_TYPE_FLOAT, 4],
-						['double', DATA_TYPE_DOUBLE, 8]]
-						
-SUPPORTED_FIELD_TYPES =[['required', FIELD_TYPE_REQUIRED],
-						['optional', FIELD_TYPE_OPTIONAL],
-						['repeated', FIELD_TYPE_REPEATED],
-						['fixed_repeated', FIELD_TYPE_FIXED_REPEATED]]
-						
-# The supported data types for array size (has to be orderd by size increasingly, because creator assumes ordered)
-SUPPORTED_SIZE_DATA_TYPES = ['uint8', 'uint16', 'uint32', 'uint64']
-						
-# Mapping of supported data-types and C-data-types
-C_DATA_TYPE_MAPPING =[	['uint8', 'uint8_t'],
-						['int8', 'int8_t'],
-						['uint16', 'uint16_t'],
-						['int16', 'int16_t'],
-						['uint32', 'uint32_t'],
-						['int32', 'int32_t'],
-						['uint64', 'uint64_t'],
-						['int64', 'int64_t'],
-						['float', 'float'],
-						['double', 'double']]
-						
+SUPPORTED_ENDIANNESS = ['-be', '-le']	
 
-C_FIELD_TYPE_NAME 		= "tb_field_t"
-C_OFFSETOF_MAKRO_NAME 	= "tb_offsetof"
-C_MEMBERSIZE_MAKRO_NAME = "tb_membersize"
-C_DELTA_MAKRO_NAME 		= "tb_delta"
-C_LAST_FIELD_NAME 		= "TB_LAST_FIELD"
 
-PYTHON_DATA_TYPE_MAPPING = [['uint8', '>B'],
-							['int8', '>b'],
-							['uint16', '>H'],
-							['int16', '>h'],
-							['uint32', '>I'],
-							['int32', '>i'],
-							['uint64', '>Q'],
-							['int64', '>q'],
-							['float', '>f'],
-							['double', '>d']]
 
-class Protocol_parser:
-	def __init__(self, file):
-		self.file = file
+
+FIELD_RULE_REQUIRED 		= 1
+FIELD_RULE_OPTIONAL 		= 2
+FIELD_RULE_REPEATED 		= 4
+FIELD_RULE_FIXED_REPEATED 	= 8
+FIELD_RULE_ONEOF 			= 16
+FIELD_TYPE_INT 				= 32
+FIELD_TYPE_UINT 			= 64
+FIELD_TYPE_FLOAT 			= 128
+FIELD_TYPE_DOUBLE 			= 256
+FIELD_TYPE_MESSAGE 			= 512
+	
+
+# The supported field types. Messages/extern messages are added to this list, so that subsequent messages can use this message as field type.
+SUPPORTED_FIELD_TYPES = ['uint8', 'int8', 'uint16', 'int16', 'uint32', 'int32', 'uint64', 'int64', 'float', 'double']
+
+
+				
+Imports = [] 	# Array of imports
+Defines = []	# Array of defines
+Messages = [] 	# Array of messages
+
+
+
+class Block:
+	def __init__(self):
+		self.lines = []
+		self.line_numbers = []
+		self.iterator_index = 0
+	
+	def setup_iterator(self):
+		self.iterator_index = 0
 		
+	def has_next(self):
+		if(self.iterator_index + 1 > len(self.lines)):
+			return False
+		return True
+		
+	def get_next(self):
+		if(not self.has_next()):
+			raise Exception("get_next() has no next element")
+
+		ret = [self.line_numbers[self.iterator_index], self.lines[self.iterator_index]]
+		self.iterator_index = self.iterator_index + 1
+		
+		return ret
+		
+	def extract_block(self, line_number):	# returns a new Block object with this line-number as start, and ends with "}", or None if no Block was found
+		index = 0
+		
+		for i in range(0, len(self.lines)):
+			if(self.line_numbers[i] == line_number):
+				if(not '{' in self.lines[i]):
+					return None
+				
+				index = i		
+		
+		block = Block()
+		
+		bracket_open_counter = 0
+		for i in range(index, len(self.lines)):	
+			if('{' in self.lines[i]):
+				bracket_open_counter = bracket_open_counter + 1
+			if('}' in self.lines[i]):
+				bracket_open_counter = bracket_open_counter - 1
+
+				
+			block.lines.append(self.lines[i])
+			block.line_numbers.append(self.line_numbers[i])
+			
+			
+			if(bracket_open_counter == 0):
+				return block
+			
+
+		return None
+		
+	def remove_lines(self, line_numbers):	
+		
+		for j in range(0, len(line_numbers)):
+			for i in range(0, len(self.lines)):
+				if(line_numbers[j] == self.line_numbers[i]):
+					self.setup_iterator()
+					del self.lines[i]
+					del self.line_numbers[i]
+					break
+			
+		
+
+class File(Block):
+	# These special characters should be seperated from other characters
+	SPECIAL_CHARACTERS = [';', '{', '}', '[' , ']', '(' , ')']
+	
 	# returns [line_number, ['A','B',...]]
-	def read_file(self):
-		with open(self.file) as f:
+	def __init__(self, file_name):
+		self.file_name = file_name
+		Block.__init__(self)
+		
+		
+		with open(self.file_name) as f:
 			content = f.readlines()
+			
 		# you may also want to remove whitespace characters like `\n` at the end of each line
 		content = [x.strip() for x in content] 
 		
-		lines = []
 		line_number = 0
 		for line in content:
 			
 			# prepare the string to split all the special characters:
-			for c in SPECIAL_CHARACTERS:
+			for c in File.SPECIAL_CHARACTERS:
 				line = line.replace(c, ' ' + c + ' ')
 			
 			# split on white space and other splitting characters
@@ -102,470 +139,609 @@ class Protocol_parser:
 			
 			line_number = line_number + 1
 			if(len(rm) > 0):
-				lines.append([line_number, rm])
-			
-		return lines
-		
-		
-	def is_valid_var_name(self, name):
-		valid = 1
-		if(name[0].isdigit()):
-			valid = 0
-		return valid
-		
-	def define_duplicate_var_name_check(self, defines, var_name):
-		duplicate = 0
-		for i in range(1, len(defines)):
-			if(defines[i][0] == var_name):
-				duplicate = 1
-				break
-		return duplicate
-		
-		
-	# checks if variable is duplicate in message structure
-	def message_duplicate_var_name_check(self, message, var_name):
-		duplicate = 0
-		for i in range(1, len(message)):
-			if(message[i][0] == var_name):
-				duplicate = 1
-				break
-		return duplicate
-	
-	# checks if oneof_tag is duplicate in message structure
-	def message_duplicate_oneof_tag_check(self, message, oneof_tag):
-		duplicate = 0
-		for i in range(1, len(message)):
-			if(message[i][5] == oneof_tag):
-				duplicate = 1
-				break
-		return duplicate
-		
-	# checks if message name is duplicate in messages structure
-	def message_duplicate_message_name_check(self, messages, message_name):
-		duplicate = 0
-		for i in range(0, len(messages)):
-			if(messages[i][0] == message_name):
-				duplicate = 1
-				break
-		return duplicate
+				self.lines.append(rm)
+				self.line_numbers.append(line_number)
 	
 	
-	def check_format(self, line, format, format_required):
-		if(len(line) != len(format)):
-			return 0
-		for i in range(0, len(line)):
-			if(format_required[i]):
-				if(not format[i] == line[i]):
-					return 0
-		return 1
 		
-	def get_import(self, line):
-		format = ["import", "'import_name'"]
-		format_required = [1, 0]
-		if(not self.check_format(line, format, format_required)):		
-			raise Exception("Line: " + str(line) + " has not the format " + str(format))
-		return line[1]
-		
-	def get_extern_message(self, line):
-		format = ["extern", "'extern_message'", ";"]
-		format_required = [1, 0, 1]
-		if(not self.check_format(line, format, format_required)):		
-			raise Exception("Line: " + str(line) + " has not the format " + str(format))
-		return line[1]
-			
-	def check_define_header(self, line):
-		format = ["define", "{"]
-		format_required = [1, 1]
-		if(not self.check_format(line, format, format_required)):		
-			raise Exception("Line: " + str(line) + " has not the format " + str(format))
 	
-	def get_define_field(self, line):
-		format = ["'define_name'", "=", "'numeric_value'", ";"]
-		format_required = [0, 1, 0, 1]
-		if(not self.check_format(line, format, format_required)):		
-			raise Exception("Line: " + str(line) + " has not the format " + str(format))
-		
-		return [line[0], line[2]]
-		
-	def get_oneof_header(self, line):
-		format = ["oneof", "'oneof_name'", "{"]
-		format_required = [1, 0, 1]
-		if(not self.check_format(line, format, format_required)):		
-			raise Exception("Line: " + str(line) + " has not the format " + str(format))
-		
-		oneof_name = line[1]
-		return oneof_name
-		
-	def get_oneof_field_attributes(self, line, defines):
-		format = ["'data_type'", "'field_name'", "(", "'oneof_tag'", ")", ";"]					
-		format_required = [0, 0, 1, 0, 1, 1]							
-		if(not self.check_format(line, format, format_required)):		
-			raise Exception("Line: " + str(line) + " has not the format " + str(format))			
+def check_format(line, format, format_required):
+	if(len(line) != len(format)):
+		return False
+	for i in range(0, len(line)):
+		if(format_required[i]):
+			if(not format[i] == line[i]):
+				return False
+	return True
+	
 
-		field_data_type_str = line[0] 
-		field_name = line[1]		
-		field_oneof_tag_str = line[3]		
-		
-		field_type = FIELD_TYPE_ONEOF
-		field_data_type_len = 0
-		field_array_size = 0
-		field_oneof_tag = 0
-		
+def name_valid(field_name):
+	# TODO: Add more checks here
+	if(field_name[0].isdigit()):
+		return False
+	return True
 
-		found_supported_data_type = 0
-		for supported_data_type in SUPPORTED_DATA_TYPES:
-			if(field_data_type_str == supported_data_type[0]):
-				field_type = field_type | supported_data_type[1]
-				field_data_type_len = supported_data_type[2]
-				found_supported_data_type = 1
-				break
-		
-		if(not found_supported_data_type):
-			raise Exception("Field data type: '" + field_data_type_str + "' is not supported")
-		
-		
-		found_oneof_tag = 0
-		if(field_oneof_tag_str.isdigit()):
-			field_oneof_tag = int(field_oneof_tag_str)
-			found_oneof_tag = 1
-		else:
-			# Check if it is an define value
-			for define in defines:
-				define_name = define[0]
-				define_val = define[1]
-				if(field_oneof_tag_str == define_name):
-					field_oneof_tag = int(define_val)
-					found_oneof_tag = 1
 				
-		if(not found_oneof_tag):
-			raise Exception("Could not find oneof_tag: " + field_oneof_tag_str)
+class Define:
+	def __init__(self, name, number):
+		self.name = name
+		self.number = number
 		
-		if(field_oneof_tag > 255 or field_oneof_tag < 0):
-			raise Exception("Not supported oneof_tag: " + str(field_oneof_tag))
+	def __repr__(self):
+		return "Define" + str(self.__dict__)	
+		
+	@classmethod
+	def get_define(cls, line):
+		format = ["'define_name'", "=",  "'Integer'", ";"]
+		format_required = [0, 1, 0, 1]
+		
+		if(not check_format(line, format, format_required)): 
+			raise Exception('Expects required field format ' + str(format) + "\nBut given is: " + str(line))
 			
-		return [field_name, field_type, field_data_type_len, field_array_size, field_data_type_str, field_oneof_tag]
-		
-		
+		define_name = line[0]
+		if(not Define.define_name_valid(define_name)):
+			raise Exception('Unsupported define name ' + define_name)
 			
-	def get_message_header(self, line):
-		format = ["message", "'message_name'", "{"]
-		format_required = [1, 0, 1]
-		if(not self.check_format(line, format, format_required)):		
-			raise Exception("Line: " + str(line) + " has not the format " + str(format))
+		define_value = int(line[2])
+		
+		define = Define(define_name, define_value)
+		
+		# Check for duplicate define:
+		
+		for d in Defines:
+			if(define.name == d.name):
+				raise Exception("Duplicate define name " + define.name)
+		
+		
+		
+		return define
+		
+	@classmethod
+	def define_name_valid(cls, define_name):
+		return name_valid(define_name)
+		
+		
+		
+class Field:	
+	
+	def __init__(self, name):
+		self.name = name
+		
+	@classmethod
+	def field_type_supported(cls, field_type):
+		for f in SUPPORTED_FIELD_TYPES:
+			if(f == field_type):
+				return True
+		return False
+		
+	@classmethod
+	def field_name_valid(cls, field_name):
+		return name_valid(field_name)
+		
+		
+	@classmethod
+	def get_integer(cls, integer_str):
+		# Check if integer_str is a number, or if it is already in a define?
+		
+		if(integer_str.isdigit()):
+			return int(integer_str)
+		else:
+			for define in Defines:
+				if(integer_str == define.name):
+					return define.number
+			
+		return None
+		
+
+class RequiredField(Field):
+	def __init__(self, name, type):
+		Field.__init__(self, name)
+		self.type = type
+	
+	def get_name(self):
+		names = [self.name]
+		return names
+		
+	def __repr__(self):
+		return "RequiredField" + str(self.__dict__)
+	
+	@classmethod
+	def get_field(cls, line):
+		if(line[0] == 'required'):
+			
+			format = ["required", "'field_type'", "'field_name'", ";"]					
+			format_required = [1, 0, 0, 1]		
+			if(not check_format(line, format, format_required)): 
+				raise Exception('Expects required field format ' + str(format) + "\nBut given is: " + str(line))
+			
+			field_type = line[1]
+			if(not Field.field_type_supported(field_type)):
+				raise Exception('Unsupported field type ' + field_type)
+			
+			
+			field_name = line[2]
+			if(not Field.field_name_valid(field_name)):
+				raise Exception('Unsupported field name ' + field_name)
+				
+			
+			
+			return RequiredField(field_name, field_type)
+			
+		else:
+			return None
+			
+		
+class RepeatedField(Field):
+	def __init__(self, name, type, size):
+		Field.__init__(self, name)
+		self.type = type
+		self.size = size
+		
+	def get_name(self):
+		names = [self.name]
+		return names
+		
+	def __repr__(self):
+		return "RepeatedField" + str(self.__dict__)
+		
+		
+	@classmethod
+	def get_field(cls, line):
+		if(line[0] == 'repeated'):
+			
+			format = ["repeated", "'field_type'", "'field_name'", "[", "'array_size'", "]", ";"]
+			format_required = [1, 0, 0, 1, 0, 1, 1]
+			if(not check_format(line, format, format_required)): 
+				raise Exception('Expects repeated field format ' + str(format) + "\nBut given is: " + str(line))
+			
+			field_type = line[1]
+			if(not Field.field_type_supported(field_type)):
+				raise Exception('Unsupported field type ' + field_type)
+			
+			
+			field_name = line[2]
+			if(not Field.field_name_valid(field_name)):
+				raise Exception('Unsupported field name ' + field_name)
+			
+			array_size_str = line[4]
+			array_size = Field.get_integer(array_size_str)
+			if(array_size == None):
+				raise Exception('Unsupported array size ' + array_size_str)
+			
+			
+			return RepeatedField(field_name, field_type, array_size)
+			
+		else:
+			return None
+			
+			
+class FixedRepeatedField(Field):
+	def __init__(self, name, type, size):
+		Field.__init__(self, name)
+		self.type = type
+		self.size = size
+		
+	def get_name(self):
+		names = [self.name]
+		return names
+		
+	def __repr__(self):
+		return "FixedRepeatedField" + str(self.__dict__)
+		
+		
+	@classmethod
+	def get_field(cls, line):
+		if(line[0] == 'fixed_repeated'):
+			
+			format = ["fixed_repeated", "'field_type'", "'field_name'", "[", "'array_size'", "]", ";"]
+			format_required = [1, 0, 0, 1, 0, 1, 1]
+			if(not check_format(line, format, format_required)): 
+				raise Exception('Expects fixed repeated field format ' + str(format) + "\nBut given is: " + str(line))
+			
+			field_type = line[1]
+			if(not Field.field_type_supported(field_type)):
+				raise Exception('Unsupported field type ' + field_type)
+			
+			
+			field_name = line[2]
+			if(not Field.field_name_valid(field_name)):
+				raise Exception('Unsupported field name ' + field_name)
+			
+			array_size_str = line[4]
+			array_size = Field.get_integer(array_size_str)
+			if(array_size == None):
+				raise Exception('Unsupported array size ' + array_size_str)
+			
+			
+			return FixedRepeatedField(field_name, field_type, array_size)
+			
+		else:
+			return None
+		
+class OptionalField(Field):
+	def __init__(self, name, type):
+		Field.__init__(self, name)
+		self.type = type
+	
+	def get_name(self):
+		names = [self.name]
+		return names
+		
+	def __repr__(self):
+		return "OptionalField" + str(self.__dict__)
+	
+	@classmethod
+	def get_field(cls, line):
+		if(line[0] == 'optional'):
+			
+			format = ["optional", "'field_type'", "'field_name'", ";"]					
+			format_required = [1, 0, 0, 1]		
+			if(not check_format(line, format, format_required)): 
+				raise Exception('Expects optional field format ' + str(format) + "\nBut given is: " + str(line))
+			
+			field_type = line[1]
+			if(not Field.field_type_supported(field_type)):
+				raise Exception('Unsupported field type ' + field_type)
+			
+			
+			field_name = line[2]
+			if(not Field.field_name_valid(field_name)):
+				raise Exception('Unsupported field name ' + field_name)
+				
+			
+			
+			return OptionalField(field_name, field_type)
+			
+		else:
+			return None
+			
+class OneofInnerField(Field):
+	def __init__(self, name, type, tag):
+		Field.__init__(self, name)
+		self.type = type
+		self.tag = tag
+	
+	def __repr__(self):
+		return  "OneofInnerField" + str(self.__dict__)
+	
+	@classmethod
+	def get_field(cls, line):
+		format = ["'field_type'", "'field_name'", "(", "'oneof_tag'" , ")", ";"]					
+		format_required = [0, 0, 1, 0, 1, 1]		
+		if(not check_format(line, format, format_required)): 
+			raise Exception('Expects oneof field format ' + str(format) + "\nBut given is: " + str(line))
+		
+		field_type = line[0]
+		if(not Field.field_type_supported(field_type)):
+			raise Exception('Unsupported field type ' + field_type)
+		
+		
+		field_name = line[1]
+		if(not Field.field_name_valid(field_name)):
+			raise Exception('Unsupported field name ' + field_name)
+			
+		oneof_tag_str = line[3]
+		oneof_tag = Field.get_integer(oneof_tag_str)
+		if(oneof_tag == None):
+			raise Exception('Unsupported oneof tag ' + oneof_tag_str)
+			
+			
+		return OneofInnerField(field_name, field_type, oneof_tag)
+	
+	
+class OneofField(Field):
+	def __init__(self, name):
+		Field.__init__(self, name)
+		self.inner_fields = []
+		
+	def get_name(self):
+		names = []
+		names.append(self.name)
+		for f in self.inner_fields:
+			names.append(f.name)
+		
+		return names
+		
+	def __repr__(self):
+		return  "OneofField" +  str(self.__dict__)
+		
+	@classmethod
+	def is_field(cls, line):
+		if(line[0] == 'oneof'):
+			
+			format = ["oneof", "'field_name'", "{"]					
+			format_required = [1, 0, 1]		
+			if(not check_format(line, format, format_required)): 
+				raise Exception('Expects oneof field format ' + str(format) + "\nBut given is: " + str(line))
+			
+			
+			field_name = line[1]
+			if(not Field.field_name_valid(field_name)):
+				raise Exception('Unsupported field name ' + field_name)
+				
+			return True			
+		else:
+			return False
+	
+	@classmethod
+	def get_field(cls, block):	# returns a oneof field instance from a block
+		
+		if(not OneofField.is_field(block.lines[0])): # Just for safety, check if block starts with a oneof-field declaration
+			raise Exception('Is no oneof field')
+			
+		
+		oneof_field_name = block.lines[0][1]
+		oneof_field = OneofField(oneof_field_name)		
+		
+		
+		for i in range(1, len(block.lines) - 1):
+			
+			line = block.lines[i]
+			
+			oneof_inner_field = OneofInnerField.get_field(line)
+			#print(oneof_inner_field)
+			
+			
+			# Check oneof-field tag duplicates
+			
+			for inner_field in oneof_field.inner_fields:
+				if(inner_field.tag == oneof_inner_field.tag):
+					raise Exception('Duplicate oneof tag: ' + str(oneof_inner_field.tag))
+			
+			oneof_field.inner_fields.append(oneof_inner_field)
+			
+		
+		return oneof_field
+		
+	
+class Message:
+	def __init__(self, name):
+		self.name = name
+		self.fields = []	
+		
+	def __repr__(self):
+		return str(self.__dict__)
+	
+	@classmethod
+	def get_message(cls, line):
+		format = ["message", "'message_name'", "{"]					
+		format_required = [1, 0, 1]		
+		if(not check_format(line, format, format_required)): 
+			raise Exception('Expects message format ' + str(format) + "\nBut given is: " + str(line))
+			
 		
 		message_name = line[1]
-		return message_name
-	
-	
-	def get_message_field_attributes(self, line, defines):
-		formats = [ ["'field_type'", "'data_type'", "'field_name'", ";"],
-					["'field_type'", "'data_type'", "'field_name'", "[", "'array_size'", "]", ";"]]
-		formats_required = [[0, 0, 0, 1],
-							[0, 0, 0, 1, 0, 1, 1]]
-		valid_format = 0		
-		for i in range(0, len(formats)):
-			if(self.check_format(line, formats[i], formats_required[i])):
-				valid_format = i + 1
-				break
-		
-		if(not valid_format):
-			raise Exception("Line: " + str(line) + " has not one of the formats: " + str(formats[0]) + " or " + str(formats[1]))
-		
-		field_type_str = line[0]
-		field_data_type_str = line[1] 
-		field_name = line[2]		
-		field_array_size_str = "0"
-		if(valid_format == 2):	# if it is an array
-			field_array_size_str = line[4]	
-		
-		
-		field_type = 0
-		field_data_type_len = 0
-		field_array_size = 0
-		
-		
-		found_supported_field_type = 0
-		for supported_field_type in SUPPORTED_FIELD_TYPES:
-			if(field_type_str == supported_field_type[0]):
-				field_type = field_type | supported_field_type[1]
-				found_supported_field_type = 1
-				break
-		
-		
-		if(not found_supported_field_type):
-			raise Exception("Field type: '" + field_type_str + "' is not supported")
+		if(not name_valid(message_name)):
+			raise Exception('Unsupported message name ' + message_name)
 			
-			
-		found_supported_data_type = 0
-		for supported_data_type in SUPPORTED_DATA_TYPES:
-			if(field_data_type_str == supported_data_type[0]):
-				field_type = field_type | supported_data_type[1]
-				field_data_type_len = supported_data_type[2]
-				found_supported_data_type = 1
-				break
+		message = Message(message_name)
 		
-		if(not found_supported_data_type):
-			raise Exception("Field data type: '" + field_data_type_str + "' is not supported")
-
-		found_array_size = 0
-		if(field_array_size_str.isdigit()):
-			field_array_size = int(field_array_size_str)
-			found_array_size = 1
-		else:
-			# Check if it is an define value
-			for define in defines:
-				define_name = define[0]
-				define_val = define[1]
-				if(field_array_size_str == define_name):
-					field_array_size = int(define_val)
-					found_array_size = 1
+		# Add the message to the SUPPORTED_FIELD_TYPES, check duplicate names
+		for m in SUPPORTED_FIELD_TYPES:
+			if(m == message_name):
+				raise Exception("Duplicate message " + m)
 				
-		if(not found_array_size):
-			raise Exception("Could not find array size: " + field_array_size_str)
-			
-		# Check if array size matches to field_type
-		if(field_array_size == 0 and ((field_type & FIELD_TYPE_REPEATED) or (field_type & FIELD_TYPE_FIXED_REPEATED))):
-			raise Exception("Need array size > 0 for repeated/fixed_repeated field '" + field_name + "'")
+		SUPPORTED_FIELD_TYPES.append(message_name)
 		
-		if(field_array_size > 0 and ((field_type & FIELD_TYPE_OPTIONAL) or (field_type & FIELD_TYPE_OPTIONAL))):
-			raise Exception("Need array size == 0 for optional/required field '" + field_name + "'")
+		return message
+		
+		
+	def add_field(self, field):
+		
+		# Check all field names before appending it
+		names = []
+		for f in self.fields:
+			for name in f.get_name():
+				names.append(name)
+		
+		for name in field.get_name():
+			if(name in names):
+				raise Exception("Field name duplicate: " + name)
+				
+		self.fields.append(field)
+		
+		
+class ExternMessage:
+	def __init__(self, name):
+		self.name = name	
+	
+	def __repr__(self):
+		return str(self.__dict__)
+	
+	@classmethod
+	def get_extern_message(cls, line):
+		format = ["extern", "'extern_message_name'", ";"]					
+		format_required = [1, 0, 1]		
+		if(not check_format(line, format, format_required)): 
+			raise Exception('Expects extern message format ' + str(format) + "\nBut given is: " + str(line))
+			
+		
+		extern_message_name = line[1]
+		if(not name_valid(extern_message_name)):
+			raise Exception('Unsupported extern message name ' + extern_message_name)
+		
+		extern_message = ExternMessage(extern_message_name)
+		
+		
+		# Add the message to the SUPPORTED_FIELD_TYPES, check duplicate names
+		for m in SUPPORTED_FIELD_TYPES:
+			if(m == extern_message_name):
+				raise Exception("Duplicate message " + m)
+		SUPPORTED_FIELD_TYPES.append(extern_message_name)
+			
+		return extern_message
+		
+		
+class Import:
+	def __init__(self, name):
+		self.name = name	
+	
+	def __repr__(self):
+		return "Import" + str(self.__dict__)
+	
+	@classmethod
+	def get_import(cls, line):
+		format = ["import", "'import name'"]					
+		format_required = [1, 0]		
+		if(not check_format(line, format, format_required)): 
+			raise Exception('Expects import format ' + str(format) + "\nBut given is: " + str(line))
+			
+		
+		import_name = line[1]
+		if(not name_valid(import_name)):
+			raise Exception('Unsupported import name ' + import_name)
+		
+		imp = Import(import_name)
+		
+		
+		# Add the message to the SUPPORTED_FIELD_TYPES, check duplicate names
+		for i in Imports:
+			if(i.name == imp.name):
+				raise Exception("Duplicate import " + imp.name)
+
+			
+		return imp
+	
 
 		
-		return [field_name, field_type, field_data_type_len, field_array_size, field_data_type_str]
 		
-	
-	def parse_imports(self, lines):
-		new_lines = []
-		imports = []
-		extern_messages = []
-		for l in lines:
-			line_num = l[0]
-			line = l[1]
+class Parser:
+	def __init__(self, file_name):
+		self.File = File(file_name)
+		
+		self.parse_imports()
+		self.parse_extern_messages()
+		self.parse_defines()
+		self.parse_messages()
+		
+		
+	def parse_imports(self):
+		self.File.setup_iterator()
+		while(self.File.has_next()):
+			[line_number, line] = self.File.get_next()
 			if(line[0] == 'import'):
-				imports.append(self.get_import(line))
-				continue
-			
+				self.File.remove_lines([line_number])
+				
+				try:
+					# Return value is not needed..
+					imp = Import.get_import(line)
+					Imports.append(imp)
+				except Exception as e:
+					print("Exception at line " + str(line_number) + ":")
+					print(e)
+				
+	def parse_extern_messages(self):
+		self.File.setup_iterator()
+		while(self.File.has_next()):
+			[line_number, line] = self.File.get_next()
 			if(line[0] == 'extern'):
-				extern_messages.append(self.get_extern_message(line))
-				continue
-			
-			# Else just append the line to the new lines			
-			new_lines.append(l)
-			
-		return [new_lines, imports, extern_messages]
-				
-	
-	def parse_defines(self, lines):
-		new_lines = []
-		defines = [] # Array of enum entries
-		found_define_start = 0
+				self.File.remove_lines([line_number])
+				try:
+					# Return value is not needed..
+					ExternMessage.get_extern_message(line)
+				except Exception as e:
+					print("Exception at line " + str(line_number) + ":")
+					print(e)
+					
 
-		for l in lines:
-			line_num = l[0]
-			line = l[1]
 			
+	def parse_defines(self):
+		self.File.setup_iterator()
+		while(self.File.has_next()):
+			[line_number, line] = self.File.get_next()
 			if(line[0] == 'define'):
-				# Check if we are already searching for an message to stop
-				if found_define_start:
-					raise Exception("Found another define start before closing the former define at line " + str(line_num))
-				
-				try:
-					self.check_define_header(line)
-				except Exception as e:
-					print  "Exception while parsing input file at line " + str(line_num)
-					raise e
-				
-				
-				found_define_start = 1
-				continue
-				
-			if(found_define_start):
-				if(line[0] == '}'):
-					found_define_start = 0
-					continue
+				block = self.File.extract_block(line_number)
+				if(not block == None):
+					self.File.remove_lines(block.line_numbers)
 					
-				# Check if we see another '{'
-				if('{' in line):
-					raise Exception("Found another '{' before closing the former define with '}' at line " + str(line_num))
-				try:
-					[define_name, define_val] = self.get_define_field(line)
-				except Exception as e:
-					print  "Exception while parsing input file at line " + str(line_num)
-					raise e
-				
-				if(not define_val.isdigit()):
-					raise Exception("Define-value '" + define_val + "' is not a numeric value at line " + str(line_num))
-				
-				
-				if(not self.is_valid_var_name(define_name)):	
-					raise Exception("Define-name is not a valid variable name '" + define_name + "' at line " + str(line_num))
-				
-				if(self.define_duplicate_var_name_check(defines, define_name)):
-					raise Exception("Duplicate define-name found: '" + define_name + "' at line " + str(line_num))
-				
-				
-				defines.append([define_name, define_val])
-				
-				continue
-				
-			# Else just append the line to the new lines			
-			new_lines.append(l)
-				
-		if found_define_start:
-			raise Exception("Haven't found a closing '}' for define")
-			
-		#print defines
-		return [new_lines, defines]			
+					
+					for i in range(1, len(block.lines) - 1): # ignore lines with "define {" and "}"
+						try:
+							# Return value is not needed...
+							define = Define.get_define(block.lines[i])
+							Defines.append(define)							
+						except Exception as e:
+							print("Exception at line " + str(block.line_numbers[i]) + ":")
+							print(e)
+							print(traceback.format_exc())
+
+							
+						
+				else:
+					raise Exception('Could not parse define at line ' + str(line_number))
 			
 	
-	def parse_messages(self, lines, defines):
-		messages = []
-		new_lines = []
-		found_message_start = 0
-		found_oneof_start = 0
-		message = []	# ['message_name', ['','']]
-		oneof_names = []
-		for l in lines:
-			line_num = l[0]
-			line = l[1]
-			
+	def parse_messages(self):
+		self.File.setup_iterator()
+		while(self.File.has_next()):
+			[line_number, line] = self.File.get_next()
 			if(line[0] == 'message'):
-				# Check if we are already searching for an message to stop
-				if found_message_start:
-					raise Exception("Found another message start before closing the former message at line " + str(line_num))
 				
-				# Reset the message and the oneof_names
-				message = []
-				oneof_names = []
+				# Create new message object
+				message = Message.get_message(line)
+
 				
-				try:
-					message_name = self.get_message_header(line)
-				except Exception as e:
-					print  "Exception while parsing input file at line " + str(line_num)
-					raise e
+				# Extract message block
+				block = self.File.extract_block(line_number)
+				if(not block == None):
+					self.File.remove_lines(block.line_numbers)			
 					
-				if(not self.is_valid_var_name(message_name)):	
-					raise Exception("Message name is not a valid name '" + message_name + "' at line " + str(line_num))
-				
-				if(self.message_duplicate_message_name_check(messages, message_name)):
-					raise Exception("Found duplicate message name '" + message_name + "' at line " + str(line_num))
-				
-				found_message_start = 1
-				message.append(message_name)
-				continue
-			
-			if(found_message_start):				
-				if(not found_oneof_start):	# We assume that the next '}' is the end of the message, if there is no oneof
-					if(line[0] == '}'):
-						# Append as new data-type
-						SUPPORTED_DATA_TYPES.append([message[0], DATA_TYPE_MESSAGE, 0])
+					# iterate through the message block
+					block.setup_iterator()
+					while(block.has_next()):
+						[block_line_number, block_line] = block.get_next()
 						
-						messages.append(message)
-						found_message_start = 0
-						continue
-						
+						try:
+							# Check different fields
+							field = RequiredField.get_field(block_line)
+							if(not field == None):
+								message.add_field(field)
+								block.remove_lines([block_line_number])
+								continue
+								
+								
+							field = RepeatedField.get_field(block_line)
+							if(not field == None):
+								message.add_field(field)
+								block.remove_lines([block_line_number])
+								continue
+								
+							field = FixedRepeatedField.get_field(block_line)
+							if(not field == None):
+								message.add_field(field)
+								block.remove_lines([block_line_number])
+								continue
+								
+							field = OptionalField.get_field(block_line)
+							if(not field == None):
+								message.add_field(field)
+								block.remove_lines([block_line_number])
+								continue
+							
+							
+							if(OneofField.is_field(block_line)):	# check if oneof-field
+								oneof_block = block.extract_block(block_line_number)
+								field = OneofField.get_field(oneof_block)
+								message.add_field(field)
+								block.remove_lines(oneof_block.line_numbers)
+								continue
+							
+							
+							
+						except Exception as e:
+							print("Exception at line " + str(block_line_number) + ":")
+							print(e)
+							print(traceback.format_exc())
+							sys.exit()		
 					
-				
-				
-				if(line[0] == 'oneof'):
-					# Check if we are already searching for an message to stop
-					if found_oneof_start:
-						raise Exception("Found another oneof start before closing the former oneof at line " + str(line_num))
-						
-					try:
-						oneof_name = self.get_oneof_header(line)
-					except Exception as e:
-						print  "Exception while parsing input file at line " + str(line_num)
-						raise e
-					
-					if(not self.is_valid_var_name(oneof_name)):	
-						raise Exception("Oneof name is not a valid name '" + oneof_name + "' at line " + str(line_num))
-					
-			
-					if(oneof_name in oneof_names):
-						raise Exception("Duplicate message oneof_name-field found: '" + oneof_name + "' at line " + str(line_num))
-					
-					oneof_names.append(oneof_name)
-					found_oneof_start = 1
-					continue
-					
-				if(found_oneof_start):
-					if(line[0] == '}'):	# Check if we reached the end of the oneof-field
-						found_oneof_start = 0
-						continue
-					
-					try:
-						[field_name, field_type, field_data_type, field_array_size, field_data_type_str, field_oneof_tag] = self.get_oneof_field_attributes(line, defines)
-					except Exception as e:
-						print  "Exception while parsing input file at line " + str(line_num)
-						raise e
-						
-						
-					if(not self.is_valid_var_name(field_name)):	
-						raise Exception("Message field-name is not a valid variable name '" + field_name + "' at line " + str(line_num))
-						
-					if(self.message_duplicate_oneof_tag_check(message, field_oneof_tag)):	
-						raise Exception("Duplicate oneof_tag found: '" + str(field_oneof_tag) + "' at line " + str(line_num))
-					
-					if(self.message_duplicate_var_name_check(message, field_name)):
-						raise Exception("Duplicate message field found: '" + field_name + "' at line " + str(line_num))
-					
-					message.append([field_name, field_type, field_data_type, field_array_size, field_data_type_str, field_oneof_tag, oneof_names[-1]])
-					continue	
-				
-				# If this is not a oneof-field then it should be a normal message-field
-				try:
-					[field_name, field_type, field_data_type, field_array_size, field_data_type_str] = self.get_message_field_attributes(line, defines)
-				except Exception as e:
-					print  "Exception while parsing input file at line " + str(line_num)
-					raise e
+					# Add message to Messages
+					Messages.append(message)			
 					
 					
-				if(not self.is_valid_var_name(field_name)):	
-					raise Exception("Message field-name is not a valid variable name '" + field_name + "' at line " + str(line_num))
-				
-				if(self.message_duplicate_var_name_check(message, field_name)):
-					raise Exception("Duplicate message field found: '" + field_name + "' at line " + str(line_num))
-				
-				message.append([field_name, field_type, field_data_type, field_array_size, field_data_type_str, 0 , ""])
-				continue
-				
-				
-			# Else just append the line to the new lines			
-			new_lines.append(l)
-			
-		if found_message_start:
-			raise Exception("Haven't found a closing '}' for message " + message[0])
-			
-		#print messages
-		return [new_lines, messages]			
-	
-	
-	
-	# returns [defines, messages]:
-	# defines: [['Name1', 'Val'],['Name1', 'Val']]
-	# messages: [['MessageName1', ['var_name', field_type, field_data_type_len, array_size, 'data_type_str', oneof_tag, oneof_name], ...], 
-	#			 ['MessageName2', ['var_name', field_type, field_data_type_len, array_size, 'data_type_str', oneof_tag, oneof_name], ...]
-	#																											
-	def parse(self):
-		print "Parsing..."
-		lines = self.read_file()
-		
-		
-		[lines, imports, extern_messages] = self.parse_imports(lines)
-		# Add all the extern-messages as known data-types
-		for extern_message in extern_messages:
-			SUPPORTED_DATA_TYPES.append([extern_message, DATA_TYPE_MESSAGE, 0])
-			
-		[lines, defines] = self.parse_defines(lines)
-		[lines, messages] = self.parse_messages(lines, defines)
-		
-		#print "Messages: " + str(messages)
-		
-		if(len(lines) > 0):
-			raise Exception("Could not parse line " + str(lines[0][0]))
-		
-		return [imports, defines, messages]
+				else:
+					raise Exception('Could not parse message at line ' + str(line_number))
+					sys.exit()		
+
 
 class OutputFile:
 	def __init__(self, output_file):
@@ -579,262 +755,34 @@ class OutputFile:
 	def write_to_file(self):
 		with open(self.output_file, "w") as f:
 			f.write(self.file_output)
-		
-class Protocol_creator:
-	def __init__(self, output_format, output_path, output_name, imports, defines, messages):
-		self.output_format = output_format
+			
+
+def search_size_type(size):
+	size_types =   [["uint8",  1], ["uint16", 2], ["uint32", 4], ["uint64", 8]]
+					
+	for i in range(0, len(size_types)):
+		if((((2**8)**size_types[i][1]) > size)):
+			return [size_types[i][0], size_types[i][1]]
+
+	raise Exception("Not found a valid size-type for size: " + str(size))
+	
+
+
+class C_Creator:
+	def __init__(self, output_path, output_name, imports, defines, messages):
 		self.output_path = output_path
 		self.output_name = output_name
 		self.imports = imports
 		self.defines = defines
 		self.messages = messages
 		
-	
+		self.create()
+		
 	def create(self):
-		if(self.output_format == '-c'):
-			self.c_create()
-		elif(self.output_format == '-python'):
-			self.python_create()
-		else:
-			raise Exception("Output format '" + self.output_format + "' is not supported")
-	
+		print "Creating C/H-Files..."
 		
-	
-	def search_size_data_type(self, size):
-		for i in range(0, len(SUPPORTED_SIZE_DATA_TYPES)):
-			for j in range(0, len(SUPPORTED_DATA_TYPES)):
-				if(SUPPORTED_SIZE_DATA_TYPES[i] == SUPPORTED_DATA_TYPES[j][0]):
-					data_type_str = SUPPORTED_SIZE_DATA_TYPES[i]
-					data_type_size = SUPPORTED_DATA_TYPES[j][2]
-					if((((2**8)**data_type_size) > size)):
-						return [data_type_str, data_type_size]
-					
-		raise Exception("Not found a valid data-type for size: " + str(size))			
-	
-	# Function that returns the position of a field in a oneof-field [1, 1] if both first and last, if intermediate [0, 0] should be returned
-	def get_field_position_in_oneof_field(self, field_name, oneof_name, variables):
-		number_of_fields_in_oneof_field = 0
-		field_position_in_oneof_field = -1
-		for variable in variables:
-			tmp_field_name = variable[0]
-			tmp_oneof_name = variable[6]			
-			if(tmp_oneof_name == oneof_name):
-				if(tmp_field_name == field_name):
-					field_position_in_oneof_field = number_of_fields_in_oneof_field				
-				number_of_fields_in_oneof_field += 1
-				
-		if(field_position_in_oneof_field == -1):
-			raise Exception("Could not find field '" + field_name + "' in oneof-field '" + oneof_name + "'")
-		
-		return [field_position_in_oneof_field == 0, field_position_in_oneof_field == number_of_fields_in_oneof_field-1]
-		
-			
-	def is_first_field_in_oneof_field(self, field_name, oneof_name, variables):
-		return self.get_field_position_in_oneof_field(field_name, oneof_name, variables)[0]
-		
-	def is_last_field_in_oneof_field(self, field_name, oneof_name, variables):
-		return self.get_field_position_in_oneof_field(field_name, oneof_name, variables)[1]
-		
-	# Returns a list [[[variable1],[variable2]],[[...],[...]]]
-	def get_variables_of_oneof_fields(self, variables):
-		oneof_fields_variables = []
-		oneof_field_variables = []
-		for variable in variables:
-			field_name = variable[0]
-			field_type = variable[1]
-			oneof_name = variable[6]
-			
-			if(field_type & FIELD_TYPE_ONEOF):
-				if(self.is_first_field_in_oneof_field(field_name, oneof_name, variables)):
-					oneof_field_variables = []
-				
-				oneof_field_variables.append(variable)
-				
-				if(self.is_last_field_in_oneof_field(field_name, oneof_name, variables)):
-					oneof_fields_variables.append(oneof_field_variables)
-			
-		return oneof_fields_variables
-		
-	def c_get_data_type_mapping(self, data_type_str):
-		for i in range(0, len(C_DATA_TYPE_MAPPING)):
-			if(C_DATA_TYPE_MAPPING[i][0] == data_type_str):
-				return C_DATA_TYPE_MAPPING[i][1]
-		
-		raise Exception("Data type '" + data_type_str + "' was not found in C_DATA_TYPE_MAPPING")
-		
-	
-	
-	def c_search_size_data_type(self, size):
-		[data_type_str, data_type_size] = self.search_size_data_type(size)
-		
-		c_data_type_str = self.c_get_data_type_mapping(data_type_str)
-		
-		return [c_data_type_str, data_type_size]
-		
-	def c_create_oneof_tags(self, message):
-		message_name = message[0]
-		variables = message[1:]
-		
-		for variable in variables:
-			field_name = variable[0]
-			field_type = variable[1]
-			oneof_tag = variable[5]
-	
-			if(field_type & FIELD_TYPE_ONEOF):
-				self.h_file.append_line("#define " + message_name + "_" + field_name +  "_tag " + str(oneof_tag))
-			
-
-	
-	def c_create_struct(self, message):
-		self.h_file.append_line("typedef struct {")
-		message_name = message[0]
-		variables = message[1:]
-		
-		
-		for variable in variables:
-			field_name = variable[0]
-			field_type = variable[1]
-			field_data_type_len = variable[2]
-			field_array_size = variable[3]
-			field_data_type_str = variable[4]
-			oneof_tag = variable[5]
-			oneof_name = variable[6]
-			
-
-			
-			if((field_type & DATA_TYPE_INT) or (field_type & DATA_TYPE_UINT) or (field_type & DATA_TYPE_FLOAT) or (field_type & DATA_TYPE_DOUBLE)):
-				field_data_type_str = self.c_get_data_type_mapping(field_data_type_str)
-			elif((field_type & DATA_TYPE_MESSAGE)):
-				field_data_type_str = field_data_type_str
-			else:
-				raise Exception ("Field type " + str(field_type) + " is not supported")		
-			
-			
-			
-			if(field_type & FIELD_TYPE_REQUIRED):					
-				self.h_file.append_line("\t" + field_data_type_str + " " + field_name + ";")
-			elif(field_type & FIELD_TYPE_OPTIONAL):
-				self.h_file.append_line("\t" + "uint8_t has_" + field_name + ";")
-				self.h_file.append_line("\t" + field_data_type_str + " " + field_name + ";")					
-			elif(field_type & FIELD_TYPE_REPEATED):
-				[array_size_data_type_str, array_size_data_type_size] = self.c_search_size_data_type(field_array_size)
-				self.h_file.append_line("\t" + array_size_data_type_str + " " + field_name + "_count;")
-				self.h_file.append_line("\t" + field_data_type_str + " " + field_name + "[" + str(field_array_size) + "];")		
-			elif(field_type & FIELD_TYPE_FIXED_REPEATED):
-				self.h_file.append_line("\t" + field_data_type_str + " " + field_name + "[" + str(field_array_size) + "];")		
-			elif(field_type & FIELD_TYPE_ONEOF):
-				
-				if(self.is_first_field_in_oneof_field(field_name, oneof_name, variables)):			
-					self.h_file.append_line("\t" + "uint8_t which_" + oneof_name + ";")
-					self.h_file.append_line("\t" + "union {")
-				
-				self.h_file.append_line("\t\t" + field_data_type_str + " " + field_name + ";")	
-				
-				if(self.is_last_field_in_oneof_field(field_name, oneof_name, variables)):			
-					self.h_file.append_line("\t" + "} " + oneof_name + ";")
-			else:
-				raise Exception ("Field type " + str(field_type) + " is not supported")
-				
-		
-				
-				
-		self.h_file.append_line("} " + message_name + ";")
-		
-	def c_create_message_fields(self, message):
-	
-		
-		message_name = message[0]
-		variables = message[1:]
-		num_variables = len(variables)
-		
-		# Declare the field-array in the H-file
-		self.h_file.append_line("extern const " + C_FIELD_TYPE_NAME + " " + message_name + "_fields[" + str(num_variables + 1) + "];")
-		
-		
-		# Create the field-arrays in the C-file
-		
-		self.c_file.append_line("const " + C_FIELD_TYPE_NAME + " " + message_name + "_fields[" + str(num_variables + 1) + "] = {")
-		
-		
-
-		for variable in variables:
-			field_name = variable[0]
-			field_type = variable[1]
-			field_data_type_len = variable[2]
-			field_array_size = variable[3]
-			field_data_type_str = variable[4]
-			oneof_tag = variable[5]
-			oneof_name = variable[6]
-			
-			field_ptr = "NULL"
-			if((field_type & DATA_TYPE_INT) or (field_type & DATA_TYPE_UINT) or (field_type & DATA_TYPE_FLOAT) or (field_type & DATA_TYPE_DOUBLE)):
-				field_ptr = "NULL"
-			elif((field_type & DATA_TYPE_MESSAGE)):
-				field_ptr = "&" + field_data_type_str + "_fields"
-			else:
-				raise Exception ("Field type " + str(field_type) + " is not supported")
-				
-			
-			if(field_type & FIELD_TYPE_REQUIRED):			
-				s = "\t{" + str(field_type) + ", ";
-				s += C_OFFSETOF_MAKRO_NAME + "(" + message_name + ", " + field_name + "), " 
-				s += "0, 0, "
-				s += C_MEMBERSIZE_MAKRO_NAME + "(" + message_name + ", " + field_name + "), 0, " + "0, 0, " + field_ptr + "},"                    
-				self.c_file.append_line(s)
-			elif(field_type & FIELD_TYPE_OPTIONAL):
-				s = "\t{" + str(field_type) + ", ";
-				s += C_OFFSETOF_MAKRO_NAME + "(" + message_name + ", " + field_name + "), " 
-				s += C_DELTA_MAKRO_NAME + "(" + message_name + ", " + "has_" + field_name + ", " + field_name + "), 1, "
-				s += C_MEMBERSIZE_MAKRO_NAME + "(" + message_name + ", " + field_name + "), 0, " + "0, 0, " + field_ptr + "},"                    
-				self.c_file.append_line(s)			
-			elif(field_type & FIELD_TYPE_REPEATED):
-				[array_size_data_type_str, array_size_data_type_size] = self.c_search_size_data_type(field_array_size)				
-				s = "\t{" + str(field_type) + ", ";
-				s += C_OFFSETOF_MAKRO_NAME + "(" + message_name + ", " + field_name + "), " 
-				s += C_DELTA_MAKRO_NAME + "(" + message_name + ", " + field_name + "_count" + ", " + field_name + "), " + str(array_size_data_type_size) + ", "
-				s += C_MEMBERSIZE_MAKRO_NAME + "(" + message_name + ", " + field_name + "[0]" + "), " 
-				s += C_MEMBERSIZE_MAKRO_NAME + "(" + message_name + ", " + field_name + ")/" + C_MEMBERSIZE_MAKRO_NAME + "(" + message_name + ", " + field_name + "[0]" + "), "
-				s += "0, 0, "
-				s += field_ptr + "},"                    
-				self.c_file.append_line(s)		
-			elif(field_type & FIELD_TYPE_FIXED_REPEATED):
-				[array_size_data_type_str, array_size_data_type_size] = self.c_search_size_data_type(field_array_size)				
-				s = "\t{" + str(field_type) + ", ";
-				s += C_OFFSETOF_MAKRO_NAME + "(" + message_name + ", " + field_name + "), " 
-				s += "0, 0, "
-				s += C_MEMBERSIZE_MAKRO_NAME + "(" + message_name + ", " + field_name + "[0]" + "), " 
-				s += C_MEMBERSIZE_MAKRO_NAME + "(" + message_name + ", " + field_name + ")/" + C_MEMBERSIZE_MAKRO_NAME + "(" + message_name + ", " + field_name + "[0]" + "), "
-				s += "0, 0, "
-				s += field_ptr + "},"                    
-				self.c_file.append_line(s)		
-			elif(field_type & FIELD_TYPE_ONEOF):
-				first_oneof_field = 0
-				if(self.is_first_field_in_oneof_field(field_name, oneof_name, variables)):	
-					first_oneof_field = 1
-					
-				s = "\t{" + str(field_type) + ", ";
-				s += C_OFFSETOF_MAKRO_NAME + "(" + message_name + ", " + oneof_name + "." + field_name + "), " 
-				s += C_DELTA_MAKRO_NAME + "(" + message_name + ", " + "which_" + oneof_name + ", " + oneof_name + "." + field_name + "), " + "1" + ", "
-				s += C_MEMBERSIZE_MAKRO_NAME + "(" + message_name + ", " + oneof_name + "." + field_name + "), " 
-				s += "0, "
-				s += str(oneof_tag) + ", " + str(first_oneof_field) + ", "
-				s += field_ptr + "},"                    
-				self.c_file.append_line(s)
-				
-			else:
-				raise Exception ("Field type " + str(field_type) + " is not supported")
-			
-			
-		
-		self.c_file.append_line("\t" + C_LAST_FIELD_NAME + ",")
-		self.c_file.append_line("};")
-		
-	
-	def c_create(self):
 		self.c_file = OutputFile(self.output_path + "/" + self.output_name + ".c")
 		self.h_file = OutputFile(self.output_path + "/" + self.output_name + ".h")
-	
-		print "Creating C/H-Files..."
 		
 		# First write the include-pattern for header files:
 		self.h_file.append_line("#ifndef " + "__" + self.output_name.upper() + "_H")
@@ -850,29 +798,29 @@ class Protocol_creator:
 		
 		# First create the imports
 		for imp in self.imports:
-			self.h_file.append_line('#include "' + imp + '.h"')
+			self.h_file.append_line('#include "' + imp.name + '.h"')
 		self.h_file.append_line()
 		
 		# Then create the defines
 		for define in self.defines:
-			self.h_file.append_line("#define " + define[0] + " " + define[1])
+			self.h_file.append_line("#define " + define.name + " " + str(define.number))
 		self.h_file.append_line()
 		
 		# Then create the oneof_tags from the messages
 		for message in self.messages:
-			self.c_create_oneof_tags(message)
+			self.create_oneof_tags(message)
 		self.h_file.append_line()
 				
 		# Then create the structs from the messages
 		for message in self.messages:
-			self.c_create_struct(message)
+			self.create_struct(message)
 			self.h_file.append_line()
 	
 		
 		
 		# Then create the field-arrays from the messages
 		for message in self.messages:
-			self.c_create_message_fields(message)
+			self.create_message_fields(message)
 			self.c_file.append_line()
 		
 		# Finally close the header-file with #endif 
@@ -888,467 +836,186 @@ class Protocol_creator:
 		
 		self.c_file.write_to_file()
 		self.h_file.write_to_file()
-	
-	def python_create_field_declarations(self, message_name, variables):
-		for variable in variables:
-			field_name = variable[0]
-			field_type = variable[1]
-			field_data_type_len = variable[2]
-			field_array_size = variable[3]
-			field_data_type_str = variable[4]
-			oneof_tag = variable[5]
-			oneof_name = variable[6]
 		
 		
-			
-			if(field_type & FIELD_TYPE_ONEOF):
-				if(self.is_first_field_in_oneof_field(field_name, oneof_name, variables)):
-					self.python_file.append_line("\t\tself." + oneof_name + " = " + "self._" + oneof_name + "()")
-				continue
-		
-			# Add has_'field' when optional field
-			if(field_type & FIELD_TYPE_OPTIONAL):
-				self.python_file.append_line("\t\tself." + "has_" + field_name + " = 0")
-			
-			if((field_type & DATA_TYPE_INT) or (field_type & DATA_TYPE_UINT) or (field_type & DATA_TYPE_FLOAT) or (field_type & DATA_TYPE_DOUBLE)):
-				if(field_type & FIELD_TYPE_REPEATED) or (field_type & FIELD_TYPE_FIXED_REPEATED):
-					self.python_file.append_line("\t\tself." + field_name + " = []")
-				elif(field_type & FIELD_TYPE_REQUIRED) or (field_type & FIELD_TYPE_OPTIONAL):
-					self.python_file.append_line("\t\tself." + field_name + " = 0")
-				else:
-					raise Exception ("Field type " + str(field_type) + " is not supported")
-				
-				
-			elif((field_type & DATA_TYPE_MESSAGE)):
-				if(field_type & FIELD_TYPE_REPEATED) or (field_type & FIELD_TYPE_FIXED_REPEATED):
-					self.python_file.append_line("\t\tself." + field_name + " = []")
-				elif(field_type & FIELD_TYPE_REQUIRED) or (field_type & FIELD_TYPE_OPTIONAL):
-					self.python_file.append_line("\t\tself." + field_name + " = None")
-				else:
-					raise Exception ("Field type " + str(field_type) + " is not supported")
-			else:
-				raise Exception ("Field type " + str(field_type) + " is not supported")
-	
-	
-	
-	def python_get_data_type_mapping(self, data_type_str):
-		for i in range(0, len(PYTHON_DATA_TYPE_MAPPING)):
-			if(PYTHON_DATA_TYPE_MAPPING[i][0] == data_type_str):
-				return PYTHON_DATA_TYPE_MAPPING[i][1]
-				
-		raise Exception("Data type '" + data_type_str + "' was not found in PYTHON_DATA_TYPE_MAPPING")
-		
-	
-	
-	def python_create_encode_functions(self, variables):
-		# Create the encode function
-		self.python_file.append_line()
-		self.python_file.append_line("\tdef encode(self):")
-		self.python_file.append_line("\t\tostream = _Ostream()")
-		self.python_file.append_line("\t\tself.encode_internal(ostream)")
-		self.python_file.append_line("\t\treturn ostream.buf")
-		
-		# Create the encode_internal-function
-		self.python_file.append_line()
-		self.python_file.append_line("\tdef encode_internal(self, ostream):")
-		for variable in variables:
-			field_name = variable[0]	
-			field_type = variable[1]
-			oneof_name = variable[6]
-			if(field_type & FIELD_TYPE_ONEOF):
-				if(self.is_first_field_in_oneof_field(field_name, oneof_name, variables)):		
-					self.python_file.append_line("\t\t" + "self." + oneof_name + ".encode_internal(ostream)")
-			else:
-				self.python_file.append_line("\t\tself.encode_" + field_name + "(ostream)")
-		self.python_file.append_line("\t\tpass")	# Added this if there is an Empty message, with no fields at all
-		
-		# Create all the encode-functions for the variables
-		self.python_file.append_line()
-		for variable in variables:
-			field_name = variable[0]
-			field_type = variable[1]
-			field_array_size = variable[3]
-			field_data_type_str = variable[4]	
-			
-			# Oneof fields are handled above
-			if(field_type & FIELD_TYPE_ONEOF):
-				continue
-				
-			self.python_file.append_line("\tdef encode_" + field_name + "(self, ostream):")
-			
-			
-			
-			if(field_type & FIELD_TYPE_OPTIONAL): # write has_'field' as one byte 
-				self.python_file.append_line("\t\t" + "ostream.write(" + "struct.pack('" + self.python_get_data_type_mapping('uint8') + "', " + "self.has_" + field_name + "))")
-				self.python_file.append_line("\t\t" + "if self.has_" + field_name + ":")
-				
-				if((field_type & DATA_TYPE_INT) or (field_type & DATA_TYPE_UINT) or (field_type & DATA_TYPE_FLOAT) or (field_type & DATA_TYPE_DOUBLE)):
-					self.python_file.append_line("\t\t\t" + "ostream.write(" + "struct.pack('" + self.python_get_data_type_mapping(field_data_type_str) + "', " + "self." + field_name + "))")
-				elif(field_type & DATA_TYPE_MESSAGE):
-					self.python_file.append_line("\t\t\t" + "self." + field_name + ".encode_internal(ostream)")
-				else:
-					raise Exception ("Field type " + str(field_type) + " is not supported")
+	def create_oneof_tags(self, message):
+		for field in message.fields:
+			if(isinstance(field, OneofField)): # Is oneof field
+				for inner_field in field.inner_fields:
+					self.h_file.append_line("#define " + message.name + "_" + inner_field.name +  "_tag " + str(inner_field.tag))
 					
-			elif(field_type & FIELD_TYPE_REPEATED): # write array-size
-				[size_data_type_str, size_data_type_size] = self.search_size_data_type(field_array_size)
-				
-				self.python_file.append_line("\t\t" + "count = len(" + "self." + field_name + ")")
-				self.python_file.append_line("\t\t" + "ostream.write(" + "struct.pack('" + self.python_get_data_type_mapping(size_data_type_str) + "', " + "count" + "))")
-				self.python_file.append_line("\t\t" + "for i in range(0, " + "count" + "):")
-				
-				if((field_type & DATA_TYPE_INT) or (field_type & DATA_TYPE_UINT) or (field_type & DATA_TYPE_FLOAT) or (field_type & DATA_TYPE_DOUBLE)):
-					self.python_file.append_line("\t\t\t" + "ostream.write(" + "struct.pack('" + self.python_get_data_type_mapping(field_data_type_str) + "', " + "self." + field_name + "[i]))")
-				elif(field_type & DATA_TYPE_MESSAGE):
-					self.python_file.append_line("\t\t\t" + "self." + field_name + "[i].encode_internal(ostream)" )
-				else:
-					raise Exception ("Field type " + str(field_type) + " is not supported")
+	def get_field_type_mapping(self, field_type):
+		field_type_mapping = {"uint8": "uint8_t", "int8": "int8_t", "uint16": "uint16_t", "int16": "int16_t", 
+							  "uint32": "uint32_t", "int32": "int32_t", "uint64": "uint64_t", "int64": "int64_t", 
+							  "float": "float", "double": "double"}
 					
-			elif(field_type & FIELD_TYPE_FIXED_REPEATED): # write no array-size
-				self.python_file.append_line("\t\t" + "count = " + str(field_array_size))
-				self.python_file.append_line("\t\t" + "for i in range(0, " + "count" + "):")
-				
-				if((field_type & DATA_TYPE_INT) or (field_type & DATA_TYPE_UINT) or (field_type & DATA_TYPE_FLOAT) or (field_type & DATA_TYPE_DOUBLE)):
-					self.python_file.append_line("\t\t\t" + "ostream.write(" + "struct.pack('" + self.python_get_data_type_mapping(field_data_type_str) + "', " + "self." + field_name + "[i]))")
-				elif(field_type & DATA_TYPE_MESSAGE):
-					self.python_file.append_line("\t\t\t" + "self." + field_name + "[i].encode_internal(ostream)" )
-				else:
-					raise Exception ("Field type " + str(field_type) + " is not supported")
-					
-			elif(field_type & FIELD_TYPE_REQUIRED): 
-				if((field_type & DATA_TYPE_INT) or (field_type & DATA_TYPE_UINT) or (field_type & DATA_TYPE_FLOAT) or (field_type & DATA_TYPE_DOUBLE)):
-					self.python_file.append_line("\t\t" + "ostream.write(" + "struct.pack('" + self.python_get_data_type_mapping(field_data_type_str) + "', " + "self." + field_name + "))")
-				elif(field_type & DATA_TYPE_MESSAGE):
-					self.python_file.append_line("\t\t" + "self." + field_name + ".encode_internal(ostream)")
-				else:
-					raise Exception ("Field type " + str(field_type) + " is not supported")
-					
-			else:
-				raise Exception ("Field type " + str(field_type) + " is not supported")
+		if field_type in field_type_mapping:
+			return field_type_mapping[field_type]
+		else:	# For example in the case of message as field type
+			return field_type
 			
-			self.python_file.append_line()
-	
-	
-	def python_create_decode_functions(self, variables):
-	
+	def get_field_type_identifier(self, field_type):
+		field_type_identifier ={"uint8": FIELD_TYPE_UINT, "int8": FIELD_TYPE_INT, "uint16": FIELD_TYPE_UINT, "int16": FIELD_TYPE_INT, 
+								"uint32": FIELD_TYPE_UINT, "int32": FIELD_TYPE_INT, "uint64": FIELD_TYPE_UINT, "int64": FIELD_TYPE_INT, 
+								"float": FIELD_TYPE_FLOAT, "double": FIELD_TYPE_DOUBLE}
 		
-		# Create the decode function
-		self.python_file.append_line()
-		self.python_file.append_line("\t@classmethod")
-		self.python_file.append_line("\tdef decode(cls, buf):")
-		self.python_file.append_line("\t\tobj = cls()")
-		self.python_file.append_line("\t\tobj.decode_internal(_Istream(buf))")
-		self.python_file.append_line("\t\treturn obj")
+		if field_type in field_type_identifier:
+			return field_type_identifier[field_type]
+		else:	# For example in the case of message as field type
+			return FIELD_TYPE_MESSAGE
 		
 		
-		# Create the decode_internal-function
-		self.python_file.append_line()
-		self.python_file.append_line("\tdef decode_internal(self, istream):")
-		self.python_file.append_line("\t\tself.reset()")
-		for variable in variables:
-			field_name = variable[0]	
-			field_type = variable[1]
-			oneof_name = variable[6]
-			if(field_type & FIELD_TYPE_ONEOF):
-				if(self.is_first_field_in_oneof_field(field_name, oneof_name, variables)):		
-					self.python_file.append_line("\t\t" + "self." + oneof_name + ".decode_internal(istream)")
+	def create_struct(self, message):
+		self.h_file.append_line("typedef struct {")
+		for field in message.fields:
+			if(isinstance(field, RequiredField)): # Is required field
+				self.h_file.append_line("\t" + self.get_field_type_mapping(field.type) + " " + field.name + ";")
+			elif(isinstance(field, OptionalField)): # Is optional field
+				self.h_file.append_line("\t" + "uint8_t has_" + field.name + ";")
+				self.h_file.append_line("\t" + self.get_field_type_mapping(field.type) + " " + field.name + ";")		
+			elif(isinstance(field, RepeatedField)): # Is repeated field
+				[size_type, size_type_byte_number] = search_size_type(field.size)
+				self.h_file.append_line("\t" + self.get_field_type_mapping(size_type) + " " + field.name + "_count;")
+				self.h_file.append_line("\t" + self.get_field_type_mapping(field.type) + " " + field.name + "[" + str(field.size) + "];")				
+			elif(isinstance(field, FixedRepeatedField)): # Is fixed repeated field
+				self.h_file.append_line("\t" + self.get_field_type_mapping(field.type) + " " + field.name + "[" + str(field.size) + "];")		
+			elif(isinstance(field, OneofField)): # Is oneof field	
+				self.h_file.append_line("\t" + "uint8_t which_" + field.name + ";")
+				self.h_file.append_line("\t" + "union {")
+				for inner_field in field.inner_fields:
+					self.h_file.append_line("\t\t" + self.get_field_type_mapping(inner_field.type) + " " + inner_field.name + ";")
+				self.h_file.append_line("\t" + "} " + field.name + ";")
 			else:
-				self.python_file.append_line("\t\tself.decode_" + field_name + "(istream)")
-		self.python_file.append_line("\t\tpass")	# Added this if there is an Empty message, with no fields at all	
-			
+				raise Exception ("Field " + str(field) + " is not supported")
+		self.h_file.append_line("} " + message.name + ";")
 		
-		# Create all the decode-functions for the variables
-		self.python_file.append_line()
-		for variable in variables:
-			field_name = variable[0]
-			field_type = variable[1]
-			field_data_type_len = variable[2]
-			field_array_size = variable[3]
-			field_data_type_str = variable[4]	
+	
+	def create_message_fields(self, message):
+	
+		C_FIELD_TYPE_NAME 		= "tb_field_t"
+		C_OFFSETOF_MAKRO_NAME 	= "tb_offsetof"
+		C_MEMBERSIZE_MAKRO_NAME = "tb_membersize"
+		C_DELTA_MAKRO_NAME 		= "tb_delta"
+		C_LAST_FIELD_NAME 		= "TB_LAST_FIELD"
+		
+		
+	
+	
+		# Determine the number of fields in the message
+		num_fields = 0
+		for field in message.fields:
+			if(isinstance(field, OneofField)): # Is oneof field
+				num_fields = num_fields + len(field.inner_fields)
+			else:
+				num_fields = num_fields + 1
+		
+		
+		# Declare the field-array in the H-file
+		self.h_file.append_line("extern const " + C_FIELD_TYPE_NAME + " " + message.name + "_fields[" + str(num_fields + 1) + "];")
+		
+		
+		# Create the field-arrays in the C-file		
+		self.c_file.append_line("const " + C_FIELD_TYPE_NAME + " " + message.name + "_fields[" + str(num_fields + 1) + "] = {")
+		
+		
+		for field in message.fields:		
+			if(isinstance(field, RequiredField)): # Is required field
+				field_identifier = self.get_field_type_identifier(field.type) | FIELD_RULE_REQUIRED
+				field_ptr = str("&" + field.type + "_fields") if (field_identifier & FIELD_TYPE_MESSAGE) else "NULL"
+				s = "\t{" + str(field_identifier) + ", ";
+				s += C_OFFSETOF_MAKRO_NAME + "(" + message.name + ", " + field.name + "), " 
+				s += "0, 0, "
+				s += C_MEMBERSIZE_MAKRO_NAME + "(" + message.name + ", " + field.name + "), 0, " + "0, 0, " + field_ptr + "},"                    
+				self.c_file.append_line(s)
+			elif(isinstance(field, OptionalField)): # Is optional field
+				field_identifier = self.get_field_type_identifier(field.type) | FIELD_RULE_OPTIONAL
+				field_ptr = str("&" + field.type + "_fields") if (field_identifier & FIELD_TYPE_MESSAGE) else "NULL"
+				s = "\t{" + str(field_identifier) + ", ";
+				s += C_OFFSETOF_MAKRO_NAME + "(" + message.name + ", " + field.name + "), " 
+				s += C_DELTA_MAKRO_NAME + "(" + message.name + ", " + "has_" + field.name + ", " + field.name + "), 1, "
+				s += C_MEMBERSIZE_MAKRO_NAME + "(" + message.name + ", " + field.name + "), 0, " + "0, 0, " + field_ptr + "},"                    
+				self.c_file.append_line(s)		
+			elif(isinstance(field, RepeatedField)): # Is repeated field
+				[size_type, size_type_byte_number] = search_size_type(field.size)
+				field_identifier = self.get_field_type_identifier(field.type) | FIELD_RULE_REPEATED
+				field_ptr = str("&" + field.type + "_fields") if (field_identifier & FIELD_TYPE_MESSAGE) else "NULL"
+				s = "\t{" + str(field_identifier) + ", ";
+				s += C_OFFSETOF_MAKRO_NAME + "(" + message.name + ", " + field.name + "), " 
+				s += C_DELTA_MAKRO_NAME + "(" + message.name + ", " + field.name + "_count" + ", " + field.name + "), " + str(size_type_byte_number) + ", "
+				s += C_MEMBERSIZE_MAKRO_NAME + "(" + message.name + ", " + field.name + "[0]" + "), " 
+				s += C_MEMBERSIZE_MAKRO_NAME + "(" + message.name + ", " + field.name + ")/" + C_MEMBERSIZE_MAKRO_NAME + "(" + message.name + ", " + field.name + "[0]" + "), "
+				s += "0, 0, "
+				s += field_ptr + "},"                    
+				self.c_file.append_line(s)
+			elif(isinstance(field, FixedRepeatedField)): # Is fixed repeated field
+				field_identifier = self.get_field_type_identifier(field.type) | FIELD_RULE_FIXED_REPEATED
+				field_ptr = str("&" + field.type + "_fields") if (field_identifier & FIELD_TYPE_MESSAGE) else "NULL"
+				s = "\t{" + str(field_identifier) + ", ";
+				s += C_OFFSETOF_MAKRO_NAME + "(" + message.name + ", " + field.name + "), " 
+				s += "0, 0, "
+				s += C_MEMBERSIZE_MAKRO_NAME + "(" + message.name + ", " + field.name + "[0]" + "), " 
+				s += C_MEMBERSIZE_MAKRO_NAME + "(" + message.name + ", " + field.name + ")/" + C_MEMBERSIZE_MAKRO_NAME + "(" + message.name + ", " + field.name + "[0]" + "), "
+				s += "0, 0, "
+				s += field_ptr + "},"                    
+				self.c_file.append_line(s)
+			elif(isinstance(field, OneofField)): # Is oneof field			
+				for i in range(0, len(field.inner_fields)):
+					inner_field = field.inner_fields[i]
+					inner_field_identifier = self.get_field_type_identifier(inner_field.type) | FIELD_RULE_ONEOF
+					inner_field_ptr = str("&" + inner_field.type + "_fields") if (inner_field_identifier & FIELD_TYPE_MESSAGE) else "NULL"
+					s = "\t{" + str(inner_field_identifier) + ", ";
+					s += C_OFFSETOF_MAKRO_NAME + "(" + message.name + ", " + field.name + "." + inner_field.name + "), " 
+					s += C_DELTA_MAKRO_NAME + "(" + message.name + ", " + "which_" + field.name + ", " + field.name + "." + inner_field.name + "), " + "1" + ", "
+					s += C_MEMBERSIZE_MAKRO_NAME + "(" + message.name + ", " + field.name + "." + inner_field.name + "), " 
+					s += "0, "
+					s += str(inner_field.tag) + ", " 
+					s += "1"  if i == 0 else "0"
+					s += ", " + inner_field_ptr + "},"
+					self.c_file.append_line(s)				
+			else:
+				raise Exception ("Field " + str(field) + " is not supported")
+		
+		self.c_file.append_line("\t" + C_LAST_FIELD_NAME + ",")
+		self.c_file.append_line("};")
 
-			# Oneof fields are handled above
-			if(field_type & FIELD_TYPE_ONEOF):
-				continue
-				
-			self.python_file.append_line("\tdef decode_" + field_name + "(self, istream):")
-			
-			
-			
-			if(field_type & FIELD_TYPE_OPTIONAL): # read has_'field' as one byte 
-				self.python_file.append_line("\t\t" + "self.has_" + field_name + "= struct.unpack('" + self.python_get_data_type_mapping('uint8') + "', " + "istream.read(" + "1" + "))[0]" )
-				self.python_file.append_line("\t\t" + "if self.has_" + field_name + ":")
-				
-				if((field_type & DATA_TYPE_INT) or (field_type & DATA_TYPE_UINT) or (field_type & DATA_TYPE_FLOAT) or (field_type & DATA_TYPE_DOUBLE)):
-					self.python_file.append_line("\t\t\t" + "self." + field_name + "= struct.unpack('" + self.python_get_data_type_mapping(field_data_type_str) + "', "  + "istream.read(" + str(field_data_type_len) + "))[0]")
-				elif(field_type & DATA_TYPE_MESSAGE):
-					self.python_file.append_line("\t\t\t" + "self." + field_name + " = " + field_data_type_str + "()")
-					self.python_file.append_line("\t\t\t" + "self." + field_name + ".decode_internal(istream)")
-				else:
-					raise Exception ("Field type " + str(field_type) + " is not supported")
-					
-			elif(field_type & FIELD_TYPE_REPEATED): # read array-size	
-			
-				[size_data_type_str, size_data_type_size] = self.search_size_data_type(field_array_size)
-				
-				self.python_file.append_line("\t\t" + "count = struct.unpack('" + self.python_get_data_type_mapping(size_data_type_str) + "', " + "istream.read(" + str(size_data_type_size) + "))[0]" )
-				self.python_file.append_line("\t\t" + "for i in range(0, " + "count" + "):")
-				
-				
-				if((field_type & DATA_TYPE_INT) or (field_type & DATA_TYPE_UINT) or (field_type & DATA_TYPE_FLOAT) or (field_type & DATA_TYPE_DOUBLE)):
-					self.python_file.append_line("\t\t\t" + "self." + field_name + ".append(struct.unpack('" + self.python_get_data_type_mapping(field_data_type_str) + "', " + "istream.read(" +  str(field_data_type_len) + "))[0])")
-				elif(field_type & DATA_TYPE_MESSAGE):
-					self.python_file.append_line("\t\t\t" + "tmp" + " = " + field_data_type_str + "()")
-					self.python_file.append_line("\t\t\t" + "tmp.decode_internal(istream)")
-					self.python_file.append_line("\t\t\t" + "self." + field_name + ".append(tmp)")
-				else:
-					raise Exception ("Field type " + str(field_type) + " is not supported")
-					
-			elif(field_type & FIELD_TYPE_FIXED_REPEATED): # read no array-size	
-			
-				self.python_file.append_line("\t\t" + "count = " + str(field_array_size) )
-				self.python_file.append_line("\t\t" + "for i in range(0, " + "count" + "):")
-				
-				
-				if((field_type & DATA_TYPE_INT) or (field_type & DATA_TYPE_UINT) or (field_type & DATA_TYPE_FLOAT) or (field_type & DATA_TYPE_DOUBLE)):
-					self.python_file.append_line("\t\t\t" + "self." + field_name + ".append(struct.unpack('" + self.python_get_data_type_mapping(field_data_type_str) + "', " + "istream.read(" +  str(field_data_type_len) + "))[0])")
-				elif(field_type & DATA_TYPE_MESSAGE):
-					self.python_file.append_line("\t\t\t" + "tmp" + " = " + field_data_type_str + "()")
-					self.python_file.append_line("\t\t\t" + "tmp.decode_internal(istream)")
-					self.python_file.append_line("\t\t\t" + "self." + field_name + ".append(tmp)")
-				else:
-					raise Exception ("Field type " + str(field_type) + " is not supported")
-					
-					
-			elif(field_type & FIELD_TYPE_REQUIRED): 
-				if((field_type & DATA_TYPE_INT) or (field_type & DATA_TYPE_UINT) or (field_type & DATA_TYPE_FLOAT) or (field_type & DATA_TYPE_DOUBLE)):
-					self.python_file.append_line("\t\t" + "self." + field_name + "= struct.unpack('" + self.python_get_data_type_mapping(field_data_type_str) + "', "  + "istream.read(" + str(field_data_type_len) + "))[0]")
-				elif(field_type & DATA_TYPE_MESSAGE):
-					self.python_file.append_line("\t\t" + "self." + field_name + " = " + field_data_type_str + "()")
-					self.python_file.append_line("\t\t" + "self." + field_name + ".decode_internal(istream)")
-				else:
-					raise Exception ("Field type " + str(field_type) + " is not supported")
-			else:
-					raise Exception ("Field type " + str(field_type) + " is not supported")
-			
-			self.python_file.append_line()
-	
-	
-	def python_create_bytestring_functions(self, variables):
-		for variable in variables:
-			field_name = variable[0]
-			field_type = variable[1]
-			field_data_type_len = variable[2]
-			field_array_size = variable[3]
-			
-			# Check if variable is an array and has data_type_len of 1 and unsigned, so we could represent it as bytestring
-			if((field_array_size > 0) and (field_data_type_len == 1) and (field_type & DATA_TYPE_UINT)):
-				# First create a function to encode the array to a bytestring
-				self.python_file.append_line("\tdef " + "get_" + field_name + "_as_bytestring(self):")
-				self.python_file.append_line("\t\tbytestring = b''")
-				self.python_file.append_line("\t\tfor b in " + "self." + field_name + ":")
-				self.python_file.append_line("\t\t\tbytestring += struct.pack('>B', b)")
-				self.python_file.append_line("\t\treturn bytestring")
-				self.python_file.append_line()
-				
-				# Then create a function to decode the bytestring to an array
-				self.python_file.append_line("\tdef " + "set_" + field_name + "_as_bytestring(self, bytestring):")
-				self.python_file.append_line("\t\t" + "self." + field_name + " = []")
-				self.python_file.append_line("\t\tfor b in bytestring:")
-				self.python_file.append_line("\t\t\t" + "self." + field_name + ".append(struct.unpack('>B', b)[0])")
-				self.python_file.append_line()
-		
-	def python_create_oneof_tags(self, message):
-		message_name = message[0]
-		variables = message[1:]
-		
-		for variable in variables:
-			field_name = variable[0]
-			field_type = variable[1]
-			oneof_tag = variable[5]
-	
-			if(field_type & FIELD_TYPE_ONEOF):
-				self.python_file.append_line(message_name + "_" + field_name +  "_tag = " + str(oneof_tag))
-		
-	def python_create_oneof_encode_functions(self, variables):
-		# Create the encode_internal-function
-		self.python_file.append_line()
-		self.python_file.append_line("\t\tdef encode_internal(self, ostream):")
-		self.python_file.append_line("\t\t\t" + "ostream.write(" + "struct.pack('" + self.python_get_data_type_mapping('uint8') + "', " + "self.which" + "))")
-		self.python_file.append_line("\t\t\t" + "options = {" )
-		for variable in variables:
-			field_name = variable[0]	
-			oneof_tag = variable[5]
-			self.python_file.append_line("\t\t\t\t" + str(oneof_tag) + ": " + "self.encode_" + field_name + ",")
-		self.python_file.append_line("\t\t\t" + "}" )
-		self.python_file.append_line("\t\t\t" + "options[self.which](ostream)" )
-		self.python_file.append_line("\t\t\tpass")
-		
-		
-		# Create all the encode-functions for the variables
-		self.python_file.append_line()
-		for variable in variables:
-			field_name = variable[0]
-			field_type = variable[1]
-			field_array_size = variable[3]
-			field_data_type_str = variable[4]	
-			oneof_tag = variable[5]
-			oneof_name = variable[6]
-			
-			
-			self.python_file.append_line("\t\tdef encode_" + field_name + "(self, ostream):")
-			
-	
-			if((field_type & DATA_TYPE_INT) or (field_type & DATA_TYPE_UINT) or (field_type & DATA_TYPE_FLOAT) or (field_type & DATA_TYPE_DOUBLE)):
-				self.python_file.append_line("\t\t\t" + "ostream.write(" + "struct.pack('" + self.python_get_data_type_mapping(field_data_type_str) + "', " + "self." + field_name + "))")
-			elif(field_type & DATA_TYPE_MESSAGE):
-				self.python_file.append_line("\t\t\t" + "self." + field_name + ".encode_internal(ostream)")
-			else:
-				raise Exception ("Field type " + str(field_type) + " is not supported")
-				
-			self.python_file.append_line()
-	
-	def python_create_oneof_decode_functions(self, variables):
-		# Create the decode_internal-function
-		self.python_file.append_line()
-		self.python_file.append_line("\t\tdef decode_internal(self, istream):")
-		self.python_file.append_line("\t\t\tself.reset()")
-		
-		self.python_file.append_line("\t\t\t" + "self.which" + "= struct.unpack('" + self.python_get_data_type_mapping('uint8') + "', " + "istream.read(" + "1" + "))[0]" )
-		self.python_file.append_line("\t\t\t" + "options = {" )
-		for variable in variables:
-			field_name = variable[0]	
-			oneof_tag = variable[5]
-			self.python_file.append_line("\t\t\t\t" + str(oneof_tag) + ": " + "self.decode_" + field_name + ",")
-		self.python_file.append_line("\t\t\t" + "}" )
-		self.python_file.append_line("\t\t\t" + "options[self.which](istream)" )
-		self.python_file.append_line("\t\t\tpass")
-		
-		
-		# Create all the decode-functions for the variables
-		self.python_file.append_line()
-		for variable in variables:
-			field_name = variable[0]
-			field_type = variable[1]
-			field_data_type_len = variable[2]
-			field_data_type_str = variable[4]	
-			
-			self.python_file.append_line("\t\tdef decode_" + field_name + "(self, istream):")
-			
-			
-			if((field_type & DATA_TYPE_INT) or (field_type & DATA_TYPE_UINT) or (field_type & DATA_TYPE_FLOAT) or (field_type & DATA_TYPE_DOUBLE)):
-				self.python_file.append_line("\t\t\t" + "self." + field_name + "= struct.unpack('" + self.python_get_data_type_mapping(field_data_type_str) + "', "  + "istream.read(" + str(field_data_type_len) + "))[0]")
-			elif(field_type & DATA_TYPE_MESSAGE):
-				self.python_file.append_line("\t\t\t" + "self." + field_name + " = " + field_data_type_str + "()")
-				self.python_file.append_line("\t\t\t" + "self." + field_name + ".decode_internal(istream)")
-			else:
-				raise Exception ("Field type " + str(field_type) + " is not supported")
-				
-			self.python_file.append_line()		
-	
-	def python_create_oneof_tags(self, message):
-		message_name = message[0]
-		variables = message[1:]
-		
-		for variable in variables:
-			field_name = variable[0]
-			field_type = variable[1]
-			oneof_tag = variable[5]
-	
-			if(field_type & FIELD_TYPE_ONEOF):
-				self.python_file.append_line(message_name + "_" + field_name +  "_tag = " + str(oneof_tag))
-	
-			
-	def python_create_oneof_classes(self, variables):
-		variables_of_oneof_fields = self.get_variables_of_oneof_fields(variables)
-		
-		
-		for oneof_variables in variables_of_oneof_fields:
-			
-			oneof_name = oneof_variables[0][6]
-			# Create an own class for this oneof_name
-			self.python_file.append_line("\tclass _" + oneof_name + ":")
-			self.python_file.append_line()
-			self.python_file.append_line("\t\tdef __init__(self):")
-			self.python_file.append_line("\t\t\tself.reset()")
-			self.python_file.append_line()
-			self.python_file.append_line("\t\tdef __repr__(self):")
-			self.python_file.append_line("\t\t\treturn str(self.__dict__)")
-			self.python_file.append_line()
-			self.python_file.append_line("\t\tdef reset(self):")
-			
-			# Declare the variables
-			self.python_file.append_line("\t\t\tself." + "which" + " = 0")
-			for variable in oneof_variables:
-				field_name = variable[0]
-				field_type = variable[1]				
-				if((field_type & DATA_TYPE_INT) or (field_type & DATA_TYPE_UINT) or (field_type & DATA_TYPE_FLOAT) or (field_type & DATA_TYPE_DOUBLE)):
-					self.python_file.append_line("\t\t\tself." + field_name + " = 0")
-				elif((field_type & DATA_TYPE_MESSAGE)):				
-					self.python_file.append_line("\t\t\tself." + field_name + " = None")				
-				else:
-					raise Exception ("Field type " + str(field_type) + " is not supported")
-		
-			self.python_file.append_line("\t\t\tpass")
-					
-			self.python_create_oneof_encode_functions(oneof_variables)
-		
-			self.python_create_oneof_decode_functions(oneof_variables)
-			
-			
-			
-			
-	def python_create_class(self, message):
-		message_name = message[0]
-		variables = message[1:]
-		num_variables = len(variables)
 
-		self.python_file.append_line("class " + message_name + ":")
-		self.python_file.append_line()
-		self.python_file.append_line("\tdef __init__(self):")
-		self.python_file.append_line("\t\tself.reset()")
-		self.python_file.append_line()
-		self.python_file.append_line("\tdef __repr__(self):")
-		self.python_file.append_line("\t\treturn str(self.__dict__)")
-		self.python_file.append_line()
-		self.python_file.append_line("\tdef reset(self):")
-		
-		
-		self.python_create_field_declarations(message_name, variables)
-		
-		self.python_file.append_line("\t\tpass")	# Added this if there is an Empty message, with no fields at all
-		
-		
-		self.python_create_encode_functions(variables)
-		
-		self.python_create_decode_functions(variables)
 
-		self.python_create_bytestring_functions(variables)
+class Python_Creator:
+	def __init__(self, output_path, output_name, imports, defines, messages, endianness):
+		self.output_path = output_path
+		self.output_name = output_name
+		self.imports = imports
+		self.defines = defines
+		self.messages = messages
+		self.endianness = endianness
 		
-		self.python_create_oneof_classes(variables)
+		self.create()
 		
+
 		
 			
 	
-	def python_create(self):
-		self.python_file = OutputFile(self.output_path + "/" + self.output_name + ".py")
-		
+	def create(self):
 		print "Creating python-file..."
 		
-		self.python_file.append_line("import struct")	
+		self.python_file = OutputFile(self.output_path + "/" + self.output_name + ".py")
+		
+		self.python_file.append_line("import struct")
 		
 		# First create the imports
 		for imp in self.imports:
-			self.python_file.append_line("from " + imp + " import *")
+			self.python_file.append_line("from " + imp.name + " import *")
 			
 		self.python_file.append_line()
 			
 		# Then create the defines
 		for define in self.defines:
-			self.python_file.append_line(define[0] + " = " + define[1])
+			self.python_file.append_line(define.name + " = " + str(define.number))
 		self.python_file.append_line()
 		
 		# Then create the oneof_tags from the messages		
 		for message in self.messages:
-			self.python_create_oneof_tags(message)
+			self.create_oneof_tags(message)
 		self.python_file.append_line()
 		
 		# Create Ostream-class
@@ -1374,7 +1041,7 @@ class Protocol_creator:
 		
 		# Then create the python-classes from the messages
 		for message in self.messages:
-			self.python_create_class(message)
+			self.create_class(message)
 			self.python_file.append_line()
 		
 		#print "Python file:"
@@ -1382,15 +1049,349 @@ class Protocol_creator:
 		
 		
 		self.python_file.write_to_file()
+		
+	
+	def create_oneof_tags(self, message):
+		for field in message.fields:
+			if(isinstance(field, OneofField)): # Is oneof field
+				for inner_field in field.inner_fields:
+					self.python_file.append_line(message.name + "_" + inner_field.name +  "_tag = " + str(inner_field.tag))
+					
+	
+	def get_default_value(self, field_type):
+		field_type_values = {"uint8": "0", "int8": "0", "uint16": "0", "int16": "0", 
+							  "uint32": "0", "int32": "0", "uint64": "0", "int64": "0", 
+							  "float": "0", "double": "0"}
+		
+		if field_type in field_type_values:
+			return field_type_values[field_type]
+		else:	# For example in the case of message as field type. Here you can also return an "instance" of the message: field_type + "()"
+			return "None"
+			
+	def get_field_type_mapping(self, field_type):
+		if(self.endianness == BIG_ENDIANNESS):
+			field_type_mapping = {"uint8": ">B", "int8": ">b", "uint16": ">H", "int16": ">h", 
+								  "uint32": ">I", "int32": ">i", "uint64": ">Q", "int64": ">q", 
+								  "float": ">f", "double": ">d"}
+		else:	  
+			field_type_mapping = {"uint8": "<B", "int8": "<b", "uint16": "<H", "int16": "<h", 
+								  "uint32": "<I", "int32": "<i", "uint64": "<Q", "int64": "<q", 
+								  "float": "<f", "double": "<d"}
+					
+		if field_type in field_type_mapping:
+			return field_type_mapping[field_type]
+		else:	# For example in the case of message as field type
+			return None
+	
+	def get_field_type_len(self, field_type):
+		field_type_lengths =   {"uint8": 1, "int8": 1, "uint16": 2, "int16": 2, 
+								"uint32": 4, "int32": 4, "uint64": 8, "int64": 8, 
+								"float": 4, "double": 8}
+								
+		return field_type_lengths[field_type]
+			
+	def create_encode_functions(self, message):
+		# Create the encode function
+		self.python_file.append_line()
+		self.python_file.append_line("\tdef encode(self):")
+		self.python_file.append_line("\t\tostream = _Ostream()")
+		self.python_file.append_line("\t\tself.encode_internal(ostream)")
+		self.python_file.append_line("\t\treturn ostream.buf")
+		
+		# Create the encode_internal-function
+		self.python_file.append_line()
+		self.python_file.append_line("\tdef encode_internal(self, ostream):")
+		
+		for field in message.fields:
+			if(isinstance(field, OneofField)): # Is oneof field	
+				self.python_file.append_line("\t\t" + "self." + field.name + ".encode_internal(ostream)")
+			else:
+				self.python_file.append_line("\t\tself.encode_" + field.name + "(ostream)")		
+		
+		self.python_file.append_line("\t\tpass")	# Added this if there is an Empty message, with no fields at all
+		
+		# Create all the encode-functions for the fields
+		self.python_file.append_line()		
+		for field in message.fields:
+			# Skip oneof fields
+			if(isinstance(field, OneofField)): # Is oneof field
+				continue
+		
+			self.python_file.append_line("\tdef encode_" + field.name + "(self, ostream):")
+		
+			if(isinstance(field, RequiredField)): # Is required field
+				mapped_field_type = self.get_field_type_mapping(field.type)
+				if(mapped_field_type == None): # is a message
+					self.python_file.append_line("\t\t" + "self." + field.name + ".encode_internal(ostream)")
+				else:
+					self.python_file.append_line("\t\t" + "ostream.write(" + "struct.pack('" + mapped_field_type + "', " + "self." + field.name + "))")		
+					
+			elif(isinstance(field, OptionalField)): # Is optional field
+				self.python_file.append_line("\t\t" + "ostream.write(" + "struct.pack('" + self.get_field_type_mapping('uint8') + "', " + "self.has_" + field.name + "))")
+				self.python_file.append_line("\t\t" + "if self.has_" + field.name + ":")				
+				mapped_field_type = self.get_field_type_mapping(field.type)
+				if(mapped_field_type == None): # is a message
+					self.python_file.append_line("\t\t\t" + "self." + field.name + ".encode_internal(ostream)")
+				else:
+					self.python_file.append_line("\t\t\t" + "ostream.write(" + "struct.pack('" + mapped_field_type + "', " + "self." + field.name + "))")
+				
+			elif(isinstance(field, RepeatedField)): # Is repeated field			
+				[size_type, size_type_number_bytes] = search_size_type(field.size)
+				self.python_file.append_line("\t\t" + "count = len(" + "self." + field.name + ")")
+				self.python_file.append_line("\t\t" + "ostream.write(" + "struct.pack('" + self.get_field_type_mapping(size_type) + "', " + "count" + "))")
+				self.python_file.append_line("\t\t" + "for i in range(0, " + "count" + "):")
+				mapped_field_type = self.get_field_type_mapping(field.type)				
+				if(mapped_field_type == None): # is a message
+					self.python_file.append_line("\t\t\t" + "self." + field.name + "[i].encode_internal(ostream)" )
+				else:
+					self.python_file.append_line("\t\t\t" + "ostream.write(" + "struct.pack('" + mapped_field_type + "', " + "self." + field.name + "[i]))")
+					
+			elif(isinstance(field, FixedRepeatedField)): # Is fixed repeated field
+				self.python_file.append_line("\t\t" + "count = " + str(field.size))
+				self.python_file.append_line("\t\t" + "for i in range(0, " + "count" + "):")
+				
+				mapped_field_type = self.get_field_type_mapping(field.type)				
+				if(mapped_field_type == None): # is a message
+					self.python_file.append_line("\t\t\t" + "self." + field.name + "[i].encode_internal(ostream)" )
+				else:
+					self.python_file.append_line("\t\t\t" + "ostream.write(" + "struct.pack('" + mapped_field_type + "', " + "self." + field.name + "[i]))")
+				
+			else:
+				raise Exception ("Field " + str(field) + " is not supported")
+					
+			self.python_file.append_line()
+			
+	def create_decode_functions(self, message):
+	
+		
+		# Create the decode function
+		self.python_file.append_line()
+		self.python_file.append_line("\t@classmethod")
+		self.python_file.append_line("\tdef decode(cls, buf):")
+		self.python_file.append_line("\t\tobj = cls()")
+		self.python_file.append_line("\t\tobj.decode_internal(_Istream(buf))")
+		self.python_file.append_line("\t\treturn obj")
+		
+		
+		# Create the decode_internal-function
+		self.python_file.append_line()
+		self.python_file.append_line("\tdef decode_internal(self, istream):")
+		self.python_file.append_line("\t\tself.reset()")
+		for field in message.fields:
+			if(isinstance(field, OneofField)): # Is oneof field	
+				self.python_file.append_line("\t\t" + "self." + field.name + ".decode_internal(istream)")
+			else:
+				self.python_file.append_line("\t\tself.decode_" + field.name + "(istream)")		
+		
+		self.python_file.append_line("\t\tpass")	# Added this if there is an Empty message, with no fields at all
+		
+		
+		# Create all the decode-functions for the fields
+		self.python_file.append_line()
+		
+		
+		for field in message.fields:
+			# Skip oneof fields
+			if(isinstance(field, OneofField)): # Is oneof field
+				continue
+			
+			self.python_file.append_line("\tdef decode_" + field.name + "(self, istream):")
+			
+			
+			
+		
+			if(isinstance(field, RequiredField)): # Is required field
+				mapped_field_type = self.get_field_type_mapping(field.type)
+				if(mapped_field_type == None): # is a message
+					self.python_file.append_line("\t\t" + "self." + field.name + " = " + field.type + "()")
+					self.python_file.append_line("\t\t" + "self." + field.name + ".decode_internal(istream)")
+				else:
+					self.python_file.append_line("\t\t" + "self." + field.name + "= struct.unpack('" + mapped_field_type + "', "  + "istream.read(" + str(self.get_field_type_len(field.type)) + "))[0]")
+					
+			elif(isinstance(field, OptionalField)): # Is optional field
+				self.python_file.append_line("\t\t" + "self.has_" + field.name + "= struct.unpack('" + self.get_field_type_mapping('uint8') + "', " + "istream.read(" + "1" + "))[0]" )
+				self.python_file.append_line("\t\t" + "if self.has_" + field.name + ":")
+			
+				mapped_field_type = self.get_field_type_mapping(field.type)
+				if(mapped_field_type == None): # is a message
+					self.python_file.append_line("\t\t\t" + "self." + field.name + " = " + field.type + "()")
+					self.python_file.append_line("\t\t\t" + "self." + field.name + ".decode_internal(istream)")
+				else:
+					self.python_file.append_line("\t\t\t" + "self." + field.name + "= struct.unpack('" + mapped_field_type + "', "  + "istream.read(" + str(self.get_field_type_len(field.type)) + "))[0]")
+			
+			
+			elif(isinstance(field, RepeatedField)): # Is repeated field			
+				[size_type, size_type_number_bytes] = search_size_type(field.size)
+				self.python_file.append_line("\t\t" + "count = struct.unpack('" + self.get_field_type_mapping(size_type) + "', " + "istream.read(" + str(size_type_number_bytes) + "))[0]" )
+				self.python_file.append_line("\t\t" + "for i in range(0, " + "count" + "):")
+				
+				mapped_field_type = self.get_field_type_mapping(field.type)
+				if(mapped_field_type == None): # is a message
+					self.python_file.append_line("\t\t\t" + "tmp" + " = " + field.type + "()")
+					self.python_file.append_line("\t\t\t" + "tmp.decode_internal(istream)")
+					self.python_file.append_line("\t\t\t" + "self." + field.name + ".append(tmp)")
+				else:
+					self.python_file.append_line("\t\t\t" + "self." + field.name + ".append(struct.unpack('" + mapped_field_type + "', " + "istream.read(" +  str(self.get_field_type_len(field.type)) + "))[0])")
+			
+			elif(isinstance(field, FixedRepeatedField)): # Is fixed repeated field
+				self.python_file.append_line("\t\t" + "count = " + str(field.size) )
+				self.python_file.append_line("\t\t" + "for i in range(0, " + "count" + "):")
+				
+			
+				mapped_field_type = self.get_field_type_mapping(field.type)
+				if(mapped_field_type == None): # is a message
+					self.python_file.append_line("\t\t\t" + "tmp" + " = " + field.type + "()")
+					self.python_file.append_line("\t\t\t" + "tmp.decode_internal(istream)")
+					self.python_file.append_line("\t\t\t" + "self." + field.name + ".append(tmp)")
+				else:
+					self.python_file.append_line("\t\t\t" + "self." + field.name + ".append(struct.unpack('" + mapped_field_type + "', " + "istream.read(" +  str(self.get_field_type_len(field.type)) + "))[0])")				
+			else:
+				raise Exception ("Field " + str(field) + " is not supported")
+					
+			self.python_file.append_line()
+		
+	def create_oneof_classes(self, message):
+	
+	
+		for field in message.fields:
+			if(isinstance(field, OneofField)): # Is oneof field	
+				# Create an own class for this oneof_name
+				self.python_file.append_line("\tclass _" + field.name + ":")
+				self.python_file.append_line()
+				self.python_file.append_line("\t\tdef __init__(self):")
+				self.python_file.append_line("\t\t\tself.reset()")
+				self.python_file.append_line()
+				self.python_file.append_line("\t\tdef __repr__(self):")
+				self.python_file.append_line("\t\t\treturn str(self.__dict__)")
+				self.python_file.append_line()
+				self.python_file.append_line("\t\tdef reset(self):")
+				
+				
+				# Declare the variables in the oneof field
+				self.python_file.append_line("\t\t\tself." + "which" + " = 0")
+				for inner_field in field.inner_fields:
+					self.python_file.append_line("\t\t\tself." + inner_field.name + " = " + self.get_default_value(inner_field.type))
+				self.python_file.append_line("\t\t\tpass")
+				
+		
+				############ Encode functions ############
+				
+				# Create the encode_internal-function
+				self.python_file.append_line()
+				self.python_file.append_line("\t\tdef encode_internal(self, ostream):")
+				self.python_file.append_line("\t\t\t" + "ostream.write(" + "struct.pack('" + self.get_field_type_mapping('uint8') + "', " + "self.which" + "))")
+				self.python_file.append_line("\t\t\t" + "options = {" )
+				
+
+				for inner_field in field.inner_fields:
+					self.python_file.append_line("\t\t\t\t" + str(inner_field.tag) + ": " + "self.encode_" + inner_field.name + ",")
+				self.python_file.append_line("\t\t\t" + "}" )
+				self.python_file.append_line("\t\t\t" + "options[self.which](ostream)" )
+				self.python_file.append_line("\t\t\tpass")
+				
+				
+				
+				# Create all the encode-functions for the inner fields
+				self.python_file.append_line()
+				
+				
+				for inner_field in field.inner_fields:
+					self.python_file.append_line("\t\tdef encode_" + inner_field.name + "(self, ostream):")
+					
+					mapped_field_type = self.get_field_type_mapping(inner_field.type)
+					if(mapped_field_type == None): # is a message
+						self.python_file.append_line("\t\t\t" + "self." + inner_field.name + ".encode_internal(ostream)")
+					else:
+						self.python_file.append_line("\t\t\t" + "ostream.write(" + "struct.pack('" + mapped_field_type + "', " + "self." + inner_field.name + "))")
+					
+					self.python_file.append_line()
+						
+				
+	
+				############ Decode functions ############
+				
+				# Create the decode_internal-function
+				self.python_file.append_line()
+				self.python_file.append_line("\t\tdef decode_internal(self, istream):")
+				self.python_file.append_line("\t\t\tself.reset()")
+				
+				self.python_file.append_line("\t\t\t" + "self.which" + "= struct.unpack('" + self.get_field_type_mapping('uint8') + "', " + "istream.read(" + "1" + "))[0]" )
+				self.python_file.append_line("\t\t\t" + "options = {" )		
+				for inner_field in field.inner_fields:
+					self.python_file.append_line("\t\t\t\t" + str(inner_field.tag) + ": " + "self.decode_" + inner_field.name + ",")
+				self.python_file.append_line("\t\t\t" + "}" )
+				self.python_file.append_line("\t\t\t" + "options[self.which](istream)" )
+				self.python_file.append_line("\t\t\tpass")
+				
+				
+				
+				# Create all the decode-functions for the inner fields
+				self.python_file.append_line()			
+				for inner_field in field.inner_fields:
+					self.python_file.append_line("\t\tdef decode_" + inner_field.name + "(self, istream):")
+					
+					mapped_field_type = self.get_field_type_mapping(inner_field.type)
+					if(mapped_field_type == None): # is a message
+						self.python_file.append_line("\t\t\t" + "self." + inner_field.name + " = " + inner_field.type + "()")
+						self.python_file.append_line("\t\t\t" + "self." + inner_field.name + ".decode_internal(istream)")				
+					else:
+						self.python_file.append_line("\t\t\t" + "self." + inner_field.name + "= struct.unpack('" + mapped_field_type + "', "  + "istream.read(" + str(self.get_field_type_len(inner_field.type)) + "))[0]")
+					
+					self.python_file.append_line()		
+				
+			
+	def create_class(self, message):
+
+
+		self.python_file.append_line("class " + message.name + ":")
+		self.python_file.append_line()
+		self.python_file.append_line("\tdef __init__(self):")
+		self.python_file.append_line("\t\tself.reset()")
+		self.python_file.append_line()
+		self.python_file.append_line("\tdef __repr__(self):")
+		self.python_file.append_line("\t\treturn str(self.__dict__)")
+		self.python_file.append_line()
+		self.python_file.append_line("\tdef reset(self):")
+		
+		# Declare the fields:
+		for field in message.fields:
+			if(isinstance(field, RequiredField)): # Is required field
+				self.python_file.append_line("\t\tself." + field.name + " = " + self.get_default_value(field.type))
+			elif(isinstance(field, OptionalField)): # Is optional field
+				self.python_file.append_line("\t\tself." + "has_" + field.name + " = 0")	
+				self.python_file.append_line("\t\tself." + field.name + " = " + self.get_default_value(field.type))
+			elif(isinstance(field, RepeatedField)): # Is repeated field
+				self.python_file.append_line("\t\tself." + field.name + " = []")
+			elif(isinstance(field, FixedRepeatedField)): # Is fixed repeated field
+				self.python_file.append_line("\t\tself." + field.name + " = []")	
+			elif(isinstance(field, OneofField)): # Is oneof field	
+				self.python_file.append_line("\t\tself." + field.name + " = " + "self._" + field.name + "()")
+			else:
+				raise Exception ("Field " + str(field) + " is not supported")
+		
+		self.python_file.append_line("\t\tpass")	# Added this if there is an Empty message, with no fields at all
+		
+		
+		self.create_encode_functions(message)
+		
+		self.create_decode_functions(message)
+		
+		self.create_oneof_classes(message)
+		
+		
+	
+
+
 
 if __name__ == '__main__':
 	if(len(sys.argv) < 5):
-		raise Exception("Script has to be called with: " + sys.argv[0] + " " + str(SUPPORTED_OUTPUT_FORMATS) + " 'protocol-file' 'output-path' 'output-file name'")
+		raise Exception("Script has to be called with: " + sys.argv[0] + " " + str(SUPPORTED_OUTPUT_FORMATS) + " 'protocol-file' 'output-path' 'output-file name'" + " " + str(SUPPORTED_ENDIANNESS))
 
 	output_format = sys.argv[1]
 	file = sys.argv[2]
 	output_path = sys.argv[3]
 	output_name = sys.argv[4]
+	
 	
 	print "Output name"
 	print output_name
@@ -1399,9 +1400,15 @@ if __name__ == '__main__':
 		raise Exception("Output format '"+ output_format + "' not supported. Take one of these: " +  str(SUPPORTED_OUTPUT_FORMATS))
 	if(not os.path.isfile(file)):
 		raise Exception("Protocol-file '" + file + "' does not exist.")
-		
-	protocol_parser = Protocol_parser(file)
-	[imports, defines, messages] = protocol_parser.parse()
-	protocol_creator = Protocol_creator(output_format, output_path, output_name, imports, defines, messages)
-	protocol_creator.create()
+	
+	# Parse the file
+	Parser(file)
+	
+	# Create the source code
+	if(output_format == '-c'):
+		C_Creator(output_path, output_name, Imports, Defines, Messages)
+	elif(output_format == '-python'):
+		endianness = BIG_ENDIANNESS if sys.argv[5] == '-be' else LITTLE_ENDIANNESS
+		Python_Creator(output_path, output_name, Imports, Defines, Messages, endianness)
+	
 	
