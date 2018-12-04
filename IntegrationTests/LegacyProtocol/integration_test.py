@@ -7,10 +7,9 @@ import serial
 import serial.tools.list_ports
 import threading
 
-sys.path.append('../BadgeFramework')
+sys.path.append('../../BadgeFramework')
 from ble_badge_connection import BLEBadgeConnection
-from bluepy.btle import BTLEException
-from badge import OpenBadge
+from badge_legacy import OpenBadge
 
 logging.basicConfig(filename="integration_test.log", level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -23,33 +22,15 @@ logger.addHandler(stdout_handler)
 # Uncomment this line to make logging very verbose.
 # logging.getLogger().addHandler(stdout_handler)
 
+# Special badge restart command only used for testing purposes
+def restart_badge(serial):
+	serial.write("restart\n")
+	time.sleep(5)
+
 class IntegrationTest(unittest.TestCase):
 	def __init__(self, device_addr):
 		self.device_addr = device_addr
 		unittest.TestCase.__init__(self)
-
-	def restart_badge(self, badge):
-		try:
-			badge.restart()
-		except BTLEException as e:
-			self.connection.connect()
-			return OpenBadge(self.connection)
-
-	def assertStatusesEqual(self, status, expected_values):
-		"""
-		Takes a status response from a badge
-		And a dict with expected values
-		Note that the keys in <expected_values> must match
-		 those in <status> exactly
-		"""
-		for key, expected_val in expected_values.iteritems():
-			actual_val = getattr(status, key)
-			self.assertEqual(actual_val, expected_val, msg="""
-			Actual and expected status values did not match for
-			status: {}\n
-			Expected value: {}\n
-			Actual value: {}
-			""".format(key, expected_val, actual_val))
 
 	def runTest(self):
 		self.runTest_startUART()
@@ -83,13 +64,11 @@ class IntegrationTest(unittest.TestCase):
 		logger.info("UART:" + data)
 
 	def runTest_MainLoop(self):
+		restart_badge(self.uartSerial)
 
-		self.connection = BLEBadgeConnection.get_connection_to_badge(self.device_addr)
-		self.connection.connect()
-		badge = OpenBadge(self.connection)
-
-		badge = self.restart_badge(badge)
-
+		connection = BLEBadgeConnection.get_connection_to_badge(self.device_addr)
+		connection.connect()
+		badge = OpenBadge(connection)
 
 		try:
 			self.testCase(badge, logger)

@@ -17,7 +17,7 @@ if len(sys.argv) != 2:
 
 device_addr = sys.argv[1]
 
-for file in sorted(os.listdir(".")):
+for file in os.listdir("."):
 	if fnmatch(file, "test_*.py"):
 		test_case_name = file.replace(".py", "")
 		print("Running " + test_case_name + "...")
