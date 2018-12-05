@@ -12,34 +12,22 @@ Schema-file layout:
 
 - Messages defines the structured data with different fields:
 
-		message Test_message {
-    
-			required uint8 a;
-      
-			optional int8 b;
-      
-			repeated uint16 c[5];
-      
-			fixed_repeated int16 d[10];
-      
-			oneof e {
-      
-				uint32 e (1);
-        
-				int32 f	 (2);
-        
-			}
-      
+		message Test_message {    
+			required uint8 a;      
+			optional int8 b;      
+			repeated uint16 c[5];      
+			fixed_repeated int16 d[10];      
+			oneof e {      
+				uint32 e (1);        
+				int32 f	 (2);        
+			}      
 		}
 	
 - Define constants:
 
-		define {
-    
-			TEST_CONSTANT = 100;
-      
-			TEST1_CONSTANT = 200;
-      
+		define {    
+			TEST_CONSTANT = 100;      
+			TEST1_CONSTANT = 200;      
 		}
 	
 - Import other automatic generated files:
