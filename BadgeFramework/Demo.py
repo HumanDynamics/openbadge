@@ -21,11 +21,10 @@ import numpy as np
 
 # It is important to enable the access to the host-display with "xhost +" before starting the docker-container
 # You have to configure the ID's and group number of the badges via the terminal correctly to "find" them in a scan --> same group number
-# Please put the MAC-Address of the Badge you want to display here:
-
-MAC_ADDRESS = "D0:BC:EF:04:A7:E6"
+# Please enter the MAC-Address of the Badge during the call of this python script
 
 
+MAC_ADDRESS = ""
 DISPLAY_COUNTER_MIC 	= 200
 DISPLAY_TIME_MIC_SEC	= 10
 DISPLAY_COUNTER_ACC 	= 200
@@ -385,5 +384,11 @@ class PlotThread(threading.Thread):
 		return x_lim_min, x_lim_max
 
 		
-app = App()
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Please enter badge MAC address")
+        exit(1)
+    device_addr = sys.argv[1]
+    MAC_ADDRESS = device_addr
+    app = App()
 

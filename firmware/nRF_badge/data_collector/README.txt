@@ -15,9 +15,11 @@ Protocol:
 		Status Request			|	Request to retrieve the current status of the badge, setting the time, 
 									and optionally setting the ID and group number.
 			->
-		Status Response			|	Response returns the current status of the badge: clock_status, 									microphone_status, scan_status, accelerometer_interrupt_status, battery status. 
-							Additionally, a local timestamp of the badge and the current 
-							battery-data is returned.
+		Status Response			|	Response returns the current status of the badge: 
+									clock_status, microphone_status, scan_status, accelerometer_status,
+									accelerometer_interrupt_status, battery status. 
+									Additionally, a local timestamp of the badge and the current 
+									battery-data is returned.
 		-------------------------------------------------------------------------------------------------------------
 		Start Request			| 	Request to start a certain data source for recording and storing. 
 									Each data source has its own parameters that are specified via 
@@ -44,8 +46,8 @@ Protocol:
 									for storage.
 			->
 		StreamResponse			|	This is a message that contains all data points of the streamed data sources. 
-							It is transmitted continously. (If a data source is not activated, 
-							the repeated field is empty)
+									It is transmitted continously. (If a data source is not activated, 
+									the repeated field is empty)
 		-------------------------------------------------------------------------------------------------------------
 		Stop Stream Request		|	Stops the streaming of a certain data source.
 			->
