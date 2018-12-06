@@ -23,7 +23,7 @@
 #include "uart_commands_lib.h"
 
 
-void check_init_error(ret_code_t ret, uint8_t identifier);
+void check_init_error(ret_code_t ret);
 
 /**
  * ============================================== MAIN ====================================================
@@ -61,22 +61,22 @@ int main(void)
 	APP_TIMER_INIT(0, 60, NULL);
 	
 	ret = systick_init(0);
-	check_init_error(ret, 1);
+	check_init_error(ret);
 	
 	ret = timeout_init();
-	check_init_error(ret, 2);
+	check_init_error(ret);
 	
 	ret = ble_init();
-	check_init_error(ret, 3);
+	check_init_error(ret);
 	
 	ret = sampling_init();
-	check_init_error(ret, 4);
+	check_init_error(ret);
 	
 	ret = storer_init();
-	check_init_error(ret, 5);
+	check_init_error(ret);
 	
 	ret = uart_commands_init();
-	check_init_error(ret, 6);
+	check_init_error(ret);
 	
 	#ifdef TESTER_ENABLE	
 		
@@ -85,7 +85,7 @@ int main(void)
 	(void) selftest_status;
 	
 	ret = storer_clear();
-	check_init_error(ret, 7);
+	check_init_error(ret);
 	debug_log("MAIN: Storer clear: %u\n\r", ret);
 	
 	#endif
@@ -98,11 +98,19 @@ int main(void)
 	advertiser_init();
 	
 	ret = advertiser_start_advertising();
-	check_init_error(ret, 8);
+	check_init_error(ret);
 	
 	ret = request_handler_init();
-	check_init_error(ret, 9);
+	check_init_error(ret);
 
+	
+	// If initialization was successful, blink the green LED 3 times.
+	for(uint8_t i = 0; i < 3; i++) {
+		nrf_gpio_pin_write(GREEN_LED, LED_ON);  //turn on LED	
+		nrf_delay_ms(100);
+		nrf_gpio_pin_write(GREEN_LED, LED_OFF);  //turn off LED
+		nrf_delay_ms(100);
+	}
 	
 	(void) ret;
 	
@@ -113,21 +121,13 @@ int main(void)
 	}	
 }
 
-/**@brief Function to display an initialization error.
+/**@brief Function that enters a while-true loop if initialization failed.
  *
  * @param[in]	ret				Error code from an initialization function.
- * @param[in]	identifier		The identifier of the initialization function (represents number of LED blinks)
  *
  */
-void check_init_error(ret_code_t ret, uint8_t identifier) {
+void check_init_error(ret_code_t ret) {
 	if(ret == NRF_SUCCESS)
 		return;
-	while(1) {
-		for(uint8_t i = 0; i < identifier; i++) {
-			nrf_gpio_pin_write(RED_LED, LED_ON);	//turn on LED
-			nrf_delay_ms(300);
-			nrf_gpio_pin_write(RED_LED, LED_OFF);	//turn off LED
-		}
-		nrf_delay_ms(2000);
-	}
+	while(1) {}
 }
