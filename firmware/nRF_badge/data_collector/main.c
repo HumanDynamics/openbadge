@@ -23,7 +23,7 @@
 #include "uart_commands_lib.h"
 
 
-void check_init_error(ret_code_t ret);
+void check_init_error(ret_code_t ret, uint8_t identifier);
 
 /**
  * ============================================== MAIN ====================================================
@@ -59,24 +59,24 @@ int main(void)
 	SOFTDEVICE_HANDLER_INIT(&clock_lf_cfg, NULL);
 	APP_SCHED_INIT(4, 100);
 	APP_TIMER_INIT(0, 60, NULL);
-	
+
 	ret = systick_init(0);
-	check_init_error(ret);
+	check_init_error(ret, 1);
 	
 	ret = timeout_init();
-	check_init_error(ret);
+	check_init_error(ret, 2);
 	
 	ret = ble_init();
-	check_init_error(ret);
+	check_init_error(ret, 3);
 	
 	ret = sampling_init();
-	check_init_error(ret);
+	check_init_error(ret, 4);
 	
 	ret = storer_init();
-	check_init_error(ret);
+	check_init_error(ret, 5);
 	
 	ret = uart_commands_init();
-	check_init_error(ret);
+	check_init_error(ret, 6);
 	
 	#ifdef TESTER_ENABLE	
 		
@@ -85,7 +85,7 @@ int main(void)
 	(void) selftest_status;
 	
 	ret = storer_clear();
-	check_init_error(ret);
+	check_init_error(ret, 7);
 	debug_log("MAIN: Storer clear: %u\n\r", ret);
 	
 	#endif
@@ -98,10 +98,10 @@ int main(void)
 	advertiser_init();
 	
 	ret = advertiser_start_advertising();
-	check_init_error(ret);
+	check_init_error(ret, 8);
 	
 	ret = request_handler_init();
-	check_init_error(ret);
+	check_init_error(ret, 9);
 
 	
 	// If initialization was successful, blink the green LED 3 times.
@@ -124,10 +124,19 @@ int main(void)
 /**@brief Function that enters a while-true loop if initialization failed.
  *
  * @param[in]	ret				Error code from an initialization function.
+ * @param[in]	identifier		Identifier, represents the number of red LED blinks.
  *
  */
-void check_init_error(ret_code_t ret) {
+void check_init_error(ret_code_t ret, uint8_t identifier) {
 	if(ret == NRF_SUCCESS)
 		return;
-	while(1) {}
+	while(1) {
+		for(uint8_t i = 0; i < identifier; i++) {
+			nrf_gpio_pin_write(RED_LED, LED_ON);  //turn on LED	
+			nrf_delay_ms(200);
+			nrf_gpio_pin_write(RED_LED, LED_OFF);  //turn off LED
+			nrf_delay_ms(200);
+		}
+		nrf_delay_ms(2000);
+	}
 }
