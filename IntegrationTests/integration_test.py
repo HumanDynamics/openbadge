@@ -32,6 +32,8 @@ class IntegrationTest(unittest.TestCase):
 		try:
 			badge.restart()
 		except BTLEException as e:
+			# let it restart
+			time.sleep(0.25)
 			self.connection.connect()
 			return OpenBadge(self.connection)
 
