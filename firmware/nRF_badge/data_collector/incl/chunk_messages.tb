@@ -1,0 +1,56 @@
+import common_messages
+
+extern Timestamp;
+extern BatteryData;
+extern MicrophoneData;
+extern ScanResultData;
+extern AccelerometerData;
+
+
+define {
+	MICROPHONE_CHUNK_DATA_SIZE = 114;
+}
+
+define {
+	ACCELEROMETER_CHUNK_DATA_SIZE = 100;
+}
+
+define {
+	SCAN_CHUNK_DATA_SIZE = 29;
+	SCAN_SAMPLING_CHUNK_DATA_SIZE = 255;
+	SCAN_CHUNK_AGGREGATE_TYPE_MAX = 0;
+	SCAN_CHUNK_AGGREGATE_TYPE_MEAN = 1;
+}
+
+
+message BatteryChunk {
+	required Timestamp timestamp;
+	required BatteryData battery_data;
+}
+
+message MicrophoneChunk {
+	required Timestamp timestamp;
+	required uint16 sample_period_ms;
+	repeated MicrophoneData microphone_data[MICROPHONE_CHUNK_DATA_SIZE];
+}
+
+message ScanSamplingChunk {
+	required Timestamp timestamp;
+	repeated ScanResultData scan_result_data[SCAN_SAMPLING_CHUNK_DATA_SIZE];
+}
+
+message ScanChunk {
+	required Timestamp timestamp;
+	repeated ScanResultData scan_result_data[SCAN_CHUNK_DATA_SIZE];
+}
+
+message AccelerometerChunk {
+	required Timestamp timestamp;
+	repeated AccelerometerData accelerometer_data[ACCELEROMETER_CHUNK_DATA_SIZE];
+}
+
+
+message AccelerometerInterruptChunk {
+	required Timestamp timestamp;
+}
+

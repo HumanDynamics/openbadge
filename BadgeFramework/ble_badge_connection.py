@@ -11,6 +11,7 @@ from bluepy import btle
 from bluepy.btle import UUID, Peripheral, DefaultDelegate, AssignedNumbers ,Scanner
 from bluepy.btle import BTLEException
 import struct	
+import Queue
 
 logger = logging.getLogger(__name__)
 
@@ -52,14 +53,12 @@ class BLEBadgeConnection(BadgeConnection):
 		self.rx = None
 		self.tx = None
 		self.conn = None
+		
 
 		# Contains the bytes recieved from the device. Held here until an entire message is recieved.
-		self.rx_buffer = ""
-		# Set to be the recieved message when an entire message is recieved.
-		self.rx_message = None
-		# The number of bytes in the completed message we are currently waiting on.
-		self.rx_bytes_expected = 0
-
+		self.rx_queue = Queue.Queue()
+		
+		
 		BadgeConnection.__init__(self)
 
 	# Returns a BLEBadgeConnection() to the first badge it sees, or none if a badge
@@ -77,13 +76,11 @@ class BLEBadgeConnection(BadgeConnection):
 
 	def received(self,data):
 		logger.debug("Recieved {}".format(data.encode("hex")))
-		self.rx_buffer += data
-
-		if len(self.rx_buffer) >= self.rx_bytes_expected:
-			self.rx_message = self.rx_buffer[0:self.rx_bytes_expected]
-			self.rx_buffer = self.rx_buffer[self.rx_bytes_expected:]
-			self.rx_bytes_expected = 0
-
+		
+		for b in data:
+			self.rx_queue.put(b)
+			
+		
 
 	# Implements BadgeConnection's connect() spec.	
 	def connect(self):
@@ -110,11 +107,10 @@ class BLEBadgeConnection(BadgeConnection):
 		self.uart = None
 		self.tx = None
 		self.rx = None
-
-		self.rx_buffer = ""
-		self.rx_message = None
-		self.rx_bytes_expected = 0
-
+		
+		with self.rx_queue.mutex:
+			self.rx_queue.queue.clear()
+		
 		#self.ble_device.disconnect()
 		self.conn.disconnect()
 		self.ble_device = None
@@ -134,14 +130,18 @@ class BLEBadgeConnection(BadgeConnection):
 		if not self.is_connected():
 			raise RuntimeError("BLEBadgeConnection not connected before await_data()!")
 
-		self.rx_bytes_expected = data_len
-		self.rx_message = None
-
-		if data_len > 0:
-			while(self.rx_message is None):
+		rx_message = ""
+		rx_bytes_expected = data_len
+		
+		if rx_bytes_expected > 0:
+			while True:
+				while(not self.rx_queue.empty()):
+					rx_message += self.rx_queue.get()
+					if(len(rx_message) == rx_bytes_expected):
+						return rx_message
+						
 				self.conn.waitForNotifications(5.0)
-
-			return self.rx_message
+		
 			
 
 	# Implements BadgeConnection's send() spec.
@@ -149,13 +149,19 @@ class BLEBadgeConnection(BadgeConnection):
 		if not self.is_connected():
 			raise RuntimeError("BLEBadgeConnection not connected before send()!")
 
-		self.rx_bytes_expected = response_len
-		self.rx_message = None
-
+		rx_message = ""
+		rx_bytes_expected = response_len
+		
 		self.tx.write(message,withResponse=True)
-
-		if response_len > 0:
-			while(self.rx_message is None):
+	
+		
+		if rx_bytes_expected > 0:
+			while True:
+				while(not self.rx_queue.empty()):
+					rx_message += self.rx_queue.get()
+					if(len(rx_message) == rx_bytes_expected):
+						return rx_message
+						
 				self.conn.waitForNotifications(5.0)
-
-			return self.rx_message
+				
+		
