@@ -1,228 +1,142 @@
 
-
+#include "sdk_config.h"
 #include <stdint.h>
 #include <string.h>
-#include <nrf51.h>
-#include <app_timer.h>
-#include <app_scheduler.h>
+#include <stdbool.h>
 
-/**
- * From Nordic SDK
- */
-#include "nordic_common.h"
-#include "nrf.h"
-#include "nrf51_bitfields.h"
+#include "custom_board.h"
+#include "nrf_gpio.h"
+#include "nrf_delay.h"
+#include "softdevice_handler.h"
+#include "debug_lib.h"
+#include "app_timer.h"
+#include "systick_lib.h"
+#include "timeout_lib.h"
+#include "ble_lib.h"
+#include "advertiser_lib.h"
+#include "request_handler_lib_01v1.h"
+#include "request_handler_lib_02v1.h"
+#include "storer_lib.h"
+#include "sampling_lib.h"
+#include "app_scheduler.h"
+#include "selftest_lib.h"
+#include "uart_commands_lib.h"
 
-#include "nrf_drv_rtc.h"        //driver abstraction for real-time counter
-#include "app_error.h"          //error handling
-#include "nrf_delay.h"          //includes blocking delay functions
-#include "nrf_gpio.h"           //abstraction for dealing with gpio
-#include "ble_flash.h"          //for writing to flash
 
-#include "app_error.h"
-
-#include "ble_gap.h"            //basic ble functions (advertising, scans, connecting)
-
-#include "debug_log.h"          //UART debugging logger
-//requires app_fifo, app_uart_fifo.c and retarget.c for printf to work properly
-
-#include "nrf_drv_config.h"
-#include "boards.h"
-
-/**
- * Custom libraries/abstractions
- */
-#include "analog.h"     //analog inputs, battery reading
-#include "battery.h"
-//#include "external_flash.h"  //for interfacing to external SPI flash
-#include "scanner.h"       //for performing scans and storing scan data
-#include "self_test.h"   // for built-in tests
-
-typedef struct {
-    bool error_occured;
-    uint32_t error_code;
-    uint32_t line_num;
-    char file_name[32];
-} AppErrorData_t;
-
-static AppErrorData_t mAppErrorData __attribute((section (".noinit")));
-
-void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name) {
-    mAppErrorData.error_occured = true;
-    mAppErrorData.error_code = error_code;
-    mAppErrorData.line_num = line_num;
-    strncpy(mAppErrorData.file_name, (char *) p_file_name, sizeof(mAppErrorData.file_name));
-
-    NVIC_SystemReset();
-}
-
-//=========================== Global function definitions ==================================
-//==========================================================================================
-
-#define SCHED_MAX_EVENT_DATA_SIZE sizeof(uint32_t)
-#define SCHED_QUEUE_SIZE 100
+void check_init_error(ret_code_t ret, uint8_t identifier);
 
 /**
  * ============================================== MAIN ====================================================
  */
 int main(void)
 {
-    #if defined(BOARD_PCA10028)  //NRF51DK
-        //If button 4 is pressed on startup, do nothing (mostly so that UART lines are freed on the DK board)
-        nrf_gpio_cfg_input(BUTTON_4,NRF_GPIO_PIN_PULLUP);  //button 4
-        if(nrf_gpio_pin_read(BUTTON_4) == 0)  //button pressed
-        {
-            nrf_gpio_pin_dir_set(LED_4,NRF_GPIO_PIN_DIR_OUTPUT);
-            nrf_gpio_pin_write(LED_4,LED_ON);
-            while(1);
-        }
-        nrf_gpio_cfg_default(BUTTON_4);
-    #endif
-
-    debug_log_init();
-    debug_log("\r\n\r\n\r\n\r\nUART trace initialized.\r\n\r\n");
-
-    // TODO: Check the reset reason to make sure our noinit RAM is valid
-    if (mAppErrorData.error_occured) {
-        debug_log("CRASH! APP ERROR %lu @ %s:%lu\r\n", mAppErrorData.error_code,
-                  mAppErrorData.file_name, mAppErrorData.line_num);
-        mAppErrorData.error_occured = false;
-    }
-
-    debug_log("Name: %.5s\r\n",DEVICE_NAME);
-    debug_log("Firmware Version: %s, Branch: %s, Commit: %s\r\n", GIT_TAG, GIT_BRANCH, GIT_COMMIT);
 
 
-    // Define and set LEDs
-    nrf_gpio_pin_dir_set(LED_1,NRF_GPIO_PIN_DIR_OUTPUT);  //set LED pin to output
-    nrf_gpio_pin_write(LED_1,LED_ON);  //turn on LED
-    nrf_gpio_pin_dir_set(LED_2,NRF_GPIO_PIN_DIR_OUTPUT);  //set LED pin to output
-    nrf_gpio_pin_write(LED_2,LED_OFF);  //turn off LED
+	nrf_gpio_pin_dir_set(GREEN_LED, NRF_GPIO_PIN_DIR_OUTPUT);  //set LED pin to output
+	nrf_gpio_pin_dir_set(RED_LED,NRF_GPIO_PIN_DIR_OUTPUT);  //set LED pin to output
+	
+	// Do some nice pattern here:
+    nrf_gpio_pin_write(RED_LED, LED_ON);  //turn on LED
+	
+	nrf_delay_ms(100);
+    nrf_gpio_pin_write(RED_LED, LED_OFF);  //turn off LED
+	
+	
+	ret_code_t ret;
+	
+	
+	debug_init();
+	
+	debug_log("MAIN: Start...\n\r");
 
-    // Initialize
-    BLE_init();
-    sd_power_mode_set(NRF_POWER_MODE_LOWPWR);  //set low power sleep mode
-    adc_config();
-    rtc_config();
-    spi_init();
+	
+	nrf_clock_lf_cfg_t clock_lf_cfg =  {.source        = NRF_CLOCK_LF_SRC_XTAL,            
+										.rc_ctiv       = 0,                                
+										.rc_temp_ctiv  = 0,                                
+										.xtal_accuracy = NRF_CLOCK_LF_XTAL_ACCURACY_20_PPM};
+										
 
+	SOFTDEVICE_HANDLER_INIT(&clock_lf_cfg, NULL);
+	APP_SCHED_INIT(4, 100);
+	APP_TIMER_INIT(0, 60, NULL);
 
-    #if defined(TESTER_ENABLE) // tester mode is enabled
-        runSelfTests();
-        while(1);
-    #endif    // end of self tests
+	ret = systick_init(0);
+	check_init_error(ret, 1);
+	
+	ret = timeout_init();
+	check_init_error(ret, 2);
+	
+	ret = ble_init();
+	check_init_error(ret, 3);
+	
+	ret = sampling_init();
+	check_init_error(ret, 4);
+	
+	ret = storer_init();
+	check_init_error(ret, 5);
+	
+	ret = uart_commands_init();
+	check_init_error(ret, 6);
+	
+	#ifdef TESTER_ENABLE	
+		
+	selftest_status_t selftest_status = selftest_test();
+	debug_log("MAIN: Ret selftest_test: %u\n\r", selftest_status);
+	(void) selftest_status;
+	
+	ret = storer_clear();
+	check_init_error(ret, 7);
+	debug_log("MAIN: Storer clear: %u\n\r", ret);
+	
+	#endif
+		
+	uint8_t mac[6];
+	ble_get_MAC_address(mac);
+	debug_log("MAIN: MAC address: %.2X:%.2X:%.2X:%.2X:%.2X:%.2X\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
+	
+	advertiser_init();
+	
+	ret = advertiser_start_advertising();
+	check_init_error(ret, 8);
+	
+	ret = request_handler_init();
+	check_init_error(ret, 9);
 
-    /*
-    debug_log("=DEVELOPMENT BADGE.  ONLY ERASES EEPROM=\r\n");
-    debug_log("=ERASING EEPROM...=\r\n");
-    ext_eeprom_wait();
-    unsigned char empty[EXT_CHUNK_SIZE + EXT_EEPROM_PADDING];
-    memset(empty,0,sizeof(empty));
-    for (int i = EXT_FIRST_CHUNK; i <= EXT_LAST_CHUNK; i++)  {
-        ext_eeprom_write(EXT_ADDRESS_OF_CHUNK(i),empty,sizeof(empty));
-        if (i % 10 == 0)  {
-            nrf_gpio_pin_toggle(LED_1);
-            nrf_gpio_pin_toggle(LED_2);
-        }
-        ext_eeprom_wait();
-    }
-    debug_log("  done.  \r\n");
-    nrf_gpio_pin_write(LED_1,LED_ON);
-    nrf_gpio_pin_write(LED_2,LED_ON);
-    while (1);
-    */
+	
+	// If initialization was successful, blink the green LED 3 times.
+	for(uint8_t i = 0; i < 3; i++) {
+		nrf_gpio_pin_write(GREEN_LED, LED_ON);  //turn on LED	
+		nrf_delay_ms(100);
+		nrf_gpio_pin_write(GREEN_LED, LED_OFF);  //turn off LED
+		nrf_delay_ms(100);
+	}
+	
+	(void) ret;
+	
 
-    APP_SCHED_INIT(SCHED_MAX_EVENT_DATA_SIZE, SCHED_QUEUE_SIZE);
-
-    collector_init();
-    storer_init();
-    sender_init();
-    scanner_init();
-    BatteryMonitor_init();
-
-    BLEsetBadgeAssignment(getStoredBadgeAssignment());
-    advertising_init();
-
-    // Blink once on start
-    nrf_gpio_pin_write(LED_1,LED_OFF);
-    nrf_delay_ms(100);
-    nrf_gpio_pin_write(LED_1,LED_ON);
-    nrf_gpio_pin_write(LED_2,LED_ON);
-    nrf_delay_ms(100);
-    for (int i=0; i<=2; i++) {
-        nrf_gpio_pin_write(LED_1,LED_OFF);
-        nrf_delay_ms(100);
-        nrf_gpio_pin_write(LED_1,LED_ON);
-        nrf_delay_ms(100);
-        nrf_gpio_pin_write(LED_2,LED_OFF);
-        nrf_delay_ms(100);
-        nrf_gpio_pin_write(LED_2,LED_ON);
-        nrf_delay_ms(100);
-    }
-    nrf_gpio_pin_write(LED_1,LED_ON);
-    nrf_gpio_pin_write(LED_2,LED_ON);
-    nrf_delay_ms(100);
-    nrf_gpio_pin_write(LED_1,LED_OFF);
-    nrf_gpio_pin_write(LED_2,LED_OFF);
-
-
-    nrf_delay_ms(1000);
-
-    debug_log("Done with setup.  Entering main loop.\r\n\r\n");
-
-    BLEstartAdvertising();
-
-    nrf_delay_ms(2);
-
-    while (true) {
-        app_sched_execute();
-        sd_app_evt_wait();
-    }
+	while(1) {		
+		app_sched_execute();	// Executes the events in the scheduler queue
+		sd_app_evt_wait();		// Sleeps until an event/interrupt occurs
+	}	
 }
 
-void BLEonConnect()
-{
-    debug_log("--CONNECTED--\r\n");
-    sleep = false;
-
-    // for app development. disable if forgotten in prod. version
-    #ifdef DEBUG_LOG_ENABLE
-        nrf_gpio_pin_write(LED_1,LED_ON);
-    #endif
-
-    ble_timeout_set(CONNECTION_TIMEOUT_MS);
-}
-
-void BLEonDisconnect()
-{
-    debug_log("--DISCONNECTED--\r\n");
-    sleep = false;
-
-    // for app development. disable if forgotten in prod. version
-    #ifdef DEBUG_LOG_ENABLE
-        nrf_gpio_pin_write(LED_1,LED_OFF);
-    #endif
-
-    ble_timeout_cancel();
-}
-
-static void processPendingCommand(void * p_event_data, uint16_t event_size) {
-    bool sendOperationsRemaining = updateSender();
-    if (sendOperationsRemaining) {
-        app_sched_event_put(NULL, 0, processPendingCommand);
-    }
-}
-
-/** Function for handling incoming data from the BLE UART service
+/**@brief Function that enters a while-true loop if initialization failed.
+ *
+ * @param[in]	ret				Error code from an initialization function.
+ * @param[in]	identifier		Identifier, represents the number of red LED blinks.
+ *
  */
-void BLEonReceive(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)
-{
-    if(length > 0)
-    {
-        pendingCommand = unpackCommand(p_data, length);
-        app_sched_event_put(NULL, 0, processPendingCommand);
-    }
-
-    ble_timeout_set(CONNECTION_TIMEOUT_MS);
+void check_init_error(ret_code_t ret, uint8_t identifier) {
+	if(ret == NRF_SUCCESS)
+		return;
+	while(1) {
+		for(uint8_t i = 0; i < identifier; i++) {
+			nrf_gpio_pin_write(RED_LED, LED_ON);  //turn on LED	
+			nrf_delay_ms(200);
+			nrf_gpio_pin_write(RED_LED, LED_OFF);  //turn off LED
+			nrf_delay_ms(200);
+		}
+		nrf_delay_ms(2000);
+	}
 }

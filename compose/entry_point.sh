@@ -15,6 +15,9 @@ elif [ "$1" = 'terminal' ]; then
 elif [ "$1" = 'run_all_tests' ]; then
     cd /app/IntegrationTests
     python ./run_all_tests.py ${@:2}
+elif [ "$1" = 'run_speed_test' ]; then
+    cd /app/IntegrationTests
+    python ./manual_badge_speed_test.py ${@:2} ${@:3}
 else
     exec "$@"
 fi

@@ -74,6 +74,7 @@ do
 
         sleep 5
         load
+	sleep 1
     	get_mac
 	    echo "########## Finished (${COUNTER}) #######"
 	    let COUNTER=COUNTER+1

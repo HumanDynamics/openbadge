@@ -1,0 +1,37 @@
+import common_messages
+
+extern Timestamp;
+extern BatteryData;
+extern MicrophoneData;
+extern ScanDevice;
+extern AccelerometerRawData;
+
+
+define {	
+	STREAM_BATTERY_FIFO_SIZE = 10;
+	STREAM_MICROPHONE_FIFO_SIZE = 100;
+	STREAM_SCAN_FIFO_SIZE = 100;
+	STREAM_ACCELEROMETER_FIFO_SIZE = 100;
+	STREAM_ACCELEROMETER_INTERRUPT_FIFO_SIZE = 10;
+}
+
+message BatteryStream {
+	required BatteryData battery_data;
+}
+
+message MicrophoneStream {
+	required MicrophoneData	microphone_data;
+}
+
+message ScanStream {
+	required ScanDevice scan_device;
+}
+
+message AccelerometerStream {
+	required AccelerometerRawData accelerometer_raw_data;
+}
+
+message AccelerometerInterruptStream {
+	required Timestamp timestamp;
+}
+

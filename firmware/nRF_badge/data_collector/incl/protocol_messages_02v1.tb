@@ -1,0 +1,324 @@
+import common_messages
+import stream_messages
+
+extern Timestamp;
+extern BadgeAssignement;
+extern BatteryData;
+extern MicrophoneData;
+extern ScanResultData;
+extern AccelerometerData;
+extern BatteryStream;
+extern MicrophoneStream;
+extern ScanStream;
+extern AccelerometerStream;
+extern AccelerometerInterruptStream;
+
+define {
+	PROTOCOL_MICROPHONE_DATA_SIZE = 114;
+	PROTOCOL_SCAN_DATA_SIZE = 29;
+	PROTOCOL_ACCELEROMETER_DATA_SIZE = 100;
+}
+
+define {
+	PROTOCOL_MICROPHONE_STREAM_SIZE = 10;
+	PROTOCOL_SCAN_STREAM_SIZE = 10;
+	PROTOCOL_ACCELEROMETER_STREAM_SIZE = 10;
+	PROTOCOL_ACCELEROMETER_INTERRUPT_STREAM_SIZE = 10;
+	PROTOCOL_BATTERY_STREAM_SIZE = 10;
+}
+
+
+message StatusRequest {
+	required Timestamp timestamp;
+	optional BadgeAssignement badge_assignement;
+}
+
+message StartMicrophoneRequest {
+	required Timestamp 	timestamp;
+	required uint16		timeout;
+	required uint16		period_ms;
+}
+
+message StopMicrophoneRequest {
+}
+
+message StartScanRequest {
+	required Timestamp 	timestamp;
+	required uint16		timeout;
+	required uint16		window;
+	required uint16		interval;
+	required uint16		duration;
+	required uint16		period;
+	required uint8		aggregation_type;
+}
+
+message StopScanRequest {
+}
+
+message StartAccelerometerRequest {
+	required Timestamp 	timestamp;
+	required uint16		timeout;
+	required uint8		operating_mode;
+	required uint8		full_scale;
+	required uint16		datarate;
+	required uint16		fifo_sampling_period_ms;
+}
+
+message StopAccelerometerRequest {
+}
+
+
+message StartAccelerometerInterruptRequest {
+	required Timestamp 	timestamp;
+	required uint16		timeout;
+	required uint16 	threshold_mg;
+	required uint16 	minimal_duration_ms;
+	required uint32 	ignore_duration_ms;
+}
+
+message StopAccelerometerInterruptRequest {
+}
+
+message StartBatteryRequest {
+	required Timestamp 	timestamp;
+	required uint16		timeout;
+	required uint32		period_ms;
+}
+
+message StopBatteryRequest {
+}
+
+
+
+message MicrophoneDataRequest {
+	required Timestamp timestamp;
+}
+
+message ScanDataRequest {
+	required Timestamp timestamp;
+}
+
+message AccelerometerDataRequest {
+	required Timestamp timestamp;
+}
+
+message AccelerometerInterruptDataRequest {
+	required Timestamp timestamp;
+}
+
+message BatteryDataRequest {
+	required Timestamp timestamp;
+}
+
+
+
+message StartMicrophoneStreamRequest {
+	required Timestamp 	timestamp;
+	required uint16		timeout;
+	required uint16		period_ms;
+}
+
+message StopMicrophoneStreamRequest {
+}
+
+message StartScanStreamRequest {
+	required Timestamp 	timestamp;
+	required uint16		timeout;
+	required uint16		window;
+	required uint16		interval;
+	required uint16		duration;
+	required uint16		period;
+	required uint8		aggregation_type;
+}
+
+message StopScanStreamRequest {
+}
+
+message StartAccelerometerStreamRequest {
+	required Timestamp 	timestamp;
+	required uint16		timeout;
+	required uint8		operating_mode;
+	required uint8		full_scale;
+	required uint16		datarate;
+	required uint16		fifo_sampling_period_ms;
+}
+
+message StopAccelerometerStreamRequest {
+}
+
+
+message StartAccelerometerInterruptStreamRequest {
+	required Timestamp 	timestamp;
+	required uint16		timeout;
+	required uint16 	threshold_mg;
+	required uint16 	minimal_duration_ms;
+	required uint32 	ignore_duration_ms;
+}
+
+message StopAccelerometerInterruptStreamRequest {
+}
+
+message StartBatteryStreamRequest {
+	required Timestamp 	timestamp;
+	required uint16		timeout;
+	required uint32		period_ms;
+}
+
+message StopBatteryStreamRequest {
+}
+
+
+message IdentifyRequest {
+	required uint16 timeout;
+}
+
+message TestRequest {
+}
+
+message RestartRequest {
+}
+
+message Request {
+	oneof type {
+		StatusRequest 								status_request (1);
+		StartMicrophoneRequest						start_microphone_request (2);
+		StopMicrophoneRequest						stop_microphone_request (3);
+		StartScanRequest							start_scan_request (4);
+		StopScanRequest								stop_scan_request (5);
+		StartAccelerometerRequest					start_accelerometer_request (6);
+		StopAccelerometerRequest					stop_accelerometer_request (7);
+		StartAccelerometerInterruptRequest			start_accelerometer_interrupt_request (8);
+		StopAccelerometerInterruptRequest			stop_accelerometer_interrupt_request (9);
+		StartBatteryRequest							start_battery_request (10);
+		StopBatteryRequest							stop_battery_request (11);
+		MicrophoneDataRequest						microphone_data_request (12);
+		ScanDataRequest								scan_data_request (13);
+		AccelerometerDataRequest					accelerometer_data_request (14);
+		AccelerometerInterruptDataRequest			accelerometer_interrupt_data_request (15);
+		BatteryDataRequest							battery_data_request (16);
+		StartMicrophoneStreamRequest				start_microphone_stream_request (17);
+		StopMicrophoneStreamRequest					stop_microphone_stream_request (18);
+		StartScanStreamRequest						start_scan_stream_request (19);
+		StopScanStreamRequest						stop_scan_stream_request (20);
+		StartAccelerometerStreamRequest				start_accelerometer_stream_request (21);
+		StopAccelerometerStreamRequest				stop_accelerometer_stream_request (22);
+		StartAccelerometerInterruptStreamRequest	start_accelerometer_interrupt_stream_request (23);
+		StopAccelerometerInterruptStreamRequest		stop_accelerometer_interrupt_stream_request (24);
+		StartBatteryStreamRequest					start_battery_stream_request (25);
+		StopBatteryStreamRequest					stop_battery_stream_request (26);
+		IdentifyRequest								identify_request (27);
+		TestRequest									test_request (28);
+		RestartRequest								restart_request (29);
+	}
+}
+
+
+
+
+
+
+
+message StatusResponse {
+	required uint8 clock_status;
+	required uint8 microphone_status;
+	required uint8 scan_status;
+	required uint8 accelerometer_status;
+	required uint8 accelerometer_interrupt_status;
+	required uint8 battery_status;
+	required Timestamp timestamp;
+	required BatteryData battery_data;
+}
+
+message StartMicrophoneResponse {
+	required Timestamp timestamp;
+}
+
+
+message StartScanResponse {
+	required Timestamp timestamp;
+}
+
+
+message StartAccelerometerResponse {
+	required Timestamp 	timestamp;
+}
+
+
+message StartAccelerometerInterruptResponse {
+	required Timestamp 	timestamp;
+}
+
+
+message StartBatteryResponse {
+	required Timestamp 	timestamp;
+}
+
+
+
+
+message MicrophoneDataResponse {
+	required uint8					last_response;
+	required Timestamp 				timestamp;
+	required uint16 				sample_period_ms;
+	repeated MicrophoneData 		microphone_data [PROTOCOL_MICROPHONE_DATA_SIZE];
+}
+
+message ScanDataResponse {
+	required uint8					last_response;
+	required Timestamp 				timestamp;
+	repeated ScanResultData 		scan_result_data[PROTOCOL_SCAN_DATA_SIZE];
+}
+
+message AccelerometerDataResponse {
+	required uint8					last_response;
+	required Timestamp 				timestamp;
+	repeated AccelerometerData 		accelerometer_data[PROTOCOL_ACCELEROMETER_DATA_SIZE];
+}
+
+message AccelerometerInterruptDataResponse {
+	required uint8					last_response;
+	required Timestamp 				timestamp;
+}
+
+message BatteryDataResponse {
+	required uint8					last_response;
+	required Timestamp 				timestamp;
+	required BatteryData 			battery_data;
+}
+
+
+
+message StreamResponse {
+	required Timestamp 						timestamp;
+	repeated BatteryStream 					battery_stream[PROTOCOL_BATTERY_STREAM_SIZE];
+	repeated MicrophoneStream 				microphone_stream[PROTOCOL_MICROPHONE_STREAM_SIZE];
+	repeated ScanStream 					scan_stream[PROTOCOL_SCAN_STREAM_SIZE];
+	repeated AccelerometerStream 			accelerometer_stream[PROTOCOL_ACCELEROMETER_STREAM_SIZE];
+	repeated AccelerometerInterruptStream	accelerometer_interrupt_stream[PROTOCOL_ACCELEROMETER_INTERRUPT_STREAM_SIZE];
+}
+
+
+
+message TestResponse {
+	required uint8					test_failed;
+}
+
+
+
+message Response {
+	oneof type {
+		StatusResponse 							status_response (1);
+		StartMicrophoneResponse 				start_microphone_response (2);
+		StartScanResponse 						start_scan_response (3);
+		StartAccelerometerResponse 				start_accelerometer_response (4);
+		StartAccelerometerInterruptResponse 	start_accelerometer_interrupt_response (5);
+		StartBatteryResponse 					start_battery_response (6);
+		MicrophoneDataResponse					microphone_data_response (7);
+		ScanDataResponse						scan_data_response (8);
+		AccelerometerDataResponse				accelerometer_data_response (9);
+		AccelerometerInterruptDataResponse		accelerometer_interrupt_data_response (10);
+		BatteryDataResponse						battery_data_response (11);
+		StreamResponse							stream_response (12);
+		TestResponse							test_response (13);
+	}
+}

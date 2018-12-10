@@ -44,3 +44,29 @@ The framework includes two tools for testing firmware code
 
 Note that in order to run the integration tests, you'll need to have a badge connected with a serial interface. A regular J-Link debugger/programmer does not include these. We recommend using a nRF51 dev-kit as a programmer for this purpose (see our wiki/documentations on how to make one).
 
+## Badge testing procedure ##
+The badge firmware includes a tester mode that can be used for testing new badges. 
+To compile, use the badge_03v6_tester flag (or badge_03v4_tester, for older hardware). For example:
+```
+make badge_03v6_noDebug flashUnlock flashErase  flashS130 flashAPP
+```
+
+Or, when using docker:
+```
+docker-compose run nrf make badge_03v6_noDebug flashUnlock flashErase  flashS130 flashAPP
+```
+
+Once programmed, the badge uses the LEDs to indicate the status of the test:
+1. Blink red LED several times, one for each test (EEPROM, Flash, etc)
+2. Microphone test. When it starts, both green and red LEDs will turn on 
+It then looks for quiet->noise->quiet->noise pattern, each section must be at least 200 ms long. 
+This must be completed within 10 seconds.
+In a quiet place, simply say "ahhhh" twice, with pause in between. Every time the noise passed the threshold, the LEDs 
+will turn off
+3. Accelerometer test. When it starts, both green and red LEDs will turn on. Simply shake the badge
+4. Once done, the green LED will turn off for several seconds and then turn off
+
+Example for known issues with badge manufacturing:
+* LEDs not turning on - might be a problem with the LEDs themselves
+* When microphone test starts, both LEDs will momentarily turn on and then off
+This might indicate a problem in the microphone filter or amplifier circuit (the microphone saturates and noise level says high) 

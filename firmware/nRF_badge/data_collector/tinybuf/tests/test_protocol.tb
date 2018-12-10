@@ -1,0 +1,41 @@
+import test_parent_protocol
+extern Empty_message;
+
+define {
+	TEST1 = 10;
+	TEST2 = 12;
+	TEST3 = 1000;
+}
+
+
+message Embedded_message1 {
+	optional uint64 			e;
+}
+
+message Embedded_message {
+	required uint8 						f;
+	fixed_repeated Embedded_message1 	embedded_message1[2];
+	oneof embedded_payload {
+		uint8 g(100);
+	}
+}
+
+
+
+message Test_message { 
+	fixed_repeated uint32		fixed_array[4];
+	optional uint16 			a;
+	required int32 				b;
+	repeated uint16 			uint16_array[TEST1];
+	repeated Embedded_message 	embedded_messages[TEST2];
+	optional Embedded_message1 	embedded_message1;
+	required Empty_message 		empty_message;
+	repeated uint8 				uint8_array[TEST3];
+	optional double 			c;	
+	required float 				d;
+	oneof payload {
+		uint8 x (1);
+		Embedded_message embedded_message_oneof (2);
+	}
+}
+
