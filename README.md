@@ -11,6 +11,10 @@ Additional repositories that are part of this project:
  the data to a server
 * https://github.com/HumanDynamics/openbadge-server - the backend server for the app
 
+* https://github.com/HumanDynamics/openbadge-analysis - Python (2.7) package for loading and pre-processing badge data
+
+* https://github.com/HumanDynamics/openbadge-analysis-examples - Examples showing how to use the analysis package
+
 ![Badge](/images/badge_3v06.jpg?raw=true "Open Badge")
 
 ## Docker wrapper ##
